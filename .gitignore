@@ -1,0 +1,5 @@
+/node_modules
+/.husky
+/commitlint.config.js
+/package-lock.json
+/package.json
