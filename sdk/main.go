@@ -14,14 +14,31 @@ func main() {
 }
 
 func add() {
-	fmt.Println("--- Please press ctrl + shift + q to stop hook ---")
-	hook.Register(hook.KeyDown, []string{"q", "ctrl", "shift"}, func(e hook.Event) {
-		fmt.Println("ctrl-shift-q")
-		hook.End()
-	})
+	// fmt.Println("--- Please press ctrl + shift + q to stop hook ---")
+	// hook.Register(hook.KeyDown, []string{"q", "ctrl", "shift"}, func(e hook.Event) {
+	// 	fmt.Println("ctrl-shift-q")
+	// 	hook.End()
+	// })
 
 	fmt.Println("--- Please press w---")
-	hook.Register(hook.KeyDown, []string{"w"}, func(e hook.Event) {
+	// hook.Register(hook.KeyDown, []string{"w"}, func(e hook.Event) {
+
+	// 	// fmt.Println("hook(KeyDown): ", e)
+
+	// 	ee, _ := json.Marshal(e)
+	// 	fmt.Println("hook(KeyDown): ", string(ee))
+
+	// 	fmt.Println("w")
+	// })
+
+	hook.Register(hook.KeyUp, []string{"w"}, func(e hook.Event) {
+		// 此处存在的问题https://github.com/robotn/gohook/issues/48
+
+		// fmt.Println("hook(KeyUp): ", e)
+
+		ee, _ := json.Marshal(e)
+		fmt.Println("hook(KeyUp): ", string(ee))
+
 		fmt.Println("w")
 	})
 
