@@ -1,6 +1,9 @@
 package main
 
 import (
+	"sync"
+	"time"
+
 	hook "github.com/robotn/gohook"
 )
 
@@ -55,38 +58,59 @@ func keyEventListen() {
 
 func handleKeyEvent(evChan chan hook.Event) {
 
-	var time int64 = 0
+	var timeCount int64 = 0
 	var key_down_soundIsRun bool = false
+	var soundIsRun_Mutex sync.Mutex // 此锁的作用是为了尽可能地防止 key_down 声音播放的触发时机异常。 不过虽可解决触发时机异常的问题, 但目前仍会存在重复触发key_down的问题<println("仅播放 key_down 声音")+println("播放 key_down 声音 + key_up 声音")的组合问题>
+	go func() {
+		for {
+			// time.Sleep(100 * time.Millisecond)
+
+			soundIsRun_Mutex.Lock()
+			if (time.Now().UnixMilli()-timeCount) > 300 && timeCount != 0 {
+				if !key_down_soundIsRun {
+
+					println("仅播放 key_down 声音")
+
+					key_down_soundIsRun = true
+				}
+			}
+			soundIsRun_Mutex.Unlock()
+		}
+	}()
 
 	for ev := range evChan {
 		if ev.Kind == 4 {
 			println("hold")
-			if time == 0 {
-				time = ev.When.UnixMilli()
+			if timeCount == 0 {
+				timeCount = ev.When.UnixMilli()
 			}
 			println(ev.Keycode) // 按下时, 由于goHook的bug, 无法判断实际的keyCode。 但由于hold的触发实际与down几乎一致, 且可判断实际的keyCode, 因此可使用此事件代替down
 		}
-		// 由于同时(或者说几乎同时)按下两个按键后, 只有最后一个被按下的按键会一直触发hold事件(等于说会造成先按下的按键可能无法借助此处判断来播放key_down的声音)
-		if (ev.When.UnixMilli()-time) > 300 && ev.Kind == 4 {
-			if !key_down_soundIsRun {
-				println("仅播放 key_down 声音")
-				key_down_soundIsRun = true
-			}
-		}
+		// // 由于同时(或者说几乎同时)按下两个按键后, 只有最后一个被按下的按键会一直触发hold事件(等于说会造成先按下的按键可能无法借助此处判断来播放key_down的声音)
+		// if (ev.When.UnixMilli()-timeCount) > 300 && ev.Kind == 4 {
+		// 	if !key_down_soundIsRun {
+		// 		println("仅播放 key_down 声音")
+		// 		key_down_soundIsRun = true
+		// 	}
+		// }
+
 		if ev.Kind == 5 {
+
+			soundIsRun_Mutex.Lock()
 			println("up")
 			println(ev.Keycode)
 
-			if (ev.When.UnixMilli() - time) > 300 {
+			if (ev.When.UnixMilli() - timeCount) > 300 {
 				println("仅播放 key_up 声音")
 			} else {
-				// ev.When - time <= 50
+				// ev.When - timeCount <= 50
 				println("播放 key_down 声音 + key_up 声音")
 			}
 
-			time = 0 // 最终将time归0, 以确保下一次按键触发时, 可以正确的记录时间。
+			timeCount = 0 // 最终将timeCount归0, 以确保下一次按键触发时, 可以正确的记录时间。
 
 			key_down_soundIsRun = false
+			soundIsRun_Mutex.Unlock()
 
 		}
 	}
