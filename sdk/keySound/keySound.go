@@ -39,3 +39,79 @@ func PlayKeySound(ss string) {
 	<-done
 
 }
+
+func init() {
+	initKeyDownSoundBuffer()
+	initKeyUpSoundBuffer()
+}
+
+var bufferKeyDownSound *beep.Buffer
+var bufferKeyUpSound *beep.Buffer
+
+func initKeyDownSoundBuffer() {
+	// fmt.Println("sounds/test_down.wav")
+	audioFile, err := sounds.Open("sounds/test_down.wav")
+	if err != nil {
+		panic(err)
+	}
+	defer audioFile.Close()
+
+	// 对文件进行解码
+	audioStreamer, format, err := wav.Decode(audioFile)
+	if err != nil {
+		panic(err)
+	}
+	defer audioStreamer.Close()
+
+	bufferKeyDownSound = beep.NewBuffer(format)
+	bufferKeyDownSound.Append(audioStreamer)
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
+}
+
+func initKeyUpSoundBuffer() {
+	// fmt.Println("sounds/test_up.wav")
+	audioFile, err := sounds.Open("sounds/test_up.wav")
+	if err != nil {
+		panic(err)
+	}
+	defer audioFile.Close()
+
+	// 对文件进行解码
+	audioStreamer, format, err := wav.Decode(audioFile)
+	if err != nil {
+		panic(err)
+	}
+	defer audioStreamer.Close()
+
+	bufferKeyUpSound = beep.NewBuffer(format)
+	bufferKeyUpSound.Append(audioStreamer)
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
+}
+
+func KeyDownSoundPlay() {
+	shot := bufferKeyDownSound.Streamer(0, bufferKeyDownSound.Len())
+	speaker.Play(shot)
+
+	// // 播放音乐
+	// done := make(chan bool)
+	// speaker.Play(beep.Seq(shot, beep.Callback(func() {
+	// 	done <- true
+	// })))
+
+	// // 等待播放完成
+	// <-done
+}
+
+func KeyUpSoundPlay() {
+	shot := bufferKeyUpSound.Streamer(0, bufferKeyUpSound.Len())
+	speaker.Play(shot)
+
+	// // 播放音乐
+	// done := make(chan bool)
+	// speaker.Play(beep.Seq(shot, beep.Callback(func() {
+	// 	done <- true
+	// })))
+
+	// // 等待播放完成
+	// <-done
+}
