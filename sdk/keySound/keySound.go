@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
 	"github.com/gopxl/beep/speaker"
 	"github.com/gopxl/beep/wav"
 )
@@ -29,9 +30,16 @@ func PlayKeySound(ss string) {
 	// 初始化speaker。(可更改第二个参数的值(越大, 音质越好, 响应越慢。 越小, 音质越差, 响应速度越快。))
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
+	volume := &effects.Volume{
+		Streamer: audioStreamer,
+		Base:     2,
+		Volume:   3,
+		Silent:   false,
+	}
+
 	// 播放音乐
 	done := make(chan bool)
-	speaker.Play(beep.Seq(audioStreamer, beep.Callback(func() {
+	speaker.Play(beep.Seq(volume, beep.Callback(func() {
 		done <- true
 	})))
 
