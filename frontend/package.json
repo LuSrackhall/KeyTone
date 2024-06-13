@@ -13,6 +13,7 @@
     "build": "quasar build"
   },
   "dependencies": {
+    "@electron/remote": "^2.1.2",
     "@quasar/extras": "^1.16.4",
     "axios": "^1.2.1",
     "pinia": "^2.0.11",

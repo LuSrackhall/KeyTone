@@ -1,6 +1,15 @@
 import { app, BrowserWindow } from 'electron';
+/*
+ * 无边框功能实现时, 需借此做到窗口关闭等的控制。
+ * 从 @electron/remote/main 模块中导入 initialize 和 enable 函数。
+ * initialize 函数用于初始化@electron/remote，而 enable 函数用于启用特定窗口的远程访问。
+ */
+import { initialize, enable } from '@electron/remote/main';
 import path from 'path';
 import os from 'os';
+
+// 初始化 @electron/remote 模块，使其可以在主进程和渲染进程之间进行通信。
+initialize();
 
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
@@ -67,17 +76,23 @@ function createWindow() {
    */
   mainWindow = new BrowserWindow({
     icon: path.resolve(__dirname, 'icons/icon.png'), // tray icon
-    width: 1000,
-    height: 600,
+    width: 390,
+    height: 500,
     useContentSize: true,
+    frame: false,
+    resizable: false, // 是否可调整窗口大小, 默认为true
     // autoHideMenuBar: true,  // 此方式只是自动隐藏菜单栏, 但仍可通过 'alt' 键打开。
     show: false,
     webPreferences: {
+      sandbox: false, // 能够在预加载脚本中导入@electronic/remote
       contextIsolation: true,
       // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
       preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
     },
   });
+
+  // 作用：启用指定窗口的远程访问，使得渲染进程可以通过 @electron/remote 模块访问主进程的功能。
+  enable(mainWindow.webContents);
 
   mainWindow.loadURL(process.env.APP_URL);
   mainWindow.on('ready-to-show', () => {
