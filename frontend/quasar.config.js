@@ -8,9 +8,9 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-
 const { configure } = require('quasar/wrappers');
 const path = require('path');
+const { version } = require('./package.json');
 
 module.exports = configure(function (/* ctx */) {
   return {
@@ -20,7 +20,7 @@ module.exports = configure(function (/* ctx */) {
       // exclude: [],
       // rawOptions: {},
       warnings: true,
-      errors: true
+      errors: true,
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -29,15 +29,10 @@ module.exports = configure(function (/* ctx */) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [
-      'i18n',
-      'axios',
-    ],
+    boot: ['i18n', 'axios'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
-    css: [
-      'app.scss'
-    ],
+    css: ['app.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -56,8 +51,22 @@ module.exports = configure(function (/* ctx */) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       target: {
-        browser: [ 'es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1' ],
-        node: 'node16'
+        browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
+        node: 'node16',
+      },
+
+      // TIPS: 可以通过以下代码, 让build生成的生产环境的代码, 删除console.log、debugger等。
+      minify: 'terser',
+      extendViteConf(viteConf) {
+        viteConf.build.terserOptions = viteConf.build.terserOptions || {};
+        viteConf.build.terserOptions = {
+          ...viteConf.build.terserOptions,
+          compress: {
+            ...viteConf.build.terserOptions.compress,
+            drop_console: true,
+            drop_debugger: true,
+          },
+        };
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -69,7 +78,9 @@ module.exports = configure(function (/* ctx */) {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: {
+        APP_VERSION: version,
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
@@ -80,24 +91,27 @@ module.exports = configure(function (/* ctx */) {
       // viteVuePluginOptions: {},
 
       vitePlugins: [
-        ['@intlify/vite-plugin-vue-i18n', {
-          // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
-          // compositionOnly: false,
+        [
+          '@intlify/vite-plugin-vue-i18n',
+          {
+            // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
+            // compositionOnly: false,
 
-          // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
-          // you need to set `runtimeOnly: false`
-          // runtimeOnly: false,
+            // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
+            // you need to set `runtimeOnly: false`
+            // runtimeOnly: false,
 
-          // you need to set i18n resource including paths !
-          include: path.resolve(__dirname, './src/i18n/**')
-        }]
-      ]
+            // you need to set i18n resource including paths !
+            include: path.resolve(__dirname, './src/i18n/**'),
+          },
+        ],
+      ],
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
     devServer: {
       // https: true
-      open: true // opens browser window automatically
+      open: true, // opens browser window automatically
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
@@ -115,7 +129,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ['Notify', 'Dialog'],
     },
 
     // animations: 'all', // --- includes all animations
@@ -137,7 +151,7 @@ module.exports = configure(function (/* ctx */) {
     // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
     ssr: {
       // ssrPwaHtmlFilename: 'offline.html', // do NOT use index.html as name!
-                                          // will mess up SSR
+      // will mess up SSR
 
       // extendSSRWebserverConf (esbuildConf) {},
       // extendPackageJson (json) {},
@@ -148,11 +162,11 @@ module.exports = configure(function (/* ctx */) {
       // manualPostHydrationTrigger: true,
 
       prodPort: 3000, // The default port that the production server should use
-                      // (gets superseded if process.env.PORT is specified at runtime)
+      // (gets superseded if process.env.PORT is specified at runtime)
 
       middlewares: [
-        'render' // keep this as last one
-      ]
+        'render', // keep this as last one
+      ],
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
@@ -176,7 +190,7 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-capacitor-apps/configuring-capacitor
     capacitor: {
-      hideSplashscreen: true
+      hideSplashscreen: true,
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
@@ -186,17 +200,15 @@ module.exports = configure(function (/* ctx */) {
 
       inspectPort: 5858,
 
-      bundler: 'packager', // 'packager' or 'builder'
+      bundler: 'builder', // 'packager' or 'builder'
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
         // Windows only
         // win32metadata: { ... }
       },
@@ -204,18 +216,52 @@ module.exports = configure(function (/* ctx */) {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'key-tone'
-      }
+        // appId: 'key-tone',
+        // productName: "keyTone", // 这是您的应用程序的名称，用户在安装时看到的名称。
+        appId: 'top.srackhall.keytone',
+        // asar: false, // (推荐使用默认的true,以简单地保护下前端源代码<虽然实际作用不大>)这表明您的应用代码不会被打包到 ASAR 存档中。ASAR 是 Electron 用来打包应用源代码的格式，设置为 false 表示源代码将以普通文件夹的形式包含在应用中。
+        copyright: 'Copyright (C) 2024 LuSrackhall',
+        artifactName: 'KeyTone-Setup-${version}-${os}.${ext}', // 这个配置是用于定义生成的文件名模板。artifactName 可以包含变量，比如 ${version} 会用应用程序的版本号替换，${os} 会用目标操作系统替换，${ext} 会用文件的扩展名替换。这样，生成的安装文件名能清楚地反映出版本信息和适用的操作系统。
+        win: {
+          extraResources: [
+            {
+              from: 'dist/key_tone_sdk',
+              to: 'key_tone_sdk',
+              // filter:[]
+            },
+          ], // TIPS: 核心, 有了它就不需要再依赖makefile了
+          signingHashAlgorithms: ['sha256'], // 这个配置项意味着, 如果要启用代码签名，将使用SHA-256哈希算法进行签名。代码签名对于确认应用程序的完整性和来源是非常重要的。
+          rfc3161TimeStampServer:
+            'http://timestamp.entrust.net/TSS/RFC3161sha2TS', //这个配置项用于指定一个RFC 3161兼容的时间戳服务器的URL。当你的应用程序进行代码签名时，时间戳能确保签名在证书过期之后仍然有效。
+          //这个网址不是私人的，它是一个公开的RFC 3161兼容时间戳服务的URL。时间戳服务由Entrust公司提供，是用来为数字签名生成时间戳的。这对于确保在软件开发和分发过程中代码签名的完整性和长期有效性非常重要。当您对软件进行数字签名时，时间戳服务会记录和证明签名是在证书有效期内完成的。这样，即使证书在未来某个时候过期，带有时间戳的签名也仍然会被操作系统和用户视为有效和可信的。
+          // 通常情况下，使用公开的RFC 3161时间戳服务，如Entrust提供的服务，是不需要付费的。这些服务一般是免费提供给公众使用的，以便于签名过程中实现时间戳的功能。但是，有一些服务提供商可能会对频繁或大量的使用提出收费，所以具体是否需要付费可能取决于你的使用情况以及服务提供商的政策。如果你是商业用户或对时间戳服务有高要求，建议直接咨询服务提供商，以了解其服务详情和是否需要付费。
+          target: 'nsis', // 这个配置是特定于 Windows 平台的。target 指定生成安装程序的类型。这里设置为 "NSIS"（Nullsoft Scriptable Install System），它是一个流行的 Windows 安装程序制作工具，允许开发者创建带有自定义逻辑和界面的安装程序。
+        },
+        // 定制安装程序流程和相关操作。
+        nsis: {
+          oneClick: false, // 这个选项设置为false意味着安装时不会直接一键安装，用户将会看到更多的安装选项。
+          perMachine: false, // 表示安装默认是为当前用户安装，而不是为所有用户安装。
+          allowToChangeInstallationDirectory: true, // 允许用户在安装期间更改安装目录。
+          allowElevation: true, // 允许安装程序请求提升权限，如果需要的话。
+          deleteAppDataOnUninstall: true, // 表示当应用被卸载时将删除应用数据目录。
+          createDesktopShortcut: true, // 表示安装程序将创建桌面快捷方式。
+          createStartMenuShortcut: true, //表示将创建开始菜单快捷方式。
+          shortcutName: 'KeyTone', // 指定了快捷方式的名称。
+          // license: '../LICENSE', // 指定了安装过程中会显示的许可协议文件。
+          // include: 'nsis/installer.nsh', // 包含额外的NSIS脚本文件，用于自定义安装过程。 // 比如检测系统版本是否是win10及以上, 若不满足触发退出窗口, 用户无法继续安装只能退出。
+          warningsAsErrors: false, // 这意味着在NSIS脚本编译时，警告不会作为错误处理
+          // installerSidebar: 'nsis/installerSidebar.bmp', // 安装侧边栏使用的图片。
+          // uninstallerSidebar: 'nsis/uninstallerSidebar.bmp', // 卸载侧边栏使用的图片。
+        },
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
     bex: {
-      contentScripts: [
-        'my-content-script'
-      ],
+      contentScripts: ['my-content-script'],
 
       // extendBexScriptsConf (esbuildConf) {}
       // extendBexManifestJson (json) {}
-    }
-  }
+    },
+  };
 });
