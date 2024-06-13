@@ -147,6 +147,9 @@ module.exports = configure(function (/* ctx */) {
     //   electronMain: 'src-electron/electron-main',
     //   electronPreload: 'src-electron/electron-preload'
     // },
+    sourceFiles: {
+      electronPreload: 'src-electron/main-process/electron-preload',
+    },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-ssr/configuring-ssr
     ssr: {
