@@ -17,7 +17,7 @@
         <q-space />
 
         <q-btn dense flat icon="horizontal_rule" @click="minimize" />
-        <q-btn dense flat icon="crop_square" @click="toggleMaximize" />
+        <!-- <q-btn dense flat icon="crop_square" @click="toggleMaximize" /> -->
         <q-btn dense flat icon="close" @click="closeApp" />
       </q-bar>
     </q-header>
