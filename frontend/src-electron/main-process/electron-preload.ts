@@ -1,6 +1,6 @@
 // 从 electron 模块中导入 contextBridge，用于在渲染进程和主进程之间安全地暴露API。
 // import { contextBridge } from 'electron';
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 // 从 @electron/remote 模块中导入 BrowserWindow，用于在渲染进程中控制窗口。
 import { BrowserWindow } from '@electron/remote';
 
@@ -35,4 +35,6 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
     BrowserWindow.getFocusedWindow()?.close();
     // console.log('close, 关闭当前窗口');
   },
+
+  openExternal: (url: string) => ipcRenderer.send('open-external', url),
 });

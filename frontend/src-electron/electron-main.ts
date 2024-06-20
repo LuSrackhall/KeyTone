@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu } from 'electron';
+import { app, BrowserWindow, Tray, Menu, ipcMain, shell } from 'electron';
 /*
  * 无边框功能实现时, 需借此做到窗口关闭等的控制。
  * 从 @electron/remote/main 模块中导入 initialize 和 enable 函数。
@@ -199,4 +199,9 @@ app.on('activate', () => {
   if (mainWindow === undefined) {
     createWindow();
   }
+});
+
+// 处理 IPC 事件
+ipcMain.on('open-external', (event, url) => {
+  shell.openExternal(url);
 });
