@@ -41,6 +41,16 @@
       behavior="desktop"
       elevated
     >
+      <q-item-label header class="flex">
+        <!-- 自己名字这里, 到时候可以放置个链接属性, 让用户可以通过点击来启动系统默认浏览器进入我的github主页 -->
+        <div>{{ $t('keyTone.developer') }}:</div>
+        <q-item
+          clickable
+          class="p-0 m-l-2 shadowSizeChange"
+          @click="openExternal('https://github.com/LuSrackhall')"
+          >LuSrackhall</q-item
+        >
+      </q-item-label>
     </q-drawer>
 
     <q-page-container>
@@ -76,13 +86,27 @@ function closeApp() {
     window.myWindowAPI.close();
   }
 }
+
+function openExternal(url: string) {
+  if (process.env.MODE === 'electron') {
+    window.myWindowAPI.openExternal(url);
+  }
+}
 </script>
 
 <style lang="scss" scoped>
+/* 抽屉尺寸适配 */
 .sizeChange {
   :deep(.q-drawer) {
     height: calc(100% - 42px);
     border-bottom-left-radius: 0.25rem /* 4px */;
+  }
+}
+
+/* 悬停阴影适配 */
+.shadowSizeChange {
+  :deep(.q-focus-helper) {
+    height: 18px;
   }
 }
 </style>
