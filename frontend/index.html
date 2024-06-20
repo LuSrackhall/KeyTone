@@ -17,10 +17,11 @@
     <style>
       body {
         margin: 0;
-        overflow: hidden;
+        height: 500px;
+        /* overflow: hidden; */
         /* background: #edc0bf; */
         /* background: rgba(255, 255, 255, 0.2); 半透明背景 */
-        background: linear-gradient(90deg, #edc0bf 0,#c4caef 58%);
+        /* background: linear-gradient(90deg, #edc0bf 0,#c4caef 58%); */
         /* font-family: 'Inter', sans-serif; */
       }
       /* 由于浏览器的毛玻璃效果, 仅支持浏览器内部, 无法提供直接透到操作系统桌面的毛玻璃效果,因此弃用 */
@@ -34,6 +35,24 @@
         backdrop-filter: blur(10px) brightness(0.8); 毛玻璃效果
         -webkit-backdrop-filter:blur(10px) brightness(0.8); 兼容性处理
       } */
+      #app-container {
+        width: 100%;
+        height: 100%;
+        /* 将背景的设置从body 转移到此处, 以避免对实现圆角的功能产生影响*/
+        /* background: #edc0bf; */
+        background: linear-gradient(90deg, #edc0bf 0%, #c4caef 58%);
+        /* border-radius: 30px; 圆角<这里设置的远大于实际的即可> */
+        /* border-radius: 1.0rem; */
+        /* 顶部圆角设置 */
+        border-top-left-radius: 0.5rem/* 8px */;
+        border-top-right-radius: 0.5rem/* 8px */;
+        /* 底部圆角设置 */
+        border-bottom-right-radius: 0.250rem/* 4px */;
+        border-bottom-left-radius: 0.250rem/* 4px */;
+        /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); 阴影 */
+        /* 阴影设置 */
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1),0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color) ;
+      }
       .content {
         position: relative;
         z-index: 1;
@@ -44,10 +63,11 @@
   </head>
   <body>
     <!-- <div class="blurred-background"></div> -->
-    <div id="app" class="content">
-      <!-- 下面这一行这个是quasar的核心 -->
-      <!-- quasar:entry-point -->
+    <div id="app-container">
+      <div class="content">
+        <!-- 下面这一行这个是quasar的核心 -->
+        <!-- quasar:entry-point -->
+      </div>
     </div>
-
   </body>
 </html>
