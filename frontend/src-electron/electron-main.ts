@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Tray, Menu } from 'electron';
 /*
  * 无边框功能实现时, 需借此做到窗口关闭等的控制。
  * 从 @electron/remote/main 模块中导入 initialize 和 enable 函数。
@@ -69,6 +69,7 @@ if (process.env.DEBUGGING) {
 const platform = process.platform || os.platform();
 
 let mainWindow: BrowserWindow | undefined;
+let tray;
 
 function createWindow() {
   /**
@@ -112,8 +113,55 @@ function createWindow() {
     });
   }
 
-  mainWindow.on('closed', () => {
-    mainWindow = undefined;
+  // mainWindow.on('closed', () => {
+  //   mainWindow = undefined;
+  // });
+
+  // 关闭窗口时隐藏窗口而不是退出应用
+  mainWindow.on('close', (event) => {
+    if (!(app as any).isQuiting) {
+      event.preventDefault();
+      mainWindow?.hide();
+    }
+    return false;
+  });
+}
+
+function createTray() {
+  // 创建托盘图标
+  tray = new Tray(path.join(__dirname, 'icons/icon.png')); // 替换为你的图标路径
+
+  // 创建托盘图标的上下文菜单
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示',
+      click: () => {
+        mainWindow?.show();
+      },
+    },
+    {
+      label: '退出',
+      click: () => {
+        (app as any).isQuiting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  // 设置托盘图标的上下文菜单
+  tray.setContextMenu(contextMenu);
+
+  // 设置托盘图标的提示文本
+  tray.setToolTip('KeyTone');
+
+  // 点击托盘图标时显示窗口
+  // tray.on('click', () => {
+  //   mainWindow?.show();
+  // });
+
+  // 双击托盘图标时显示窗口：
+  tray.on('double-click', () => {
+    mainWindow?.show();
   });
 }
 
@@ -136,6 +184,8 @@ if (!gotTheLock) {
   app.whenReady().then(() => {
     // 创建浏览器窗口。
     createWindow();
+    // 当Electron完成初始化并准备创建浏览器窗口时调用此方法
+    createTray();
   });
 }
 
