@@ -3,8 +3,12 @@
    q-layout 有个 style="min-height: 835.2px" 的样式, 会造成滚动条的出现 进而无法展示窗口底部 进而无法通过css实现圆角
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
-  <q-layout view="hHh lpR lFr" style="min-height: 0px">
-    <q-header elevated class="bg-primary text-white rounded-t-lg">
+  <q-layout view="hHh lpR lFr" style="min-height: 0px" class="sizeChange">
+    <q-header
+      elevated
+      class="bg-primary text-white rounded-t-lg"
+      style="width: calc(100% - 10px); right: 5px"
+    >
       <q-bar class="q-electron-drag rounded-t-lg">
         <q-btn
           flat
@@ -29,6 +33,7 @@
       </q-bar>
     </q-header>
 
+    <!-- 实际上的抽屉在q-layout中, 因此将.sizeChange这个css放到那边而不是这里 -->
     <q-drawer
       v-model="leftDrawerOpen"
       side="left"
@@ -72,3 +77,11 @@ function closeApp() {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.sizeChange {
+  :deep(.q-drawer) {
+    height: calc(100% - 42px);
+  }
+}
+</style>
