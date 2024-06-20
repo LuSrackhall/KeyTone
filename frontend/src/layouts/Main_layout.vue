@@ -1,7 +1,11 @@
 <template>
-  <q-layout view="hHh lpR lFr">
-    <q-header elevated class="bg-primary text-white">
-      <q-bar class="q-electron-drag">
+  <!--
+   q-layout 有个 style="min-height: 835.2px" 的样式, 会造成滚动条的出现 进而无法展示窗口底部 进而无法通过css实现圆角
+   因此, 我们这里主动设置 style="min-height: 0px"
+  -->
+  <q-layout view="hHh lpR lFr" style="min-height: 0px">
+    <q-header elevated class="bg-primary text-white rounded-t-lg">
+      <q-bar class="q-electron-drag rounded-t-lg">
         <q-btn
           flat
           dense
