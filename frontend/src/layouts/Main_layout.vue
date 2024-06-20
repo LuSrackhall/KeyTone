@@ -12,7 +12,10 @@
         />
 
         <!-- <q-btn flat dense round icon="keyboard_alt"></q-btn> -->
-        <div>KeyTone</div>
+        <div class="flex">
+          <div>KeyTone</div>
+          <div class="ml-2 text-xs pt-1.5">{{ version }}</div>
+        </div>
 
         <q-space />
 
@@ -39,6 +42,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+const version = process.env.APP_VERSION;
 
 const leftDrawerOpen = ref(false);
 
