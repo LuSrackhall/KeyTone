@@ -79,8 +79,9 @@ function createWindow() {
     width: 390,
     height: 500,
     useContentSize: true,
-    frame: false,
+    frame: false, // 设置无边框窗口
     resizable: false, // 是否可调整窗口大小, 默认为true
+    // transparent: true, // 设置透明窗口, 为进一步的毛玻璃窗口做准备 // 由于纯CSS不支持直接透到操作系统桌面的毛玻璃效果, 因此放弃
     // autoHideMenuBar: true,  // 此方式只是自动隐藏菜单栏, 但仍可通过 'alt' 键打开。
     show: false,
     webPreferences: {
