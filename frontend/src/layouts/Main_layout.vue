@@ -82,6 +82,7 @@ function closeApp() {
 .sizeChange {
   :deep(.q-drawer) {
     height: calc(100% - 42px);
+    border-bottom-left-radius: 0.25rem /* 4px */;
   }
 }
 </style>
