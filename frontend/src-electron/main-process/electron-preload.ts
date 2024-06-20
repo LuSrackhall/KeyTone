@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
   // minimize：最小化当前窗口。
   minimize() {
     BrowserWindow.getFocusedWindow()?.minimize();
-    console.log('minimize, 窗口最小化');
+    // console.log('minimize, 窗口最小化');
   },
 
   // toggleMaximize：切换当前窗口的最大化状态。
@@ -23,16 +23,16 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
 
     if (win?.isMaximized()) {
       win.unmaximize();
-      console.log('unmaximize, 窗口取消最大化');
+      // console.log('unmaximize, 窗口取消最大化');
     } else {
       win?.maximize();
-      console.log('maximize, 窗口最大化');
+      // console.log('maximize, 窗口最大化');
     }
   },
 
   // close：关闭当前窗口。
   close() {
     BrowserWindow.getFocusedWindow()?.close();
-    console.log('close, 关闭当前窗口');
+    // console.log('close, 关闭当前窗口');
   },
 });
