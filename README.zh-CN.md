@@ -3,6 +3,14 @@
 </p>
 <p align="center">
   在寂静中，让您的键盘唤醒舒适的声音。
+  <br/>
+  <br/>
+  <a href="https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/LuSrackhall/KeyTone"/>
+  </a>
+  <a href="https://github.com/LuSrackhall/KeyTone/tags" rel="nofollow">
+    <img alt="GitHub tag (latest SemVer pre-release)" src="https://img.shields.io/github/v/tag/LuSrackhall/KeyTone?include_prereleases&label=version"/>
+  </a>
 </p>
 
 <div align="center">
