@@ -1,11 +1,19 @@
 <p align="center" style="text-align: center">
-  <img src="./frontend/src/assets/img/KeyTone.png" width="55%"><br/>
+  <img src="./frontend/src/assets/img/KeyTone.png" width="35%"><br/>
 </p>
 <p align="center">
   在寂静中，让您的键盘唤醒舒适的声音。
 </p>
 
+<div align="center">
+<strong>
+<samp>
+
 [English](README.md) · [简体中文](README.zh-CN.md)
+
+</samp>
+</strong>
+</div>
 
 # KeyTone
 
