@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "KeyTone"
-  text: "Can simulate the sound of keyboard strokes in real-time"
-  tagline: In silence, let your keyboard bring forth pleasing sounds.
+  text: In silence, let your keyboard bring forth pleasing sounds.
+  tagline: "Can simulate the sound of keyboard strokes in real-time"
   image:
     src: /KeyTone.png
     alt: Logo      # KeyTone 的 Logo # 描述,为图像提供描述性文本，使网页更加语义化，有助于机器和人类更好地理解网页内容(猜测),如下:。  
@@ -36,3 +36,4 @@ features:
   # - title: Feature C
   #   details: 
 ---
+

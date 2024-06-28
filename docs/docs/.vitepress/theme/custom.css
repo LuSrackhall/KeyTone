@@ -1,0 +1,23 @@
+:root {
+  /* 标题 */
+  /* --vp-home-hero-name-color: transparent; */
+  /* --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #41d1ff 30%, #bd34fe); */
+
+  /* 标题 */
+  /* --vp-home-hero-name-color: transparent; */
+  /* --vp-home-hero-name-background: linear-gradient(135deg, #f6ceec 10%, #d939cd 100%); */
+
+  /* 图标背景 */
+  /* --vp-home-hero-image-background-image: linear-gradient(90deg, #edc0bf 0%, #c4caef 58%); */
+  /* --vp-home-hero-image-filter: blur(60px); */
+
+  /* 标题 */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #41d1ff 30%, #ff00ae);
+  /* 目前不支持名暗主题分别自定义css, 下方这个字体样式在黑暗模式下显示效果更佳 */
+  /* --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #41d1ff 30%, #ffd8d8); */
+
+  /* 图标背景 */
+  --vp-home-hero-image-background-image: linear-gradient(-66deg, #47caff 17%, #f0f0dc 63%, #ffd8d8 20%);
+  --vp-home-hero-image-filter: blur(44px);
+}
