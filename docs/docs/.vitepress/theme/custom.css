@@ -21,3 +21,19 @@
   --vp-home-hero-image-background-image: linear-gradient(-66deg, #47caff 17%, #f0f0dc 63%, #ffd8d8 20%);
   --vp-home-hero-image-filter: blur(44px);
 }
+
+/*
+ * 通过媒体查询和 CSS 变量，实现了根据视口宽度动态调整元素模糊效果。
+ * 这种响应式设计，可以根据不同设备和屏幕尺寸提供最佳的视觉效果。
+ */
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(56px);
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --vp-home-hero-image-filter: blur(72px);
+  }
+}
