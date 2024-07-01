@@ -16,20 +16,22 @@ export default defineConfig({
     // logo: "/KeyTone.png", // 目前这个logo不适合在这里使用, 不美观。
     // siteTitle: false, // 当为字符串时, 可以自定义此项目以替换导航中的默认网站标题（应用程序配置中的 title ）。当设置为 false 时，导航中的标题将被禁用。当您的 logo 已包含网站标题文本时很有用。
 
-    nav: [
-      { text: "Home", link: "/" },
-      { text: "Examples", link: "/markdown-examples" },
-    ],
+    // 后续要增加国际化, 此导航需要在各个国际化的config配置文件中独立配置, 而不是在此处。
+    // nav: [
+    //   { text: "Home", link: "/" },
+    //   { text: "Examples", link: "/markdown-examples" },
+    // ],
 
-    sidebar: [
-      {
-        text: "Examples",
-        items: [
-          { text: "Markdown Examples", link: "/markdown-examples" },
-          { text: "Runtime API Examples", link: "/api-examples" },
-        ],
-      },
-    ],
+    // 后续要增加国际化, 此导航需要在各个国际化的config配置文件中独立配置, 而不是在此处。
+    // sidebar: [
+    //   {
+    //     text: "Examples",
+    //     items: [
+    //       { text: "Markdown Examples", link: "/markdown-examples" },
+    //       { text: "Runtime API Examples", link: "/api-examples" },
+    //     ],
+    //   },
+    // ],
 
     socialLinks: [{ icon: "github", link: "https://github.com/LuSrackhall/KeyTone" }],
   },

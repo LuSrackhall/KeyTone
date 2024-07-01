@@ -7,7 +7,8 @@ hero:
   text: In silence, let your keyboard bring forth pleasing sounds.
   tagline: "Can simulate the sound of keyboard strokes in real-time"
   image:
-    src: /KeyTone.png
+    # 放置在 public 中的资源将按原样复制到输出目录的根目录<请注意，您应该使用根绝对路径引用放置在 public 中的文件 - 例如， public/icon.png 应始终在源代码中引用为 /icon.png>
+    src: /images/KeyTone.png
     alt: Logo      # KeyTone 的 Logo # 描述,为图像提供描述性文本，使网页更加语义化，有助于机器和人类更好地理解网页内容(猜测),如下:。  
                      ## 屏幕阅读器会读取 alt 属性的内容，帮助视力障碍者理解图像的内容(大模型给的猜测)。  
                      ## 搜索引擎会使用 alt 属性的内容来理解图像的内容，从而更好地索引和排名网页。因此，合理使用 alt 属性有助于提升网页的搜索引擎排名(大模型给的猜测)。 
