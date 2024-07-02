@@ -1,8 +1,10 @@
 import { defineConfig } from "vitepress";
+import { enConfig } from "./config/en.mts";
+import { zhConfig } from "./config/zh.mts";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  lang: "en-US",
+  // lang: "en-US", // 这个会被locales配置中root的lang配置给覆盖掉(当然root配置代表默认的配置, 未被root覆盖的配置仍会使用当前配置文件的内容; 以此类推所有国际化配置。 <另外, root配置不会在url中将root这个key名的作为默认link追加, 也不允许自行配置link>)
   title: "KeyTone",
   // description: "In silence, let your keyboard bring forth pleasing sounds.",
   description: "Can simulate the sound of keyboard strokes in real-time",
@@ -34,5 +36,16 @@ export default defineConfig({
     // ],
 
     socialLinks: [{ icon: "github", link: "https://github.com/LuSrackhall/KeyTone" }],
+  },
+
+  locales: {
+    // 当key名为root时, 配置不会在url中将root这个key名的作为默认link值追加, 也不允许在其value的对象中自行配置link。
+    root: {
+      ...enConfig,
+    },
+    // 这里的的key名, 将会作为默认的link值, 在url后进行追加。 但是, 可以在value的对象中通过自行配置link字段来覆盖此默认的link值。
+    zh: {
+      ...zhConfig,
+    },
   },
 });
