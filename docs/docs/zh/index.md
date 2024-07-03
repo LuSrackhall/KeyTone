@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "KeyTone"
-  text: In silence, let your keyboard bring forth pleasing sounds.
-  # tagline: "Can simulate the sound of keyboard strokes in real-time"
+  text: 在寂静中，让您的键盘唤醒舒适的声音。
+  # tagline: "可以实时模拟键盘敲击的声音"
   image:
     # 放置在 public 中的资源将按原样复制到输出目录的根目录<请注意，您应该使用根绝对路径引用放置在 public 中的文件 - 例如， public/icon.png 应始终在源代码中引用为 /icon.png>
     src: /images/KeyTone.png
@@ -15,10 +15,10 @@ hero:
                      ## 当图像无法加载时，浏览器会显示 alt 属性的内容作为替代文本，帮助用户理解原本应该显示的图像内容(大模型给的猜测)。
   actions:
     - theme: brand
-      text: Download
+      text: 下载
       link: https://github.com/LuSrackhall/KeyTone/releases
     - theme: alt
-      text: View On GitHub
+      text: 查看源码
       link: https://github.com/LuSrackhall/KeyTone
 
   # actions:
@@ -33,13 +33,14 @@ hero:
 
 
 features:
-  - title: Ready to use out of the box
-    details: Can simulate the sound of keyboard strokes in real-time.
-  - title:  Attention to detail
-    details: The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
-  - title: Open Source
-    details: This software is completely open source, feel safe to use and share it.
-    linkText: Source Code
-    link:  https://github.com/LuSrackhall/KeyTone
+  - title: 开箱即用
+    details: 可以实时模拟键盘敲击的声音。
+  - title: 注重细节
+    details: 按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。
+  - title: 代码开源
+    details: 我们致力于制作安全可靠的软件，本软件完全开源，用户可放心使用和传播。
+    linkText: 源码地址
+    link: https://github.com/LuSrackhall/KeyTone
 ---
+
 
