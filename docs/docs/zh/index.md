@@ -13,13 +13,13 @@ hero:
                      ## 屏幕阅读器会读取 alt 属性的内容，帮助视力障碍者理解图像的内容(大模型给的猜测)。  
                      ## 搜索引擎会使用 alt 属性的内容来理解图像的内容，从而更好地索引和排名网页。因此，合理使用 alt 属性有助于提升网页的搜索引擎排名(大模型给的猜测)。 
                      ## 当图像无法加载时，浏览器会显示 alt 属性的内容作为替代文本，帮助用户理解原本应该显示的图像内容(大模型给的猜测)。
-  actions:
-    - theme: brand
-      text: 下载
-      link: https://github.com/LuSrackhall/KeyTone/releases
-    - theme: alt
-      text: 查看源码
-      link: https://github.com/LuSrackhall/KeyTone
+  # actions:
+  #   - theme: brand
+  #     text: 下载
+  #     link: https://github.com/LuSrackhall/KeyTone/releases
+  #   - theme: alt
+  #     text: 查看源码
+  #     link: https://github.com/LuSrackhall/KeyTone
 
   # actions:
     # - theme: brand  # `theme`默认为brand, 代表按钮的背景颜色为蓝色; 此外, 还可以是另外一个值alt,代表按钮颜色为灰色
