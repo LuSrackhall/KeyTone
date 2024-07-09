@@ -8,6 +8,13 @@ export default defineConfig({
   title: "KeyTone",
   // description: "In silence, let your keyboard bring forth pleasing sounds.",
   description: "Can simulate the sound of keyboard strokes in real-time",
+
+  head: [
+    // ['link', {rel: 'icon', type: 'image/svg+xml', href: '/images/logo.svg'}], // 到时候需要整个应用图标才靠谱(为了保证图标在浏览器中的兼容性, 即使有了svg图标, 也要仍旧保留一个png的图标, 防止某些浏览器不支持svg图标的情况)
+    ["link", { rel: "icon", type: "image/png", href: "/images/KeyTone.png" }], // 虽然不合适, 但目前确实没有图标可用
+    // 下方还可以定义一些网站分析的脚本, 来分析下本网站的浏览量规模
+  ],
+
   cleanUrls: true, // WARN: 设置成true, 可以使得url后面没有.html, 不过对于部署来说, 对不同的部署方式需要额外配置, 才能支持此功能。
 
   // assetsDir: "static",  // 这个是build后,spa页面静态资源的目录, 默认为assetsDir。
@@ -36,6 +43,10 @@ export default defineConfig({
     // ],
 
     socialLinks: [{ icon: "github", link: "https://github.com/LuSrackhall/KeyTone" }],
+
+    search: {
+      provider: "local",
+    },
   },
 
   locales: {
