@@ -14,6 +14,10 @@ export const enConfig: Config = {
   // 应用的changelog内容中要注意, 由于个人习惯使用<>, 但<>内容中如果是英文的开头, 则需要一个空格, 否则会造成在页面上解析失败的报错。如<Ni Hao>要改成< Ni Hao>才行。
 
   themeConfig: {
+    // sidebarMenuLabel: "Menu",  // 默认为"Menu", 无需显示配置
+    // returnToTopLabel: "Return to top",  // 默认为"Return to top", 无需显示配置
+    // aside: true, // 默认为true, 则页面导航显示在右边, 配置false则关闭显示, 配置"left"则页面导航会显示在左边。如果想对所有页面禁用它，应该使用 outline: false。
+    outline: { level: 3, label: "On this page" }, // level:3 代表只显示3级标题<即会忽略1、2、4、5、6级标题>, 如果想显示更多的标题级别, 可以通过数组来配置level, 如level:[2,3,4,5]这样子配置<不过需要注意的是, 请确保你的文章中真的有这些标题级别, 若是你没有4级标题却有2,3,5级标题, 请配置level:[2,3,5]>
     nav: [
       { text: "Home", link: "/" },
       // { text: "User Guide", link: "/guide/", activeMatch: "/guide/" },
