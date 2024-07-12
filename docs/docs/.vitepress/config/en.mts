@@ -8,10 +8,24 @@ interface Config extends LocaleSpecificConfig {
   // link?: string; // 当前配置作为root使用, 因此不能配置link字段来自定义url后缀, 否则会引起主页面异常。
 }
 
+export const META_URL = "https://keytone.xuanhall.com";
+export const META_TITLE = "KeyTone";
+export const META_DESCRIPTION =
+  "Can simulate the sound of keyboard strokes in real-time, supports multi-platform Windows, Mac and Linux, easy fast installation. The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time. Ready to use out of the box, Attention to detail, In silence, let your keyboard bring forth pleasing sounds.";
+
 export const enConfig: Config = {
   label: "English",
   lang: "en",
   // 应用的changelog内容中要注意, 由于个人习惯使用<>, 但<>内容中如果是英文的开头, 则需要一个空格, 否则会造成在页面上解析失败的报错。如<Ni Hao>要改成< Ni Hao>才行。
+
+  description: META_DESCRIPTION,
+  head: [
+    ["meta", { property: "og:url", content: META_URL }],
+    ["meta", { property: "og:description", content: META_DESCRIPTION }],
+    ["meta", { property: "twitter:url", content: META_URL }],
+    ["meta", { property: "twitter:title", content: META_TITLE }],
+    ["meta", { property: "twitter:description", content: META_DESCRIPTION }],
+  ],
 
   themeConfig: {
     // sidebarMenuLabel: "Menu",  // 默认为"Menu", 无需显示配置

@@ -8,10 +8,24 @@ interface Config extends LocaleSpecificConfig {
   link?: string; // 当前配置不用于root, 因此可以配置link字段来自定义url后缀。
 }
 
+export const META_URL = "https://keytone.xuanhall.com";
+export const META_TITLE = "KeyTone";
+export const META_DESCRIPTION =
+  "可以实时模拟键盘敲击的声音, 支持多平台Windows、Mac和Linux系统, 安装简单迅速。按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。开箱即用, 注重细节, 在寂静中，让您的键盘唤醒舒适的声音。";
+
 export const zhConfig: Config = {
   label: "中文",
   lang: "zh",
   // link: "/zh/test", // 这个是用于改变默认url的后缀的<默认的url后缀名获取方式, 参考当前项目.vitepress/config.mts中locales字段内容的注释介绍方可获悉>。
+
+  description: META_DESCRIPTION,
+  head: [
+    ["meta", { property: "og:url", content: META_URL }],
+    ["meta", { property: "og:description", content: META_DESCRIPTION }],
+    ["meta", { property: "twitter:url", content: META_URL }],
+    ["meta", { property: "twitter:title", content: META_TITLE }],
+    ["meta", { property: "twitter:description", content: META_DESCRIPTION }],
+  ],
 
   themeConfig: {
     sidebarMenuLabel: "菜单",
