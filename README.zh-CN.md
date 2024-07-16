@@ -48,6 +48,10 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 
 开箱即用 -->
 
+## 路线图
+
+项目的路线图可以在[这里](https://github.com/LuSrackhall/KeyTone/milestones)找到。在创建增强请求之前，请先查阅它。😊
+
 ## 问题
 
 欢迎任何想法!

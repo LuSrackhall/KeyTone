@@ -44,6 +44,10 @@ In addition, KeyTone is an open-source software that follows the GPL license.
 * Install and open it.
 * Enjoy it.
 
+## Roadmap
+
+The project roadmap may be found [here](https://github.com/LuSrackhall/KeyTone/milestones). Please consult it before creating an enhancement request.😊
+
 ## Issues
 
 Any ideas are welcome!
