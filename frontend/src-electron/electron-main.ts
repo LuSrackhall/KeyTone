@@ -173,8 +173,14 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // 当运行第二个实例时,将会聚焦到myWindow这个窗口
     if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+        mainWindow.focus();
+      }
+      // 如果窗口不再前台(或没有展示或隐藏), 则显示窗口。
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+      }
     }
   });
 
