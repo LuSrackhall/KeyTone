@@ -97,8 +97,26 @@ function createWindow() {
   enable(mainWindow.webContents);
 
   mainWindow.loadURL(process.env.APP_URL);
+
+  // 这三行配合上面的`show:false`, 可以使得前端页面加载完毕后再显示窗口。
+  // 作用是: 牺牲的窗口启动速度, 来避免窗口启动后白屏加载前端的糟糕体验。
   mainWindow.on('ready-to-show', () => {
-    mainWindow?.show();
+    // 注释掉, 包含在后续判断的else中。
+    // mainWindow?.show();
+
+    // 这个"可能"用于配合官方库, 来实现自动隐藏启动的功能。(未验证)
+    // if (app.getLoginItemSettings().wasOpenedAtLogin) {
+    //   mainWindow?.hide();
+    // } else {
+    //   mainWindow?.show();
+    // }
+
+    // 这个用于配合改用第三方库node-auto-launch, 来实现自动隐藏启动的功能。
+    if (process.argv[1] == '--hidden') {
+      mainWindow?.hide();
+    } else {
+      mainWindow?.show();
+    }
   });
 
   if (process.env.DEBUGGING) {
@@ -194,6 +212,49 @@ if (!gotTheLock) {
     createTray();
   });
 }
+
+//#region    -----<<<<<<<<<<<<<<<<<<<< -- 开机自启动 start ^_^-_-^_^
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// // * 官方提供的开机自动启动的api(由于不支持全平台, 且在macos上, 存在与第三方库相同的问题, 因此本项目弃用此api)
+// app.setLoginItemSettings({
+//   openAtLogin: true,
+//   // openAsHidden: true, // 功能为以隐藏模式打开。(仅在windows中可用, 因为对于macos不支持MAS和从macos13起及更高的版本<基本等于不可用>故弃用此选项)
+// });
+
+// * 改用第三方库[node-auto-launch](https://github.com/Teamwork/node-auto-launch)来实现开机自启动的功能。
+const AutoLaunch = require('auto-launch');
+
+// 创建一个 AutoLaunch 实例
+const autoLauncher = new AutoLaunch({
+  name: 'KeyTone',
+  // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
+  isHidden: true,
+});
+
+// 启动时检查并设置自动启动
+autoLauncher
+  .isEnabled()
+  .then((isEnabled: any) => {
+    // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
+    if (!isEnabled) {
+      autoLauncher.enable(); // 开启自启动
+    }
+
+    // // 如果应用已设置在开机时自启动, 则主动设置关闭自启动。 此判断仅为防止防止重复关闭。
+    // if (isEnabled) {
+    //   autoLauncher.disable(); // 关闭自启动
+    // }
+  })
+  .catch((err: any) => {
+    console.error('Error checking auto-launch status:', err);
+  });
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//#endregion ----->>>>>>>>>>>>>>>>>>>> -- 开机自启动 end   -_-^_^-_- ^_^-_-^_^-_-
+// ...
+// ...
+// ...
+//!endregion ----->>>>>>>>>>>>>>>>>>>> -- 开机自启动 end   -_-^_^-_- ^_^-_-^_^-_-
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') {
