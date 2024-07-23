@@ -1,13 +1,52 @@
 package main
 
 import (
+	"KeyTone/config"
 	"KeyTone/keySound"
+	"KeyTone/server"
+	"flag"
+	"fmt"
+	"os"
 
 	hook "github.com/robotn/gohook"
 )
 
 func main() {
 
+	// 获取命令行参数中的配置文件路径
+	{
+		// 如果不需要默认参数, 则可直接使用os包来获取参数变量
+		// config.ConfigRun(os.Args[1])
+
+		// 如果需要默认参数, 则使用专门的库来解析获取参数变量
+		// * 此功能需要使用命令行参数解析库, 最简单的有个官方库flag
+		// * 对于复杂的命令行交互, 推荐使用第三方库[cobra](https://github.com/spf13/cobra) 或 [cli](https://github.com/urfave/cli)
+
+		// 定义命令行参数
+		var configPath string
+
+		// 如果路径不存在, 则使用当前目录作为路径
+		// * 第一个参数是指向一个字符串变量的指针，用于存储解析后的值。
+		// * 第二个参数是命令行参数的名称（在命令行中使用）。  用户在使用时 go run main.go -configPath=./path
+		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
+		// * 第四个参数是这个参数的描述（帮助信息）。
+		flag.StringVar(&configPath, "configPath", ".", "Path to the config file")
+
+		// 解析命令行参数
+		flag.Parse()
+
+		// 使用命令行参数
+		{
+			// 检查指定的路径是否存在
+			if _, err := os.Stat(configPath); os.IsNotExist(err) {
+				fmt.Println("指定的路径不存在，使用当前目录")
+				configPath = "." // 使用当前目录
+			}
+			config.ConfigRun(configPath)
+		}
+	}
+
+	go server.ServerRun()
 	keyEventListen()
 }
 
