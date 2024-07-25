@@ -27,7 +27,8 @@ const logsDirPath = path.join(logsDir, 'log.jsonl');
 // console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuu=', logsDirPath);
 
 // 确保路径是可用路径(若发现路径不存在, 则递归创建)
-const fs = require('fs');
+// const fs = require('fs');
+import fs from 'fs';
 if (!fs.existsSync(databasesDir)) {
   fs.mkdirSync(databasesDir, { recursive: true });
 }
@@ -35,6 +36,7 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
+import cp from 'child_process';
 // TIPS: 在最前面进行, 是因为防止启动后因子进程未能及时的成功启动, 而触发强制用户选择ip的模态窗口。
 if (process.env.DEBUGGING) {
   // TIPS: win平台下, 想要执行二进制文件, 请注意其只认.exe为扩展名的二进制文件(或其它如.bat .cmd等之类的非二进制文件)。
@@ -55,7 +57,7 @@ if (process.env.DEBUGGING) {
   //   stdio: 'ignore',
   // });
 } else {
-  const cp = require('child_process');
+  // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
   const sdkProcessParameter = [''];
@@ -222,7 +224,8 @@ if (!gotTheLock) {
 // });
 
 // * 改用第三方库[node-auto-launch](https://github.com/Teamwork/node-auto-launch)来实现开机自启动的功能。
-const AutoLaunch = require('auto-launch');
+// const AutoLaunch = require('auto-launch');
+import AutoLaunch from 'auto-launch';
 
 // 创建一个 AutoLaunch 实例
 const autoLauncher = new AutoLaunch({
