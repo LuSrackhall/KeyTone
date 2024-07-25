@@ -3,27 +3,37 @@ package main
 import (
 	"KeyTone/config"
 	"KeyTone/keySound"
+	"KeyTone/logger"
 	"KeyTone/server"
 	"flag"
-	"fmt"
+	"log/slog"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	hook "github.com/robotn/gohook"
 )
 
-func main() {
+func init() {
 
-	// 获取命令行参数中的配置文件路径
+	// 设置环境变量
+	err := godotenv.Load()
+	// 在 InitLogger 之前, 使用slog的log信息(与我们的logger模块无关), 此类信息仅在终端上看即可, 输出到日志中也无意义。
+	if err != nil {
+		// 没必要因为这个err退出程序, .env文件在本项目中, 主要作为开发文件使用。(后面真要上配置文件的话, 也是使用.json格式的)
+		slog.Warn("无法加载.env文件", "err", err)
+	} else {
+		slog.Info(".env文件已被正确加载", "SDK_MODE", os.Getenv("SDK_MODE"))
+	}
+
+	// 定义配置文件路径的命令行参数
+	var configPath string
+	// 定义日志文件路径的命令行参数
+	var logPathAndName string
+
+	// 获取命令行参数中的传入值
 	{
-		// 如果不需要默认参数, 则可直接使用os包来获取参数变量
-		// config.ConfigRun(os.Args[1])
-
-		// 如果需要默认参数, 则使用专门的库来解析获取参数变量
-		// * 此功能需要使用命令行参数解析库, 最简单的有个官方库flag
-		// * 对于复杂的命令行交互, 推荐使用第三方库[cobra](https://github.com/spf13/cobra) 或 [cli](https://github.com/urfave/cli)
-
-		// 定义命令行参数
-		var configPath string
 
 		// 如果路径不存在, 则使用当前目录作为路径
 		// * 第一个参数是指向一个字符串变量的指针，用于存储解析后的值。
@@ -31,21 +41,64 @@ func main() {
 		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
 		// * 第四个参数是这个参数的描述（帮助信息）。
 		flag.StringVar(&configPath, "configPath", ".", "Path to the config file")
+		flag.StringVar(&logPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
 
 		// 解析命令行参数
 		flag.Parse()
 
 		// 使用命令行参数
+		// ...
+
+	}
+
+	// 初始化模块
+	{
+
+		// 初始化日志模块(并顺便初始化gin的MODE), 主要是为了输出到日志中, 便于在用户使用过程中记录bug数据。
+		{
+			logger.InitLogger(logPathAndName)
+
+			// 设置日志级别(此处主要用于开发过程中, 自己可随时进行调整的级别设置)
+			logger.ProgramLevel.Set(slog.LevelDebug)
+			// logger.ProgramLevel.Set(slog.LevelInfo)
+			// logger.ProgramLevel.Set(slog.LevelWarn)
+			// logger.ProgramLevel.Set(slog.LevelError)
+
+			if os.Getenv("SDK_MODE") != "debug" {
+				// 设置log库, 在正式release中的默认级别
+				logger.ProgramLevel.Set(slog.LevelInfo)
+
+				// 设置 gin 框架, 在正式release中的 MODE 为 "release"
+				gin.SetMode(gin.ReleaseMode)
+			}
+
+			logger.Info("日志模块已开始正常运行, Getenv值已获取。 ", "SDK_MODE", os.Getenv("SDK_MODE"), "GIN_MODE", os.Getenv("GIN_MODE"))
+		}
+
+		// 初始化配置模块
 		{
 			// 检查指定的路径是否存在
 			if _, err := os.Stat(configPath); os.IsNotExist(err) {
-				fmt.Println("指定的路径不存在，使用当前目录")
-				configPath = "." // 使用当前目录
+				// 如果路径不存在，创建路径
+				err := os.MkdirAll(configPath, os.ModePerm)
+				if err != nil {
+					logger.Error("配置文件路径创建时出错。", "err", err.Error())
+				} else {
+					logger.Info("配置文件路径创建成功。", "你的配置文件路径为", configPath)
+				}
+			} else if err != nil {
+				logger.Error("检查配置文件路径时出错。", "err", err.Error())
+			} else {
+				logger.Info("配置文件路径已存在且无异常。", "你的配置文件路径为", configPath)
 			}
 			config.ConfigRun(configPath)
 		}
+
 	}
 
+}
+
+func main() {
 	go server.ServerRun()
 	keyEventListen()
 }
@@ -78,10 +131,10 @@ func keyEventListen() {
 			// 	println(ev.Keycode) // 按下时, 由于goHook的bug, 故无法判断实际的Keycode, 因此我们不使用这个事件。
 			// }
 			if _, exists := keycode_keycodeChan_map[ev.Keycode]; exists {
-				// fmt.Println("此时已经有了处理此按键发音的通道与其专用的goroutine, 因此无需进行任何创建操作, 只需要向其传递最新的事件信号即可")
+				// logger.Debug("此时已经有了处理此按键发音的通道与其专用的goroutine, 因此无需进行任何创建操作, 只需要向其传递最新的事件信号即可")
 				keycode_keycodeChan_map[ev.Keycode] <- ev
 			} else {
-				// fmt.Println("此时还没有处理此按键发音的通道与其专用的goroutine, 因此需进行相关的创建操作, 并在创建后向其传递最新的事件信号")
+				// logger.Debug("此时还没有处理此按键发音的通道与其专用的goroutine, 因此需进行相关的创建操作, 并在创建后向其传递最新的事件信号")
 				// 创建此按键的专属通道channel
 				keycode_keycodeChan_map[ev.Keycode] = make(chan hook.Event)
 				// 创建此按键专属 按键事件处理 的 goroutine

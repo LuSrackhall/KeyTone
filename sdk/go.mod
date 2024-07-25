@@ -55,6 +55,7 @@ require (
 	github.com/ebitengine/oto/v3 v3.1.0 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/gin-contrib/cors v1.7.2
+	github.com/joho/godotenv v1.5.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/viper v1.19.0
 	github.com/vcaesar/keycode v0.10.1 // indirect
