@@ -57,7 +57,6 @@ var bufferKeyDownSound *beep.Buffer
 var bufferKeyUpSound *beep.Buffer
 
 func initKeyDownSoundBuffer() {
-	// fmt.Println("sounds/test_down.wav")
 	audioFile, err := sounds.Open("sounds/test_down.wav")
 	if err != nil {
 		panic(err)
@@ -77,7 +76,6 @@ func initKeyDownSoundBuffer() {
 }
 
 func initKeyUpSoundBuffer() {
-	// fmt.Println("sounds/test_up.wav")
 	audioFile, err := sounds.Open("sounds/test_up.wav")
 	if err != nil {
 		panic(err)

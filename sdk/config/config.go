@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"KeyTone/logger"
 
 	"github.com/spf13/viper"
 )
@@ -20,22 +20,22 @@ func ConfigRun(path string) {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到，创建默认设置的配置文件
-			fmt.Println("未找到设置文件，正在创建...")
+			logger.Info("未找到默认的配置文件，正在创建...")
 			createDefaultSetting()
 		} else {
 			// 其他错误
-			fmt.Printf("读取设置文件时出错: %s", err)
+			logger.Error("读取设置文件时发生致命错误", "err", err.Error())
 		}
 	}
 
 	// 使用配置
 	value := viper.GetString("key")
-	fmt.Println("Value:", value)
+	logger.Debug("打印测试用的key值", "value", value)
 
 	// 设置新配置值, 并将设置的值保存到配置文件
 	viper.Set("key", "newValue")
 	if err := viper.WriteConfig(); err != nil {
-		fmt.Printf("写入设置时出错, 错误为: %s", err)
+		logger.Error("向配置文件保存设置时发生致命错误", "err", err.Error())
 	}
 }
 
@@ -43,6 +43,7 @@ func ConfigRun(path string) {
 func createDefaultSetting() {
 	viper.Set("key", "defaultValue")
 	if err := viper.SafeWriteConfig(); err != nil {
-		fmt.Printf("创建默认设置文件时出错, 错误为: %s", err)
+		logger.Error("创建默认设置文件时发生致命错误", "err", err.Error())
+
 	}
 }
