@@ -7,6 +7,7 @@ import { app, BrowserWindow, Tray, Menu, ipcMain, shell } from 'electron';
 import { initialize, enable } from '@electron/remote/main';
 import path from 'path';
 import os from 'os';
+import { StoreGet, StoreSet } from 'boot/query/store-query';
 
 // 初始化 @electron/remote 模块，使其可以在主进程和渲染进程之间进行通信。
 initialize();
@@ -56,15 +57,19 @@ if (process.env.DEBUGGING) {
   //         应用的安装程序中包含这些额外的可执行文件，并且在安装过程中将它们放置在合适的位置(或通过makefile让其在编译后直
   //         接到这个目录中去)。然后在 Electron 应用中用正确的路径来引用这些文件。(也因此, 注释了dev模式下的这个)
   // const cp = require('child_process');
-  // const sdkProcess = cp.spawn('./src-electron/key_tone_sdk/key_tone_sdk.exe', [], {
-  //   detached: false,
-  //   stdio: 'ignore',
-  // });
+  // const sdkProcess = cp.spawn(
+  //   './src-electron/key_tone_sdk/key_tone_sdk.exe',
+  //   ['-configPath=../sdk'],
+  //   {
+  //     detached: false,
+  //     stdio: 'ignore',
+  //   }
+  // );
 } else {
   // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = [''];
+  const sdkProcessParameter = ['-configPath=' + databasesDir];
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
     stdio: 'ignore',
@@ -231,30 +236,81 @@ if (!gotTheLock) {
 // const AutoLaunch = require('auto-launch');
 import AutoLaunch from 'auto-launch';
 
-// 创建一个 AutoLaunch 实例
-const autoLauncher = new AutoLaunch({
-  name: 'KeyTone',
-  // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
-  isHidden: true,
-});
+// 由于首次启动时, sdk的web服务可能还未能准备好, 因此通过递归的方式, 来保证获取到正确的配置值。
+// * 这只是临时取巧方式, 通用解决方案应该是明确架构出整个生命周期, 来保证整个项目的整体执行顺序。
+// * * 比如, 可以通过整体的轮询监听, 或是通过sse, 来保证初始化electron时, sdk是已经启动好的, 从而明确生命周期(不过这样可能会对界面的启动速度有影响<主要指客户端ui的创建速度>)。
+// * 当然, 也可以通过sse, 仅对对应需要明确顺序逻辑的依赖部分, 进行执行顺序的明确。 (避免影响electron的应用启动速度<主要指客户端ui的创建速度>)
+// * 也可以退一步, 加个延时或直接上轮询, 以避免快速的递归造成短期的cpu消耗过度。
+function autoRunInit() {
+  StoreGet('auto_startup').then((value) => {
+    if (value === false) {
+      console.log('value的值是false', value);
+      autoRunInit();
+    } else {
+      // 从此可判断, 我们获取到的value, 已经解析过JSON了, 直接是最终对象。
+      console.log('解析value前', typeof value.is_auto_run);
 
-// 启动时检查并设置自动启动
-autoLauncher
-  .isEnabled()
-  .then((isEnabled: any) => {
-    // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
-    if (!isEnabled) {
-      autoLauncher.enable(); // 开启自启动
+      // 创建一个 AutoLaunch 实例
+      const autoLauncher = new AutoLaunch({
+        name: 'KeyTone',
+        // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
+        isHidden: value.is_hide_windows,
+      });
+
+      // 启动时检查并设置自动启动
+      autoLauncher
+        .isEnabled()
+        .then((isEnabled: any) => {
+          // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
+          if (
+            (!isEnabled && value.is_auto_run) ||
+            (isEnabled && value.is_hide_windows !== value.is_hide_windows_old)
+          ) {
+            // if (value.is_auto_run) { // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
+
+            autoLauncher.enable().then(() => {
+              // 如果窗口是否隐藏改变了, 则需要更新is_hide_windows_old以记录最新情况。 (由于我们为了防止重复设置, 只有在关闭自启动, 并开启自启动时, 才会触发重新设置自启动)
+              if (value.is_hide_windows !== value.is_hide_windows_old) {
+                StoreSet(
+                  'auto_startup.is_hide_windows_old',
+                  value.is_hide_windows
+                );
+              }
+            }); // 开启自启动
+          }
+
+          // // 如果应用已设置在开机时自启动, 则主动设置关闭自启动。 此判断仅为防止防止重复关闭。
+          if (isEnabled && !value.is_auto_run) {
+            // if (!value.is_auto_run) {
+            // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
+            autoLauncher.disable(); // 关闭自启动
+          }
+
+          // 此部分因重复, 故已集成至首个判断语句
+          // if (
+          //   isEnabled &&
+          //   value.is_hide_windows !== value.is_hide_windows_old
+          // ) {
+          //   StoreSet('auto_startup.is_hide_windows_old', value.is_hide_windows); // 更新is_hide_windows_old以记录最新情况。
+          //   autoLauncher.disable().then(() => {
+          //     autoLauncher.enable(); // 开启自启动  <要确确保在then的disable执行之后>
+          //   }); // 关闭自启动
+
+          //   // autoLauncher.enable(); // 开启自启动(不用先关闭再开启, 直接重新调用即可完成is_hide_windows的设置)
+          // }
+        })
+        .catch((err: any) => {
+          console.error('Error checking auto-launch status:', err);
+        });
     }
-
-    // // 如果应用已设置在开机时自启动, 则主动设置关闭自启动。 此判断仅为防止防止重复关闭。
-    // if (isEnabled) {
-    //   autoLauncher.disable(); // 关闭自启动
-    // }
-  })
-  .catch((err: any) => {
-    console.error('Error checking auto-launch status:', err);
   });
+}
+
+// 后续可轮询此函数, 以避免重启后才能生效的问题。<似乎不起作用, 只能提示用户重启客户端后生效了, 或是直接在客户端帮助用户强制重启客户端>
+// 或者, 也可通过sse来触发其重新调用<更为复杂些, 甚至要监听配置文件的变更情况>。<似乎不起作用-<未验证>, 只能提示用户重启客户端后生效了, 或是直接在客户端帮助用户强制重启客户端>
+autoRunInit();
+// 请放弃不重启就成功的重新设置自启动的不成熟想法, 不然只会再浪费3天的时间。
+// setInterval(() => { },500)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //#endregion ----->>>>>>>>>>>>>>>>>>>> -- 开机自启动 end   -_-^_^-_- ^_^-_-^_^-_-

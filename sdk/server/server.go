@@ -1,6 +1,11 @@
 package server
 
 import (
+	"KeyTone/config"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -22,17 +27,65 @@ func ServerRun() {
 }
 
 func mainRouters(r *gin.Engine) {
-	mainSettingRouters := r.Group("/main-setting")
+	settingStoreRouters := r.Group("/store")
 
-	// 给到'客户端'使用, 供其判断如何设置自启动功能
-	mainSettingRouters.GET("/get-is-auto-run", func(ctx *gin.Context) {
+	// 给到'客户端'或'前端'使用, 供它们获取持久化的设置。
+	settingStoreRouters.GET("/get", func(ctx *gin.Context) {
+
+		// key := ctx.Query("key")
+		key := ctx.DefaultQuery("key", "unknown")
+
+		if key == "unknown" || key == "" {
+			ctx.JSON(200, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容key值, 不符合接口规定格式:",
+			})
+			return
+		}
+
+		value := config.GetValue(key)
+
+		fmt.Println("查询到的value= ", value)
+
 		ctx.JSON(200, gin.H{
 			"message": "ok",
+			"key":     key,
+			// 这里的value, 会自动转换为JSON字符串
+			"value": value,
 		})
 	})
 
-	// 给到'前端'使用, 供其ui界面实现应用自启动的设置功能
-	mainSettingRouters.GET("/setting-is-auto-run", func(ctx *gin.Context) {
+	// 给到'前端'使用, 供其ui界面实现应用的设置功能
+	settingStoreRouters.POST("/set", func(ctx *gin.Context) {
+		type SettingStore struct {
+			Key   string `json:"key"`
+			Value string `json:"value"`
+		}
+
+		var store_setting SettingStore
+		err := ctx.ShouldBind(&store_setting)
+		if err != nil || store_setting.Key == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容key值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		// 定义一个空的 map，用于存放解析后的数据
+		// var value map[string]interface{}
+		var value any
+
+		// 解析 JSON 字符串
+		err = json.Unmarshal([]byte(store_setting.Value), &value)
+		if err != nil {
+			fmt.Println("Value JSON string 解析出错:", err)
+			ctx.JSON(200, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容value值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		config.SaveNewValue(store_setting.Key, value)
+
 		ctx.JSON(200, gin.H{
 			"message": "ok",
 		})
