@@ -17,12 +17,16 @@ const appDir = path.dirname(app.getAppPath());
 // const key_tone_sdk_name = 'win32' === process.platform ? 'SiYuan-Kernel.exe' : 'SiYuan-Kernel';
 const key_tone_sdk_path = path.join(appDir, 'key_tone_sdk', 'key_tone_sdk.exe');
 
-const databasesDir = path.join(app.getPath('appData'), 'KeyTone', 'Database');
+const databasesDir = path.join(
+  app.getPath('appData'),
+  'KeyToneGoSdk', // 为了和electron原生与前端持久化区域做区分, 我们sdk依赖将使用独立的持久化路径
+  'Database'
+);
 const dbPath = path.join(databasesDir, 'key_tone.db');
 
 // console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuu=', dbPath);
-const logsDir = path.join(app.getPath('home'), '.config', 'KeyTone');
-const logsDirPath = path.join(logsDir, 'log.jsonl');
+const logsDir = path.join(app.getPath('home'), '.config', 'KeyToneGoSdk');
+const logsDirPath = path.join(logsDir, 'KeyToneSdkLog.jsonl');
 
 // console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuu=', logsDirPath);
 

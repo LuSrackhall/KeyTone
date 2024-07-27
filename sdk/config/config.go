@@ -9,7 +9,7 @@ import (
 // Setting.json is the configuration for the application
 func ConfigRun(path string) {
 	// 设置配置文件名称和类型
-	viper.SetConfigName("setting")
+	viper.SetConfigName("KeyToneSetting")
 	viper.SetConfigType("json")
 
 	// 添加配置文件路径
