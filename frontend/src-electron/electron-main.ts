@@ -126,7 +126,21 @@ function createWindow() {
     if (process.argv[1] == '--hidden') {
       mainWindow?.hide();
     } else {
-      mainWindow?.show();
+      // 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
+      (function startupSetting() {
+        StoreGet('startup').then((value) => {
+          if (value === false) {
+            startupSetting();
+          } else {
+            if (value.is_hide_windows) {
+              // 如果'is_hide_windows' 为 true , 则隐藏窗口
+              mainWindow?.hide();
+            } else {
+              mainWindow?.show();
+            }
+          }
+        });
+      })();
     }
   });
 
@@ -200,17 +214,37 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // 当运行第二个实例时,将会聚焦到myWindow这个窗口
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore();
-        mainWindow.focus();
-      }
-      // 如果窗口不再前台(或没有展示或隐藏), 则显示窗口。
-      if (!mainWindow.isVisible()) {
-        mainWindow.show();
-      }
-    }
+    // 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
+    (function startupSetting() {
+      StoreGet('startup').then((value) => {
+        if (value === false) {
+          startupSetting();
+        } else {
+          if (value.is_hide_windows) {
+            // 如果默认隐藏, 则不作任何展示操作, 仅聚焦
+            // 当运行第二个实例时,将会聚焦到myWindow这个窗口
+            if (mainWindow) {
+              if (mainWindow.isMinimized()) {
+                mainWindow.restore();
+                mainWindow.focus();
+              }
+            }
+          } else {
+            // 当运行第二个实例时,将会聚焦到myWindow这个窗口
+            if (mainWindow) {
+              if (mainWindow.isMinimized()) {
+                mainWindow.restore();
+                mainWindow.focus();
+              }
+              // 如果窗口不再前台(或没有展示或隐藏), 则显示窗口。
+              if (!mainWindow.isVisible()) {
+                mainWindow.show();
+              }
+            }
+          }
+        }
+      });
+    })();
   });
 
   // 创建窗口的代码

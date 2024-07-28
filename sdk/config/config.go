@@ -89,6 +89,11 @@ func createDefaultSetting() {
 		"is_hide_windows_old": true,
 	})
 
+	// 手动打开应用时的默认设置
+	viper.Set("startup", map[string]interface{}{
+		"is_hide_windows": false,
+	})
+
 	if err := viper.SafeWriteConfig(); err != nil {
 		logger.Error("创建默认设置文件时发生致命错误", "err", err.Error())
 	}
