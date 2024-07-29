@@ -5,7 +5,14 @@
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
   <q-page style="min-height: 0px">
-    <div :class="['', 'w-auto h-60 flex flex-col items-center']">
+    <div
+      :class="[
+        '',
+        'w-auto h-60 flex flex-col items-center',
+        // 使页面文本无法选择, 免得影响界面体验。
+        'select-none',
+      ]"
+    >
       <q-avatar
         :class="[
           '',
@@ -15,7 +22,8 @@
           '',
         ]"
       >
-        <img :src="logoUrl" />
+        <!-- draggable="false"使得图片无法拖动, 免得影响界面体验 -->
+        <img :src="logoUrl" draggable="false" />
       </q-avatar>
     </div>
   </q-page>
