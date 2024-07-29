@@ -3,5 +3,5 @@
 /commitlint.config.js
 /package-lock.json
 /package.json
-/sdk/setting.json
+/sdk/KeyToneSetting.json
 /sdk/log.jsonl

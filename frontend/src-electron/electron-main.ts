@@ -69,7 +69,10 @@ if (process.env.DEBUGGING) {
   // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = ['-configPath=' + databasesDir];
+  const sdkProcessParameter = [
+    '-configPath=' + databasesDir,
+    '-logPathAndName=' + logsDirPath,
+  ];
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
     stdio: 'ignore',

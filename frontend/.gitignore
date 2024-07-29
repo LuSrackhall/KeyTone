@@ -38,3 +38,4 @@ yarn-error.log*
 
 # log  (这个log文件可能会在调试时, 被作为sdk内二进制文件的当前路径, 因此我们忽略它)
 log.jsonl
+KeyToneSetting.json
