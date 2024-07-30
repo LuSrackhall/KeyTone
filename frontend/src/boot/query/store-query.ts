@@ -1,5 +1,5 @@
 import { api } from 'boot/axios';
-export async function StoreSet(key: string, value: string) {
+export async function StoreSet(key: string, value: any) {
   api
     .post('/store/set', {
       key: key,
