@@ -1,6 +1,6 @@
 /node_modules
 /.husky
-/commitlint.config.js
+# /commitlint.config.js
 /package-lock.json
 /package.json
 /sdk/KeyToneSetting.json
