@@ -3,7 +3,7 @@ export async function StoreSet(key: string, value: any) {
   api
     .post('/store/set', {
       key: key,
-      value: JSON.stringify(value),
+      value: value,
     })
     .then((req) => {
       console.debug('status=', req.status, '->StoreSet 请求已成功执行并返回->', req.data);

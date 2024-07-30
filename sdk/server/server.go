@@ -2,7 +2,6 @@ package server
 
 import (
 	"KeyTone/config"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -58,7 +57,7 @@ func mainRouters(r *gin.Engine) {
 	settingStoreRouters.POST("/set", func(ctx *gin.Context) {
 		type SettingStore struct {
 			Key   string `json:"key"`
-			Value string `json:"value"`
+			Value any    `json:"value"`
 		}
 
 		var store_setting SettingStore
@@ -70,21 +69,7 @@ func mainRouters(r *gin.Engine) {
 			return
 		}
 
-		// 定义一个空的 map，用于存放解析后的数据
-		// var value map[string]interface{}
-		var value any
-
-		// 解析 JSON 字符串
-		err = json.Unmarshal([]byte(store_setting.Value), &value)
-		if err != nil {
-			fmt.Println("Value JSON string 解析出错:", err)
-			ctx.JSON(200, gin.H{
-				"message": "error: 参数接收--收到的前端数据内容value值, 不符合接口规定格式:" + err.Error(),
-			})
-			return
-		}
-
-		config.SaveNewValue(store_setting.Key, value)
+		config.SaveNewValue(store_setting.Key, store_setting.Value)
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
