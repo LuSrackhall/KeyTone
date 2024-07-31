@@ -69,10 +69,7 @@ if (process.env.DEBUGGING) {
   // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = [
-    '-configPath=' + databasesDir,
-    '-logPathAndName=' + logsDirPath,
-  ];
+  const sdkProcessParameter = ['-configPath=' + databasesDir, '-logPathAndName=' + logsDirPath];
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
     stdio: 'ignore',
@@ -299,19 +296,13 @@ function autoRunInit() {
         .isEnabled()
         .then((isEnabled: any) => {
           // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
-          if (
-            (!isEnabled && value.is_auto_run) ||
-            (isEnabled && value.is_hide_windows !== value.is_hide_windows_old)
-          ) {
+          if ((!isEnabled && value.is_auto_run) || (isEnabled && value.is_hide_windows !== value.is_hide_windows_old)) {
             // if (value.is_auto_run) { // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
 
             autoLauncher.enable().then(() => {
               // 如果窗口是否隐藏改变了, 则需要更新is_hide_windows_old以记录最新情况。 (由于我们为了防止重复设置, 只有在关闭自启动, 并开启自启动时, 才会触发重新设置自启动)
               if (value.is_hide_windows !== value.is_hide_windows_old) {
-                StoreSet(
-                  'auto_startup.is_hide_windows_old',
-                  value.is_hide_windows
-                );
+                StoreSet('auto_startup.is_hide_windows_old', value.is_hide_windows);
               }
             }); // 开启自启动
           }
