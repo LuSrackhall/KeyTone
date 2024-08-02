@@ -6,26 +6,32 @@
   <q-layout view="hHh lpR lFr" style="min-height: 0px" class="sizeChange">
     <q-header elevated class="bg-primary text-white rounded-t-lg" style="width: calc(100% - 10px); right: 5px">
       <!-- TODO: 工具栏后续可以做的更丰富
-                 1. 可以根据非'/'路由路径, 使back按钮独立至Menu右面
-                 2. 可以对主题Label标题, 添加点击事件, 使其点击后可直接跳转至主页面路由路径'/'
+             - completed(已完成)    1. 可以根据非'/'路由路径, 使back按钮独立至Menu右面
+             - 过分设计, 无需解决   2. 可以对主题Label标题, 添加点击事件, 使其点击后可直接跳转至主页面路由路径'/'  (TIPS: 简单应用涉及的路径太浅, 没必要)
+             - completed(已完成)    3. 可以对每次页面变更, 在工具栏中心位置展示页面Label (此时可以把back按钮, 放到Label的左边, 感觉会更好)
+             - 过分设计, 无需解决   4. 更进一步, 可以整一个更完善的路由Label, 如 `设置`-`语言设置` + 左右滚动的窗口, 以让用户点击路径上任一节点即可跳转。
+                                      * 实现步骤也很容易, 只需要将 pageLabel 转换为对象, 其中包含相关对应的 to 属性即可。 ((TIPS: 简单应用涉及的路径太浅, 没必要))
       -->
       <q-bar class="q-electron-drag rounded-t-lg">
-        <q-btn
-          v-if="router.currentRoute.value.fullPath === '/'"
-          flat
-          dense
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-        <q-btn v-else dense flat round icon="keyboard_backspace" @click="back" />
-
+        <q-btn flat dense icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
         <!-- <q-btn flat dense round icon="keyboard_alt"></q-btn> -->
         <div class="flex">
           <div>{{ $t('KeyTone.KeyTone') }}</div>
           <div class="ml-2 text-xs pt-1.5">{{ version }}</div>
         </div>
 
+        <q-space />
+        <q-btn
+          v-if="router.currentRoute.value.fullPath !== '/'"
+          dense
+          flat
+          round
+          icon="keyboard_backspace"
+          @click="back"
+        />
+        <div class="flex">
+          <div>{{ pageLabel }}</div>
+        </div>
         <q-space />
 
         <q-btn dense flat icon="horizontal_rule" @click="minimize" />
@@ -58,8 +64,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+const $t = t;
 
 const version = process.env.APP_VERSION;
 
@@ -112,6 +122,14 @@ const router = useRouter();
 const back = () => {
   router.back();
 };
+
+const pageLabel = computed(() => {
+  if (router.currentRoute.value.fullPath.split('-')[0] === '/setting') {
+    return $t('KeyTone.setting.index');
+  } else {
+    return '';
+  }
+});
 </script>
 
 <style lang="scss" scoped>
