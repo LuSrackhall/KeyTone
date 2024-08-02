@@ -35,10 +35,14 @@ func RestoreDefaultSetting() {
 }
 
 // 获取配置
+// * 如果想获取这个json文件的所有配置, 则可用key="get_all_value"作为键值来查询
 func GetValue(key string) any {
 	// value := viper.GetString(key)
-	value := viper.Get(key)
-	return value
+	if key == "get_all_value" {
+		return viper.AllSettings()
+	} else {
+		return viper.Get(key)
+	}
 }
 
 // 设置新配置值, 并将设置的值保存到配置文件

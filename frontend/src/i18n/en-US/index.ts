@@ -1,8 +1,15 @@
-// This is just an example,
-// so you can safely delete all default props below
-
 export default {
-  keyTone: {
+  KeyTone: {
+    KeyTone: 'KeyTone',
     developer: 'Developer',
+    setting: { index: 'Setting', caption: '' },
+  },
+  setting: {
+    setting: 'Setting',
+    language: { index: 'Language', caption: '' },
+  },
+
+  language: {
+    'setting language': 'setting language/设置语言',
   },
 };
