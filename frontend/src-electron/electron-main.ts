@@ -9,6 +9,28 @@ import path from 'path';
 import os from 'os';
 import { StoreGet, StoreSet } from 'boot/query/store-query';
 
+// 未解决但于本项目已无影响FIXME: 只要引入 vue-i18n , 并使用它,  就会造成调试对话框无法独立打开。(猜测可能是影响了`process.env.DEBUGGING`的正常获取<如果真的是这样, 那就太严重了。(测试结果并没有影响这个环境变量的获取, 可以确定只是影响了`mainWindow.webContents.openDevTools({ mode: 'detach' });`这个api的功能效果)>)
+// import { createI18n } from 'vue-i18n';  // 直接复用前端boot中的i18n文件的导出即可, 没必要重复写代码
+// import messages from 'src/i18n';
+// const i18n = createI18n({
+//   locale: 'zh-CN',
+//   legacy: false,
+//   messages,
+// });
+// console.log('fffffffffffffffffffffff', i18n.global.t('setting.setting'));
+
+// const i = require('boot/i18n');  //node.js对ts的支持有点恶心, 因此不推荐使用这种导入方式
+// const i18n = i.i18n
+// setInterval(() => {
+// console.log('ffffffffffffffffffffffff', i.i18n.global.t('setting.setting'));
+// console.log('ffffffffffffffffffffffff', process.env.DEBUGGING);
+// }, 1000);
+
+import { i18n } from 'src/boot/i18n'; //node.js对ts的支持有点恶心, 所以推荐使用这种导入方式, 复用es, 使ts可以更好的支持
+// setInterval(() => {
+//   console.log('ffffffffffffffffffffffff', i18n.global.t('setting.setting'));
+// }, 1000);
+
 // 初始化 @electron/remote 模块，使其可以在主进程和渲染进程之间进行通信。
 initialize();
 
@@ -170,6 +192,41 @@ function createWindow() {
   });
 }
 
+// 先通过轮询验证下可行性, 之后再引入sse或websocket。 (等引入sse或websocket时, 再来改动此部分代码, 目前能用就行。)
+let history_language_default: string;
+
+setInterval(() => {
+  StoreGet('language_default').then((req) => {
+    if (req !== history_language_default) {
+      // 希望只是没有响应式, 而不是无法用 (已验证, 希望是正确的, 可以使用。<即使在nodejs环境下, 也该遵守其类型去对其赋值>)
+      // i18n.global.locale = req; // 错误用法, 未遵守其类型。 //   - completed(已完成)   FIXME: 此设置, 并未根本的更改国际化(由此可知vue-i18n 无法在nodejs中适配使用)
+      i18n.global.locale.value = req; // 正确用法。
+      // 先验证i18n是否生效
+      // console.log('req', req);
+      // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
+      // console.log('i18n.global.t(Electron.tray.close)', i18n.global.t('Electron.tray.close'));
+      const contextMenu = Menu.buildFromTemplate([
+        {
+          label: i18n.global.t('Electron.tray.show'),
+          click: () => {
+            mainWindow?.show();
+          },
+        },
+        {
+          label: i18n.global.t('Electron.tray.close'),
+          click: () => {
+            (app as any).isQuiting = true;
+            app.quit();
+          },
+        },
+      ]);
+
+      tray!.setContextMenu(contextMenu);
+      history_language_default = req;
+    }
+  });
+}, 1000);
+
 function createTray() {
   // 创建托盘图标
   tray = new Tray(path.join(__dirname, 'icons/icon.png')); // 替换为你的图标路径
@@ -177,13 +234,13 @@ function createTray() {
   // 创建托盘图标的上下文菜单
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '显示',
+      label: i18n.global.t('Electron.tray.show'),
       click: () => {
         mainWindow?.show();
       },
     },
     {
-      label: '退出',
+      label: i18n.global.t('Electron.tray.close'),
       click: () => {
         (app as any).isQuiting = true;
         app.quit();

@@ -12,4 +12,10 @@ export default {
   language: {
     'setting language': 'setting language/设置语言',
   },
+  Electron: {
+    tray: {
+      show: 'Show',
+      close: 'Close',
+    },
+  },
 };
