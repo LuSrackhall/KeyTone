@@ -7,6 +7,15 @@ export default {
   setting: {
     setting: '设置',
     language: { index: '语言', caption: '' }, // 如果需要describe(caption) , 则在最后一级使用 `对象`{index: '...' , caption: '...'}
+    启动与自动启动: {
+      启动与自动启动: { index: `启动与自动启动`, caption: '' },
+      启动时隐藏窗口: { index: '启动时隐藏窗口', caption: '打开应用时最小化到系统托盘' },
+      自动启动: { index: '自动启动', caption: '是否要在电脑开机时自动启动本应用<注: 重启本应用后生效>' },
+      自动启动时隐藏窗口: {
+        index: `自动启动时隐藏窗口`,
+        caption: '电脑开机自动启动本应用时最小化到系统托盘<注: 重启本应用后生效>',
+      },
+    },
   },
 
   language: {

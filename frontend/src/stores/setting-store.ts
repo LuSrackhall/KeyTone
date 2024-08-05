@@ -43,6 +43,38 @@ export const useSettingStore = defineStore('setting', () => {
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
 
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- startup start ^_^-_-^_^
+
+  // 个人习惯使用ref。 ( 不管是 ref 还是 reactive, 都不影响后续watch时, 对其子元素的单独监听。 )
+  const startup = ref({
+    isHideWindows: false,
+  });
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- startup end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- startup end   -_-^_^-_- ^_^-_-^_^-_-
+
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
+
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- auto startup start ^_^-_-^_^
+
+  // 个人习惯使用ref。 ( 不管是 ref 还是 reactive, 都不影响后续watch时, 对其子元素的单独监听。 )
+  const autoStartup = ref({
+    isAutoRun: false,
+    isHideWindows: true,
+  });
+
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- auto startup end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- auto startup end   -_-^_^-_- ^_^-_-^_^-_-
+
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
+
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
 
   async function settingInitAndRealTimeStorage() {
@@ -78,6 +110,21 @@ export const useSettingStore = defineStore('setting', () => {
       if (settingStorage.language_default !== undefined) {
         languageDefault.value = settingStorage.language_default;
       }
+
+      console.log('111111111', settingStorage.aaa);
+
+      // TIPS: 因为值本身就是boolean类型, 因此不能直接用于判断(最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>)。
+      //       *  if (typeof settingStorage.startup.is_hide_windows === 'boolean') 虽然这样判断更准确, 但不够通用。 因为我只想简化开发成本, 所以我不用。
+      if (settingStorage.startup.is_hide_windows !== undefined) {
+        startup.value.isHideWindows = settingStorage.startup.is_hide_windows;
+      }
+      if (settingStorage.auto_startup.is_auto_run !== undefined) {
+        autoStartup.value.isAutoRun = settingStorage.auto_startup.is_auto_run;
+      }
+
+      if (settingStorage.auto_startup.is_hide_windows !== undefined) {
+        autoStartup.value.isHideWindows = settingStorage.auto_startup.is_hide_windows;
+      }
     });
 
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
@@ -92,6 +139,24 @@ export const useSettingStore = defineStore('setting', () => {
     watch(languageDefault, () => {
       StoreSet('language_default', languageDefault.value);
     });
+    watch(
+      () => startup.value.isHideWindows,
+      () => {
+        StoreSet('startup.is_hide_windows', startup.value.isHideWindows);
+      }
+    );
+    watch(
+      () => autoStartup.value.isAutoRun,
+      () => {
+        StoreSet('auto_startup.is_auto_run', autoStartup.value.isAutoRun);
+      }
+    );
+    watch(
+      () => autoStartup.value.isHideWindows,
+      () => {
+        StoreSet('auto_startup.is_hide_windows', autoStartup.value.isHideWindows);
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -105,6 +170,8 @@ export const useSettingStore = defineStore('setting', () => {
 
   return {
     languageDefault,
+    startup,
+    autoStartup,
     settingInitAndRealTimeStorage,
   };
 });

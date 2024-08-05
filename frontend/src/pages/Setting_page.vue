@@ -12,6 +12,7 @@
           :content-inset-level="0"
         >
           <language v-if="menuItem.to === '/setting-language'"></language>
+          <StartupAndAutoStartup v-if="menuItem.to === '/setting-startupAndAutoStartup'"></StartupAndAutoStartup>
         </q-expansion-item>
         <q-separator :key="'sep' + index" v-if="menuItem.separator" />
       </template>
@@ -29,6 +30,8 @@
 
 <script setup lang="ts">
 import Language from 'src/pages/SettingPageChildren/Language_setting.vue';
+import StartupAndAutoStartup from 'src/pages/SettingPageChildren/StartupAndAutoStartup_setting.vue';
+
 const menuList = [
   {
     icon: 'language',
@@ -36,6 +39,13 @@ const menuList = [
     caption: 'language.caption',
     separator: true,
     to: '/setting-language',
+  },
+  {
+    icon: 'sunny_snowing',
+    label: '启动与自动启动.启动与自动启动.index',
+    caption: '启动与自动启动.启动与自动启动.caption',
+    separator: true,
+    to: '/setting-startupAndAutoStartup',
   },
 ];
 </script>
