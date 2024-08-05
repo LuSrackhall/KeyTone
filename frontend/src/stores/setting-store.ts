@@ -74,7 +74,8 @@ export const useSettingStore = defineStore('setting', () => {
 
       // 使用从存储取出的设置数据, 对setting-store.ts内的相关变量做初始化
       // TODO: 修改配置名或加入新配置后, 需在此处做相应的初始化处理 (代号 setting)
-      if (settingStorage.language_default) {
+      // TIPS: 这里只是为了判断是否从配置文件中读到了这个内容。为防止内容本身就为bool类型, 最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>。
+      if (settingStorage.language_default !== undefined) {
         languageDefault.value = settingStorage.language_default;
       }
     });
