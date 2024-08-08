@@ -1,7 +1,9 @@
 package keySound
 
 import (
+	"KeyTone/config"
 	"embed"
+	"fmt"
 	"time"
 
 	"github.com/gopxl/beep"
@@ -30,12 +32,7 @@ func PlayKeySound(ss string) {
 	// 初始化speaker。(可更改第二个参数的值(越大, 音质越好, 响应越慢。 越小, 音质越差, 响应速度越快。))
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
-	volume := &effects.Volume{
-		Streamer: audioStreamer,
-		Base:     2,
-		Volume:   3,
-		Silent:   false,
-	}
+	volume := audioVolumeProcessing(audioStreamer)
 
 	// 播放音乐
 	done := make(chan bool)
@@ -46,6 +43,30 @@ func PlayKeySound(ss string) {
 	// 等待播放完成
 	<-done
 
+}
+
+func audioVolumeProcessing(audioStreamer beep.Streamer) *effects.Volume {
+
+	// 这里并没重新请求
+	var audio_volume_processing map[string]interface{} = config.GetValue("audio_volume_processing").(map[string]interface{})
+	fmt.Println("aaaaa", audio_volume_processing) // 这里不应该的
+
+	volumeAmplify := &effects.Volume{
+		Streamer: audioStreamer,
+		Base:     1.6, // 设置成1.6, 可以使得调整更细腻(越接近1越细腻)的同时, 更加吉利。 (常见的做法是设置成2)。
+		Volume:   audio_volume_processing["volume_amplify"].(float64),
+		Silent:   false,
+	}
+
+	volumeNormal := &effects.Volume{
+		Streamer: volumeAmplify,
+		// TIPS: 在大多数音频应用中，Base 是固定的，因为它定义了音量调整的行为曲线。如果用户需要调整音量，通常是调整 Volume，而不是 Base。Base 的调整通常是在你希望改变音量增益的对数曲线时。例如，如果你希望音量调整曲线更敏感或更平滑，可以调整 Base。但是，这种需求在实际应用中比较少见。
+		Base:   1.6,                                                // 设置成1.6, 可以使得调整更细腻(越接近1越细腻)的同时, 更加吉利。 (常见的做法是设置成2)。
+		Volume: audio_volume_processing["volume_normal"].(float64), // nil
+		Silent: false,
+	}
+
+	return volumeNormal
 }
 
 func init() {

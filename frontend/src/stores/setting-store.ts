@@ -136,6 +136,7 @@ export const useSettingStore = defineStore('setting', () => {
     //   StoreSet('settingPage', JSON.stringify(settingStorage));
     // });
 
+    // 最小修改级别必须是对象(因为sdk中使用了viper库, 其不支持比对象更小的字段的修改<这种修改会破坏下次此对象的读取>)
     watch(languageDefault, () => {
       StoreSet('language_default', languageDefault.value);
     });

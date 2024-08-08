@@ -6,8 +6,10 @@ import (
 	"KeyTone/logger"
 	"KeyTone/server"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -100,7 +102,36 @@ func init() {
 
 func main() {
 	go server.ServerRun()
+
+	time.Sleep(time.Millisecond * 5000)
+	go func() {
+		for {
+
+			var audio_volume_processing_normal float64 = config.GetValue("audio_volume_processing.volume_normal").(float64)
+			fmt.Println("main_normal", audio_volume_processing_normal)
+			var audio_volume_processing map[string]interface{} = config.GetValue("audio_volume_processing").(map[string]interface{})
+			fmt.Println("main", audio_volume_processing)
+
+			/*
+			 *  TIPS: 在使用viper库对配置文件的更改时, 注意要对某个对象进行整体的更改, 而不是深入的更改某个键
+			 *        * 虽然可以这么做, 但是这会破坏掉下次读取这个对象时的读取结果(不知道算不算bug)
+			 */
+			/*
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// config.SaveNewValue("audio_volume_processing.volume_amplify", audio_volume_processing["volume_amplify"].(float64)+1)  // 错误//
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				// audio_volume_processing["volume_amplify"] = audio_volume_processing["volume_amplify"].(float64) + 1                   /////////
+				// config.SaveNewValue("audio_volume_processing", audio_volume_processing)                                               // 正确//
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			*/
+			// audio_volume_processing["volume_amplify"] = audio_volume_processing["volume_amplify"].(float64) + 1
+			// config.SaveNewValue("audio_volume_processing", audio_volume_processing) // 正确
+			config.SaveNewValue("audio_volume_processing.volume_amplify", audio_volume_processing["volume_amplify"].(float64)+1) // 错误
+			time.Sleep(time.Millisecond * 2000)
+		}
+	}()
 	keyEventListen()
+
 }
 
 func keyEventListen() {

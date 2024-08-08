@@ -98,6 +98,13 @@ func createDefaultSetting() {
 		"is_hide_windows": false,
 	})
 
+	// FIXME:如果已有默认的配置文件, 则此处新增的配置不会被增量地写入原有的配置文件中
+	viper.Set("audio_volume_processing", map[string]interface{}{
+		"volume_normal":        0,  // -5~0 ; // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
+		"volume_amplify":       0,  // (-无穷)~0~(+无穷) ; // 此处理可能超出安全的范围, 它希望无论如何都要调整音量的大小(即使在一定值时会破坏原音频音质, 也在所不惜)
+		"volume_amplify_limit": 10, // 给(-无穷)~0~(+无穷)一个限制; 让其实际上为(-volume_amplify_limit)~0~(+volume_amplify_limit)
+	})
+
 	if err := viper.SafeWriteConfig(); err != nil {
 		logger.Error("创建默认设置文件时发生致命错误", "err", err.Error())
 	}
