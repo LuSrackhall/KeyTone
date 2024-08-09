@@ -16,6 +16,11 @@ func ConfigRun(path string) {
 	viper.AddConfigPath(path)
 	// viper.AddConfigPath(path2) // 越靠下, 优先级越高
 
+	// 监听配置文件更改
+	// * TIPS: viper在加载时, 会一次性将配置文件中所有配置读入内存中管理,也就是说,默认不会监听文件本身非viper操作之外的更改。
+	//         > 若不调用WatchConfig(), 则只有通过viper的更改(如用`viper.Set`设置的更改), 才能够在下次`viper.Get`时读取到。
+	viper.WatchConfig()
+
 	// 读取配置文件
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -66,6 +71,11 @@ func settingDefaultConfig() {
 
 	// 手动打开应用时的默认设置
 	viper.SetDefault("startup.is_hide_windows", false)
+
+	// 音频音量处理的默认设置
+	viper.SetDefault("audio_volume_processing.volume_amplify", 0.0)        // (-无穷)~0~(+无穷) ; // 此处理可能超出安全的范围, 它希望无论如何都要调整音量的大小(即使在一定值时会破坏原音频音质, 也在所不惜)
+	viper.SetDefault("audio_volume_processing.volume_amplify_limit", 10.0) // 给(-无穷)~0~(+无穷)一个限制; 让其实际上为(-volume_amplify_limit)~0~(+volume_amplify_limit)
+	viper.SetDefault("audio_volume_processing.volume_normal", 0.0)         // -5~0 ; // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
 }
 
 func createDefaultConfig() {

@@ -1,6 +1,7 @@
 package keySound
 
 import (
+	"KeyTone/config"
 	"embed"
 	"time"
 
@@ -30,12 +31,7 @@ func PlayKeySound(ss string) {
 	// 初始化speaker。(可更改第二个参数的值(越大, 音质越好, 响应越慢。 越小, 音质越差, 响应速度越快。))
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
-	volume := &effects.Volume{
-		Streamer: audioStreamer,
-		Base:     2,
-		Volume:   3,
-		Silent:   false,
-	}
+	volume := globalAudioVolumeProcessing(audioStreamer)
 
 	// 播放音乐
 	done := make(chan bool)
@@ -46,6 +42,26 @@ func PlayKeySound(ss string) {
 	// 等待播放完成
 	<-done
 
+}
+
+func globalAudioVolumeProcessing(audioStreamer beep.Streamer) *effects.Volume {
+	var audio_volume_processing_volume_amplify = config.GetValue("audio_volume_processing.volume_amplify")
+	volumeAmplify := &effects.Volume{
+		Streamer: audioStreamer,
+		Base:     1.6,
+		Volume:   audio_volume_processing_volume_amplify.(float64),
+		Silent:   false,
+	}
+
+	var audio_volume_processing_volume_normal = config.GetValue("audio_volume_processing.volume_normal")
+	volumeNormal := &effects.Volume{
+		Streamer: volumeAmplify,
+		Base:     1.6,
+		Volume:   audio_volume_processing_volume_normal.(float64),
+		Silent:   false,
+	}
+
+	return volumeNormal
 }
 
 func init() {
