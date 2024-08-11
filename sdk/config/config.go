@@ -55,27 +55,39 @@ func GetValue(key string) any {
 }
 
 // 设置新配置值, 并将设置的值保存到配置文件
-func SaveNewValue(key string, value any) {
+func SetValue(key string, value any) {
 	viper.Set(key, value)
 	if err := viper.WriteConfig(); err != nil {
 		logger.Error("向配置文件保存设置时发生致命错误", "err", err.Error())
 	}
 }
 
-// 设置默认的配置
+// 自动启动应用时的默认设置
+const Auto_startup___is_auto_run = false
+const Auto_startup___is_hide_windows = true
+const Auto_startup___is_hide_windows_old = true
+
+// 手动打开应用时的默认设置
+const Startup___is_hide_windows = false
+
+// 音频音量处理的默认设置
+const Audio_volume_processing___volume_amplify = 0.0        // (-无穷)~0~(+无穷) ; // 此处理可能超出安全的范围, 它希望无论如何都要调整音量的大小(即使在一定值时会破坏原音频音质, 也在所不惜)
+const Audio_volume_processing___volume_amplify_limit = 10.0 // 给(-无穷)~0~(+无穷)一个限制; 让其实际上为(-volume_amplify_limit)~0~(+volume_amplify_limit)// 设置默认的配置
+const Audio_volume_processing___volume_normal = 0.0         // -5~0 ; // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
+
 func settingDefaultConfig() {
 	// 自动启动应用时的默认设置
-	viper.SetDefault("auto_startup.is_auto_run", false)
-	viper.SetDefault("auto_startup.is_hide_windows", true)
-	viper.SetDefault("auto_startup.is_hide_windows_old", true)
+	viper.SetDefault("auto_startup.is_auto_run", Auto_startup___is_auto_run)
+	viper.SetDefault("auto_startup.is_hide_windows", Auto_startup___is_hide_windows)
+	viper.SetDefault("auto_startup.is_hide_windows_old", Auto_startup___is_hide_windows_old)
 
 	// 手动打开应用时的默认设置
-	viper.SetDefault("startup.is_hide_windows", false)
+	viper.SetDefault("startup.is_hide_windows", Startup___is_hide_windows)
 
 	// 音频音量处理的默认设置
-	viper.SetDefault("audio_volume_processing.volume_amplify", 0.0)        // (-无穷)~0~(+无穷) ; // 此处理可能超出安全的范围, 它希望无论如何都要调整音量的大小(即使在一定值时会破坏原音频音质, 也在所不惜)
-	viper.SetDefault("audio_volume_processing.volume_amplify_limit", 10.0) // 给(-无穷)~0~(+无穷)一个限制; 让其实际上为(-volume_amplify_limit)~0~(+volume_amplify_limit)
-	viper.SetDefault("audio_volume_processing.volume_normal", 0.0)         // -5~0 ; // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
+	viper.SetDefault("audio_volume_processing.volume_amplify", Audio_volume_processing___volume_amplify)
+	viper.SetDefault("audio_volume_processing.volume_amplify_limit", Audio_volume_processing___volume_amplify_limit)
+	viper.SetDefault("audio_volume_processing.volume_normal", Audio_volume_processing___volume_normal)
 }
 
 func createDefaultConfig() {

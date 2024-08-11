@@ -69,7 +69,7 @@ func mainRouters(r *gin.Engine) {
 			return
 		}
 
-		config.SaveNewValue(store_setting.Key, store_setting.Value)
+		config.SetValue(store_setting.Key, store_setting.Value)
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
