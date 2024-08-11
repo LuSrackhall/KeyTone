@@ -16,6 +16,14 @@ func ConfigRun(path string) {
 	viper.AddConfigPath(path)
 	// viper.AddConfigPath(path2) // 越靠下, 优先级越高
 
+	// TIPS: 我们可能无法在此回调中, 直接获取被更改的配置是哪个
+	//       > 因此如果使用此回调, 我们只需对我们所关注的配置项, 手动建立历史值, 并在回调中重新获取这个值予以对比即可。
+	//       > (比如监听是否自动重启的配置是否更改, 如果更改就触发服务端推送<sse或webSocket>)
+	// viper.OnConfigChange(func(e fsnotify.Event) {
+	// 	// TIPS: 不要在这内部调用此函数或任何会修改配置文件的写入操作, 否则会造成循环依赖从而破坏事件
+	// 	// viper.WriteConfig()
+	// })
+
 	// 监听配置文件更改
 	// * TIPS: viper在加载时, 会一次性将配置文件中所有配置读入内存中管理,也就是说,默认不会监听文件本身非viper操作之外的更改。
 	//         > 若不调用WatchConfig(), 则只有通过viper的更改(如用`viper.Set`设置的更改), 才能够在下次`viper.Get`时读取到。
