@@ -45,19 +45,28 @@ func PlayKeySound(ss string) {
 }
 
 func globalAudioVolumeProcessing(audioStreamer beep.Streamer) *effects.Volume {
-	var audio_volume_processing_volume_amplify = config.GetValue("audio_volume_processing.volume_amplify")
+	audio_volume_processing_volume_amplify, ok := config.GetValue("audio_volume_processing.volume_amplify").(float64)
+	if !ok {
+		audio_volume_processing_volume_amplify = config.Audio_volume_processing___volume_amplify
+		go config.SetValue("audio_volume_processing.volume_amplify", config.Audio_volume_processing___volume_amplify)
+	}
+
 	volumeAmplify := &effects.Volume{
 		Streamer: audioStreamer,
 		Base:     1.6,
-		Volume:   audio_volume_processing_volume_amplify.(float64),
+		Volume:   audio_volume_processing_volume_amplify,
 		Silent:   false,
 	}
 
-	var audio_volume_processing_volume_normal = config.GetValue("audio_volume_processing.volume_normal")
+	audio_volume_processing_volume_normal, ok := config.GetValue("audio_volume_processing.volume_normal").(float64)
+	if !ok {
+		audio_volume_processing_volume_normal = config.Audio_volume_processing___volume_normal
+		go config.SetValue("audio_volume_processing.volume_normal", config.Audio_volume_processing___volume_normal)
+	}
 	volumeNormal := &effects.Volume{
 		Streamer: volumeAmplify,
 		Base:     1.6,
-		Volume:   audio_volume_processing_volume_normal.(float64),
+		Volume:   audio_volume_processing_volume_normal,
 		Silent:   false,
 	}
 
