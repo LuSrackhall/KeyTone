@@ -11,6 +11,22 @@ export const useSettingStore = defineStore('setting', () => {
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
 
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- 页面状态管理(无需持久化) start ^_^-_-^_^
+
+  const settingItemsOpenedState = ref([]);
+  // watch(settingItemsOpenedState.value, () => {
+  //   console.log('settingItemsOpenedState.value', settingItemsOpenedState.value);
+  // });
+
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- 页面状态管理(无需持久化) end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- 页面状态管理(无需持久化) end   -_-^_^-_- ^_^-_-^_^-_-
+
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
+
   //#region    -----<<<<<<<<<<<<<<<<<<<< --languageDefault  start ^_^-_-^_^
   /**
    * 此处为, 设置页面定义语言项国际化页面 m 的区域
@@ -170,6 +186,7 @@ export const useSettingStore = defineStore('setting', () => {
 
   return {
     languageDefault,
+    settingItemsOpenedState,
     startup,
     autoStartup,
     settingInitAndRealTimeStorage,

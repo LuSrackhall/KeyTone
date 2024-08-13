@@ -4,6 +4,7 @@
       <q-list>
         <template v-for="(menuItem, index) in menuList" :key="index">
           <q-expansion-item
+            v-model="setting_store.settingItemsOpenedState[index]"
             :icon="menuItem.icon"
             :label="$t('setting.' + menuItem.label)"
             :caption="$t('setting.' + menuItem.caption)"
@@ -24,6 +25,9 @@
 <script setup lang="ts">
 import Language from 'src/pages/SettingPageChildren/Language_setting.vue';
 import StartupAndAutoStartup from 'src/pages/SettingPageChildren/StartupAndAutoStartup_setting.vue';
+import { useSettingStore } from 'src/stores/setting-store';
+
+const setting_store = useSettingStore();
 
 const menuList = [
   {
