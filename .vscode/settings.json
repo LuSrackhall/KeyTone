@@ -1,3 +1,22 @@
 {
-  "cSpell.words": ["fsnotify", "godotenv", "gohook", "joho", "robotn"]
+  "cSpell.words": ["fsnotify", "godotenv", "gohook", "joho", "robotn"],
+
+  /*************************************************i18n-ally 配置begin************************************************/
+  /*
+   * 由于我们项目的i18n文件类型, 是使用的ts文件类型, 而不是常用的json文件类型, 因此必须加上它。
+   * > 否则插件会报这个错误-->`没有找到文案文件。 项目配置可能存在问题。`
+   * > * 报这个错误是因为i18n-ally的2.0版本以后, 默认仅支持json、yaml和json5> [相关链接](https://github.com/lokalise/i18n-ally/wiki/Locale-Formats)
+   * > * * 且悬停状态以及ui面版中的编辑和翻译功能, 仅在默认为json、yaml和json5文件格式时生效
+   * > * * * 比如使用js/ts的文件格式时, 插件的工作模式会被强制设置为只读, 因为它太动态了。[相关链接](https://github.com/lokalise/i18n-ally/issues/365)
+   */
+  "i18n-ally.enabledParsers": ["ts"],
+  "i18n-ally.enabledFrameworks": ["vue"], // 当项目根目录不是你的ui目录时, 请先尝试指定你的ui框架, 以激活自动的递归式识别。
+  "i18n-ally.localesPaths": ["frontend/src/i18n"], // 这个一般可以在配置完 "指定的ui框架" 后, 自动识别出来。
+  /*
+   * 默认的  [\w\d\. \-\[\]]*?  无法匹配以中文或多语言混合的key路径, 只能识别纯英文的路径。
+   * > 配置成 .*? 后, 可以识别一些非英文字母的语言(包括中多种语言混合)形式的路径。 [相关链接](https://github.com/lokalise/i18n-ally/wiki/Configurations)
+   * > * 比如个人就比较喜欢将 key 的路径 定义为'中文/英文'的结合。
+   */
+  "i18n-ally.regex.key": ".*?"
+  /*************************************************i18n-ally 配置end**************************************************/
 }
