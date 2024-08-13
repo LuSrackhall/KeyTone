@@ -4,7 +4,6 @@
       <q-list>
         <template v-for="(menuItem, index) in menuList" :key="index">
           <q-expansion-item
-            default-opened
             :icon="menuItem.icon"
             :label="$t('setting.' + menuItem.label)"
             :caption="$t('setting.' + menuItem.caption)"
