@@ -90,6 +90,19 @@ export const useSettingStore = defineStore('setting', () => {
 
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- volume start ^_^-_-^_^
+  const audioVolumeProcessing = ref({
+    volumeAmplify: 0,
+    volumeAmplifyLimit: 10,
+    volumeNormal: 0,
+  });
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
 
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
 
@@ -141,6 +154,16 @@ export const useSettingStore = defineStore('setting', () => {
       if (settingStorage.auto_startup.is_hide_windows !== undefined) {
         autoStartup.value.isHideWindows = settingStorage.auto_startup.is_hide_windows;
       }
+
+      if (settingStorage.audio_volume_processing.volume_amplify !== undefined) {
+        audioVolumeProcessing.value.volumeAmplify = settingStorage.audio_volume_processing.volume_amplify;
+      }
+      if (settingStorage.audio_volume_processing.volume_amplify_limit !== undefined) {
+        audioVolumeProcessing.value.volumeAmplifyLimit = settingStorage.audio_volume_processing.volume_amplify_limit;
+      }
+      if (settingStorage.audio_volume_processing.volume_normal !== undefined) {
+        audioVolumeProcessing.value.volumeNormal = settingStorage.audio_volume_processing.volume_normal;
+      }
     });
 
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
@@ -173,6 +196,26 @@ export const useSettingStore = defineStore('setting', () => {
         StoreSet('auto_startup.is_hide_windows', autoStartup.value.isHideWindows);
       }
     );
+    watch(
+      () => audioVolumeProcessing.value.volumeAmplify,
+      () => {
+        StoreSet('audio_volume_processing.volume_amplify', audioVolumeProcessing.value.volumeAmplify);
+      }
+    );
+    watch(
+      () => audioVolumeProcessing.value.volumeAmplifyLimit,
+      () => {
+        if (audioVolumeProcessing.value.volumeAmplifyLimit > 0) {
+          StoreSet('audio_volume_processing.volume_amplify_limit', audioVolumeProcessing.value.volumeAmplifyLimit);
+        }
+      }
+    );
+    watch(
+      () => audioVolumeProcessing.value.volumeNormal,
+      () => {
+        StoreSet('audio_volume_processing.volume_normal', audioVolumeProcessing.value.volumeNormal);
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -189,6 +232,7 @@ export const useSettingStore = defineStore('setting', () => {
     settingItemsOpenedState,
     startup,
     autoStartup,
+    audioVolumeProcessing,
     settingInitAndRealTimeStorage,
   };
 });

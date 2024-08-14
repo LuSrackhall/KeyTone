@@ -40,6 +40,10 @@ const routes: RouteRecordRaw[] = [
         path: '/setting-startupAndAutoStartup',
         component: () => import('pages/SettingPageChildren/StartupAndAutoStartup_setting.vue'),
       },
+      {
+        path: '/setting-volumeAmplify',
+        component: () => import('pages/SettingPageChildren/VolumeAmplify_setting.vue'),
+      },
     ],
   },
 

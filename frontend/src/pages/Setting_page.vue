@@ -14,6 +14,7 @@
           >
             <language v-if="menuItem.to === '/setting-language'"></language>
             <StartupAndAutoStartup v-if="menuItem.to === '/setting-startupAndAutoStartup'"></StartupAndAutoStartup>
+            <VolumeAmplify v-if="menuItem.to === '/setting-volumeAmplify'"></VolumeAmplify>
           </q-expansion-item>
           <q-separator :key="'sep' + index" v-if="menuItem.separator" />
         </template>
@@ -25,6 +26,7 @@
 <script setup lang="ts">
 import Language from 'src/pages/SettingPageChildren/Language_setting.vue';
 import StartupAndAutoStartup from 'src/pages/SettingPageChildren/StartupAndAutoStartup_setting.vue';
+import VolumeAmplify from './SettingPageChildren/VolumeAmplify_setting.vue';
 import { useSettingStore } from 'src/stores/setting-store';
 
 const setting_store = useSettingStore();
@@ -43,6 +45,13 @@ const menuList = [
     caption: 'setting.启动与自动启动.启动与自动启动.caption',
     separator: true,
     to: '/setting-startupAndAutoStartup',
+  },
+  {
+    icon: 'volume_up',
+    label: 'setting.原始音量增减调节.原始音量增减调节.index',
+    caption: 'setting.原始音量增减调节.原始音量增减调节.caption',
+    separator: true,
+    to: '/setting-volumeAmplify',
   },
 ];
 </script>
