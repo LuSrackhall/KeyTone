@@ -6,8 +6,8 @@
           <q-expansion-item
             v-model="setting_store.settingItemsOpenedState[index]"
             :icon="menuItem.icon"
-            :label="$t('setting.' + menuItem.label)"
-            :caption="$t('setting.' + menuItem.caption)"
+            :label="$t(menuItem.label)"
+            :caption="$t(menuItem.caption)"
             :to="menuItem.to"
             :header-inset-level="0"
             :content-inset-level="0"
@@ -32,15 +32,15 @@ const setting_store = useSettingStore();
 const menuList = [
   {
     icon: 'language',
-    label: 'language.index',
-    caption: 'language.caption',
+    label: 'setting.language.index',
+    caption: 'setting.language.caption',
     separator: true,
     to: '/setting-language',
   },
   {
     icon: 'sunny_snowing',
-    label: '启动与自动启动.启动与自动启动.index',
-    caption: '启动与自动启动.启动与自动启动.caption',
+    label: 'setting.启动与自动启动.启动与自动启动.index',
+    caption: 'setting.启动与自动启动.启动与自动启动.caption',
     separator: true,
     to: '/setting-startupAndAutoStartup',
   },

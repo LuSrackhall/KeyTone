@@ -23,6 +23,23 @@
    * > * 比如个人就比较喜欢将 key 的路径 定义为'中文/英文'的结合。
    */
   "i18n-ally.regex.key": ".*?",
-  "i18n-ally.keystyle": "nested" // 虽然会自动识别, 但每次自动识别后都会更新到配置中, 相当于自动帮你手动配置。 由于本项目的确仅使用此种json格式, 因此显示配置它。
+  "i18n-ally.keystyle": "nested", // 虽然会自动识别, 但每次自动识别后都会更新到配置中, 相当于自动帮你手动配置。 由于本项目的确仅使用此种json格式, 因此显示配置它。
+  "i18n-ally.translate.engines": ["openai", "google", "google-cn", "deepl", "libretranslate", "baidu"],
+  // TODO: 用于配置t() 和 $t() 之外的, 可被识别的i18n字符串。(根据具体项目, 具体配置。<如某些情况下, 通过变量定义i18n字符串时, 不想直接使用t()或$t()>)
+  "i18n-ally.regex.usageMatchAppend": [
+    // "[^\\w\\d]a\\(['\"`]({key})['\"`]",  // 可以识别所有的   a("你的i18n路径key")
+    // "[^\\w\\d]['\"`]({key})['\"`]",      // 可以识别所有的   "你的i18n路径key" , 即裸字符串 // 虽然这个配和"i18n-ally.extract.parsers.html"也可以做到, 但范围太大, 报错太多(且无法忽略个别变量名后的字符串)
+    "[^\\w\\d]label:[^\\w\\d]['\"`]({key})['\"`]", // 这样就很精确了, 可以避免裸字符串的大范围误伤。 // label: "你的i18n路径key"
+    "[^\\w\\d]caption:[^\\w\\d]['\"`]({key})['\"`]" // caption: "你的i18n路径key"
+  ]
+  // "i18n-ally.extract.parsers.html": {
+  //   // 可以添加裸字符串时, 某些不被支持的标签或变量名
+  //   "attributes": ["text", "title", "alt", "placeholder", "label", "aria-label", "caption", "aria-caption"],
+  //   // 但无法忽略添加裸字符串时, 某些已经支持的标签或变量名
+  //   "ignoredTags": ["script", "style"],
+  //   "vBind": true,
+  //   "inlineText": true
+  // }
   /*************************************************i18n-ally 配置end**************************************************/
+  // Make sure that particular refactoring templates would be picked up be the bulk extraction depending on the context
 }
