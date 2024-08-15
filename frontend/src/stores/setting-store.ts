@@ -94,7 +94,10 @@ export const useSettingStore = defineStore('setting', () => {
   const audioVolumeProcessing = ref({
     volumeAmplify: 0,
     volumeAmplifyLimit: 10,
+    // 以下3项后续需要重构
     volumeNormal: 0,
+    volumeNormalReduceScope: 5,
+    volumeSilent: false,
   });
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
   // ...
@@ -164,6 +167,14 @@ export const useSettingStore = defineStore('setting', () => {
       if (settingStorage.audio_volume_processing.volume_normal !== undefined) {
         audioVolumeProcessing.value.volumeNormal = settingStorage.audio_volume_processing.volume_normal;
       }
+      if (settingStorage.audio_volume_processing.volume_normal_reduce_scope !== undefined) {
+        audioVolumeProcessing.value.volumeNormalReduceScope =
+          settingStorage.audio_volume_processing.volume_normal_reduce_scope;
+      }
+      if (settingStorage.audio_volume_processing.volume_silent !== undefined) {
+        audioVolumeProcessing.value.volumeSilent = settingStorage.audio_volume_processing.volume_silent;
+      }
+
     });
 
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
@@ -216,6 +227,22 @@ export const useSettingStore = defineStore('setting', () => {
         StoreSet('audio_volume_processing.volume_normal', audioVolumeProcessing.value.volumeNormal);
       }
     );
+    watch(
+      () => audioVolumeProcessing.value.volumeNormalReduceScope,
+      () => {
+        StoreSet(
+          'audio_volume_processing.volume_normal_reduce_scope',
+          audioVolumeProcessing.value.volumeNormalReduceScope
+        );
+      }
+    );
+    watch(
+      () => audioVolumeProcessing.value.volumeSilent,
+      () => {
+        StoreSet('audio_volume_processing.volume_silent', audioVolumeProcessing.value.volumeSilent);
+      }
+    );
+
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
