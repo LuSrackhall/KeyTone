@@ -87,6 +87,8 @@ const Audio_volume_processing___volume_normal = 0.0            // (-无穷)~0 ; 
 const Audio_volume_processing___volume_normal_reduce_scope = 5 // 默认为5
 const Audio_volume_processing___volume_silent = false          // 当其为true时, 代表静音。
 
+// 主页面的默认设置
+const Main_home___audio_volume_processing___is_open_volume_debug_slider = false // 用于在设置页面 和 主页面上显示 音量调试滑块
 
 func settingDefaultConfig() {
 	// 自动启动应用时的默认设置
@@ -105,6 +107,9 @@ func settingDefaultConfig() {
 	viper.SetDefault("audio_volume_processing.volume_normal", Audio_volume_processing___volume_normal)
 	viper.SetDefault("audio_volume_processing.volume_normal_reduce_scope", Audio_volume_processing___volume_normal_reduce_scope)
 	viper.SetDefault("audio_volume_processing.volume_silent", Audio_volume_processing___volume_silent)
+
+	// 主页面的默认设置
+	viper.SetDefault("main_home.audio_volume_processing.is_open_volume_debug_slider", Main_home___audio_volume_processing___is_open_volume_debug_slider)
 }
 
 func createDefaultConfig() {

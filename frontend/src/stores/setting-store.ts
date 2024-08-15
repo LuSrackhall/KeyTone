@@ -106,7 +106,24 @@ export const useSettingStore = defineStore('setting', () => {
   //!endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- mainHome start ^_^-_-^_^
+  const mainHome = ref({
+    audioVolumeProcessing: {
+      // volumeNormal: 0,
+      // volumeNormalReduceScope: 5,
+      // volumeSilent: false,
+      isOpenVolumeDebugSlider: false,
+    },
+  });
 
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
+
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
 
   async function settingInitAndRealTimeStorage() {
@@ -143,8 +160,6 @@ export const useSettingStore = defineStore('setting', () => {
         languageDefault.value = settingStorage.language_default;
       }
 
-      console.log('111111111', settingStorage.aaa);
-
       // TIPS: 因为值本身就是boolean类型, 因此不能直接用于判断(最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>)。
       //       *  if (typeof settingStorage.startup.is_hide_windows === 'boolean') 虽然这样判断更准确, 但不够通用。 因为我只想简化开发成本, 所以我不用。
       if (settingStorage.startup.is_hide_windows !== undefined) {
@@ -175,6 +190,10 @@ export const useSettingStore = defineStore('setting', () => {
         audioVolumeProcessing.value.volumeSilent = settingStorage.audio_volume_processing.volume_silent;
       }
 
+      if (settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider !== undefined) {
+        mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider =
+          settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
+      }
     });
 
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
@@ -243,6 +262,15 @@ export const useSettingStore = defineStore('setting', () => {
       }
     );
 
+    watch(
+      () => mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider,
+      () => {
+        StoreSet(
+          'main_home.audio_volume_processing.is_open_volume_debug_slider',
+          mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider
+        );
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -260,6 +288,7 @@ export const useSettingStore = defineStore('setting', () => {
     startup,
     autoStartup,
     audioVolumeProcessing,
+    mainHome,
     settingInitAndRealTimeStorage,
   };
 });
