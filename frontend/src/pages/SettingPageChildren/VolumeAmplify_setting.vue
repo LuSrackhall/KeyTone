@@ -63,7 +63,7 @@
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"
-          @click="returnToNormalLimit()"
+          @click="returnToDefaultLimit()"
         />
       </div>
     </div>
@@ -137,7 +137,7 @@ function returnToNormal() {
   setting_store.audioVolumeProcessing.volumeAmplify = 0.0;
 }
 
-function returnToNormalLimit() {
+function returnToDefaultLimit() {
   setting_store.audioVolumeProcessing.volumeAmplifyLimit = 10.0;
 }
 </script>

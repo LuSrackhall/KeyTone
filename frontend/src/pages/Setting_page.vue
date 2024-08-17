@@ -12,7 +12,7 @@
             :header-inset-level="0"
             :content-inset-level="0"
           >
-            <language v-if="menuItem.to === '/setting-language'"></language>
+            <Language v-if="menuItem.to === '/setting-language'"></Language>
             <StartupAndAutoStartup v-if="menuItem.to === '/setting-startupAndAutoStartup'"></StartupAndAutoStartup>
             <VolumeAmplify v-if="menuItem.to === '/setting-volumeAmplify'"></VolumeAmplify>
           </q-expansion-item>
