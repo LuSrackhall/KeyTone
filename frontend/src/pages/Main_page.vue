@@ -73,6 +73,22 @@
           color="light-green"
         />
       </div>
+      <div :class="['w-56  flex justify-end items-center mt-5']">
+        <q-slider
+          :class="['w-[80%]']"
+          v-if="setting_store.mainHome.audioVolumeProcessing.isOpenVolumeDebugSlider"
+          v-model="setting_store.mainHome.audioVolumeProcessing.volumeNormal"
+          :max="0"
+          :min="-min"
+          :step="0"
+          :markers="markersDebug"
+          marker-labels
+          label
+          label-always
+          :label-value="labelValueDebug"
+          color="light-green"
+        />
+      </div>
     </div>
   </q-page>
 </template>
@@ -111,6 +127,21 @@ watch(
     setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
   }
 );
+
+const labelValueDebug = computed(() => {
+  return setting_store.mainHome.audioVolumeProcessing.volumeNormal.toFixed(2);
+});
+const markersDebug = computed(() => {
+  if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {
+    return (
+      (setting_store.audioVolumeProcessing.volumeAmplify +
+        setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope) /
+      1
+    );
+  } else {
+    return setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope / 1;
+  }
+});
 
 const isSilent = () => {
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =

@@ -36,11 +36,26 @@
         "index": "Original volume increase and decrease adjustment",
         "caption": "Algorithmly increase/reduce the default volume of the original audio file. Note: The adjustment limit should not be too large. Just adjust the appropriate amount, otherwise the original sound quality of the audio may be destroyed."
       },
-      "重置": "reset",
+      "重置": "Reset",
       "音量": "Volume",
       "AmplifyLimit": {
         "index": "Amplify Limit",
         "rulesErrorInfo": "The input value must be greater than 0 and less than 100,000,000"
+      }
+    },
+    "mainHome": {
+      "音量调试滑块": {
+        "index": "Volume Debug slider",
+        "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
+      },
+      "重置": "Reset",
+      "音量降幅": {
+        "index": "Volume decrease range",
+        "rulesErrorInfo": "The input value must be greater than or equal to 5 and less than 100,000,000"
+      },
+      "mainHome": {
+        "index": "Main page related",
+        "caption": "Customize the related functions on the main page"
       }
     }
   },

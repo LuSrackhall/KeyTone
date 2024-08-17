@@ -36,6 +36,7 @@ const routes: RouteRecordRaw[] = [
       //       /setting/setting-language      // no
       // TIPS: 注意, 我的children使用的都是Page组件
       { path: '/setting-language', component: () => import('pages/SettingPageChildren/Language_setting.vue') },
+      { path: '/setting-mainHome', component: () => import('pages/SettingPageChildren/MainHome_setting.vue') },
       {
         path: '/setting-startupAndAutoStartup',
         component: () => import('pages/SettingPageChildren/StartupAndAutoStartup_setting.vue'),

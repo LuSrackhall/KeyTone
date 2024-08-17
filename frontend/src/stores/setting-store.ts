@@ -248,7 +248,10 @@ export const useSettingStore = defineStore('setting', () => {
     watch(
       () => audioVolumeProcessing.value.volumeAmplifyLimit,
       () => {
-        if (audioVolumeProcessing.value.volumeAmplifyLimit > 0) {
+        if (
+          audioVolumeProcessing.value.volumeAmplifyLimit > 0 &&
+          audioVolumeProcessing.value.volumeAmplifyLimit < 100000000
+        ) {
           StoreSet('audio_volume_processing.volume_amplify_limit', audioVolumeProcessing.value.volumeAmplifyLimit);
         }
       }
@@ -264,10 +267,15 @@ export const useSettingStore = defineStore('setting', () => {
     watch(
       () => mainHome.value.audioVolumeProcessing.volumeNormalReduceScope,
       () => {
-        StoreSet(
-          'main_home.audio_volume_processing.volume_normal_reduce_scope',
-          mainHome.value.audioVolumeProcessing.volumeNormalReduceScope
-        );
+        if (
+          mainHome.value.audioVolumeProcessing.volumeNormalReduceScope >= 5 &&
+          mainHome.value.audioVolumeProcessing.volumeNormalReduceScope < 100000000
+        ) {
+          StoreSet(
+            'main_home.audio_volume_processing.volume_normal_reduce_scope',
+            mainHome.value.audioVolumeProcessing.volumeNormalReduceScope
+          );
+        }
       }
     );
     watch(

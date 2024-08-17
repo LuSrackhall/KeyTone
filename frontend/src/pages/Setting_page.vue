@@ -13,6 +13,7 @@
             :content-inset-level="0"
           >
             <Language v-if="menuItem.to === '/setting-language'"></Language>
+            <MainHome v-if="menuItem.to === '/setting-mainHome'"></MainHome>
             <StartupAndAutoStartup v-if="menuItem.to === '/setting-startupAndAutoStartup'"></StartupAndAutoStartup>
             <VolumeAmplify v-if="menuItem.to === '/setting-volumeAmplify'"></VolumeAmplify>
           </q-expansion-item>
@@ -25,6 +26,7 @@
 
 <script setup lang="ts">
 import Language from 'src/pages/SettingPageChildren/Language_setting.vue';
+import MainHome from 'src/pages/SettingPageChildren/MainHome_setting.vue';
 import StartupAndAutoStartup from 'src/pages/SettingPageChildren/StartupAndAutoStartup_setting.vue';
 import VolumeAmplify from './SettingPageChildren/VolumeAmplify_setting.vue';
 import { useSettingStore } from 'src/stores/setting-store';
@@ -38,6 +40,13 @@ const menuList = [
     caption: 'setting.language.caption',
     separator: true,
     to: '/setting-language',
+  },
+  {
+    icon: 'volume_up',
+    label: 'setting.mainHome.mainHome.index',
+    caption: 'setting.mainHome.mainHome.caption',
+    separator: true,
+    to: '/setting-mainHome',
   },
   {
     icon: 'sunny_snowing',
