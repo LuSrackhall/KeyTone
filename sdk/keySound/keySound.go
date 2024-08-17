@@ -28,7 +28,14 @@ func PlayKeySound(ss string) {
 	}
 	defer audioStreamer.Close()
 
-	// 初始化speaker。(可更改第二个参数的值(越大, 音质越好, 响应越慢。 越小, 音质越差, 响应速度越快。))
+	// 初始化speaker。
+	// 第二个参数的值, 不会对音质产生影响, 它只是缓冲区的大小。
+	// > bufferSize参数指定扬声器缓冲区的样本数。更大的缓冲区大小意味着更低的CPU使用率和更可靠的播放。较低的缓冲区大小意味着更好的响应性和更少的延迟。
+	// > * 缓冲区越大, cpu压力越小, 播放的整个过程崩溃率也会降低。(个人理解)
+	// > * 缓冲区越小, cpu压力越大, 会得到更快的响应性和更少的延时。(个人理解)
+	// > 鉴于个人的以上理解, 这个数值对我们KeyTone项目来说, 缓冲区设置的越小越好。
+	// > * 但实际测试下来, 缓冲区无论如何设置, 其响应到播放完毕的用时都只有最大20ms作用的波动, 而且绝大部分时候, 波动仅有1ms左右。因此给其一个固定的值即可
+	// starTime := time.Now()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
 	volume := globalAudioVolumeAmplifyProcessing(audioStreamer)
@@ -43,7 +50,7 @@ func PlayKeySound(ss string) {
 
 	// 等待播放完成
 	<-done
-
+	// fmt.Println("播放用时", time.Since(starTime))
 }
 
 func globalAudioVolumeAmplifyProcessing(audioStreamer beep.Streamer) *effects.Volume {
