@@ -32,11 +32,15 @@
       }
     },
     "原始音量增减调节": {
-      "重置": "reset",
-      "音量": "Volume",
       "原始音量增减调节": {
         "index": "Original volume increase and decrease adjustment",
         "caption": "Algorithmly increase/reduce the default volume of the original audio file. Note: The adjustment limit should not be too large. Just adjust the appropriate amount, otherwise the original sound quality of the audio may be destroyed."
+      },
+      "重置": "reset",
+      "音量": "Volume",
+      "AmplifyLimit": {
+        "index": "Amplify Limit",
+        "rulesErrorInfo": "The input value must be greater than 0 and less than 100,000,000"
       }
     }
   },

@@ -43,7 +43,7 @@
       </div>
     </div>
   </q-item>
-  <q-item :class="['h-15 mb-6']">
+  <q-item :class="['h-15 mb-12']">
     <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
 
     <div :class="['w-[100%] grid justify-items-center']">
@@ -51,11 +51,13 @@
         <q-input
           dense
           hide-bottom-space
-          :class="['w-[50%] h-10.5 ']"
+          :class="['w-[55%] h-10.5 ']"
           v-model.number="setting_store.audioVolumeProcessing.volumeAmplifyLimit"
           type="number"
           filled
-          :rules="[(val: number) => { return val > 0 && val<100000000 || '请输入一个大于0且小于100000000的数字'; }]"
+          :label="$t('setting.原始音量增减调节.AmplifyLimit.index')"
+          stack-label
+          :rules="[(val: number) => { return val > 0 && val<100000000 || $t('setting.原始音量增减调节.AmplifyLimit.rulesErrorInfo'); }]"
         />
 
         <q-btn
