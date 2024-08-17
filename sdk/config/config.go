@@ -70,41 +70,45 @@ func SetValue(key string, value any) {
 	}
 }
 
+// 手动打开应用时的默认设置
+const Startup___is_hide_windows = false
+
 // 自动启动应用时的默认设置
 const Auto_startup___is_auto_run = false
 const Auto_startup___is_hide_windows = true
 const Auto_startup___is_hide_windows_old = true
 
-// 手动打开应用时的默认设置
-const Startup___is_hide_windows = false
-
 // 音频音量处理的默认设置
 // * 用于设置页面 音量提升/缩减 设置
 const Audio_volume_processing___volume_amplify = 0.0        // (-无穷)~0~(+无穷) ; // 此处理可能超出安全的范围, 它希望无论如何都要调整音量的大小(即使在一定值时会破坏原音频音质, 也在所不惜)
 const Audio_volume_processing___volume_amplify_limit = 10.0 // 给(-无穷)~0~(+无穷)一个限制; 让其实际上为(-volume_amplify_limit)~0~(+volume_amplify_limit)// 设置默认的配置
-// * 用于主页面(随后需要重构过去)
-const Audio_volume_processing___volume_normal = 0.0            // (-无穷)~0 ; // 让其最小值实际上为(-volume_amplify_limit)~0,以应对音量被增强后的音量缩减需求 // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
-const Audio_volume_processing___volume_normal_reduce_scope = 5 // 默认为5
-const Audio_volume_processing___volume_silent = false          // 当其为true时, 代表静音。
 
+// 主页面的默认设置
+const Main_home___audio_volume_processing___volume_normal = 0.0                 // (-无穷)~0 ; // 让其最小值实际上为(-volume_amplify_limit)~0,以应对音量被增强后的音量缩减需求 // 此为安全范围内的音量处理, 它希望在保留(或不超过)原始音频音量的前提下调整音量
+const Main_home___audio_volume_processing___volume_normal_reduce_scope = 5      // 默认为5
+const Main_home___audio_volume_processing___volume_silent = false               // 当其为true时, 代表静音。
+const Main_home___audio_volume_processing___is_open_volume_debug_slider = false // 用于在设置页面 和 主页面上显示 音量调试滑块
 
 func settingDefaultConfig() {
+	// 手动打开应用时的默认设置
+	viper.SetDefault("startup.is_hide_windows", Startup___is_hide_windows)
+
 	// 自动启动应用时的默认设置
 	viper.SetDefault("auto_startup.is_auto_run", Auto_startup___is_auto_run)
 	viper.SetDefault("auto_startup.is_hide_windows", Auto_startup___is_hide_windows)
 	viper.SetDefault("auto_startup.is_hide_windows_old", Auto_startup___is_hide_windows_old)
 
-	// 手动打开应用时的默认设置
-	viper.SetDefault("startup.is_hide_windows", Startup___is_hide_windows)
-
 	// 音频音量处理的默认设置
 	// * 用于设置页面 音量提升/缩减 设置
 	viper.SetDefault("audio_volume_processing.volume_amplify", Audio_volume_processing___volume_amplify)
 	viper.SetDefault("audio_volume_processing.volume_amplify_limit", Audio_volume_processing___volume_amplify_limit)
-	// * 用于主页面(随后需要重构过去)
-	viper.SetDefault("audio_volume_processing.volume_normal", Audio_volume_processing___volume_normal)
-	viper.SetDefault("audio_volume_processing.volume_normal_reduce_scope", Audio_volume_processing___volume_normal_reduce_scope)
-	viper.SetDefault("audio_volume_processing.volume_silent", Audio_volume_processing___volume_silent)
+
+	// 主页面的默认设置
+	viper.SetDefault("main_home.audio_volume_processing.volume_normal", Main_home___audio_volume_processing___volume_normal)
+	viper.SetDefault("main_home.audio_volume_processing.volume_normal_reduce_scope", Main_home___audio_volume_processing___volume_normal_reduce_scope)
+	viper.SetDefault("main_home.audio_volume_processing.volume_silent", Main_home___audio_volume_processing___volume_silent)
+	viper.SetDefault("main_home.audio_volume_processing.is_open_volume_debug_slider", Main_home___audio_volume_processing___is_open_volume_debug_slider)
+
 }
 
 func createDefaultConfig() {

@@ -57,14 +57,14 @@
           dense
           round
           flat
-          :icon="setting_store.audioVolumeProcessing.volumeSilent ? 'volume_off' : 'volume_up'"
+          :icon="setting_store.mainHome.audioVolumeProcessing.volumeSilent ? 'volume_off' : 'volume_up'"
           @click="isSilent"
         >
         </q-btn>
 
         <q-slider
           :class="['w-[80%]']"
-          v-model="setting_store.audioVolumeProcessing.volumeNormal"
+          v-model="setting_store.mainHome.audioVolumeProcessing.volumeNormal"
           :max="0"
           :min="-min"
           :step="0"
@@ -87,30 +87,34 @@ const setting_store = useSettingStore();
 const min = computed(() => {
   if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {
     return (
-      setting_store.audioVolumeProcessing.volumeAmplify + setting_store.audioVolumeProcessing.volumeNormalReduceScope
+      setting_store.audioVolumeProcessing.volumeAmplify +
+      setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope
     );
   } else {
     //  FIXME的完成小记: 对应步骤小记, 当setting_store.audioVolumeProcessing.volumeAmplify<0时, 我们使用固定的g值作为缩小幅度(或者说已被缩小的值<即0>为参考的对数g, 因为我们的最大值固定为0, 因此也是固定的g值)
-    //                   * g值 = setting_store.audioVolumeProcessing.volumeNormalReduceScope。
-    return setting_store.audioVolumeProcessing.volumeNormalReduceScope;
+    //                   * g值 = setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope。
+    return setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
   }
 });
 
 const labelValue = computed(() => {
-  const percentage = ((1 - -setting_store.audioVolumeProcessing.volumeNormal / min.value) * 100).toFixed(2).split('.');
+  const percentage = ((1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value) * 100)
+    .toFixed(2)
+    .split('.');
   return percentage[1] === '00' ? percentage[0] + '%' : percentage[0] + '.' + percentage[1] + '%';
 });
 
 watch(
-  () => setting_store.audioVolumeProcessing.volumeNormal,
+  () => setting_store.mainHome.audioVolumeProcessing.volumeNormal,
   () => {
     // 当用户拖动音量进度条时, 自动解除静音
-    setting_store.audioVolumeProcessing.volumeSilent = false;
+    setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
   }
 );
 
 const isSilent = () => {
-  setting_store.audioVolumeProcessing.volumeSilent = !setting_store.audioVolumeProcessing.volumeSilent;
+  setting_store.mainHome.audioVolumeProcessing.volumeSilent =
+    !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
 </script>
 

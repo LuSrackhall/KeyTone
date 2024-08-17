@@ -94,10 +94,6 @@ export const useSettingStore = defineStore('setting', () => {
   const audioVolumeProcessing = ref({
     volumeAmplify: 0,
     volumeAmplifyLimit: 10,
-    // 以下3项后续需要重构
-    volumeNormal: 0,
-    volumeNormalReduceScope: 5,
-    volumeSilent: false,
   });
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
   // ...
@@ -106,7 +102,24 @@ export const useSettingStore = defineStore('setting', () => {
   //!endregion ----->>>>>>>>>>>>>>>>>>>> -- volume end   -_-^_^-_- ^_^-_-^_^-_-
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- mainHome start ^_^-_-^_^
+  const mainHome = ref({
+    audioVolumeProcessing: {
+      volumeNormal: 0,
+      volumeNormalReduceScope: 5,
+      volumeSilent: false,
+      isOpenVolumeDebugSlider: false,
+    },
+  });
 
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
+
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
 
   async function settingInitAndRealTimeStorage() {
@@ -136,6 +149,7 @@ export const useSettingStore = defineStore('setting', () => {
 
       const settingStorage = req;
 
+      // 语言设置(仅在前端配置的配置项,sdk对此无依赖)
       // 使用从存储取出的设置数据, 对setting-store.ts内的相关变量做初始化
       // TODO: 修改配置名或加入新配置后, 需在此处做相应的初始化处理 (代号 setting)
       // TIPS: 这里只是为了判断是否从配置文件中读到了这个内容。为防止内容本身就为bool类型, 最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>。
@@ -143,13 +157,14 @@ export const useSettingStore = defineStore('setting', () => {
         languageDefault.value = settingStorage.language_default;
       }
 
-      console.log('111111111', settingStorage.aaa);
-
+      // 手动打开应用时的默认设置
       // TIPS: 因为值本身就是boolean类型, 因此不能直接用于判断(最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>)。
       //       *  if (typeof settingStorage.startup.is_hide_windows === 'boolean') 虽然这样判断更准确, 但不够通用。 因为我只想简化开发成本, 所以我不用。
       if (settingStorage.startup.is_hide_windows !== undefined) {
         startup.value.isHideWindows = settingStorage.startup.is_hide_windows;
       }
+
+      // 自动启动应用时的默认设置
       if (settingStorage.auto_startup.is_auto_run !== undefined) {
         autoStartup.value.isAutoRun = settingStorage.auto_startup.is_auto_run;
       }
@@ -158,23 +173,32 @@ export const useSettingStore = defineStore('setting', () => {
         autoStartup.value.isHideWindows = settingStorage.auto_startup.is_hide_windows;
       }
 
+      // 音频音量处理的默认设置
+      // * 用于设置页面 音量提升/缩减 设置
       if (settingStorage.audio_volume_processing.volume_amplify !== undefined) {
         audioVolumeProcessing.value.volumeAmplify = settingStorage.audio_volume_processing.volume_amplify;
       }
       if (settingStorage.audio_volume_processing.volume_amplify_limit !== undefined) {
         audioVolumeProcessing.value.volumeAmplifyLimit = settingStorage.audio_volume_processing.volume_amplify_limit;
       }
-      if (settingStorage.audio_volume_processing.volume_normal !== undefined) {
-        audioVolumeProcessing.value.volumeNormal = settingStorage.audio_volume_processing.volume_normal;
-      }
-      if (settingStorage.audio_volume_processing.volume_normal_reduce_scope !== undefined) {
-        audioVolumeProcessing.value.volumeNormalReduceScope =
-          settingStorage.audio_volume_processing.volume_normal_reduce_scope;
-      }
-      if (settingStorage.audio_volume_processing.volume_silent !== undefined) {
-        audioVolumeProcessing.value.volumeSilent = settingStorage.audio_volume_processing.volume_silent;
-      }
 
+      // 主页面的默认设置
+      if (settingStorage.main_home.audio_volume_processing.volume_normal !== undefined) {
+        mainHome.value.audioVolumeProcessing.volumeNormal =
+          settingStorage.main_home.audio_volume_processing.volume_normal;
+      }
+      if (settingStorage.main_home.audio_volume_processing.volume_normal_reduce_scope !== undefined) {
+        mainHome.value.audioVolumeProcessing.volumeNormalReduceScope =
+          settingStorage.main_home.audio_volume_processing.volume_normal_reduce_scope;
+      }
+      if (settingStorage.main_home.audio_volume_processing.volume_silent !== undefined) {
+        mainHome.value.audioVolumeProcessing.volumeSilent =
+          settingStorage.main_home.audio_volume_processing.volume_silent;
+      }
+      if (settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider !== undefined) {
+        mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider =
+          settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
+      }
     });
 
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
@@ -186,15 +210,20 @@ export const useSettingStore = defineStore('setting', () => {
     //   StoreSet('settingPage', JSON.stringify(settingStorage));
     // });
 
+    // 语言设置(仅在前端配置的配置项,sdk对此无依赖)
     watch(languageDefault, () => {
       StoreSet('language_default', languageDefault.value);
     });
+
+    // 手动打开应用时的默认设置
     watch(
       () => startup.value.isHideWindows,
       () => {
         StoreSet('startup.is_hide_windows', startup.value.isHideWindows);
       }
     );
+
+    // 自动启动应用时的默认设置
     watch(
       () => autoStartup.value.isAutoRun,
       () => {
@@ -207,6 +236,9 @@ export const useSettingStore = defineStore('setting', () => {
         StoreSet('auto_startup.is_hide_windows', autoStartup.value.isHideWindows);
       }
     );
+
+    // 音频音量处理的默认设置
+    // * 用于设置页面 音量提升/缩减 设置
     watch(
       () => audioVolumeProcessing.value.volumeAmplify,
       () => {
@@ -221,28 +253,39 @@ export const useSettingStore = defineStore('setting', () => {
         }
       }
     );
+
+    // 主页面的默认设置
     watch(
-      () => audioVolumeProcessing.value.volumeNormal,
+      () => mainHome.value.audioVolumeProcessing.volumeNormal,
       () => {
-        StoreSet('audio_volume_processing.volume_normal', audioVolumeProcessing.value.volumeNormal);
+        StoreSet('main_home.audio_volume_processing.volume_normal', mainHome.value.audioVolumeProcessing.volumeNormal);
       }
     );
     watch(
-      () => audioVolumeProcessing.value.volumeNormalReduceScope,
+      () => mainHome.value.audioVolumeProcessing.volumeNormalReduceScope,
       () => {
         StoreSet(
-          'audio_volume_processing.volume_normal_reduce_scope',
-          audioVolumeProcessing.value.volumeNormalReduceScope
+          'main_home.audio_volume_processing.volume_normal_reduce_scope',
+          mainHome.value.audioVolumeProcessing.volumeNormalReduceScope
         );
       }
     );
     watch(
-      () => audioVolumeProcessing.value.volumeSilent,
+      () => mainHome.value.audioVolumeProcessing.volumeSilent,
       () => {
-        StoreSet('audio_volume_processing.volume_silent', audioVolumeProcessing.value.volumeSilent);
+        StoreSet('main_home.audio_volume_processing.volume_silent', mainHome.value.audioVolumeProcessing.volumeSilent);
       }
     );
 
+    watch(
+      () => mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider,
+      () => {
+        StoreSet(
+          'main_home.audio_volume_processing.is_open_volume_debug_slider',
+          mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider
+        );
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -260,6 +303,7 @@ export const useSettingStore = defineStore('setting', () => {
     startup,
     autoStartup,
     audioVolumeProcessing,
+    mainHome,
     settingInitAndRealTimeStorage,
   };
 });
