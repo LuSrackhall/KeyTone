@@ -2,6 +2,7 @@ package config
 
 import (
 	"KeyTone/logger"
+	"sync"
 
 	"github.com/spf13/viper"
 )
@@ -52,9 +53,13 @@ func RestoreDefaultSetting() {
 
 }
 
+var viperGetMu sync.Mutex
+
 // 获取配置
 // * 如果想获取这个json文件的所有配置, 则可用key="get_all_value"作为键值来查询
 func GetValue(key string) any {
+	viperGetMu.Lock()
+	defer viperGetMu.Unlock()
 	if key == "get_all_value" {
 		return viper.AllSettings()
 	} else {
@@ -62,8 +67,12 @@ func GetValue(key string) any {
 	}
 }
 
+var viperSetMu sync.Mutex
+
 // 设置新配置值, 并将设置的值保存到配置文件
 func SetValue(key string, value any) {
+	viperSetMu.Lock()
+	defer viperSetMu.Unlock()
 	viper.Set(key, value)
 	if err := viper.WriteConfig(); err != nil {
 		logger.Error("向配置文件保存设置时发生致命错误", "err", err.Error())
