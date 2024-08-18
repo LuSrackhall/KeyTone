@@ -214,6 +214,16 @@ const menuTemplate = [
   },
 ];
 
+// 这个在每次使用Menu.buildFromTemplate()时, 都要调用, 以防止传入未经i18n运算的原始菜单模板
+function menuTemplateI18n() {
+  return menuTemplate.map((item) => {
+    return {
+      ...item,
+      label: i18n.global.t(item.label),
+    };
+  });
+}
+
 // 先通过轮询验证下可行性, 之后再引入sse或websocket。 (等引入sse或websocket时, 再来改动此部分代码, 目前能用就行。)
 let history_language_default: string;
 
@@ -227,13 +237,7 @@ setInterval(() => {
       // console.log('req', req);
       // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
       // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
-      const test = menuTemplate.map((item) => {
-        return {
-          ...item,
-          label: i18n.global.t(item.label),
-        };
-      });
-      const contextMenu = Menu.buildFromTemplate(test);
+      const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
 
       tray.setContextMenu(contextMenu);
       history_language_default = req;
@@ -245,14 +249,8 @@ function createTray() {
   // 创建托盘图标
   tray = new Tray(path.join(__dirname, 'icons/icon.png')); // 替换为你的图标路径
 
-  const test = menuTemplate.map((item) => {
-    return {
-      ...item,
-      label: i18n.global.t(item.label),
-    };
-  });
   // 创建托盘图标的上下文菜单
-  const contextMenu = Menu.buildFromTemplate(test);
+  const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
 
   // 设置托盘图标的上下文菜单
   tray.setContextMenu(contextMenu);
