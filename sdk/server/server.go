@@ -2,7 +2,9 @@ package server
 
 import (
 	"KeyTone/config"
+	"KeyTone/logger"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -20,6 +22,51 @@ func ServerRun() {
 	})
 
 	mainRouters(r)
+
+	r.GET("/stream", func(c *gin.Context) {
+
+		logger.Logger.Debug("新生成了一个线程............................")
+		logger.Debug("新生成了一个线程............................")
+
+		clientStoresChan := make(chan *config.Store)
+
+		serverStoresChan := make(chan bool, 1)
+
+		config.Clients_sse_stores.Store(clientStoresChan, serverStoresChan)
+
+		defer func() {
+			config.Clients_sse_stores.Delete(clientStoresChan)
+
+			logger.Logger.Debug("一个线程退出了............................")
+			logger.Debug("一个线程退出了............................")
+		}()
+
+		clientGone := c.Request.Context().Done()
+
+		for {
+			re := c.Stream(func(w io.Writer) bool {
+				select {
+				case <-clientGone:
+					serverStoresChan <- false
+
+					return false
+
+				case message, ok := <-clientStoresChan:
+					if !ok {
+						logger.Error("通道clientStoresChan非正常关闭")
+						return true
+					}
+					c.SSEvent("message", message)
+					return true
+				}
+			})
+
+			if !re {
+				return
+			}
+		}
+
+	})
 
 	// 运行gin
 	r.Run("0.0.0.0:38888")

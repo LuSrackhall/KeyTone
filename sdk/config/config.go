@@ -4,8 +4,17 @@ import (
 	"KeyTone/logger"
 	"sync"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
+
+type Store struct {
+	Key   string `json:"key"`
+	Value any    `json:"value"`
+}
+
+var Clients_sse_stores sync.Map
+var once_stores sync.Once
 
 // Setting.json is the configuration for the application
 func ConfigRun(path string) {
@@ -20,10 +29,34 @@ func ConfigRun(path string) {
 	// TIPS: 我们可能无法在此回调中, 直接获取被更改的配置是哪个
 	//       > 因此如果使用此回调, 我们只需对我们所关注的配置项, 手动建立历史值, 并在回调中重新获取这个值予以对比即可。
 	//       > (比如监听是否自动重启的配置是否更改, 如果更改就触发服务端推送<sse或webSocket>)
-	// viper.OnConfigChange(func(e fsnotify.Event) {
-	// 	// TIPS: 不要在这内部调用此函数或任何会修改配置文件的写入操作, 否则会造成循环依赖从而破坏事件
-	// 	// viper.WriteConfig()
-	// })
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		// TIPS: 不要在这内部调用此函数或任何会修改配置文件的写入操作, 否则会造成循环依赖从而破坏事件
+		// viper.WriteConfig()
+		// TIPS: 虽然这里触发的sse在前端依旧会在前端触发写入操作(但前提是前端的值变了才会触发响应式的调用写入操作)
+		//       * 因此, 我们在前端引入延时触发接收到sse后写入的逻辑(并做了进一步的防抖处理), 因此在sse进行写入时
+		//         * 如果是由前端先触发写入, 并引起此处回调发送sse; 当前端延时一定时间后收到sse并作出同步时, 由于值已经变过了, 因此此sse的同步不会触发响应式更新, 也就打断了循环依赖。
+		//           > 值得注意的是, 若是不进行延时, 由于网络拥堵因素, 可能造成旧值覆盖最新值的短时间循环依赖bug(直到碰到sse值和前端内存值一致后停止, 若是运气不好还有可能循环很多轮, 甚至无限循环)
+		//         * 如果是有配置文件被手动变更引起的, 触发此处回调发送sse;  当前端延时一定时间后收到sse并作出同步时, 由于前端内存值还是旧值, 因此会被sse同步的最新值覆盖。(虽然会再次触发调用一次重复的写入, 并重新触发此处回调, 不过也就到此为止了, 循环会在前端再次收到后被打破。)
+		go func(Clients_sse_stores *sync.Map) {
+			stores := &Store{
+				Key:   "get_all_value",
+				Value: GetValue("get_all_value"),
+			}
+			Clients_sse_stores.Range(func(key, value interface{}) bool {
+				clientChan := key.(chan *Store)
+				serverChan := value.(chan bool)
+				select {
+				case clientChan <- stores:
+					return true
+				case <-serverChan:
+					once_stores.Do(func() {
+						close(serverChan)
+					})
+					return true
+				}
+			})
+		}(&Clients_sse_stores)
+	})
 
 	// 监听配置文件更改
 	// * TIPS: viper在加载时, 会一次性将配置文件中所有配置读入内存中管理,也就是说,默认不会监听文件本身非viper操作之外的更改。
