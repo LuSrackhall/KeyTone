@@ -196,6 +196,8 @@ function createWindow() {
 //  * TIPS: 需要注意的是, Menu.buildFromTemplate()在处理原始模板数组时, 不论外部的数组引用如何, 其只会根据数组的元素做判断
 //          > 这个判断方式直接排除了相同引用的数组元素对象(即使你更改了某个数组元素对象的某个字段值), 也不会为你更新托盘菜单
 //          > * 因此, 我们在需要修改某个托盘菜单时, 必须对相关元素对象彻底的解引用后, 再修改重构这个对象<只有破坏这个元素对象的引用才能得到托盘菜单的更新>。
+//  * FIXME: 上方的也仅仅是猜测, 在通过array.map遍历数组时, 除了解构的方式中使用 i18n.global.t(item.label) 可以获得国际化返回值之外, 其它的方式只能得到原始字符串。
+//           * 因此, 没有更新托盘菜单的原有也可能是i18n.global.t(item.label) 每次在遍历时, 以非解构的方式使用时, 并为获得正常返回值, 因此原始值都没变, 谈何更新。
 const menuTemplate = [
   {
     label: 'Electron.tray.show',
@@ -226,11 +228,14 @@ setInterval(() => {
       // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
       // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
       const test = menuTemplate.map((item) => {
-        return {
-          ...item,
-          label: i18n.global.t(item.label),
-        };
+        const a = () => i18n.global.t(item.label);
+        console.log('a', a());
+        item.label = a();
+        return item;
       });
+      console.log('test', test);
+      console.log('menuTemplate', menuTemplate);
+
       const contextMenu = Menu.buildFromTemplate(test);
 
       tray.setContextMenu(contextMenu);
@@ -244,11 +249,14 @@ function createTray() {
   tray = new Tray(path.join(__dirname, 'icons/icon.png')); // 替换为你的图标路径
 
   const test = menuTemplate.map((item) => {
-    return {
-      ...item,
-      label: i18n.global.t(item.label),
-    };
+    const a = () => i18n.global.t(item.label);
+    console.log('a', a());
+    item.label = a();
+    return item;
   });
+
+  console.log('test', test);
+  console.log('menuTemplate', menuTemplate);
   // 创建托盘图标的上下文菜单
   const contextMenu = Menu.buildFromTemplate(test);
 
