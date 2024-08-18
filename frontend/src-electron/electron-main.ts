@@ -102,7 +102,7 @@ if (process.env.DEBUGGING) {
 const platform = process.platform || os.platform();
 
 let mainWindow: BrowserWindow | undefined;
-let tray;
+let tray: Tray;
 
 function createWindow() {
   /**
@@ -192,6 +192,26 @@ function createWindow() {
   });
 }
 
+//  建立一个全局可知的原始菜单模板(用于后续功能实现)<只需将此数组传入Menu.buildFromTemplate()中, 即可得到托盘菜单>
+//  * TIPS: 需要注意的是, Menu.buildFromTemplate()在处理原始模板数组时, 不论外部的数组引用如何, 其只会根据数组的元素做判断
+//          > 这个判断方式直接排除了相同引用的数组元素对象(即使你更改了某个数组元素对象的某个字段值), 也不会为你更新托盘菜单
+//          > * 因此, 我们在需要修改某个托盘菜单时, 必须对相关元素对象彻底的解引用后, 再修改重构这个对象<只有破坏这个元素对象的引用才能得到托盘菜单的更新>。
+const menuTemplate = [
+  {
+    label: 'Electron.tray.show',
+    click: () => {
+      mainWindow?.show();
+    },
+  },
+  {
+    label: 'Electron.tray.quit',
+    click: () => {
+      (app as any).isQuiting = true;
+      app.quit();
+    },
+  },
+];
+
 // 先通过轮询验证下可行性, 之后再引入sse或websocket。 (等引入sse或websocket时, 再来改动此部分代码, 目前能用就行。)
 let history_language_default: string;
 
@@ -205,23 +225,15 @@ setInterval(() => {
       // console.log('req', req);
       // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
       // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
-      const contextMenu = Menu.buildFromTemplate([
-        {
-          label: i18n.global.t('Electron.tray.show'),
-          click: () => {
-            mainWindow?.show();
-          },
-        },
-        {
-          label: i18n.global.t('Electron.tray.quit'),
-          click: () => {
-            (app as any).isQuiting = true;
-            app.quit();
-          },
-        },
-      ]);
+      const test = menuTemplate.map((item) => {
+        return {
+          ...item,
+          label: i18n.global.t(item.label),
+        };
+      });
+      const contextMenu = Menu.buildFromTemplate(test);
 
-      tray!.setContextMenu(contextMenu);
+      tray.setContextMenu(contextMenu);
       history_language_default = req;
     }
   });
@@ -231,22 +243,14 @@ function createTray() {
   // 创建托盘图标
   tray = new Tray(path.join(__dirname, 'icons/icon.png')); // 替换为你的图标路径
 
+  const test = menuTemplate.map((item) => {
+    return {
+      ...item,
+      label: i18n.global.t(item.label),
+    };
+  });
   // 创建托盘图标的上下文菜单
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: i18n.global.t('Electron.tray.show'),
-      click: () => {
-        mainWindow?.show();
-      },
-    },
-    {
-      label: i18n.global.t('Electron.tray.quit'),
-      click: () => {
-        (app as any).isQuiting = true;
-        app.quit();
-      },
-    },
-  ]);
+  const contextMenu = Menu.buildFromTemplate(test);
 
   // 设置托盘图标的上下文菜单
   tray.setContextMenu(contextMenu);
