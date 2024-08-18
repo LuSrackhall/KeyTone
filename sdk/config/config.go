@@ -75,6 +75,9 @@ func SetValue(key string, value any) {
 	if err := viper.WriteConfig(); err != nil {
 		logger.Error("向配置文件保存设置时发生致命错误", "err", err.Error())
 	}
+
+	// 由于viper.Set()在设计中拥有最高覆盖级别,因此需要在每次使用此api设置后, 清空viper.Set()的设置, 以使得文件监听的api可以正常工作。
+	viper.Set(key, nil)
 }
 
 // 手动打开应用时的默认设置
