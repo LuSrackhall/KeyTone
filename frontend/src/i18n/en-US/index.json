@@ -66,6 +66,8 @@
     "tray": {
       "show": "Show",
       "quit": "Quit",
+      "mute": "Mute",
+      "unmute": "Unmute"
     }
   }
 }

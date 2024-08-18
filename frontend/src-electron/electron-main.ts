@@ -206,6 +206,12 @@ const menuTemplate = [
     },
   },
   {
+    label: 'Electron.tray.mute',
+    click: () => {
+      StoreSet('main_home.audio_volume_processing.volume_silent', true);
+    },
+  },
+  {
     label: 'Electron.tray.quit',
     click: () => {
       (app as any).isQuiting = true;
@@ -224,8 +230,20 @@ function menuTemplateI18n() {
   });
 }
 
+// 在菜单模板中, 搜索所需菜单项的数组序号, 供后续变更使用
+function searchItemIndexInMenuTemplate(label: string): number {
+  for (let i = 0; i < menuTemplate.length; i++) {
+    if (menuTemplate[i].label === label) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 // 先通过轮询验证下可行性, 之后再引入sse或websocket。 (等引入sse或websocket时, 再来改动此部分代码, 目前能用就行。)
 let history_language_default: string;
+
+let history_volume_silent: boolean;
 
 setInterval(() => {
   StoreGet('language_default').then((req) => {
@@ -241,6 +259,32 @@ setInterval(() => {
 
       tray.setContextMenu(contextMenu);
       history_language_default = req;
+    }
+  });
+  StoreGet('main_home.audio_volume_processing.volume_silent').then((req) => {
+    if (req != history_volume_silent) {
+      if (req === true) {
+        const index = searchItemIndexInMenuTemplate('Electron.tray.mute');
+        menuTemplate[index] = {
+          label: 'Electron.tray.unmute',
+          click: () => {
+            StoreSet('main_home.audio_volume_processing.volume_silent', false);
+          },
+        };
+      } else if (req === false) {
+        const index = searchItemIndexInMenuTemplate('Electron.tray.unmute');
+        menuTemplate[index] = {
+          label: 'Electron.tray.mute',
+          click: () => {
+            StoreSet('main_home.audio_volume_processing.volume_silent', true);
+          },
+        };
+      }
+
+      const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+
+      tray.setContextMenu(contextMenu);
+      history_volume_silent = req;
     }
   });
 }, 1000);
