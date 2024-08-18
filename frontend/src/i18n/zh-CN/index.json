@@ -59,7 +59,7 @@
   "Electron": {
     "tray": {
       "show": "展示",
-      "close": "关闭"
+      "quit": "退出",
     }
   }
 }

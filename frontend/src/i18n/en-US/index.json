@@ -65,7 +65,7 @@
   "Electron": {
     "tray": {
       "show": "Show",
-      "close": "Close"
+      "quit": "Quit",
     }
   }
 }

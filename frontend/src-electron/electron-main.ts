@@ -204,7 +204,7 @@ setInterval(() => {
       // 先验证i18n是否生效
       // console.log('req', req);
       // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
-      // console.log('i18n.global.t(Electron.tray.close)', i18n.global.t('Electron.tray.close'));
+      // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
       const contextMenu = Menu.buildFromTemplate([
         {
           label: i18n.global.t('Electron.tray.show'),
@@ -213,7 +213,7 @@ setInterval(() => {
           },
         },
         {
-          label: i18n.global.t('Electron.tray.close'),
+          label: i18n.global.t('Electron.tray.quit'),
           click: () => {
             (app as any).isQuiting = true;
             app.quit();
@@ -240,7 +240,7 @@ function createTray() {
       },
     },
     {
-      label: i18n.global.t('Electron.tray.close'),
+      label: i18n.global.t('Electron.tray.quit'),
       click: () => {
         (app as any).isQuiting = true;
         app.quit();
