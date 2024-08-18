@@ -143,7 +143,11 @@ const markersDebug = computed(() => {
   }
 });
 
-const isSilent = () => {
+const isSilent = (event: any) => {
+  if (event.detail === 0) {
+    // 由键盘触发，不处理
+    return;
+  }
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
