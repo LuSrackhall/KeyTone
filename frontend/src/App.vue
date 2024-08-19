@@ -64,7 +64,7 @@ onBeforeMount(async () => {
         settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
     }
   }
-  const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 300, {
+  const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 30, {
     trailing: true,
   });
   app_store.eventSource.addEventListener(
