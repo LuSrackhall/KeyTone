@@ -24,7 +24,7 @@
    */
   "i18n-ally.regex.key": ".*?",
   "i18n-ally.keystyle": "nested", // 虽然会自动识别, 但每次自动识别后都会更新到配置中, 相当于自动帮你手动配置。 由于本项目的确仅使用此种json格式, 因此显示配置它。
-  "i18n-ally.translate.engines": ["openai", "google", "google-cn", "deepl", "libretranslate", "baidu"],
+  "i18n-ally.translate.engines": ["google"],
   // TODO: 用于配置t() 和 $t() 之外的, 可被识别的i18n字符串。(根据具体项目, 具体配置。<如某些情况下, 通过变量定义i18n字符串时, 不想直接使用t()或$t()>)
   "i18n-ally.regex.usageMatchAppend": [
     // "[^\\w\\d]a\\(['\"`]({key})['\"`]",  // 可以识别所有的   a("你的i18n路径key")
