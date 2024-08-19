@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 
 export const useAppStore = defineStore('app', () => {
   const q = useQuasar();
+  const { t } = useI18n();
 
   const IPV4 = '127.0.0.1';
 
@@ -14,7 +16,7 @@ export const useAppStore = defineStore('app', () => {
 
       position: 'top',
 
-      message: '正在尝试获取配置文件...',
+      message: t('Notify.正在尝试获取配置文件'),
 
       timeout: 1000,
     });
@@ -25,7 +27,7 @@ export const useAppStore = defineStore('app', () => {
 
         position: 'top',
 
-        message: '获取配置文件失败',
+        message: t('Notify.获取配置文件失败'),
 
         timeout: 1000,
       });
@@ -41,7 +43,7 @@ export const useAppStore = defineStore('app', () => {
 
         position: 'bottom',
 
-        message: '配置文件获取成功, 正在读取配置...',
+        message: t('Notify.配置文件获取成功, 正在读取配置'),
 
         timeout: 500,
       });
@@ -52,7 +54,7 @@ export const useAppStore = defineStore('app', () => {
 
           position: 'bottom',
 
-          message: '配置读取成功',
+          message: t('Notify.配置读取成功'),
 
           timeout: 3000,
         });
