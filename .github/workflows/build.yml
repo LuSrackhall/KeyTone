@@ -38,20 +38,25 @@ jobs:
           cd sdk
           make all
 
+      - name: Find the generated installer
+        working-directory: frontend/dist/electron/Packaged
+        run: |
+          echo "INSTALLER_NAME=$(find  -name 'KeyTone-Setup-*-win.exe')" >> $GITHUB_ENV
+
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
         with:
-          name: windows-build
-          path: frontend/dist/electron/Packaged/KeyTone-Setup-0.1.0-win.exe
+          name: ${{ env.INSTALLER_NAME }} # Artifact 中, 下载到的打包结果的名称(如果此处命名不符合原文件名称, 将会自动加上.zip后缀<但仅是套了个壳的别名形式, 并未做任何压缩, 解压也不过是多个文件夹而已>)
+          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }}
 
       - name: Create GitHub Release
-        id: create_release
+        id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
         uses: actions/create-release@v1 # 安装用户自动创建release的脚本
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }} # 选择此release的tag名称<准确来讲这是触发工作流的分支或标签的完整引用--即带前缀的`refs/heads/ 或 refs/tags/ 前缀`>(可以尝试手动创建一个release, 其界面上是有一个让你选择tag的选项框的)
+          release_name: Release ${{ github.ref_name }} # 这个是当前release的名称<这个并非像上面一样的完整引用--即不包括`refs/heads/ 或 refs/tags/ 前缀`>。(理论上github.ref_name的值: 如果当前actions是被push/tag触发的, 则会选择tag名; 若仅是push触发, 则会选择分支名)
           draft: true # 此项为true, 表示发布的是仅自己可见的草稿(我们可以手动编辑检查后在手动发布)
           prerelease: false # 此项若为true, 则会将release打上预发布标志
 
@@ -60,7 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: frontend/dist/electron/Packaged/KeyTone-Setup-0.1.0-win.exe
-          asset_name: KeyTone-Setup-0.1.0-win.exe
-          asset_content_type: application/octet-stream
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
+          asset_path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }}
+          asset_name: ${{ env.INSTALLER_NAME }}
+          asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
