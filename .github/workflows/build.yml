@@ -57,6 +57,8 @@ jobs:
 
       - name: Upload Build Artifact to Release
         uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: frontend/dist/electron/Packaged/KeyTone-Setup-0.1.0-win.exe
