@@ -40,6 +40,7 @@ jobs:
 
       - name: Find the generated installer
         working-directory: frontend/dist/electron/Packaged
+        shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
         run: |
           echo "INSTALLER_NAME=$(find  -name 'KeyTone-Setup-*-win.exe')" >> $GITHUB_ENV
 
