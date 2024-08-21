@@ -1,14 +1,39 @@
-name: Test Workflow
+name: Build and Package Windows Applicationa
 
 on:
   push:
     branches:
       - test-github-actions
+  pull_request:
+    branches:
+      - test-github-actions
 
 jobs:
-  say_hello:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: windows-latest
 
     steps:
-      - name: Greet the World
-        run: echo "Hello from the test branch!"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install Quasar CLI
+        run: npm install -g @quasar/cli
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build Windows Application
+        run: |
+          cd sdk
+          make all
