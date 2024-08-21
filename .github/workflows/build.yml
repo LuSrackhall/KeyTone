@@ -1,4 +1,4 @@
-name: Build and Package Windows Applicationa
+name: Build and Package Windows Application
 
 on:
   push:
@@ -37,3 +37,9 @@ jobs:
         run: |
           cd sdk
           make all
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-build
+          path: frontend/dist/electron/Packaged/KeyTone-Setup-0.1.0-win.exe
