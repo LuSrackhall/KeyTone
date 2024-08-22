@@ -39,7 +39,7 @@ jobs:
           cd sdk
           make all
 
-      - name: Find the generated installer
+      - name: Find the generated installer && ZIP the generated installer
         working-directory: frontend/dist/electron/Packaged
         shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
         run:
@@ -49,7 +49,7 @@ jobs:
           INSTALLER_NAME_NO_EXT=$(echo $INSTALLER_NAME | sed 's/\.exe$//')
           echo "INSTALLER_NAME_NO_EXT=$INSTALLER_NAME_NO_EXT" >> $GITHUB_ENV
           choco install zip -y
-          zip -j -9 frontend/dist/electron/Packaged/${INSTALLER_NAME_NO_EXT}_exe.zip frontend/dist/electron/Packaged/${INSTALLER_NAME}
+          zip -j -9 ${INSTALLER_NAME_NO_EXT}_exe.zip ${INSTALLER_NAME}
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
