@@ -219,13 +219,17 @@ module.exports = configure(function (/* ctx */) {
 
       builder: {
         // https://www.electron.build/configuration/configuration
-
-        // appId: 'key-tone',
-        // productName: "keyTone", // 这是您的应用程序的名称，用户在安装时看到的名称。
+        productName: 'keyTone', // 这是您的应用程序的名称，用户在安装时看到的名称。
         appId: 'top.srackhall.keytone',
         // asar: false, // (推荐使用默认的true,以简单地保护下前端源代码<虽然实际作用不大>)这表明您的应用代码不会被打包到 ASAR 存档中。ASAR 是 Electron 用来打包应用源代码的格式，设置为 false 表示源代码将以普通文件夹的形式包含在应用中。
+        compression: 'maximum', // 压缩级别, 但这个主要与构建速度有关, 如指定为maximum将会使用更多的时间来构建。<与此同时, 最终生成的包的大小, 却并没有带来实质性的体积优化; 因此一般大家喜欢指定为store, 以或获得显著的构建时间的提升>
         copyright: 'Copyright (C) 2024 LuSrackhall',
-        artifactName: 'KeyTone-Setup-${version}-${os}.${ext}', // 这个配置是用于定义生成的文件名模板。artifactName 可以包含变量，比如 ${version} 会用应用程序的版本号替换，${os} 会用目标操作系统替换，${ext} 会用文件的扩展名替换。这样，生成的安装文件名能清楚地反映出版本信息和适用的操作系统。
+        artifactName: 'KeyTone-${version}-${os}-${arch}.${ext}', // 这个配置是用于定义生成的文件名模板。artifactName 可以包含变量，比如 ${version} 会用应用程序的版本号替换，${os} 会用目标操作系统替换，${ext} 会用文件的扩展名替换。这样，生成的安装文件名能清楚地反映出版本信息和适用的操作系统。
+        extraFiles: {
+          //指定额外要包括在应用程序包中的文件或目录。可以配置 from 和 to 字段来定义源文件或目录的路径以及它们在打包应用中的目标路径。
+          from: '../LICENSE',
+          to: 'LICENSE',
+        },
         win: {
           extraResources: [
             {
@@ -235,8 +239,7 @@ module.exports = configure(function (/* ctx */) {
             },
           ], // TIPS: 核心, 有了它就不需要再依赖makefile了
           signingHashAlgorithms: ['sha256'], // 这个配置项意味着, 如果要启用代码签名，将使用SHA-256哈希算法进行签名。代码签名对于确认应用程序的完整性和来源是非常重要的。
-          rfc3161TimeStampServer:
-            'http://timestamp.entrust.net/TSS/RFC3161sha2TS', //这个配置项用于指定一个RFC 3161兼容的时间戳服务器的URL。当你的应用程序进行代码签名时，时间戳能确保签名在证书过期之后仍然有效。
+          rfc3161TimeStampServer: 'http://timestamp.entrust.net/TSS/RFC3161sha2TS', //这个配置项用于指定一个RFC 3161兼容的时间戳服务器的URL。当你的应用程序进行代码签名时，时间戳能确保签名在证书过期之后仍然有效。
           //这个网址不是私人的，它是一个公开的RFC 3161兼容时间戳服务的URL。时间戳服务由Entrust公司提供，是用来为数字签名生成时间戳的。这对于确保在软件开发和分发过程中代码签名的完整性和长期有效性非常重要。当您对软件进行数字签名时，时间戳服务会记录和证明签名是在证书有效期内完成的。这样，即使证书在未来某个时候过期，带有时间戳的签名也仍然会被操作系统和用户视为有效和可信的。
           // 通常情况下，使用公开的RFC 3161时间戳服务，如Entrust提供的服务，是不需要付费的。这些服务一般是免费提供给公众使用的，以便于签名过程中实现时间戳的功能。但是，有一些服务提供商可能会对频繁或大量的使用提出收费，所以具体是否需要付费可能取决于你的使用情况以及服务提供商的政策。如果你是商业用户或对时间戳服务有高要求，建议直接咨询服务提供商，以了解其服务详情和是否需要付费。
           target: 'nsis', // 这个配置是特定于 Windows 平台的。target 指定生成安装程序的类型。这里设置为 "NSIS"（Nullsoft Scriptable Install System），它是一个流行的 Windows 安装程序制作工具，允许开发者创建带有自定义逻辑和界面的安装程序。
@@ -251,7 +254,7 @@ module.exports = configure(function (/* ctx */) {
           createDesktopShortcut: true, // 表示安装程序将创建桌面快捷方式。
           createStartMenuShortcut: true, //表示将创建开始菜单快捷方式。
           shortcutName: 'KeyTone', // 指定了快捷方式的名称。
-          // license: '../LICENSE', // 指定了安装过程中会显示的许可协议文件。
+          license: '../LICENSE', // 指定了安装过程中会显示的许可协议文件。
           // include: 'nsis/installer.nsh', // 包含额外的NSIS脚本文件，用于自定义安装过程。 // 比如检测系统版本是否是win10及以上, 若不满足触发退出窗口, 用户无法继续安装只能退出。
           warningsAsErrors: false, // 这意味着在NSIS脚本编译时，警告不会作为错误处理
           // installerSidebar: 'nsis/installerSidebar.bmp', // 安装侧边栏使用的图片。
