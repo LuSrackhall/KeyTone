@@ -45,13 +45,14 @@ jobs:
         run:
           | # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
           echo "INSTALLER_NAME=$( basename $( find  -name 'KeyTone-Setup-*-win.exe'))" >> $GITHUB_ENV
+          echo "INSTALLER_NAME_NO_EXT=$(echo $INSTALLER_NAME | sed 's/\.exe$//')" >> $GITHUB_ENV
+          zip -j frontend/dist/electron/Packaged/($INSTALLER_NAME_NO_EXT)_exe.zip  frontend/dist/electron/Packaged/($INSTALLER_NAME)
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
         with:
-          name: ${{ env.INSTALLER_NAME }} # Artifact 中, 下载的打包结果的名称(如果没有指定content_type, 将会自动加上.zip后缀<但仅是套了个壳的别名形式, 并未做任何压缩, 解压也不过是多个文件夹而已>)
+          name: ${{ env.INSTALLER_NAME_NO_EXT }}_exe # Artifact 中, 下载的打包结果的名称(无论名称如何设置, 都会给你加载.zip后缀的, 这是其预期的行为)<而且实质上只是套了一层壳, 并没有进行压缩--其实就算进行压缩了也小不到哪里其, 毕竟已经是压缩过的安装包文件了>。
           path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }}
-          content_type: application/octet-stream
 
       - name: Create GitHub Release
         id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
@@ -73,3 +74,13 @@ jobs:
           asset_path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }}
           asset_name: ${{ env.INSTALLER_NAME }}
           asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
+
+      - name: Upload Build Artifact ZIP to Release
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
+          asset_path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_NO_EXE}}_exe.zip
+          asset_name: ${{ env.INSTALLER_NAME }}_exe.zip
+          asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
