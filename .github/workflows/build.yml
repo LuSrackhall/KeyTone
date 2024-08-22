@@ -80,15 +80,23 @@ jobs:
           draft: true # 此项为true, 表示发布的是仅自己可见的草稿(我们可以手动编辑检查后在手动发布)
           prerelease: false # 此项若为true, 则会将release打上预发布标志
           body: |
+            ### Overview 
+
             ### Security
 
-            The SHA256 hash sum for ${{ env.INSTALLER_NAME }} is:
+            ##### The SHA256 hash sum
 
-            * ${{ env.SHA256 }}
+            `${{ env.INSTALLER_NAME }}` is:
 
-            The MD5 hash sum for ${{ env.INSTALLER_NAME }} is:
+            * `${{ env.SHA256 }}`
 
-            * ${{ env.MD5 }}
+            ##### The MD5 hash sum
+
+            `${{ env.INSTALLER_NAME }}` is:
+
+            * `${{ env.MD5 }}`
+
+            ### Changelogs
 
       - name: Upload Build Artifact to Release
         uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
