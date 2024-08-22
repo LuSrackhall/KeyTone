@@ -48,6 +48,7 @@ jobs:
           echo "INSTALLER_NAME=$INSTALLER_NAME" >> $GITHUB_ENV
           INSTALLER_NAME_NO_EXT=$(echo $INSTALLER_NAME | sed 's/\.exe$//')
           echo "INSTALLER_NAME_NO_EXT=$INSTALLER_NAME_NO_EXT" >> $GITHUB_ENV
+          choco install zip -y
           zip -j -9 frontend/dist/electron/Packaged/${INSTALLER_NAME_NO_EXT}_exe.zip frontend/dist/electron/Packaged/${INSTALLER_NAME}
 
       - name: Upload Build Artifact
