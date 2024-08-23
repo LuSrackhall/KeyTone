@@ -36,11 +36,11 @@ jobs:
         run: | # 指定此run为多个命令依次执行
           cd sdk
           sudo apt-get update
-          sudo apt-get install libasound2-dev libx11-dev libx11-xcb-dev
-          sudo apt-get install libxkbcommon-dev
-          sudo apt-get install libxkbcommon-x11-dev
-          sudo apt-get install libxext-dev
-          sudo apt-get install libxcb-xkb-dev libxfixes-dev libxtst-dev
+          sudo apt install gcc libc6-dev
+          sudo apt install libx11-dev xorg-dev libxtst-dev
+          sudo apt install xsel xclip
+          sudo apt install libpng++-dev
+          sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
           make linux
 
       - name: Debug Generated Build
