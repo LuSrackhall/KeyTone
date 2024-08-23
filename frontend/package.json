@@ -4,6 +4,7 @@
   "description": "Silent Typist's Friend",
   "productName": "KeyTone",
   "author": "LuSrackhall <3647637206@qq.com>",
+  "homepage": "https://keytone.xuanhall.com",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
