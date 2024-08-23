@@ -41,6 +41,7 @@ jobs:
           sudo apt install xsel xclip
           sudo apt install libpng++-dev
           sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
+          sudo apt install libasound2-dev
           make linux
 
       - name: Debug Generated Build
