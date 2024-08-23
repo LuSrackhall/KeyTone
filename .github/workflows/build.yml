@@ -43,33 +43,39 @@ jobs:
           sudo apt-get install libxcb-xkb-dev libxfixes-dev libxtst-dev
           make linux
 
-      - name: Find the generated installer && ZIP the generated installer
-        working-directory: frontend/dist/electron/Packaged
-        shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
-        run:
-          | # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
-          INSTALLER_NAME_TARGZ=$(basename $(find -name 'KeyTone-*-linux-*.tar.gz'))
-          echo "INSTALLER_NAME_TARGZ=$INSTALLER_NAME_TARGZ" >> $GITHUB_ENV
-          INSTALLER_NAME_APPIMAGE=$(basename $(find -name 'KeyTone-*-linux-*.AppImage'))
-          echo "INSTALLER_NAME_APPIMAGE=$INSTALLER_NAME_APPIMAGE" >> $GITHUB_ENV
-          INSTALLER_NAME_DEB=$(basename $(find -name 'KeyTone-*-linux-*.deb'))
-          echo "INSTALLER_NAME_DEB=$INSTALLER_NAME_DEB" >> $GITHUB_ENV
+      - name: Debug Generated Build
+        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+        with:
+          name: elect
+          path: frontend/dist/electron/*
 
-      - name: Upload Build Artifact Tar.gz
-        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
-        with:
-          name: ${{ env.INSTALLER_NAME_TARGZ }}
-          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_TARGZ }}
-      - name: Upload Build Artifact AppImage
-        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
-        with:
-          name: ${{ env.INSTALLER_NAME_APPIMAGE }}
-          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_APPIMAGE }}
-      - name: Upload Build Artifact Deb
-        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
-        with:
-          name: ${{ env.INSTALLER_NAME_DEB }}
-          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_DEB }}
+      # - name: Find the generated installer && ZIP the generated installer
+      #   working-directory: frontend/dist/electron/Packaged
+      #   shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
+      #   run:
+      #     | # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
+      #     INSTALLER_NAME_TARGZ=$(basename $(find -name 'KeyTone-*-linux-*.tar.gz'))
+      #     echo "INSTALLER_NAME_TARGZ=$INSTALLER_NAME_TARGZ" >> $GITHUB_ENV
+      #     INSTALLER_NAME_APPIMAGE=$(basename $(find -name 'KeyTone-*-linux-*.AppImage'))
+      #     echo "INSTALLER_NAME_APPIMAGE=$INSTALLER_NAME_APPIMAGE" >> $GITHUB_ENV
+      #     INSTALLER_NAME_DEB=$(basename $(find -name 'KeyTone-*-linux-*.deb'))
+      #     echo "INSTALLER_NAME_DEB=$INSTALLER_NAME_DEB" >> $GITHUB_ENV
+
+      # - name: Upload Build Artifact Tar.gz
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_TARGZ }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_TARGZ }}
+      # - name: Upload Build Artifact AppImage
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_APPIMAGE }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_APPIMAGE }}
+      # - name: Upload Build Artifact Deb
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_DEB }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_DEB }}
 
       # - name: Calculate File Hashes
       #   shell: bash
