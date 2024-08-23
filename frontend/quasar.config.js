@@ -280,12 +280,12 @@ module.exports = configure(function (/* ctx */) {
             from: 'dist/key_tone_sdk',
             to: 'key_tone_sdk',
           },
-          target: {
-            // 指定构建的目标包格式，可以是单一的包格式或多个格式。
-            target: 'tar.gz', // 一个使用 tar 和 gzip 组合压缩的归档格式，适用于发布和分发 Linux 应用。
-            target: 'AppImage', // 一种通用的 Linux 可执行文件格式，允许用户在大多数 Linux 发行版上运行应用，而无需安装。
-            target: 'deb', // Debian 软件包格式，广泛用于基于 Debian 的 Linux 发行版（如 Ubuntu）中。此格式方便用户通过软件包管理器（如 dpkg 或 apt）安装应用。
-          },
+          // 指定构建的目标包格式，可以是单一的包格式或多个格式。
+          target: [
+            'tar.gz', // 生成 tar.gz 格式 // 一个使用 tar 和 gzip 组合压缩的归档格式，适用于发布和分发 Linux 应用。
+            'AppImage', // 生成 AppImage 格式 // 一种通用的 Linux 可执行文件格式，允许用户在大多数 Linux 发行版上运行应用，而无需安装。
+            'deb', // 生成 deb 格式 // Debian 软件包格式，广泛用于基于 Debian 的 Linux 发行版（如 Ubuntu）中。此格式方便用户通过软件包管理器（如 dpkg 或 apt）安装应用。
+          ],
         },
       },
     },
