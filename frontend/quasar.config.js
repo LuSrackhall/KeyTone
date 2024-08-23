@@ -231,6 +231,7 @@ module.exports = configure(function (/* ctx */) {
           to: 'LICENSE',
         },
         win: {
+          // icon: 'src/assets/icon.ico', // 某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。
           extraResources: [
             {
               from: 'dist/key_tone_sdk',
@@ -259,6 +260,32 @@ module.exports = configure(function (/* ctx */) {
           warningsAsErrors: false, // 这意味着在NSIS脚本编译时，警告不会作为错误处理
           // installerSidebar: 'nsis/installerSidebar.bmp', // 安装侧边栏使用的图片。
           // uninstallerSidebar: 'nsis/uninstallerSidebar.bmp', // 卸载侧边栏使用的图片。
+        },
+
+        linux: {
+          // icon: 'src/assets/icon.icns', // 某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。
+          category: 'Utility', // 指定应用在 Linux 应用菜单中的分类。Utility 是一个常见的类别，表示工具类应用。此配置有助于将应用放置在合适的类别中，使用户更容易找到。
+          executableName: 'keytone', // 定义构建后可执行文件的名称。在你的例子中，构建后的可执行文件将命名为 Keytone。在 Linux 中，用户通常通过这个名称来启动应用, 因此常用纯小写来命名。
+
+          // 定义 Linux 桌面文件（.desktop 文件）的属性。这些文件通常放置在 /usr/share/applications/ 或 ~/.local/share/applications/ 中，用于在应用菜单中显示应用。
+          desktop: {
+            Name: 'KeyTone', // Name: 应用程序的显示名称。它将在菜单或启动器中显示。
+            Comment: 'let keyboard bring forth pleasing sounds', // 应用的简短描述。当用户将鼠标悬停在应用图标上时会显示这个描述。
+            Type: 'Application', //  指定桌面文件的类型，通常为 Application，表示这是一个应用程序。
+            Categories: 'Utility;', // 指定应用的类别，用于将应用归类到系统的应用菜单中。多个类别可以用分号分隔。
+          },
+
+          // 指定需要包含在应用包中的额外资源文件或目录。
+          extraResources: {
+            from: 'dist/key_tone_sdk',
+            to: 'key_tone_sdk',
+          },
+          target: {
+            // 指定构建的目标包格式，可以是单一的包格式或多个格式。
+            target: 'tar.gz', // 一个使用 tar 和 gzip 组合压缩的归档格式，适用于发布和分发 Linux 应用。
+            target: 'AppImage', // 一种通用的 Linux 可执行文件格式，允许用户在大多数 Linux 发行版上运行应用，而无需安装。
+            target: 'deb', // Debian 软件包格式，广泛用于基于 Debian 的 Linux 发行版（如 Ubuntu）中。此格式方便用户通过软件包管理器（如 dpkg 或 apt）安装应用。
+          },
         },
       },
     },
