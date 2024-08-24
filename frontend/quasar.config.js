@@ -231,7 +231,8 @@ module.exports = configure(function (/* ctx */) {
           to: 'LICENSE',
         },
         win: {
-          // icon: 'src/assets/icon.ico', // 某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。
+          // icon: 'src/assets/icon.ico', // 错误的论点: ~~某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。~~
+          icon: 'icons/icon.ico', // 不指定的话, 安装后是没有图标的。(win下, 使用ico格式结尾的图标名) 这里之前未指定也拥有图标的原因我也不知道, 但鉴于Linux上的经历, 最好还是指定下。
           extraResources: [
             {
               from: 'dist/key_tone_sdk',
@@ -263,7 +264,9 @@ module.exports = configure(function (/* ctx */) {
         },
 
         linux: {
-          // icon: 'src/assets/icon.icns', // 某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。
+          // icon: 'src/assets/icon.icns', // 错误的论点: ~~某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。~~
+          icon: 'icons/icon.icns', // 不指定的话, 安装后是没有图标的。(Linux下, 使用icns格式结尾的图标名)// 某些应用模板或框架（如 Quasar）, 只会帮助你将图标处理到指定路径和指定尺寸, 但用于何处还是要自己主动指定的。
+          icon: 'src/assets/img/KeyTone.png', // 由于在Ubuntu上安装后, 没有图标, 因此我尝试指定它来解决这个问题。
           category: 'Utility', // 指定应用在 Linux 应用菜单中的分类。Utility 是一个常见的类别，表示工具类应用。此配置有助于将应用放置在合适的类别中，使用户更容易找到。
           executableName: 'keytone', // 定义构建后可执行文件的名称。在你的例子中，构建后的可执行文件将命名为 Keytone。在 Linux 中，用户通常通过这个名称来启动应用, 因此常用纯小写来命名。
 
