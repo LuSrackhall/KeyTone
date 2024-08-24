@@ -51,7 +51,7 @@ jobs:
           # 由于大部分人的计算机是x64架构的(现在x86的纯32位系统几乎没人用了, 因此我的应用只支持64位的机器), 所以默认不显示架构。(我们通过正则表达式来除掉这部分)(主要显示了3中形式太乱, 如amd64、x64、x86_64)
           # * 这部分正则的原理是,  替换: 将 `从mac末尾的任意字符开头至遇到第一个.后的所有内容`  使用`mac.` 来替换。
           # ----------------------------------------------------------------------------------------INSTALLER_NAME_DMG
-          INSTALLER_NAME_DMG=$(basename $(find -name 'KeyTone-*-mac*dmg'))
+          INSTALLER_NAME_DMG=$(basename $(find . -name 'KeyTone-*-mac*dmg'))
           # mv $INSTALLER_NAME_DMG $(echo $INSTALLER_NAME_DMG | sed 's/mac[^.]*\./mac./')
           # INSTALLER_NAME_DMG=$(echo $INSTALLER_NAME_DMG | sed 's/mac[^.]*\./mac./')
           echo "INSTALLER_NAME_DMG=$INSTALLER_NAME_DMG" >> $GITHUB_ENV
