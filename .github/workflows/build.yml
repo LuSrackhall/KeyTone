@@ -8,7 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: macOS-latest # 指定虚拟机
+    # runs-on: macos-latest # 指定虚拟机 现在的latest代表的macos-14是arm64架构的
+    runs-on: macos-13 # 指定虚拟机, 指定macos-13, 以获得x64架构的打包。
 
     steps:
       - name: Checkout code
