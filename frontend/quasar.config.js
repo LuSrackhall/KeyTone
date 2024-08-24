@@ -290,6 +290,40 @@ module.exports = configure(function (/* ctx */) {
             'deb', // 生成 deb 格式 // Debian 软件包格式，广泛用于基于 Debian 的 Linux 发行版（如 Ubuntu）中。此格式方便用户通过软件包管理器（如 dpkg 或 apt）安装应用。
           ],
         },
+
+        mac: {
+          identity: 'Copyright (C) 2024 LuSrackhall',
+          provisioningProfile: '../../KeyTone.provisionprofile', // 这个文件通常由 Apple 提供，包含应用程序的分发许可和其他信息，确保应用程序可以在特定设备或环境中运行。(这应该就是苹果平台的签名文件了吧)
+          icon: 'icons/icon.icns', // 不多解释了, 它将在应用程序包中用于显示应用程序图标
+          gatekeeperAssess: false, //  控制是否执行 Gatekeeper 评估。 Gatekeeper 是 macOS 的一项安全功能，用于确保应用程序来自受信任的开发者。将此设置为 false 将跳过 Gatekeeper 的评估。一般情况下，不建议关闭。
+          hardenedRuntime: true, // 启用或禁用强化运行时。强化运行时是一项 macOS 的安全功能，增强应用程序的安全性和保护措施。启用它可以帮助防止应用程序被恶意修改。
+          entitlements: '../../entitlements.mas.plist', // 指定权限文件的路径。权限文件定义了应用程序请求的系统资源（如文件系统、网络访问、硬件等）。这个文件通常需要进行签名，并且在打包和分发过程中与应用一起提供。
+          // 用于向 Info.plist 文件添加额外的键值对。( Info.plist 是 macOS 应用程序的核心配置文件，包含了应用的基本信息。这个字段可以用来添加一些应用程序运行所需的特定键值。)
+          // extendInfo: {
+          // NSMicrophoneUsageDescription: 'This app requires microphone access to record audio.', // 用于说明为什么应用需要访问麦克风。
+          // },
+          entitlementsInherit: '../../entitlements.mas.plist', // 为子进程或辅助进程指定继承的权限文件路径。(当应用程序生成子进程时，这些进程会继承指定的权限文件中的权限。对于沙盒化的应用程序，这一点尤为重要。)
+          minimumSystemVersion: '10.15', // 指定应用程序支持的最低 macOS 版本。 (确保应用程序不会在低于指定版本的 macOS 上安装或运行。这里的设置是 macOS 10.15。)
+
+          // 指定需要包含在应用包中的额外资源文件或目录。
+          extraResources: {
+            from: 'dist/key_tone_sdk',
+            to: 'key_tone_sdk',
+          },
+          // 指定打包目标格式和cpu架构。
+          target: [
+            {
+              target: 'dmg',
+              // arch: 'x64',
+              // arch: 'arm64',
+            },
+            // {
+            //   target: 'dmg',
+            //   // arch: 'x64',
+            //   // arch: 'arm64',
+            // },
+          ],
+        },
       },
     },
 
