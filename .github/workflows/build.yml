@@ -1,0 +1,140 @@
+on:
+  push:
+    branches:
+      - test-github-actions-linux-2
+  pull_request:
+    branches:
+      - test-github-actions-linux-2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # 指定虚拟机
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # 将仓库代码复制到虚拟机文件系统中
+
+      - name: Set up Go
+        uses: actions/setup-go@v5 # 安装go依赖
+        with:
+          go-version: 1.22.0 # 指定go依赖版本
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4 # 安装nodejs
+        with:
+          node-version: "16" # 指定nodejs 版本
+
+      - name: Install Quasar CLI
+        run: npm install -g @quasar/cli # 安装quasar/cli
+
+      - name: Install frontend dependencies
+        working-directory: frontend # 以项目根目录为起点,指定对应目录
+        run: npm install # 安装前端依赖
+
+      - name: Build Windows Application
+        shell: bash # 我不喜欢powershell(即使是在windows下) # 这个指定, 应该会让我们使用git-bash。
+        run: | # 指定此run为多个命令依次执行
+          cd sdk
+          sudo apt-get update
+          sudo apt install gcc libc6-dev
+          sudo apt install libx11-dev xorg-dev libxtst-dev
+          sudo apt install xsel xclip
+          sudo apt install libpng++-dev
+          sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
+          sudo apt install libasound2-dev
+          make linux
+
+      - name: Debug Generated Build
+        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+        with:
+          name: elect
+          path: frontend/dist/electron/*
+
+      # - name: Find the generated installer && ZIP the generated installer
+      #   working-directory: frontend/dist/electron/Packaged
+      #   shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
+      #   run:
+      #     | # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
+      #     INSTALLER_NAME_TARGZ=$(basename $(find -name 'KeyTone-*-linux-*.tar.gz'))
+      #     echo "INSTALLER_NAME_TARGZ=$INSTALLER_NAME_TARGZ" >> $GITHUB_ENV
+      #     INSTALLER_NAME_APPIMAGE=$(basename $(find -name 'KeyTone-*-linux-*.AppImage'))
+      #     echo "INSTALLER_NAME_APPIMAGE=$INSTALLER_NAME_APPIMAGE" >> $GITHUB_ENV
+      #     INSTALLER_NAME_DEB=$(basename $(find -name 'KeyTone-*-linux-*.deb'))
+      #     echo "INSTALLER_NAME_DEB=$INSTALLER_NAME_DEB" >> $GITHUB_ENV
+
+      # - name: Upload Build Artifact Tar.gz
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_TARGZ }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_TARGZ }}
+      # - name: Upload Build Artifact AppImage
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_APPIMAGE }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_APPIMAGE }}
+      # - name: Upload Build Artifact Deb
+      #   uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+      #   with:
+      #     name: ${{ env.INSTALLER_NAME_DEB }}
+      #     path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_DEB }}
+
+      # - name: Calculate File Hashes
+      #   shell: bash
+      #   run: |
+      #     SHA256=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }} | awk '{print $1}')
+      #     MD5=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }} | awk '{print $1}')
+      #     echo "SHA256=$SHA256" >> $GITHUB_ENV
+      #     echo "MD5=$MD5" >> $GITHUB_ENV
+
+      # ##################################################################################################################
+      # # 开始构建Release
+      # ##################################################################################################################
+
+      # - name: Create GitHub Release
+      #   id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
+      #   uses: actions/create-release@v1 # 安装用户自动创建release的脚本
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref }} # 选择此release的tag名称<准确来讲这是触发工作流的分支或标签的完整引用--即带前缀的`refs/heads/ 或 refs/tags/ 前缀`>(可以尝试手动创建一个release, 其界面上是有一个让你选择tag的选项框的)
+      #     release_name: Release ${{ github.ref_name }} # 这个是当前release的名称<这个并非像上面一样的完整引用--即不包括`refs/heads/ 或 refs/tags/ 前缀`>。(理论上github.ref_name的值: 如果当前actions是被push/tag触发的, 则会选择tag名; 若仅是push触发, 则会选择分支名)
+      #     draft: true # 此项为true, 表示发布的是仅自己可见的草稿(我们可以手动编辑检查后在手动发布)
+      #     prerelease: false # 此项若为true, 则会将release打上预发布标志
+      #     body: |
+      #       ### Overview
+
+      #       ### Security
+
+      #       ##### The SHA256 hash sum
+
+      #       `${{ env.INSTALLER_NAME }}` is:
+
+      #       * `${{ env.SHA256 }}`
+
+      #       ##### The MD5 hash sum
+
+      #       `${{ env.INSTALLER_NAME }}` is:
+
+      #       * `${{ env.MD5 }}`
+
+      #       ### Changelogs
+
+      # - name: Upload Build Artifact to Release
+      #   uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
+      #     asset_path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME }}
+      #     asset_name: ${{ env.INSTALLER_NAME }}
+      #     asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
+
+      # - name: Upload Build Artifact ZIP to Release
+      #   uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
+      #     asset_path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_NO_EXE}}_exe.zip
+      #     asset_name: ${{ env.INSTALLER_NAME_NO_EXE }}_exe.zip
+      #     asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
