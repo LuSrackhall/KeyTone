@@ -36,9 +36,10 @@ initialize();
 
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
-// > 下方代码可能需要使用quasar专用的环境变量来替代
-// const key_tone_sdk_name = 'win32' === process.platform ? 'SiYuan-Kernel.exe' : 'SiYuan-Kernel';
-const key_tone_sdk_path = path.join(appDir, 'key_tone_sdk', 'key_tone_sdk.exe');
+// > TODO: 下方代码可能需要使用quasar专用的环境变量来替代。(正式支持Linux或MacOS之前; 或之后<因为是否有.exe的后缀名,不影响其在Linux或MacOS平台上运行, 即可有可无; .exe后缀名, 仅在win下是必须有的。>)
+// >        TIPS: 只需适配此位置, 以及修改MakeFile中对应平台的最终生成名为没有.exe即可。
+// const key_tone_sdk_name = 'win32' === process.platform ? 'KeyTone.exe' : 'Keytone';
+const key_tone_sdk_path = path.join(appDir, 'key_tone_sdk', 'KeyTone.exe');
 
 const databasesDir = path.join(
   app.getPath('appData'),

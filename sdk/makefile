@@ -12,15 +12,15 @@
 .PHONY: win # make win
 # win: spa
 win:
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/key_tone_sdk" main.go
+	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
 
 .PHONY: linux # make linux
 linux:
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/key_tone_sdk" main.go
+	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
 
 .PHONY: mac # make mac
 mac:
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/key_tone_sdk" main.go
+	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
