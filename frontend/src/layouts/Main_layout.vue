@@ -21,9 +21,9 @@
             dense
             no-caps
             stretch
-            size="17px"
+            size="16px"
             :class="[
-              'm-0 p-0',
+              'm-0 p-0 text font-normal',
 
               // 使页面文本无法选择, 免得影响界面体验。
               'select-none',
@@ -33,9 +33,14 @@
             {{ $t('KeyTone.KeyTone') }}
           </q-btn>
 
-          <div class="ml-1.3 text-xs pt-3">
-            <div class="flex p-l-1.5 p-r-1.5 outline outline-1 rounded outline-slate-300 text-slate-200">
-              <div class="mr-0.8">v</div>
+          <!-- <div class="ml-1.3 text-xs pt-2.8">
+            <div class="flex p-l-1.5 p-r-1.5 outline outline-1 rounded outline-slate-300 text-slate-200 text-[11px]">
+              <div class="mr-0.8 text-[9px]">V</div>
+              {{ version }}
+            </div>
+          </div> -->
+          <div class="text-xs pt-2.6">
+            <div class="ml-2 flex text-[12px]">
               {{ version }}
             </div>
           </div>
