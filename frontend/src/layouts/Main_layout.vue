@@ -16,8 +16,29 @@
         <q-btn flat dense icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
         <!-- <q-btn flat dense round icon="keyboard_alt"></q-btn> -->
         <div class="flex">
-          <div>{{ $t('KeyTone.KeyTone') }}</div>
-          <div class="ml-2 text-xs pt-1.5">{{ version }}</div>
+          <q-btn
+            flat
+            dense
+            no-caps
+            stretch
+            size="17px"
+            :class="[
+              'm-0 p-0',
+
+              // 使页面文本无法选择, 免得影响界面体验。
+              'select-none',
+            ]"
+            @click="home"
+          >
+            {{ $t('KeyTone.KeyTone') }}
+          </q-btn>
+
+          <div class="ml-1.3 text-xs pt-3">
+            <div class="flex p-l-1.5 p-r-1.5 outline outline-1 rounded outline-slate-300 text-slate-200">
+              <div class="mr-0.8">v</div>
+              {{ version }}
+            </div>
+          </div>
         </div>
 
         <q-space />
@@ -42,7 +63,14 @@
 
     <!-- 实际上的抽屉在q-layout中, 因此将.sizeChange这个css放到那边而不是这里 -->
     <q-drawer v-model="leftDrawerOpen" side="left" overlay behavior="desktop" elevated>
-      <q-list>
+      <!-- draggable="false"使得图片/文本类元素组合,无法拖动, 免得影响界面体验 -->
+      <q-list
+        :class="[
+          // 使页面文本无法选择, 免得影响界面体验。
+          'select-none',
+        ]"
+        draggable="false"
+      >
         <q-item-label header :class="['flex pl-4 pt-3 pb-1']">
           <!-- 自己名字这里, 到时候可以放置个链接属性, 让用户可以通过点击来启动系统默认浏览器进入我的github主页 -->
           <div :class="['h-5']">{{ $t('KeyTone.developer') }}:</div>
@@ -53,8 +81,24 @@
             >LuSrackhall</q-item
           >
         </q-item-label>
-        <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" />
+        <EssentialLink
+          v-for="link in essentialLinks"
+          :key="link.title"
+          v-bind="link"
+          draggable="false"
+          @click="
+            () => {
+              // 每次点击某个项就进入对应页面的同时, 默认情况下会关闭drawer, 但当本身就在所需跳转页面时, 再次点击, 则不会关闭drawer。
+              // * 推测后: 任为原因可能是此时未发生跳转的路由重置, 因此drawer不会被关闭。
+              // 最终解决方案: 无论原因如何, 我们都在点击后, 触发关闭drawer的逻辑。获得预期行为。
+              leftDrawerOpen = false;
+            }
+          "
+        />
       </q-list>
+      <div class="q-mini-drawer-hide absolute" style="top: 15px; right: -17px">
+        <q-btn dense round unelevated color="accent" icon="chevron_left" @click="toggleLeftDrawer" />
+      </div>
     </q-drawer>
 
     <q-page-container>
@@ -130,6 +174,12 @@ const pageLabel = computed(() => {
     return '';
   }
 });
+
+const home = () => {
+  router.push('/');
+  // 回到主页的操作, 默认关闭抽屉
+  leftDrawerOpen.value = false;
+};
 </script>
 
 <style lang="scss" scoped>
