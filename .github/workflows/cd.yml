@@ -1,0 +1,78 @@
+on:
+  push:
+    branches:
+      - cd-test
+  pull_request:
+    branches:
+      - cd-test
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # 将仓库代码复制到虚拟机文件系统中
+
+      - name: Set up Go
+        uses: actions/setup-go@v5 # 安装go依赖
+        with:
+          go-version: 1.22.0 # 指定go依赖版本
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4 # 安装nodejs
+        with:
+          node-version: "16" # 指定nodejs 版本
+
+      - name: Install Quasar CLI
+        run: npm install -g @quasar/cli # 安装quasar/cli
+
+      - name: Install frontend dependencies
+        working-directory: frontend # 以项目根目录为起点,指定对应目录
+        run: npm install # 安装前端依赖
+
+      - name: Build Application
+        shell: bash # 我不喜欢powershell(即使是在windows下) # 这个指定, 应该会让我们使用git-bash。
+        run: | # 指定此run为多个命令依次执行
+          cd sdk
+          make win
+
+      - name: Find the generated installer && ZIP the generated installer
+        working-directory: frontend/dist/electron/Packaged
+        shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
+        run: |
+          # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
+          # 由于大部分人的计算机是x64架构的(现在x86的纯32位系统几乎没人用了, 因此我的应用只支持64位的机器), 所以默认不显示架构。(我们通过正则表达式来除掉这部分)(主要显示了3中形式太乱, 如amd64、x64、x86_64)
+          # * 这部分正则的原理是,  替换: 将 `从win末尾的任意字符开头至遇到第一个.后的所有内容`  使用`win.` 来替换。
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_SETUP_EXE
+          INSTALLER_NAME_SETUP_EXE=$(basename $(find -name 'KeyTone-*-win*exe'))
+          # ------------------------------------------------------------------------------x64为默认, 不显示架构名---start
+          mv $INSTALLER_NAME_SETUP_EXE $(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win./')
+          INSTALLER_NAME_SETUP_EXE=$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win./')
+          # --------------------------------------------------------------------------------x64为默认, 不显示架构名---end
+          echo "INSTALLER_NAME_SETUP_EXE=$INSTALLER_NAME_SETUP_EXE" >> $GITHUB_ENV
+
+      - name: Upload Build Artifact EXE
+        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+        with:
+          name: ${{ env.INSTALLER_NAME_SETUP_EXE }}
+          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_SETUP_EXE }}
+
+  ######################################################################################################### build win
+  # build_windows_x64:
+  #   runs-on: windows-latest # 指定虚拟机
+  # build_windows_arm64: # TIPS: github actions 的官方运行器暂不提供arm架构下的, win和linux系统环境。 如有需要, 只能自定义运行器。
+  ######################################################################################################### build linux
+  # build_linux_x64:
+  #   runs-on: linux-latest # 指定虚拟机
+  # build_linux_arm64: # TIPS: github actions 的官方运行器暂不提供arm架构下的, win和linux系统环境。 如有需要, 只能自定义运行器。
+  ######################################################################################################### build macos
+  # build_macos_x64:
+  #   runs-on: macos-13 # 指定虚拟机
+  # build_macos_arm64:
+  #   runs-on: macos-latest # 指定虚拟机 macos14
+  ######################################################################################################### build macos
