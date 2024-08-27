@@ -11,8 +11,11 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-
     runs-on: ${{ matrix.os }}
+    outputs:
+      INSTALLER_NAME_X64_SETUP_EXE: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
+      SHA256_X64_SETUP_EXE: ${{ env.SHA256_X64_SETUP_EXE }}
+      MD5_X64_SETUP_EXE: ${{ env.MD5_X64_SETUP_EXE }}
 
     steps:
       - name: Checkout code
@@ -48,33 +51,41 @@ jobs:
           # 由于find  -name 'KeyTone-Setup-*-win.exe'得到的结果为./KeyTone-Setup-*-win.exe , 而我们不需要./ , 因此使用basename提取文件名
           # 由于大部分人的计算机是x64架构的(现在x86的纯32位系统几乎没人用了, 因此我的应用只支持64位的机器), 所以默认不显示架构。(我们通过正则表达式来除掉这部分)(主要显示了3中形式太乱, 如amd64、x64、x86_64)
           # * 这部分正则的原理是,  替换: 将 `从win末尾的任意字符开头至遇到第一个.后的所有内容`  使用`win.` 来替换。
-          # ----------------------------------------------------------------------------------------INSTALLER_NAME_SETUP_EXE
-          INSTALLER_NAME_SETUP_EXE=$(basename $(find -name 'KeyTone-*-win*exe'))
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_SETUP_EXE
+          INSTALLER_NAME_X64_SETUP_EXE=$(basename $(find -name 'KeyTone-*-win*exe'))
           # ----------为避免出现amd64、x86_64、x64等多种x64的cpu架构表示方式, 我仅按x64为默认名来显示此类cpu架构名---start
           # * 我们仅按x64为默认名来显示的话, 就存在其结果本身就是x64这个名称的情况, 那此时仍通过 mv 重命名就会发生报错了。
           #   * 因为, 在进行mv时, 遇到移动前后名称相同的情况, 是会报错的。 
           #   * 所以, 我们为了不报错, 我们尝试通过`-f`来强制重命名来解决。(失败)<因为-f解决覆盖问题, 但无法处理此情况>
           #   * 最终, 借助shell中的判断语句来解决
-          if [ "$INSTALLER_NAME_SETUP_EXE" != "$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')" ]; then
-            mv -f $INSTALLER_NAME_SETUP_EXE $(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
-            INSTALLER_NAME_SETUP_EXE=$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
+          if [ "$INSTALLER_NAME_X64_SETUP_EXE" != "$(echo $INSTALLER_NAME_X64_SETUP_EXE | sed 's/win[^.]*\./win-x64./')" ]; then
+            mv -f $INSTALLER_NAME_X64_SETUP_EXE $(echo $INSTALLER_NAME_X64_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
+            INSTALLER_NAME_X64_SETUP_EXE=$(echo $INSTALLER_NAME_X64_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
           fi
           # ------------为避免出现amd64、x86_64、x64等多种x64的cpu架构表示方式, 我仅按x64为默认名来显示此类cpu架构名---end
-          echo "INSTALLER_NAME_SETUP_EXE=$INSTALLER_NAME_SETUP_EXE" >> $GITHUB_ENV
+          echo "INSTALLER_NAME_X64_SETUP_EXE=$INSTALLER_NAME_X64_SETUP_EXE" >> $GITHUB_ENV
 
       - name: Calculate File Hashes (Windows x64)
         shell: bash
         run: |
-          SHA256=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_SETUP_EXE }} | awk '{print $1}')
-          MD5=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_SETUP_EXE }} | awk '{print $1}')
-          echo "SHA256=$SHA256" >> $GITHUB_ENV
-          echo "MD5=$MD5" >> $GITHUB_ENV
+          SHA256_X64_SETUP_EXE=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }} | awk '{print $1}')
+          MD5_X64_SETUP_EXE=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }} | awk '{print $1}')
+          echo "SHA256_X64_SETUP_EXE=$SHA256_X64_SETUP_EXE" >> $GITHUB_ENV
+          echo "MD5_X64_SETUP_EXE=$MD5_X64_SETUP_EXE" >> $GITHUB_ENV
 
       - name: Upload Build Artifact (Windows x64)
-        uses: actions/upload-artifact@v3 # 安装用于上传最终打包结果到执行完毕界面的脚本
+        # TIPS: Artifact 中, 通过手动点击, 下载的打包结果的名称(无论名称如何设置, 都会给你加载.zip后缀的, 这是其预期的行为)
+        #       > 虽然单看大小并没有被压缩, 但确实是套了一层文件夹后的压缩格式, 而不是简单的仅更改了后缀名。可通过hash值验证:
+        #       > * 此下载包的hash结果不符合校验值。
+        #       > * 不进行解压, 仅通过手动删除掉.zip后缀的hash校验结果, 与改名前的原始下载包相同, 即此hash结果也不符合校验值。
+        #       > * 对下载包进行解压, 解压结果中获得一个文件夹, 进入文件下后可看到的exe安装包, 对此exe安装包进行hash, 其结果符合hash校验值。
+        #
+        # TIPS: 但是通过actions/download-artifact@v3进行下载时, 不会出现像手动下载时那样的.zip后缀(因此我们无需在release作业的下载完成够的步骤中, 进行解压缩)。仍是可以直接通过hash值验证:
+        #       * 在release中没有进行解压缩步骤的情况下, 下载结果直接是  .exe 的可执行安装程序,  对此安装包进行hash, 其结果符合hash校验值。
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.INSTALLER_NAME_SETUP_EXE }}
-          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_SETUP_EXE }}
+          name: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
+          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
 
   release:
     runs-on: ubuntu-latest
@@ -83,7 +94,7 @@ jobs:
       - name: Download Build Artifact (ALL)
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.INSTALLER_NAME_SETUP_EXE }}
+          name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
 
       - name: Create GitHub Release
         id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
@@ -102,15 +113,15 @@ jobs:
 
             ##### The SHA256 hash sum
 
-            `${{ env.INSTALLER_NAME_SETUP_EXE }}` is:
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}` is:
 
-            * `${{ env.SHA256 }}`
+            * `${{ needs.build.outputs.SHA256_X64_SETUP_EXE }}`
 
             ##### The MD5 hash sum
 
-            `${{ env.INSTALLER_NAME_SETUP_EXE }}` is:
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}` is:
 
-            * `${{ env.MD5 }}`
+            * `${{ needs.build.outputs.MD5_X64_SETUP_EXE }}`
 
             ### Changelogs
 
@@ -120,8 +131,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
-          asset_path: ./${{ env.INSTALLER_NAME_SETUP_EXE }}
-          asset_name: ${{ env.INSTALLER_NAME_SETUP_EXE }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
           asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
 
