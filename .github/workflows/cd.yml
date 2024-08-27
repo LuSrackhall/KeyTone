@@ -50,10 +50,16 @@ jobs:
           # * 这部分正则的原理是,  替换: 将 `从win末尾的任意字符开头至遇到第一个.后的所有内容`  使用`win.` 来替换。
           # ----------------------------------------------------------------------------------------INSTALLER_NAME_SETUP_EXE
           INSTALLER_NAME_SETUP_EXE=$(basename $(find -name 'KeyTone-*-win*exe'))
-          # ------------------------------------------------------------------------------x64为默认, 不显示架构名---start
-          mv $INSTALLER_NAME_SETUP_EXE $(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win./')
-          INSTALLER_NAME_SETUP_EXE=$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win./')
-          # --------------------------------------------------------------------------------x64为默认, 不显示架构名---end
+          # ----------为避免出现amd64、x86_64、x64等多种x64的cpu架构表示方式, 我仅按x64为默认名来显示此类cpu架构名---start
+          # * 我们仅按x64为默认名来显示的话, 就存在其结果本身就是x64这个名称的情况, 那此时仍通过 mv 重命名就会发生报错了。
+          #   * 因为, 在进行mv时, 遇到移动前后名称相同的情况, 是会报错的。 
+          #   * 所以, 我们为了不报错, 我们尝试通过`-f`来强制重命名来解决。(失败)<因为-f解决覆盖问题, 但无法处理此情况>
+          #   * 最终, 借助shell中的判断语句来解决
+          if [ "$INSTALLER_NAME_SETUP_EXE" != "$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')" ]; then
+            mv -f $INSTALLER_NAME_SETUP_EXE $(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
+            INSTALLER_NAME_SETUP_EXE=$(echo $INSTALLER_NAME_SETUP_EXE | sed 's/win[^.]*\./win-x64./')
+          fi
+          # ------------为避免出现amd64、x86_64、x64等多种x64的cpu架构表示方式, 我仅按x64为默认名来显示此类cpu架构名---end
           echo "INSTALLER_NAME_SETUP_EXE=$INSTALLER_NAME_SETUP_EXE" >> $GITHUB_ENV
 
       - name: Upload Build Artifact EXE
