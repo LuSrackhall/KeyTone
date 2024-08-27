@@ -14,6 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     outputs:
       INSTALLER_NAME_X64_SETUP_EXE: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
+      INSTALLER_NAME_X64_ZIP: ${{ env.INSTALLER_NAME_X64_ZIP }}
       SHA256_X64_SETUP_EXE: ${{ env.SHA256_X64_SETUP_EXE }}
       MD5_X64_SETUP_EXE: ${{ env.MD5_X64_SETUP_EXE }}
 
@@ -64,6 +65,16 @@ jobs:
           fi
           # ------------为避免出现amd64、x86_64、x64等多种x64的cpu架构表示方式, 我仅按x64为默认名来显示此类cpu架构名---end
           echo "INSTALLER_NAME_X64_SETUP_EXE=$INSTALLER_NAME_X64_SETUP_EXE" >> $GITHUB_ENV
+          # ---------------------------------------------------------------------------------------------------ZIP start
+          INSTALLER_NAME_NO_EXE=$(echo $INSTALLER_NAME_X64_SETUP_EXE | sed 's/\.exe$//')
+          # 定义好ZIP文件的文件名变量 `INSTALLER_NAME_X64_ZIP`
+          INSTALLER_NAME_X64_ZIP=$(echo ${INSTALLER_NAME_NO_EXE}_exe.zip)
+          # 上方定义必须有, 下方的语法仅是设置了 `>> $GITHUB_ENV` 而已, 并没有在当前步骤中定义变量。 
+          # * 简单的说就是, 若缺失上方定义, 则本小节最后一步就会因找不到变量而执行失败。
+          echo "INSTALLER_NAME_X64_ZIP=$INSTALLER_NAME_X64_ZIP" >> $GITHUB_ENV
+          choco install zip -y
+          zip -j -9 ${INSTALLER_NAME_X64_ZIP} ${INSTALLER_NAME_X64_SETUP_EXE}
+          # -----------------------------------------------------------------------------------------------------ZIP end
 
       - name: Calculate File Hashes (Windows x64)
         shell: bash
@@ -73,7 +84,7 @@ jobs:
           echo "SHA256_X64_SETUP_EXE=$SHA256_X64_SETUP_EXE" >> $GITHUB_ENV
           echo "MD5_X64_SETUP_EXE=$MD5_X64_SETUP_EXE" >> $GITHUB_ENV
 
-      - name: Upload Build Artifact (Windows x64)
+      - name: Upload Build Artifact (ALL)
         # TIPS: Artifact 中, 通过手动点击, 下载的打包结果的名称(无论名称如何设置, 都会给你加载.zip后缀的, 这是其预期的行为)
         #       > 虽然单看大小并没有被压缩, 但确实是套了一层文件夹后的压缩格式, 而不是简单的仅更改了后缀名。可通过hash值验证:
         #       > * 此下载包的hash结果不符合校验值。
@@ -84,8 +95,10 @@ jobs:
         #       * 在release中没有进行解压缩步骤的情况下, 下载结果直接是  .exe 的可执行安装程序,  对此安装包进行hash, 其结果符合hash校验值。
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
-          path: frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
+          name: INSTALLER_NAME_ALL
+          path: |
+            frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
+            frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_ZIP }}
 
   release:
     runs-on: ubuntu-latest
@@ -94,8 +107,7 @@ jobs:
       - name: Download Build Artifact (ALL)
         uses: actions/download-artifact@v3
         with:
-          name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
-
+          name: INSTALLER_NAME_ALL
       - name: Create GitHub Release
         id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
         uses: actions/create-release@v1 # 安装用户自动创建release的脚本
@@ -135,16 +147,16 @@ jobs:
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
           asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
+      - name: Upload Build Artifact ZIP to Release
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
+          asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
-      # - name: Upload Build Artifact ZIP to Release
-      #   uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
-      #     asset_path: ./${{ env.INSTALLER_NAME_NO_EXE}}_exe.zip
-      #     asset_name: ${{ env.INSTALLER_NAME_NO_EXE }}_exe.zip
-      #     asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
   ######################################################################################################### build win
   # build_windows_x64:
