@@ -10,18 +10,21 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-13, macos-latest]
     runs-on: ${{ matrix.os }}
     outputs:
       # region ------------Windows start
+      # ----------------------------------------------------------------------------------------X64
       INSTALLER_NAME_X64_SETUP_EXE: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
       INSTALLER_NAME_X64_ZIP: ${{ env.INSTALLER_NAME_X64_ZIP }}
       SHA256_X64_SETUP_EXE: ${{ env.SHA256_X64_SETUP_EXE }}
       MD5_X64_SETUP_EXE: ${{ env.MD5_X64_SETUP_EXE }}
+      # ----------------------------------------------------------------------------------------arm64
       # endregion
       # -------------------Windows end
 
       # region ------------Linux start
+      # ----------------------------------------------------------------------------------------X64
       # ----------------------------------------------------------------------------------------X64_TARGZ
       INSTALLER_NAME_X64_TARGZ: ${{ env.INSTALLER_NAME_X64_TARGZ }}
       SHA256_X64_TARGZ: ${{ env.SHA256_X64_TARGZ }}
@@ -34,11 +37,23 @@ jobs:
       INSTALLER_NAME_X64_DEB: ${{ env.INSTALLER_NAME_X64_DEB }}
       SHA256_X64_DEB: ${{ env.SHA256_X64_DEB }}
       MD5_X64_DEB: ${{ env.MD5_X64_DEB }}
+
+      # ----------------------------------------------------------------------------------------arm64
+
       # endregion
       # -------------------Linux end
 
       # region ------------MacOS start
-
+      # ----------------------------------------------------------------------------------------X64
+      # ----------------------------------------------------------------------------------------X64_dmg
+      INSTALLER_NAME_X64_DMG: ${{ env.INSTALLER_NAME_X64_DMG }}
+      SHA256_X64_DMG: ${{ env.SHA256_X64_DMG }}
+      MD5_X64_DMG: ${{ env.MD5_X64_DMG }}
+      # ----------------------------------------------------------------------------------------arm64
+      # ----------------------------------------------------------------------------------------arm64_dmg
+      INSTALLER_NAME_ARM64_DMG: ${{ env.INSTALLER_NAME_ARM64_DMG }}
+      SHA256_ARM64_DMG: ${{ env.SHA256_ARM64_DMG }}
+      MD5_ARM64_DMG: ${{ env.MD5_ARM64_DMG }}
       # endregion
       # -------------------MacOS end
 
@@ -194,6 +209,68 @@ jobs:
       ############################################### MacOS start ######################################################
       # region
 
+      - name: Build Application (MacOS x64)
+        if: matrix.os == 'macos-13'
+        shell: bash
+        run: | # 指定此run为多个命令依次执行
+          cd sdk
+          make mac
+
+      - name: Find the generated installer (MacOS x64)
+        if: matrix.os == 'macos-13'
+        working-directory: frontend/dist/electron/Packaged
+        shell: bash
+        run: |
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_DMG
+          INSTALLER_NAME_X64_DMG=$(basename $(find . -name 'KeyTone-*-mac*dmg'))
+          if [ "$INSTALLER_NAME_X64_DMG" != "$(echo $INSTALLER_NAME_X64_DMG | sed 's/mac[^.]*\./mac-x64./')" ]; then
+            mv -f $INSTALLER_NAME_X64_DMG $(echo $INSTALLER_NAME_X64_DMG | sed 's/mac[^.]*\./mac-x64./')
+            INSTALLER_NAME_X64_DMG=$(echo $INSTALLER_NAME_X64_DMG | sed 's/mac[^.]*\./mac-x64./')
+          fi
+          echo "INSTALLER_NAME_X64_DMG=$INSTALLER_NAME_X64_DMG" >> $GITHUB_ENV
+
+      - name: Calculate File Hashes (MacOS x64)
+        if: matrix.os == 'macos-13'
+        shell: bash
+        run: |
+          SHA256_X64_DMG=$(shasum -a 256 frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_DMG }} | awk '{print $1}')
+          # mac上, md5命令的输出内容格式如下, 哈希值在最后一部分 即 awk '{print $4}' 。
+          # * MD5 (frontend/dist/electron/Packaged/installer.dmg) = d41d8cd98f00b204e9800998ecf8427e
+          #    1                        2                         3                  4
+          MD5_X64_DMG=$(md5 frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_DMG }} | awk '{print $4}')
+          echo "SHA256_X64_DMG=$SHA256_X64_DMG" >> $GITHUB_ENV
+          echo "MD5_X64_DMG=$MD5_X64_DMG" >> $GITHUB_ENV
+
+      # ------------------------------------------------------/////////////////////
+
+      - name: Build Application (MacOS arm64)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: | # 指定此run为多个命令依次执行
+          cd sdk
+          make mac
+
+      - name: Find the generated installer (MacOS arm64)
+        if: matrix.os == 'macos-latest'
+        working-directory: frontend/dist/electron/Packaged
+        shell: bash
+        run: |
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_DMG
+          INSTALLER_NAME_ARM64_DMG=$(basename $(find . -name 'KeyTone-*-mac*dmg'))
+          echo "INSTALLER_NAME_ARM64_DMG=$INSTALLER_NAME_ARM64_DMG" >> $GITHUB_ENV
+
+      - name: Calculate File Hashes (MacOS arm64)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          SHA256_ARM64_DMG=$(shasum -a 256 frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_DMG }} | awk '{print $1}')
+          # mac上, md5命令的输出内容格式如下, 哈希值在最后一部分 即 awk '{print $4}' 。
+          # * MD5 (frontend/dist/electron/Packaged/installer.dmg) = d41d8cd98f00b204e9800998ecf8427e
+          #    1                        2                         3                  4
+          MD5_ARM64_DMG=$(md5 frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_DMG }} | awk '{print $4}')
+          echo "SHA256_ARM64_DMG=$SHA256_ARM64_DMG" >> $GITHUB_ENV
+          echo "MD5_ARM64_DMG=$MD5_ARM64_DMG" >> $GITHUB_ENV
+
       # endregion
       ############################################### MacOS end   ######################################################
 
@@ -258,6 +335,14 @@ jobs:
 
             * `${{ needs.build.outputs.SHA256_X64_DEB }}`
 
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}` is:
+
+            * `${{ needs.build.outputs.SHA256_X64_DMG }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}` is:
+
+            * `${{ needs.build.outputs.SHA256_ARM64_DMG }}`
+
             ##### The MD5 hash sum
 
             `${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}` is:
@@ -275,6 +360,14 @@ jobs:
             `${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}` is:
 
             * `${{ needs.build.outputs.MD5_X64_DEB }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}` is:
+
+            * `${{ needs.build.outputs.MD5_X64_DMG }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}` is:
+
+            * `${{ needs.build.outputs.MD5_ARM64_DMG }}`
 
             ### Changelogs
 
@@ -342,7 +435,25 @@ jobs:
       # -------------------Linux end
 
       # region ------------MacOS start
+      - name: Upload Build Artifact to Release (MacOS x64) (DMG)
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}
+          asset_content_type: application/x-apple-diskimage
 
+      - name: Upload Build Artifact to Release (MacOS arm64) (DMG)
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}
+          asset_content_type: application/x-apple-diskimage
       # endregion
       # -------------------MacOS end
 
