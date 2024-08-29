@@ -55,7 +55,7 @@ const downloadMenu = computed(() => {
       return [
         {
           text: `Windows ${version} x64 (.zip) | Recommended`,
-          link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
           icon: Windows,
           event: "download",
           eventPlatform: "windows",
@@ -65,7 +65,7 @@ const downloadMenu = computed(() => {
         },
         {
           text: `Windows ${version} x64 Installer (.exe)`,
-          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win.exe`,
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64.exe`,
           icon: Windows,
           event: "download",
           eventPlatform: "windows",
