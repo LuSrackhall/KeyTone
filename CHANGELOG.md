@@ -1,3 +1,35 @@
+#  (2024-08-29)
+
+
+### Bug Fixes
+
+* 改善了从配置文件更改被监听到前端收到并反馈至ui的实时性。<调整了防抖延后的毫秒数值(缩小)> ([941e175](https://github.com/LuSrackhall/KeyTone/commit/941e175c84bda2012f336b390817ea19452c635a))
+* 修复了当音量提升/缩减滑块选择为小于-5或者说-g时, 主界面音量条件滑块异常的bug。<甚至仅小于0就有滑块范围缩小隐患, 原因是主页min音量的设计问题> ([1a0a88f](https://github.com/LuSrackhall/KeyTone/commit/1a0a88f96e19993256dbc1b75a0b19e0bd8c9bdb)), closes [#15](https://github.com/LuSrackhall/KeyTone/issues/15)
+* **frontend | electron:** 修复了托盘后台情况下<即隐藏窗口情况>, 重复开启单例, 不会弹出窗口的bug。 ([1657cb9](https://github.com/LuSrackhall/KeyTone/commit/1657cb99317e8a87c20890988c6fbff0ca8cabf7))
+* **frontend | ui:** 修复了页面可选中的bug。<这是由于我希望这个工具应用的界面更偏向与界面而不是页面, 因此禁止页面的文本选择以及图片的拖动。> ([09e688a](https://github.com/LuSrackhall/KeyTone/commit/09e688a0be5a2116e59bc6946874851e5f49ed0e))
+* **mute:** 对于主页面的静音按钮,对于我们键盘音软件来说,太容易被键盘误触给重新打开了。<造成不好的体验,误以为无法静音,因此禁用click中的键盘事件触发机制,仅保留鼠标单击事件。> ([82103c0](https://github.com/LuSrackhall/KeyTone/commit/82103c0f5b2998915f9f6a4f54bab7725b445e00))
+* **sdk:** 继续修复sdk的小概率崩溃bug。<虽然文档中说viper是并发读写不安全的, 但我简单测试了下, 纯并发读的情况很少崩溃, 反而读写同时进行或纯并发写时容易奔溃,因此换读写锁。> ([ecda87c](https://github.com/LuSrackhall/KeyTone/commit/ecda87c698bffe907cb7aaa0eb5b238a3e8d1144))
+* **sdk:** 解决了viper.Set()的高优先级覆盖问题, 使其使用方式更符合本应用的场景需求。<虽不知这样会不会增加损耗, 不过性能瓶颈在纯客户端应用中几乎可以忽略不计> ([f97fac5](https://github.com/LuSrackhall/KeyTone/commit/f97fac592066718973ccc72996422bb7f633441f)), closes [#18](https://github.com/LuSrackhall/KeyTone/issues/18) [#11](https://github.com/LuSrackhall/KeyTone/issues/11)
+* **sdk:** 修复了sdk的小概率崩溃bug。 <虽然机率很小, 但毕竟viper是读写并发不安全的, 因此暂且对齐set和get行为粗暴的上个互斥锁好了> ([1c884a6](https://github.com/LuSrackhall/KeyTone/commit/1c884a6cb2ded11d544c7f6bbf0ec5400a7288ed))
+* **tray:** 更改托盘的'关闭<close>'选项名称为'退出<quit>' ([adc9439](https://github.com/LuSrackhall/KeyTone/commit/adc9439c4de7e7c73ebfa0569578de37ca2cfefa))
+* **ui交互方式变更:** 对于设置界面的各组配置, 由默认展开, 改为默认收起。 ([42c84e4](https://github.com/LuSrackhall/KeyTone/commit/42c84e4b0c492cc6c027134afd9bc29b576782c6)), closes [#13](https://github.com/LuSrackhall/KeyTone/issues/13)
+* **ui:** 修复了界面溢出问题, 现在可能超出的内容和可能产生的滚动条, 不再会溢出界面。 ([d060ad6](https://github.com/LuSrackhall/KeyTone/commit/d060ad67e6415a8adc09d93b1ee3e75a9c2af33a)), closes [#12](https://github.com/LuSrackhall/KeyTone/issues/12)
+
+
+### Features
+
+* 对导航栏做了功能提升, 使得点击应用名称可以直接到主页面; 在侧边导航中, 新增了关闭侧边导航的按钮; 优化了侧边导航的关闭逻辑, 使得可在点击选项但未发生路由时也可关闭。 ([2215d01](https://github.com/LuSrackhall/KeyTone/commit/2215d018d6c7e96f03170d1b5fcb182b1b3161dc))
+* 在主页面的增加音量调整滑块, 以及静音图标。即新增了主页面的音量调整功能, 以及静音功能。 ([537f349](https://github.com/LuSrackhall/KeyTone/commit/537f34949093490586b86578fee3fe36fbbcaab0)), closes [#15](https://github.com/LuSrackhall/KeyTone/issues/15)
+* **主页面配置项:** 新增了主页面设置1.音量降低幅度的输入框;2.是否打开主页面音量调试滑块的开关;3.默认隐藏的主页面音量调试滑块;4.相关项的i18n。 ([1c29d04](https://github.com/LuSrackhall/KeyTone/commit/1c29d046129896b878c8109c639714a30c4c427a)), closes [#17](https://github.com/LuSrackhall/KeyTone/issues/17)
+* **fix:** 完善了国际化多语言设置的功能。<此提交为小阶段总结提交--懒得用pr处理这部分了: 之前的一小段提交, 我们初始化了设置页面, 并在ui中加入了简单的页面导航功能。> ([5b3eaa7](https://github.com/LuSrackhall/KeyTone/commit/5b3eaa7d506841ae69e099ac2d1d67c54e2474b8))
+* **sse:** 引入sse, 并通过sse和viper的文件监听回调,为前端ui同步配置文件的实时配置变更。<比如在electron侧完成的静音设置,或是直接手动修改配置文件完成的静音设置。> ([62bc498](https://github.com/LuSrackhall/KeyTone/commit/62bc4989264cacd4c5175c21539e4340edb1592f)), closes [#19](https://github.com/LuSrackhall/KeyTone/issues/19) [#11](https://github.com/LuSrackhall/KeyTone/issues/11) [#18](https://github.com/LuSrackhall/KeyTone/issues/18)
+* **tray:** 在系统托盘<tray>引入静音/取消静音选项。 ([a55a20e](https://github.com/LuSrackhall/KeyTone/commit/a55a20eb7c49205e7b14c684d2729ab808131565)), closes [#18](https://github.com/LuSrackhall/KeyTone/issues/18)
+* **ui交互方式变更:** 对于设置页面的各组配置的展开或收起的状态, 新增运行期间管理保留的被动功能。 ([26303d6](https://github.com/LuSrackhall/KeyTone/commit/26303d63a453dbf81ac647f15e38a36471a69d08)), closes [#13](https://github.com/LuSrackhall/KeyTone/issues/13)
+* **ui:** 实现了设置界面提升/缩减原始音频包音量的功能,以及功能相关的国际化内容配置; 引入了lodash包防抖; 此外,完美解决了此功能可能存在的一些已知bug。 ([73d1605](https://github.com/LuSrackhall/KeyTone/commit/73d1605de48a57657f3e0690ce44354f80bf981f)), closes [#6](https://github.com/LuSrackhall/KeyTone/issues/6) [#14](https://github.com/LuSrackhall/KeyTone/issues/14)
+* **ui:** 在ui设置页面, 新增"启动与自动启动"的系列设置 ([c05c646](https://github.com/LuSrackhall/KeyTone/commit/c05c6465553fe07e480a77771ec0b11c14744eaa)), closes [#4](https://github.com/LuSrackhall/KeyTone/issues/4) [#5](https://github.com/LuSrackhall/KeyTone/issues/5)
+
+
+
 #  (2024-06-20)
 
 
