@@ -1,10 +1,9 @@
+name: release auto deploy
+
 on:
   push:
-    branches:
-      - cd-test
-  pull_request:
-    branches:
-      - cd-test
+    tags:
+      - "*"
 
 jobs:
   build:
