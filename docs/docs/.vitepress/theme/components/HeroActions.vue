@@ -31,7 +31,7 @@ const downloadMenu = computed(() => {
     case "zh":
       return [
         {
-          text: "Windows x64安装包 EXE (.zip) | 推荐",
+          text: `Windows ${version} x64 (.zip) | 推荐`,
           link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
           icon: Windows,
           event: "download",
@@ -41,7 +41,7 @@ const downloadMenu = computed(() => {
           eventLang: "zh",
         },
         {
-          text: "Windows x64安装包 (.exe)",
+          text: `Windows ${version} x64 安装程序 (.exe)`,
           link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64.exe`,
           icon: Windows,
           event: "download",
@@ -54,7 +54,7 @@ const downloadMenu = computed(() => {
     default:
       return [
         {
-          text: "Windows x64 Installer EXE (.zip) | Recommended",
+          text: `Windows ${version} x64 (.zip) | Recommended`,
           link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
           icon: Windows,
           event: "download",
@@ -64,7 +64,7 @@ const downloadMenu = computed(() => {
           eventLang: "en",
         },
         {
-          text: "Windows x64 Installer (.exe)",
+          text: `Windows ${version} x64 Installer (.exe)`,
           link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win.exe`,
           icon: Windows,
           event: "download",
