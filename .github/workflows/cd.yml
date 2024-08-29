@@ -10,13 +10,37 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     outputs:
+      # region ------------Windows start
       INSTALLER_NAME_X64_SETUP_EXE: ${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
       INSTALLER_NAME_X64_ZIP: ${{ env.INSTALLER_NAME_X64_ZIP }}
       SHA256_X64_SETUP_EXE: ${{ env.SHA256_X64_SETUP_EXE }}
       MD5_X64_SETUP_EXE: ${{ env.MD5_X64_SETUP_EXE }}
+      # endregion
+      # -------------------Windows end
+
+      # region ------------Linux start
+      # ----------------------------------------------------------------------------------------X64_TARGZ
+      INSTALLER_NAME_X64_TARGZ: ${{ env.INSTALLER_NAME_X64_TARGZ }}
+      SHA256_X64_TARGZ: ${{ env.SHA256_X64_TARGZ }}
+      MD5_X64_TARGZ: ${{ env.MD5_X64_TARGZ }}
+      # ----------------------------------------------------------------------------------------X64_APPIMAGE
+      INSTALLER_NAME_X64_APPIMAGE: ${{ env.INSTALLER_NAME_X64_APPIMAGE }}
+      SHA256_X64_APPIMAGE: ${{ env.SHA256_X64_APPIMAGE }}
+      MD5_X64_APPIMAGE: ${{ env.MD5_X64_APPIMAGE }}
+      # ----------------------------------------------------------------------------------------X64_DEB
+      INSTALLER_NAME_X64_DEB: ${{ env.INSTALLER_NAME_X64_DEB }}
+      SHA256_X64_DEB: ${{ env.SHA256_X64_DEB }}
+      MD5_X64_DEB: ${{ env.MD5_X64_DEB }}
+      # endregion
+      # -------------------Linux end
+
+      # region ------------MacOS start
+
+      # endregion
+      # -------------------MacOS end
 
     steps:
       - name: Checkout code
@@ -39,13 +63,18 @@ jobs:
         working-directory: frontend # 以项目根目录为起点,指定对应目录
         run: npm install # 安装前端依赖
 
+      ################################################# Win start ######################################################
+      # region
+
       - name: Build Application (Windows x64)
+        if: matrix.os == 'windows-latest'
         shell: bash # 我不喜欢powershell(即使是在windows下) # 这个指定, 应该会让我们使用git-bash。
         run: | # 指定此run为多个命令依次执行
           cd sdk
           make win
 
       - name: Find the generated installer (Windows x64)
+        if: matrix.os == 'windows-latest'
         working-directory: frontend/dist/electron/Packaged
         shell: bash # 由于我们下方要使用的find命令, powershell中没有(更重要的是, 我不喜欢powershell) # 这个指定, 应该会让我们使用git-bash。
         run: |
@@ -77,12 +106,96 @@ jobs:
           # -----------------------------------------------------------------------------------------------------ZIP end
 
       - name: Calculate File Hashes (Windows x64)
+        if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           SHA256_X64_SETUP_EXE=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }} | awk '{print $1}')
           MD5_X64_SETUP_EXE=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }} | awk '{print $1}')
           echo "SHA256_X64_SETUP_EXE=$SHA256_X64_SETUP_EXE" >> $GITHUB_ENV
           echo "MD5_X64_SETUP_EXE=$MD5_X64_SETUP_EXE" >> $GITHUB_ENV
+
+      # ------------------------------------------------------/////////////////////
+
+      # - name: Build Application (Windows arm64)
+
+      # - name: Find the generated installer (Windows arm64)
+
+      # - name: Calculate File Hashes (Windows arm64)
+
+      # endregion
+      ################################################# Win end   ######################################################
+
+      ############################################### Linux start ######################################################
+      # region
+
+      - name: Build Application (Linux x64)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: | # 指定此run为多个命令依次执行
+          cd sdk
+          sudo apt-get update
+          sudo apt install gcc libc6-dev
+          sudo apt install libx11-dev xorg-dev libxtst-dev
+          sudo apt install xsel xclip
+          sudo apt install libpng++-dev
+          sudo apt install xcb libxcb-xkb-dev x11-xkb-utils libx11-xcb-dev libxkbcommon-x11-dev libxkbcommon-dev
+          sudo apt install libasound2-dev
+          make linux
+
+      - name: Find the generated installer (Linux x64)
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: frontend/dist/electron/Packaged
+        shell: bash
+        run: |
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_TARGZ
+          INSTALLER_NAME_X64_TARGZ=$(basename $(find -name 'KeyTone-*-linux*tar.gz'))
+          if [ "$INSTALLER_NAME_X64_TARGZ" != "$(echo $INSTALLER_NAME_X64_TARGZ | sed 's/linux[^.]*\./linux-x64./')" ]; then
+            mv -f $INSTALLER_NAME_X64_TARGZ $(echo $INSTALLER_NAME_X64_TARGZ | sed 's/linux[^.]*\./linux-x64./')
+            INSTALLER_NAME_X64_TARGZ=$(echo $INSTALLER_NAME_X64_TARGZ | sed 's/linux[^.]*\./linux-x64./')
+          fi
+          echo "INSTALLER_NAME_X64_TARGZ=$INSTALLER_NAME_X64_TARGZ" >> $GITHUB_ENV
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_APPIMAGE
+          INSTALLER_NAME_X64_APPIMAGE=$(basename $(find -name 'KeyTone-*-linux*AppImage'))
+          if [ "$INSTALLER_NAME_X64_APPIMAGE" != "$(echo $INSTALLER_NAME_X64_APPIMAGE | sed 's/linux[^.]*\./linux-x64./')" ]; then
+            mv -f $INSTALLER_NAME_X64_APPIMAGE $(echo $INSTALLER_NAME_X64_APPIMAGE | sed 's/linux[^.]*\./linux-x64./')
+            INSTALLER_NAME_X64_APPIMAGE=$(echo $INSTALLER_NAME_X64_APPIMAGE | sed 's/linux[^.]*\./linux-x64./')
+          fi
+          echo "INSTALLER_NAME_X64_APPIMAGE=$INSTALLER_NAME_X64_APPIMAGE" >> $GITHUB_ENV
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_X64_DEB
+          INSTALLER_NAME_X64_DEB=$(basename $(find -name 'KeyTone-*-linux*deb'))
+          if [ "$INSTALLER_NAME_X64_DEB" != "$(echo $INSTALLER_NAME_X64_DEB | sed 's/linux[^.]*\./linux-x64./')" ]; then
+            mv -f $INSTALLER_NAME_X64_DEB $(echo $INSTALLER_NAME_X64_DEB | sed 's/linux[^.]*\./linux-x64./')
+            INSTALLER_NAME_X64_DEB=$(echo $INSTALLER_NAME_X64_DEB | sed 's/linux[^.]*\./linux-x64./')
+          fi
+          echo "INSTALLER_NAME_X64_DEB=$INSTALLER_NAME_X64_DEB" >> $GITHUB_ENV
+
+      - name: Calculate File Hashes (Linux x64)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          # ----------------------------------------------------------------------------------------X64_TARGZ
+          SHA256_X64_TARGZ=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_TARGZ }} | awk '{print $1}')
+          MD5_X64_TARGZ=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_TARGZ }} | awk '{print $1}')
+          echo "SHA256_X64_TARGZ=$SHA256_X64_TARGZ" >> $GITHUB_ENV
+          echo "MD5_X64_TARGZ=$MD5_X64_TARGZ" >> $GITHUB_ENV
+          # ----------------------------------------------------------------------------------------X64_APPIMAGE
+          SHA256_X64_APPIMAGE=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_APPIMAGE }} | awk '{print $1}')
+          MD5_X64_APPIMAGE=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_APPIMAGE }} | awk '{print $1}')
+          echo "SHA256_X64_APPIMAGE=$SHA256_X64_APPIMAGE" >> $GITHUB_ENV
+          echo "MD5_X64_APPIMAGE=$MD5_X64_APPIMAGE" >> $GITHUB_ENV
+          # ----------------------------------------------------------------------------------------X64_DEB
+          SHA256_X64_DEB=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_DEB }} | awk '{print $1}')
+          MD5_X64_DEB=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_DEB }} | awk '{print $1}')
+          echo "SHA256_X64_DEB=$SHA256_X64_DEB" >> $GITHUB_ENV
+          echo "MD5_X64_DEB=$MD5_X64_DEB" >> $GITHUB_ENV
+      # endregion
+      ############################################### Linux end   ######################################################
+
+      ############################################### MacOS start ######################################################
+      # region
+
+      # endregion
+      ############################################### MacOS end   ######################################################
 
       - name: Upload Build Artifact (ALL)
         # TIPS: Artifact 中, 通过手动点击, 下载的打包结果的名称(无论名称如何设置, 都会给你加载.zip后缀的, 这是其预期的行为)
@@ -133,15 +246,44 @@ jobs:
 
             * `${{ needs.build.outputs.SHA256_X64_SETUP_EXE }}`
 
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}` is:
+
+            * `${{ needs.build.outputs.SHA256_X64_TARGZ }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}` is:
+
+            * `${{ needs.build.outputs.SHA256_X64_APPIMAGE }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}` is:
+
+            * `${{ needs.build.outputs.SHA256_X64_DEB }}`
+
             ##### The MD5 hash sum
 
             `${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}` is:
 
             * `${{ needs.build.outputs.MD5_X64_SETUP_EXE }}`
 
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}` is:
+
+            * `${{ needs.build.outputs.MD5_X64_TARGZ }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}` is:
+
+            * `${{ needs.build.outputs.MD5_X64_APPIMAGE }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}` is:
+
+            * `${{ needs.build.outputs.MD5_X64_DEB }}`
+
             ### Changelogs
 
-      - name: Upload Build Artifact to Release
+      ############################################  Upload Build Artifact to Release   ########################### start
+      # region
+
+      # region ------------Windows start
+
+      - name: Upload Build Artifact to Release (Windows x64) (SETUP_EXE)
         uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
@@ -151,7 +293,7 @@ jobs:
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
           asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
-      - name: Upload Build Artifact ZIP to Release
+      - name: Upload Build Artifact ZIP to Release (Windows x64)
         uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
@@ -161,6 +303,51 @@ jobs:
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
           asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
+      # endregion
+      # -------------------Windows end
+
+      # region ------------Linux start
+
+      - name: Upload Build Artifact to Release (Linux x64) (TARGZ)
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}
+          asset_content_type: application/gzip
+
+      - name: Upload Build Artifact to Release (Linux x64) (APPIMAGE)
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}
+          asset_content_type: application/x-appimage
+
+      - name: Upload Build Artifact to Release (Linux x64) (DEB)
+        uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}
+          asset_content_type: application/x-debian-package
+
+      # endregion
+      # -------------------Linux end
+
+      # region ------------MacOS start
+
+      # endregion
+      # -------------------MacOS end
+
+      # endregion
+      ############################################  Upload Build Artifact to Release   ############################# end
 
   ######################################################################################################### build win
   # build_windows_x64:
