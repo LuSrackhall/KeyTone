@@ -107,13 +107,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4 # 将仓库代码复制到虚拟机文件系统中
 
-      - name: Get Changelogs
-        run: |
-          CHANGELOG=$(cat CHANGELOG.md)
-          echo "MULTILINE_VAR<<EOF" >> $GITHUB_ENV
-          echo "CHANGELOG=$CHANGELOG"  >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Download Build Artifact (ALL)
         uses: actions/download-artifact@v3
         with:
@@ -147,8 +140,6 @@ jobs:
             * `${{ needs.build.outputs.MD5_X64_SETUP_EXE }}`
 
             ### Changelogs
-
-            ${{ env.CHANGELOG }}
 
       - name: Upload Build Artifact to Release
         uses: actions/upload-release-asset@v1 # 安装用于上传最终打包结果到本次release的脚本
