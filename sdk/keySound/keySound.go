@@ -21,7 +21,21 @@ import (
 //go:embed sounds
 var sounds embed.FS
 
-func PlayKeySound(ss string) {
+type Cut struct {
+	StartMS int
+	EndMS   int // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
+}
+
+// 键音播放器
+//
+// Parameters:
+//   - ss - 默认的嵌入程序内的键音路径名
+//   - cut - 裁剪键音的必要结构体, 为nil代表不裁剪。
+//
+// Returns:
+//   - void
+func PlayKeySound(ss string, cut *Cut) {
+
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
@@ -45,10 +59,19 @@ func PlayKeySound(ss string) {
 	// starTime := time.Now()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
-	// startSample := format.SampleRate.N(28393)
-	startSample := format.SampleRate.N(time.Millisecond * time.Duration(28393))
-	audioStreamer.Seek(startSample)
-	endSample := startSample + format.SampleRate.N(time.Millisecond*time.Duration(200))
+	endSample := -1 // 为保证cut=nil时, 也能正常保留原始工作。(当从配置文件获取的信息达不到构造cut时, cut将不会被构造。cut释放为nil的逻辑不应该在播放器端处理<如start和end都等于0时, cut就应该为nil, 即全量PlayKeySound播放>。)
+	// 如果cut=nil则全量播放
+	if cut != nil {
+		startSample := 0
+		startSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.StartMS))
+		audioStreamer.Seek(startSample)
+		// 若有不合理错误, 则直接退出, 不播放任何声音。
+		// * 如果开始时间等于结束时间, 说明用户不想播放任何声音, 为避免内存浪费, 我们在此处也直接做退出处理。
+		if cut.EndMS <= cut.StartMS {
+			return
+		}
+		endSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.EndMS))
+	}
 
 	volume := globalAudioVolumeAmplifyProcessing(audioStreamer)
 
@@ -91,7 +114,7 @@ func PlayKeySound(ss string) {
 			pos := audioStreamer.Position()
 			fmt.Println("pos", pos)
 			fmt.Println("endSample", endSample)
-			if pos >= endSample {
+			if pos >= endSample && endSample != -1 {
 				// audioStreamer.Close()
 				// done <- true
 				// return
@@ -110,10 +133,10 @@ func PlayKeySound(ss string) {
 			}
 			// speaker.Unlock()
 		}
+		// fmt.Println("播放用时", time.Since(starTime))
 	}
-	// fmt.Println("播放用时", time.Since(starTime))
-
 	fmt.Println("退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,")
+
 }
 
 func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
