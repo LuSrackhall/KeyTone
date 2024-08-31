@@ -4,6 +4,7 @@ import (
 	"KeyTone/config"
 	"embed"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -44,18 +45,63 @@ func PlayKeySound(ss string) {
 	// starTime := time.Now()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
 
+	// startSample := format.SampleRate.N(28393)
+	startSample := format.SampleRate.N(time.Millisecond * time.Duration(28393))
+	audioStreamer.Seek(startSample)
+	endSample := startSample + format.SampleRate.N(time.Millisecond*time.Duration(200))
+
 	volume := globalAudioVolumeAmplifyProcessing(audioStreamer)
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 
+	ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
+
 	// 播放音乐
 	done := make(chan bool)
-	speaker.Play(beep.Seq(volume, beep.Callback(func() {
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
 		done <- true
 	})))
 
 	// 等待播放完成
-	<-done
+	// <-done
+	//
+	// 等待播放完成
+	// for {
+	// 	select {
+	// 	case <-done:
+	// 		return
+	// 	case <-time.After(time.Second):
+	// 		speaker.Lock()
+	// 		fmt.Println(format.SampleRate.D(audioStreamer.Position()).Round(time.Second))
+	// 		fmt.Println(audioStreamer.Position())
+	// 		fmt.Println(format.SampleRate.D(audioStreamer.Len()).Round(time.Second))
+	// 		fmt.Println(audioStreamer.Len())
+	// 		speaker.Unlock()
+	// 	}
+	// }
+	//
+	// 等待播放完成
+	for {
+		select {
+		case <-done:
+			return
+		case <-time.After(10 * time.Millisecond):
+			// speaker.Lock()
+			pos := audioStreamer.Position()
+			fmt.Println("pos", pos)
+			fmt.Println("endSample", endSample)
+			if pos >= endSample {
+				// audioStreamer.Close()
+				// done <- true
+				// return
+				ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频
+				// speaker.Lock()
+				// speaker.Clear()
+				return
+			}
+			// speaker.Unlock()
+		}
+	}
 	// fmt.Println("播放用时", time.Since(starTime))
 }
 
