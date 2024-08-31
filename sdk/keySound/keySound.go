@@ -4,6 +4,7 @@ import (
 	"KeyTone/config"
 	"embed"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -32,6 +33,7 @@ func PlayKeySound(ss string) {
 	if err != nil {
 		panic(err)
 	}
+	defer audioStreamer.Close()
 
 	// 初始化speaker。
 	// 第二个参数的值, 不会对音质产生影响, 它只是缓冲区的大小。
@@ -45,23 +47,73 @@ func PlayKeySound(ss string) {
 
 	// startSample := format.SampleRate.N(28393)
 	startSample := format.SampleRate.N(time.Millisecond * time.Duration(28393))
-	// audioStreamer.Seek(startSample)
+	audioStreamer.Seek(startSample)
 	endSample := startSample + format.SampleRate.N(time.Millisecond*time.Duration(200))
 
 	volume := globalAudioVolumeAmplifyProcessing(audioStreamer)
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 
-	buffer := beep.NewBuffer(format)
-	buffer.Append(audioStreamer)
-	audioStreamer.Close()
+	ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
 
 	// 播放音乐
-	shot := buffer.Streamer(startSample, endSample)
-	speaker.Play(shot)
+	done := make(chan bool)
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
+		done <- true
+	})))
 
+	// 等待播放完成
+	// <-done
+	//
+	// 等待播放完成
+	// for {
+	// 	select {
+	// 	case <-done:
+	// 		return
+	// 	case <-time.After(time.Second):
+	// 		speaker.Lock()
+	// 		fmt.Println(format.SampleRate.D(audioStreamer.Position()).Round(time.Second))
+	// 		fmt.Println(audioStreamer.Position())
+	// 		fmt.Println(format.SampleRate.D(audioStreamer.Len()).Round(time.Second))
+	// 		fmt.Println(audioStreamer.Len())
+	// 		speaker.Unlock()
+	// 	}
+	// }
+	//
+	// 等待播放完成
+	re := true
+	for re {
+		select {
+		case <-done:
+			re = false
+		case <-time.After(10 * time.Millisecond):
+			// speaker.Lock()
+			pos := audioStreamer.Position()
+			fmt.Println("pos", pos)
+			fmt.Println("endSample", endSample)
+			if pos >= endSample {
+				// audioStreamer.Close()
+				// done <- true
+				// return
+				ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频
+				// speaker.Lock()
+				// speaker.Clear()
+				err := audioStreamer.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+				err = audioFile.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+				re = false
+			}
+			// speaker.Unlock()
+		}
+	}
 	// fmt.Println("播放用时", time.Since(starTime))
 
+	fmt.Println("退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,")
 }
 
 func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
