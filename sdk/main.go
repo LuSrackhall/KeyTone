@@ -170,7 +170,8 @@ func handleKeyEvent(evChan chan hook.Event) {
 			println(ev.Keycode)
 
 			println("仅播放 key_up 声音")
-			go keySound.PlayKeySound("test_up.wav")
+			// go keySound.PlayKeySound("test_up.wav")
+			go keySound.PlayKeySound("sound.ogg")
 			// go keySound.KeyUpSoundPlay()
 
 			key_down_soundIsRun = false

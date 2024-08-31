@@ -3,11 +3,17 @@ package keySound
 import (
 	"KeyTone/config"
 	"embed"
+	"errors"
+	"io/fs"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/mp3"
 	"github.com/gopxl/beep/speaker"
+	"github.com/gopxl/beep/vorbis"
 	"github.com/gopxl/beep/wav"
 )
 
@@ -22,7 +28,7 @@ func PlayKeySound(ss string) {
 	defer audioFile.Close()
 
 	// 对文件进行解码
-	audioStreamer, format, err := wav.Decode(audioFile)
+	audioStreamer, format, err := decodeAudioFile(audioFile, ss)
 	if err != nil {
 		panic(err)
 	}
@@ -51,6 +57,21 @@ func PlayKeySound(ss string) {
 	// 等待播放完成
 	<-done
 	// fmt.Println("播放用时", time.Since(starTime))
+}
+
+func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
+	ext := strings.ToLower(filepath.Ext(filename))
+
+	switch ext {
+	case ".wav":
+		return wav.Decode(file)
+	case ".mp3":
+		return mp3.Decode(file)
+	case ".ogg":
+		return vorbis.Decode(file)
+	default:
+		return nil, beep.Format{}, errors.New("unsupported audio format: " + ext)
+	}
 }
 
 func globalAudioVolumeAmplifyProcessing(audioStreamer beep.Streamer) *effects.Volume {
