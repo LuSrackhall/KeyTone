@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gopxl/beep"
-	"github.com/gopxl/beep/effects"
-	"github.com/gopxl/beep/mp3"
-	"github.com/gopxl/beep/speaker"
-	"github.com/gopxl/beep/vorbis"
-	"github.com/gopxl/beep/wav"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/effects"
+	"github.com/gopxl/beep/v2/mp3"
+	"github.com/gopxl/beep/v2/speaker"
+	"github.com/gopxl/beep/v2/vorbis"
+	"github.com/gopxl/beep/v2/wav"
 )
 
 //go:embed sounds

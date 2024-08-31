@@ -157,7 +157,9 @@ func handleKeyEvent(evChan chan hook.Event) {
 			println(ev.Keycode) // 按下时, 由于goHook的bug, 无法判断实际的keyCode。 但由于hold的触发实际与down几乎一致, 且可判断实际的keyCode, 因此可使用此事件代替down
 			if !key_down_soundIsRun {
 				println("仅播放 key_down 声音")
-				go keySound.PlayKeySound("test_down.wav")
+				// go keySound.PlayKeySound("test_down.wav")
+				go keySound.PlayKeySound("sound.ogg")
+				// go keySound.PlayKeySound("7.ogg")
 				// go keySound.KeyDownSoundPlay()
 
 				key_down_soundIsRun = true
@@ -172,6 +174,7 @@ func handleKeyEvent(evChan chan hook.Event) {
 			println("仅播放 key_up 声音")
 			// go keySound.PlayKeySound("test_up.wav")
 			go keySound.PlayKeySound("sound.ogg")
+			// go keySound.PlayKeySound("7.ogg")
 			// go keySound.KeyUpSoundPlay()
 
 			key_down_soundIsRun = false

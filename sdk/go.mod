@@ -3,7 +3,8 @@ module KeyTone
 go 1.22.0
 
 require (
-	github.com/gopxl/beep v1.4.1
+	github.com/fsnotify/fsnotify v1.7.0
+	github.com/gin-gonic/gin v1.10.0
 	github.com/robotn/gohook v0.41.0
 )
 
@@ -12,10 +13,8 @@ require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
@@ -55,9 +54,10 @@ require (
 )
 
 require (
-	github.com/ebitengine/oto/v3 v3.1.0 // indirect
+	github.com/ebitengine/oto/v3 v3.2.0 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/gin-contrib/cors v1.7.2
+	github.com/gopxl/beep/v2 v2.0.3
 	github.com/joho/godotenv v1.5.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/viper v1.19.0
