@@ -81,10 +81,11 @@ func PlayKeySound(ss string) {
 	// }
 	//
 	// 等待播放完成
-	for {
+	re := true
+	for re {
 		select {
 		case <-done:
-			return
+			re = false
 		case <-time.After(10 * time.Millisecond):
 			// speaker.Lock()
 			pos := audioStreamer.Position()
@@ -105,12 +106,14 @@ func PlayKeySound(ss string) {
 				if err != nil {
 					fmt.Println(err)
 				}
-				return
+				re = false
 			}
 			// speaker.Unlock()
 		}
 	}
 	// fmt.Println("播放用时", time.Since(starTime))
+
+	fmt.Println("退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,退出了,")
 }
 
 func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
