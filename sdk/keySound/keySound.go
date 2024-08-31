@@ -97,6 +97,14 @@ func PlayKeySound(ss string) {
 				ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频
 				// speaker.Lock()
 				// speaker.Clear()
+				err := audioStreamer.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+				err = audioFile.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
 				return
 			}
 			// speaker.Unlock()
