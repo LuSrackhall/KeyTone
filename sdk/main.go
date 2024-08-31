@@ -180,6 +180,9 @@ func handleKeyEvent(evChan chan hook.Event) {
 			// go keySound.PlayKeySound("test_up.wav", nil)
 			// TODO: 第一个参数何时为nil, 由配置决定。(比如可以设置个bool值, 代表是否关闭此音频, 如果为true, 则为nil。)
 			// TODO: 第二个参数何时为nil, 由配置决定。(比如当配置中, 未对开始, 结束时间做任何设置, 则默认为nil的全量播放)
+			// TODO: 第一个参数 与 第二个参数组合的更多逻辑, 都需要逐渐适配。比如
+			//       * 配置中开启优先级时, 则按照优先级指定音频, 与默认音频, 否则将放弃相关逻辑
+			//         * 当开启优先级时, 第一个参数的全局配置, 应该是和相应的cut是强关联的, 否则无意义, 因此PlayKeySound的逻辑还要改。
 			go keySound.PlayKeySound(nil, &keySound.Cut{
 				StartMS: 28393,
 				// 其它两个字段为设置, 则为"0值"。 bool的"0值"为 false。 int的"0值"为 0
