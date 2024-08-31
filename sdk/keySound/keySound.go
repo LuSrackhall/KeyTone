@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,6 +22,12 @@ import (
 //go:embed sounds
 var sounds embed.FS
 
+type AudioFilePath struct {
+	SS     string // 优先级最低
+	Global string // 优先级仅次于Part
+	Part   string // 优先级最高
+}
+
 type Cut struct {
 	StartMS int
 	EndMS   int // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
@@ -29,21 +36,44 @@ type Cut struct {
 // 键音播放器
 //
 // Parameters:
-//   - ss - 默认的嵌入程序内的键音路径名
+//   - audioFilePath - 指定音频文件路径的结构体, 为nil代表不播放任何音频。
 //   - cut - 裁剪键音的必要结构体, 为nil代表不裁剪。
 //
 // Returns:
 //   - void
-func PlayKeySound(ss string, cut *Cut) {
-
-	audioFile, err := sounds.Open("sounds/" + ss)
-	if err != nil {
-		panic(err)
+func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
+	if audioFilePath == nil {
+		return
 	}
-	defer audioFile.Close()
+
+	var audioFile fs.File
+	var err error  // 注意, 这里一定要同时带上err。 否则在if else 内部, 和已声明的audioFile一起取返回值而临时创建的err, 会造成已声明的audioFile被重新声明并定义, 从而发生作用域问题。
+	var ext string // 用于判断音频类型
+	if audioFilePath.Part != "" {
+		audioFile, err = os.Open(audioFilePath.Part)
+		if err != nil {
+			panic(err)
+		}
+		defer audioFile.Close()
+		ext = strings.ToLower(filepath.Ext(audioFilePath.Part))
+	} else if audioFilePath.Global != "" {
+		audioFile, err = os.Open(audioFilePath.Global)
+		if err != nil {
+			panic(err)
+		}
+		defer audioFile.Close()
+		ext = strings.ToLower(filepath.Ext(audioFilePath.Global))
+	} else {
+		audioFile, err = sounds.Open("sounds/" + audioFilePath.SS)
+		if err != nil {
+			panic(err)
+		}
+		defer audioFile.Close()
+		ext = strings.ToLower(filepath.Ext(audioFilePath.SS))
+	}
 
 	// 对文件进行解码
-	audioStreamer, format, err := decodeAudioFile(audioFile, ss)
+	audioStreamer, format, err := decodeAudioFile(audioFile, ext)
 	if err != nil {
 		panic(err)
 	}
@@ -139,8 +169,7 @@ func PlayKeySound(ss string, cut *Cut) {
 
 }
 
-func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
-	ext := strings.ToLower(filepath.Ext(filename))
+func decodeAudioFile(file fs.File, ext string) (beep.StreamSeekCloser, beep.Format, error) {
 
 	switch ext {
 	case ".wav":

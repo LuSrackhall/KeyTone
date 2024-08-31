@@ -158,7 +158,9 @@ func handleKeyEvent(evChan chan hook.Event) {
 			if !key_down_soundIsRun {
 				println("仅播放 key_down 声音")
 				// go keySound.PlayKeySound("test_down.wav", nil)
-				go keySound.PlayKeySound("sound.ogg", &keySound.Cut{
+				go keySound.PlayKeySound(&keySound.AudioFilePath{
+					SS: "sound.ogg",
+				}, &keySound.Cut{
 					StartMS: 28393,
 					EndMS:   28593,
 					// 其它两个字段为设置, 则为"0值"。 bool的"0值"为 false。 int的"0值"为 0
@@ -176,10 +178,12 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 			println("仅播放 key_up 声音")
 			// go keySound.PlayKeySound("test_up.wav", nil)
-			go keySound.PlayKeySound("sound.ogg", &keySound.Cut{
+			// TODO: 第一个参数何时为nil, 由配置决定。(比如可以设置个bool值, 代表是否关闭此音频, 如果为true, 则为nil。)
+			// TODO: 第二个参数何时为nil, 由配置决定。(比如当配置中, 未对开始, 结束时间做任何设置, 则默认为nil的全量播放)
+			go keySound.PlayKeySound(nil, &keySound.Cut{
 				StartMS: 28393,
 				// 其它两个字段为设置, 则为"0值"。 bool的"0值"为 false。 int的"0值"为 0
-				EndMS: 22, // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
+				EndMS: 28593, // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
 			}) // 注意, 若第二个参数为nil, 则不论多长的音频, 都会全量播放
 			// go keySound.KeyUpSoundPlay()
 
