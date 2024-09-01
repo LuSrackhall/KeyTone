@@ -87,14 +87,17 @@ func PlayKeySound(ss string) {
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 
+	ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
+
 	// 播放音乐
 	done := make(chan bool)
-	speaker.Play(beep.Seq(volume, beep.Callback(func() {
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
 		done <- true
 	})))
 
 	go (func() {
 		time.Sleep(500 * time.Millisecond)
+		ctrl.Paused = true
 		done <- true
 	})()
 
