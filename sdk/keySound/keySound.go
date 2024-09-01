@@ -56,7 +56,12 @@ func init() {
 }
 
 func PlayKeySound(ss string) {
-	defer speaker.Clear()
+	defer (func() {
+		// ERROR: (错误认知)调用的太快, 似乎只能消除最后一次播放的声音, 无法消除其内存。
+		// 正确认知, 这个时间越短, 能够回收的内存就越精准, 内存残留的一小部分就越少。
+		time.Sleep(500 * time.Millisecond)
+		speaker.Clear()
+	})()
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
