@@ -51,20 +51,12 @@ func init() {
 	}
 
 	formatGlobalSampleRate = format.SampleRate
-	go (func() {
-		for {
-			time.Sleep(3 * time.Second)
-			fmt.Println("speaker GC Start...")
-			speaker.Clear() // 可注释掉此行, 并运行程序, 会发现声音仍然会在主动结束播放协程后存在一段时间。 但此行一旦启用, 会回收掉这些没有文件句柄的播放, 但似乎并没有消除对应内存。
-			fmt.Println("speaker GC End")
-		}
-	})()
-
 	fmt.Println("format.SampleRate", format.SampleRate)
 	fmt.Println("formatGlobalSampleRate", formatGlobalSampleRate)
 }
 
 func PlayKeySound(ss string) {
+	speaker.Clear()
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
