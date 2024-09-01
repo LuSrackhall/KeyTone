@@ -42,6 +42,8 @@ type Cut struct {
 // Returns:
 //   - void
 func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
+	// speaker.Clear()
+	// defer speaker.Clear()
 	if audioFilePath == nil {
 		return
 	}
