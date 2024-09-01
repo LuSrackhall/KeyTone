@@ -86,6 +86,11 @@ func PlayKeySound(ss string) {
 		done <- true
 	})))
 
+	go (func() {
+		time.Sleep(500 * time.Millisecond)
+		done <- true
+	})()
+
 	// 等待播放完成
 	<-done
 	// fmt.Println("播放用时", time.Since(starTime))
