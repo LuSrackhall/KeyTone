@@ -56,7 +56,7 @@ func init() {
 }
 
 func PlayKeySound(ss string) {
-	speaker.Clear()
+	defer speaker.Clear()
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
