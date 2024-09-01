@@ -37,6 +37,9 @@ func init() {
 	}
 	defer audioStreamer.Close()
 
+	// TODO: 其实没必要非通过上述读取音频文件的方式来初始化Speaker, 我们完全可以自行指定一个固定的采样率。
+	// formatSampleRate := beep.SampleRate(44100) // 假设播放器的采样率为44100 Hz
+
 	// 初始化speaker。
 	// 第二个参数的值, 不会对音质产生影响, 它只是缓冲区的大小。
 	// > bufferSize参数指定扬声器缓冲区的样本数。更大的缓冲区大小意味着更低的CPU使用率和更可靠的播放。较低的缓冲区大小意味着更好的响应性和更少的延迟。
