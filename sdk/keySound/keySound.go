@@ -42,8 +42,8 @@ func init() {
 }
 
 func PlayKeySound(ss string) {
-	speaker.Clear()
-	defer speaker.Clear()
+	// speaker.Clear()
+	// defer speaker.Clear()
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
@@ -75,12 +75,12 @@ func PlayKeySound(ss string) {
 		done <- true
 	})))
 
-	// FIXME: 暂时先如此处理, 后续再进一步处理
-	go (func() {
-		time.Sleep(500 * time.Millisecond)
-		ctrl.Paused = true
-		done <- true
-	})()
+	// // FIXME: 暂时先如此处理, 后续再进一步处理
+	// go (func() {
+	// 	time.Sleep(500 * time.Millisecond)
+	// 	ctrl.Paused = true
+	// 	done <- true
+	// })()
 
 	// 等待播放完成
 	<-done
