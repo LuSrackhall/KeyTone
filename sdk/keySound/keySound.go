@@ -4,6 +4,7 @@ import (
 	"KeyTone/config"
 	"embed"
 	"errors"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -20,7 +21,29 @@ import (
 //go:embed sounds
 var sounds embed.FS
 
+// 播放器的采样率为44100 Hz
+var formatGlobalSampleRate beep.SampleRate = beep.SampleRate(44100)
+
+func init() {
+
+	// 初始化speaker。
+	// 第二个参数的值, 不会对音质产生影响, 它只是缓冲区的大小。
+	// > bufferSize参数指定扬声器缓冲区的样本数。更大的缓冲区大小意味着更低的CPU使用率和更可靠的播放。较低的缓冲区大小意味着更好的响应性和更少的延迟。
+	// > * 缓冲区越大, cpu压力越小, 播放的整个过程崩溃率也会降低。(个人理解)
+	// > * 缓冲区越小, cpu压力越大, 会得到更快的响应性和更少的延时。(个人理解)
+	// > 鉴于个人的以上理解, 这个数值对我们KeyTone项目来说, 缓冲区设置的越小越好。
+	// > * 但实际测试下来, 缓冲区无论如何设置, 其响应到播放完毕的用时都只有最大20ms作用的波动, 而且绝大部分时候, 波动仅有1ms左右。因此给其一个固定的值即可
+	// starTime := time.Now()
+	err := speaker.Init(formatGlobalSampleRate, formatGlobalSampleRate.N(time.Second/36))
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func PlayKeySound(ss string) {
+	speaker.Clear()
+	defer speaker.Clear()
 	audioFile, err := sounds.Open("sounds/" + ss)
 	if err != nil {
 		panic(err)
@@ -34,29 +57,35 @@ func PlayKeySound(ss string) {
 	}
 	defer audioStreamer.Close()
 
-	// 初始化speaker。
-	// 第二个参数的值, 不会对音质产生影响, 它只是缓冲区的大小。
-	// > bufferSize参数指定扬声器缓冲区的样本数。更大的缓冲区大小意味着更低的CPU使用率和更可靠的播放。较低的缓冲区大小意味着更好的响应性和更少的延迟。
-	// > * 缓冲区越大, cpu压力越小, 播放的整个过程崩溃率也会降低。(个人理解)
-	// > * 缓冲区越小, cpu压力越大, 会得到更快的响应性和更少的延时。(个人理解)
-	// > 鉴于个人的以上理解, 这个数值对我们KeyTone项目来说, 缓冲区设置的越小越好。
-	// > * 但实际测试下来, 缓冲区无论如何设置, 其响应到播放完毕的用时都只有最大20ms作用的波动, 而且绝大部分时候, 波动仅有1ms左右。因此给其一个固定的值即可
-	// starTime := time.Now()
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/36))
+	fmt.Println("format.SampleRate", format.SampleRate)
+	fmt.Println("formatGlobalSampleRate", formatGlobalSampleRate)
 
-	volume := globalAudioVolumeAmplifyProcessing(audioStreamer)
+	// 将文件的采样率, 设置成与播放器一致
+	reStreamer := beep.Resample(4, format.SampleRate, formatGlobalSampleRate, audioStreamer)
+
+	volume := globalAudioVolumeAmplifyProcessing(reStreamer)
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 
+	ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
+
 	// 播放音乐
 	done := make(chan bool)
-	speaker.Play(beep.Seq(volume, beep.Callback(func() {
+	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
 		done <- true
 	})))
+
+	// FIXME: 暂时先如此处理, 后续再进一步处理
+	go (func() {
+		time.Sleep(500 * time.Millisecond)
+		ctrl.Paused = true
+		done <- true
+	})()
 
 	// 等待播放完成
 	<-done
 	// fmt.Println("播放用时", time.Since(starTime))
+	fmt.Println("结束------结束------结束")
 }
 
 func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
