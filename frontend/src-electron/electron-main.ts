@@ -41,12 +41,12 @@ const appDir = path.dirname(app.getAppPath());
 // const key_tone_sdk_name = 'win32' === process.platform ? 'KeyTone.exe' : 'Keytone';
 const key_tone_sdk_path = path.join(appDir, 'key_tone_sdk', 'KeyTone.exe');
 
-const databasesDir = path.join(
+const configDir = path.join(
   app.getPath('appData'),
-  'KeyToneGoSdk', // 为了和electron原生与前端持久化区域做区分, 我们sdk依赖将使用独立的持久化路径
-  'Database'
+  'KeyToneConfig', // 为了和electron原生与前端持久化区域做区分, 我们sdk依赖将使用独立的持久化路径
+  'Config'
 );
-const dbPath = path.join(databasesDir, 'key_tone.db');
+const dbPath = path.join(configDir, 'key_tone.db');
 
 // console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuu=', dbPath);
 const logsDir = path.join(app.getPath('home'), '.config', 'KeyToneGoSdk');
@@ -57,8 +57,8 @@ const logsDirPath = path.join(logsDir, 'KeyToneSdkLog.jsonl');
 // 确保路径是可用路径(若发现路径不存在, 则递归创建)
 // const fs = require('fs');
 import fs from 'fs';
-if (!fs.existsSync(databasesDir)) {
-  fs.mkdirSync(databasesDir, { recursive: true });
+if (!fs.existsSync(configDir)) {
+  fs.mkdirSync(configDir, { recursive: true });
 }
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
@@ -92,7 +92,7 @@ if (process.env.DEBUGGING) {
   // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = ['-configPath=' + databasesDir, '-logPathAndName=' + logsDirPath];
+  const sdkProcessParameter = ['-configPath=' + configDir, '-logPathAndName=' + logsDirPath];
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
     stdio: 'ignore',
