@@ -41,12 +41,16 @@ const appDir = path.dirname(app.getAppPath());
 // const key_tone_sdk_name = 'win32' === process.platform ? 'KeyTone.exe' : 'Keytone';
 const key_tone_sdk_path = path.join(appDir, 'key_tone_sdk', 'KeyTone.exe');
 
+const appGetPath = app.getPath('appData');
+
 const configDir = path.join(
-  app.getPath('appData'),
+  appGetPath,
   'KeyToneConfig', // 为了和electron原生与前端持久化区域做区分, 我们sdk依赖将使用独立的持久化路径
   'Config'
 );
 const dbPath = path.join(configDir, 'key_tone.db');
+
+const audioPackageDir = path.join(appGetPath, 'KeyToneConfig', 'AudioPackage');
 
 // console.log('uuuuuuuuuuuuuuuuuuuuuuuuuuuu=', dbPath);
 const logsDir = path.join(app.getPath('home'), '.config', 'KeyToneGoSdk');
@@ -59,6 +63,9 @@ const logsDirPath = path.join(logsDir, 'KeyToneSdkLog.jsonl');
 import fs from 'fs';
 if (!fs.existsSync(configDir)) {
   fs.mkdirSync(configDir, { recursive: true });
+}
+if (!fs.existsSync(audioPackageDir)) {
+  fs.mkdirSync(audioPackageDir, { recursive: true });
 }
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
@@ -92,10 +99,17 @@ if (process.env.DEBUGGING) {
   // const cp = require('child_process');
   // const sdkProcessParameter = [dbPath, '', logsDirPath];
   // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = ['-configPath=' + configDir, '-logPathAndName=' + logsDirPath];
+  const sdkProcessParameter = [
+    '-configPath=' + configDir,
+    '-audioPackagePath=' + audioPackageDir,
+    '-logPathAndName=' + logsDirPath,
+  ];
+  // inherit: 子进程将继承父进程的标准输入、输出和错误流。这意味着子进程的输出会直接显示在父进程的终端中。这种方式不会对子进程的执行产生其他影响，只是改变了输出的显示方式。
+  // pipe: 子进程的标准输入、输出和错误流会被重定向到父进程中。你可以通过监听这些流来捕获子进程的输出。这种方式也不会对子进程的执行产生其他影响，但需要你在父进程中处理这些流
+  // ignore: 忽略子进程的标准输入。
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
-    stdio: 'ignore',
+    stdio: 'inherit',
   });
 }
 

@@ -29,6 +29,8 @@ func init() {
 
 	// 定义配置文件路径的命令行参数
 	var configPath string
+	// 定义音频包根目录的路径
+	var audioPackagePath string
 	// 定义日志文件路径的命令行参数
 	var logPathAndName string
 
@@ -41,6 +43,7 @@ func init() {
 		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
 		// * 第四个参数是这个参数的描述（帮助信息）。
 		flag.StringVar(&configPath, "configPath", ".", "Path to the config file")
+		flag.StringVar(&audioPackagePath, "audioPackagePath", ".", "Path to the Audio Package Root Dir")
 		flag.StringVar(&logPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
 
 		// 解析命令行参数
@@ -48,7 +51,7 @@ func init() {
 
 		// 使用命令行参数
 		// ...
-
+		slog.Info("命行参数已正确解析", "configPath", configPath, "audioPackagePath", audioPackagePath, "logPathAndName", logPathAndName)
 	}
 
 	// 初始化模块
