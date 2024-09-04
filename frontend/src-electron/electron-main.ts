@@ -109,7 +109,33 @@ if (process.env.DEBUGGING) {
   // ignore: 忽略子进程的标准输入。
   const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
     detached: false,
-    stdio: 'inherit',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  // 监听子进程的 stdout
+  sdkProcess.stdout.on('data', (data) => {
+    // console.log(`[SDK] stdout: ${data}`); // 如果输出内容设计多行文本, 则这种简单的方式只能在第一行前添加前缀
+    const lines = data.toString().split('\n');
+    lines.forEach((line: any) => {
+      if (line.trim()) {
+        process.stdout.write(`[SDK] ${line}\n`);
+      }
+    });
+  });
+
+  // 监听子进程的 stderr
+  sdkProcess.stderr.on('data', (data) => {
+    // console.error(`[SDK] stderr: ${data}`); // 如果输出内容设计多行文本, 则这种简单的方式只能在第一行前添加前缀
+    const lines = data.toString().split('\n');
+    lines.forEach((line: any) => {
+      if (line.trim()) {
+        process.stderr.write(`[SDK] ${line}\n`);
+      }
+    });
+  });
+
+  // 监听子进程的关闭事件
+  sdkProcess.on('close', (code) => {
+    console.log(`[SDK] exited with code ${code}`);
   });
 }
 
