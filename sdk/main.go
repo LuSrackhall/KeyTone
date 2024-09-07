@@ -15,6 +15,15 @@ import (
 	hook "github.com/robotn/gohook"
 )
 
+// 定义配置文件路径的命令行参数
+var ConfigPath string
+
+// 定义音频包根目录的路径
+var AudioPackagePath string
+
+// 定义日志文件路径的命令行参数
+var LogPathAndName string
+
 func init() {
 
 	// 设置环境变量
@@ -27,13 +36,6 @@ func init() {
 		slog.Info(".env文件已被正确加载", "SDK_MODE", os.Getenv("SDK_MODE"))
 	}
 
-	// 定义配置文件路径的命令行参数
-	var configPath string
-	// 定义音频包根目录的路径
-	var audioPackagePath string
-	// 定义日志文件路径的命令行参数
-	var logPathAndName string
-
 	// 获取命令行参数中的传入值
 	{
 
@@ -42,16 +44,16 @@ func init() {
 		// * 第二个参数是命令行参数的名称（在命令行中使用）。  用户在使用时 go run main.go -configPath=./path
 		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
 		// * 第四个参数是这个参数的描述（帮助信息）。
-		flag.StringVar(&configPath, "configPath", ".", "Path to the config file")
-		flag.StringVar(&audioPackagePath, "audioPackagePath", ".", "Path to the Audio Package Root Dir")
-		flag.StringVar(&logPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
+		flag.StringVar(&ConfigPath, "configPath", ".", "Path to the config file")
+		flag.StringVar(&AudioPackagePath, "audioPackagePath", ".", "Path to the Audio Package Root Dir")
+		flag.StringVar(&LogPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
 
 		// 解析命令行参数
 		flag.Parse()
 
 		// 使用命令行参数
 		// ...
-		slog.Info("命行参数已正确解析", "configPath", configPath, "audioPackagePath", audioPackagePath, "logPathAndName", logPathAndName)
+		slog.Info("命行参数已正确解析", "configPath", ConfigPath, "audioPackagePath", AudioPackagePath, "logPathAndName", LogPathAndName)
 	}
 
 	// 初始化模块
@@ -59,7 +61,7 @@ func init() {
 
 		// 初始化日志模块(并顺便初始化gin的MODE), 主要是为了输出到日志中, 便于在用户使用过程中记录bug数据。
 		{
-			logger.InitLogger(logPathAndName)
+			logger.InitLogger(LogPathAndName)
 
 			// 设置日志级别(此处主要用于开发过程中, 自己可随时进行调整的级别设置)
 			logger.ProgramLevel.Set(slog.LevelDebug)
@@ -81,20 +83,20 @@ func init() {
 		// 初始化配置模块
 		{
 			// 检查指定的路径是否存在
-			if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			if _, err := os.Stat(ConfigPath); os.IsNotExist(err) {
 				// 如果路径不存在，创建路径
-				err := os.MkdirAll(configPath, os.ModePerm)
+				err := os.MkdirAll(ConfigPath, os.ModePerm)
 				if err != nil {
 					logger.Error("配置文件路径创建时出错。", "err", err.Error())
 				} else {
-					logger.Info("配置文件路径创建成功。", "你的配置文件路径为", configPath)
+					logger.Info("配置文件路径创建成功。", "你的配置文件路径为", ConfigPath)
 				}
 			} else if err != nil {
 				logger.Error("检查配置文件路径时出错。", "err", err.Error())
 			} else {
-				logger.Info("配置文件路径已存在且无异常。", "你的配置文件路径为", configPath)
+				logger.Info("配置文件路径已存在且无异常。", "你的配置文件路径为", ConfigPath)
 			}
-			config.ConfigRun(configPath)
+			config.ConfigRun(ConfigPath)
 		}
 
 	}
