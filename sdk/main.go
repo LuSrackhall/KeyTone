@@ -45,7 +45,7 @@ func init() {
 		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
 		// * 第四个参数是这个参数的描述（帮助信息）。
 		flag.StringVar(&ConfigPath, "configPath", ".", "Path to the config file")
-		flag.StringVar(&AudioPackagePath, "audioPackagePath", ".", "Path to the Audio Package Root Dir")
+		flag.StringVar(&AudioPackagePath, "audioPackagePath", "./temporaryDebug", "Path to the Audio Package Root Dir")
 		flag.StringVar(&LogPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
 
 		// 解析命令行参数
