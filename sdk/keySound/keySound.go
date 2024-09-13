@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -41,17 +42,58 @@ func init() {
 
 }
 
-func PlayKeySound(ss string) {
-	// speaker.Clear()
-	// defer speaker.Clear()
-	audioFile, err := sounds.Open("sounds/" + ss)
-	if err != nil {
-		panic(err)
+type AudioFilePath struct {
+	SS     string // 优先级最低
+	Global string // 优先级仅次于Part
+	Part   string // 优先级最高
+}
+
+type Cut struct {
+	StartMS int
+	EndMS   int // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
+}
+
+// 键音播放器
+//
+// Parameters:
+//   - audioFilePath - 指定音频文件路径的结构体, 为nil代表不播放任何音频。
+//   - cut - 裁剪键音的必要结构体, 为nil代表不裁剪。
+//
+// Returns:
+//   - void
+func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
+
+	if audioFilePath == nil {
+		return
 	}
+
+	var audioFile fs.File
+	var err error  // 注意, 这里一定要同时带上err。 否则在if else 内部, 和已声明的audioFile一起取返回值而临时创建的err, 会造成已声明的audioFile被重新声明并定义, 从而发生作用域问题。
+	var ext string // 用于判断音频类型
+	if audioFilePath.Part != "" {
+		audioFile, err = os.Open(audioFilePath.Part)
+		if err != nil {
+			panic(err)
+		}
+		ext = strings.ToLower(filepath.Ext(audioFilePath.Part))
+	} else if audioFilePath.Global != "" {
+		audioFile, err = os.Open(audioFilePath.Global)
+		if err != nil {
+			panic(err)
+		}
+		ext = strings.ToLower(filepath.Ext(audioFilePath.Global))
+	} else {
+		audioFile, err = sounds.Open("sounds/" + audioFilePath.SS)
+		if err != nil {
+			panic(err)
+		}
+		ext = strings.ToLower(filepath.Ext(audioFilePath.SS))
+	}
+
 	defer audioFile.Close()
 
 	// 对文件进行解码
-	audioStreamer, format, err := decodeAudioFile(audioFile, ss)
+	audioStreamer, format, err := decodeAudioFile(audioFile, ext)
 	if err != nil {
 		panic(err)
 	}
@@ -62,6 +104,21 @@ func PlayKeySound(ss string) {
 
 	// 将文件的采样率, 设置成与播放器一致
 	reStreamer := beep.Resample(4, format.SampleRate, formatGlobalSampleRate, audioStreamer)
+
+	// 处理cut参数
+	endSample := -1 // 为保证cut=nil时, 也能正常保留原始工作。(当从配置文件获取的信息达不到构造cut时, cut将不会被构造。cut释放为nil的逻辑不应该在播放器端处理<如start和end都等于0时, cut就应该为nil, 即全量PlayKeySound播放>。)
+	// 如果cut=nil则全量播放
+	if cut != nil {
+		startSample := 0
+		startSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.StartMS))
+		audioStreamer.Seek(startSample)
+		// 若有不合理错误, 则直接退出, 不播放任何声音。
+		// * 如果开始时间等于结束时间, 说明用户不想播放任何声音, 为避免内存浪费, 我们在此处也直接做退出处理。
+		if cut.EndMS <= cut.StartMS {
+			return
+		}
+		endSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.EndMS))
+	}
 
 	volume := globalAudioVolumeAmplifyProcessing(reStreamer)
 
@@ -83,14 +140,24 @@ func PlayKeySound(ss string) {
 	// })()
 
 	// 等待播放完成
-	<-done
+	re := true
+	for re {
+		select {
+		case <-done:
+			re = false
+		case <-time.After(10 * time.Millisecond):
+			pos := audioStreamer.Position()
+			if pos >= endSample && endSample != -1 {
+				ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频
+				re = false
+			}
+		}
+	}
 	// fmt.Println("播放用时", time.Since(starTime))
 	fmt.Println("结束------结束------结束")
 }
 
-func decodeAudioFile(file fs.File, filename string) (beep.StreamSeekCloser, beep.Format, error) {
-	ext := strings.ToLower(filepath.Ext(filename))
-
+func decodeAudioFile(file fs.File, ext string) (beep.StreamSeekCloser, beep.Format, error) {
 	switch ext {
 	case ".wav":
 		return wav.Decode(file)
