@@ -30,7 +30,12 @@
           'select-none',
         ]"
       >
-        <q-btn no-caps :label="$t('KeyTonePackage.new.new')" icon="flight_takeoff" />
+        <q-btn
+          no-caps
+          :label="$t('KeyTonePackage.new.new')"
+          icon="flight_takeoff"
+          @click="() => router.push('/keytone_pkg-create')"
+        />
         <q-btn no-caps :label="$t('KeyTonePackage.edit.edit')" icon="flight_takeoff" />
         <q-btn no-caps :label="$t('KeyTonePackage.import.import')" icon="flight_takeoff" />
       </div>
@@ -38,6 +43,10 @@
   </q-page>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+</script>
 
 <style lang="scss" scoped></style>
