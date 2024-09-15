@@ -5,6 +5,10 @@
     "setting": {
       "index": "Setting",
       "caption": ""
+    },
+    "KeyTonePackage": {
+      "index": "KeyTone pkg",
+      "caption": ""
     }
   },
   "setting": {

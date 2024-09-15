@@ -5,6 +5,10 @@
     "setting": {
       "index": "设置",
       "caption": ""
+    },
+    "KeyTonePackage": {
+      "index": "键音包",
+      "caption": ""
     }
   },
   "setting": {

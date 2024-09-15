@@ -154,6 +154,12 @@ function openExternal(url: string) {
 
 const essentialLinks: Array<EssentialLinkProps> = [
   {
+    title: 'KeyTone.KeyTonePackage.index',
+    caption: '',
+    icon: 'album',
+    to: '/keytone_pkg',
+  },
+  {
     title: 'KeyTone.setting.index',
     caption: '',
     icon: 'settings',
@@ -175,6 +181,8 @@ const back = () => {
 const pageLabel = computed(() => {
   if (router.currentRoute.value.fullPath.split('-')[0] === '/setting') {
     return $t('KeyTone.setting.index');
+  } else if (router.currentRoute.value.fullPath.split('-')[0] === '/keytone_pkg') {
+    return $t('KeyTone.KeyTonePackage.index');
   } else {
     return '';
   }

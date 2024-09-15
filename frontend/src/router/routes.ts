@@ -47,6 +47,10 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/keytone_pkg',
+    component: () => import('layouts/Main_layout.vue'),
+  },
 
   // Always leave this as last one,
   // but you can also remove it
