@@ -50,6 +50,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/keytone_pkg',
     component: () => import('layouts/Main_layout.vue'),
+    children: [{ path: '', component: () => import('pages/Keytone_pkg_page.vue') }],
   },
 
   // Always leave this as last one,

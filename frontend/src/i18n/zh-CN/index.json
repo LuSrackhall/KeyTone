@@ -11,6 +11,17 @@
       "caption": ""
     }
   },
+  "KeyTonePackage": {
+    "new": {
+      "new": "制作新的键音包"
+    },
+    "edit": {
+      "edit": "编辑现有键音包"
+    },
+    "import": {
+      "import": "导入更多键音包"
+    }
+  },
   "setting": {
     "setting": "设置",
     "language": {

@@ -11,6 +11,17 @@
       "caption": ""
     }
   },
+  "KeyTonePackage": {
+    "new": {
+      "new": "Create new key sound pack"
+    },
+    "edit": {
+      "edit": "Edit existing key sound pack"
+    },
+    "import": {
+      "import": "Import more key sound pack"
+    }
+  },
   "setting": {
     "setting": "Setting",
     "language": {
