@@ -124,13 +124,14 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 
-	ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
+	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
 
 	// 播放音乐
-	done := make(chan bool)
+	done := make(chan struct{})
 	defer close(done)
-	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
-		done <- true
+	// speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
+	speaker.Play(beep.Seq(volume, beep.Callback(func() {
+		done <- struct{}{}
 	})))
 
 	// // FIXME: 暂时先如此处理, 后续再进一步处理
