@@ -41,6 +41,8 @@ github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/gopxl/beep/v2 v2.0.3 h1:FLqtvXCjhiUcL1e7Or5NwbgE4vyn3BOENOcao4zlr30=
 github.com/gopxl/beep/v2 v2.0.3/go.mod h1:sQvj2oSsu8fmmDWH3t0DzIe0OZzTW6/TJEHW4Ku+22o=
+github.com/gopxl/beep/v2 v2.1.0 h1:Jv95iHw3aNWoAa/J78YyXvOvMHH2ZGeAYD5ug8tVt8c=
+github.com/gopxl/beep/v2 v2.1.0/go.mod h1:sQvj2oSsu8fmmDWH3t0DzIe0OZzTW6/TJEHW4Ku+22o=
 github.com/hajimehoshi/go-mp3 v0.3.4 h1:NUP7pBYH8OguP4diaTZ9wJbUbk3tC0KlfzsEpWmYj68=
 github.com/hajimehoshi/go-mp3 v0.3.4/go.mod h1:fRtZraRFcWb0pu7ok0LqyFhCUrPeMsGRSVop0eemFmo=
 github.com/hajimehoshi/oto/v2 v2.3.1/go.mod h1:seWLbgHH7AyUMYKfKYT9pg7PhUu9/SisyJvNTT+ASQo=

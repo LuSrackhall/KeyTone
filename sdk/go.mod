@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
-	github.com/gopxl/beep/v2 v2.0.3
+	github.com/gopxl/beep/v2 v2.1.0
 	github.com/robotn/gohook v0.41.0
 )
 

@@ -128,6 +128,7 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 
 	// 播放音乐
 	done := make(chan bool)
+	defer close(done)
 	speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
 		done <- true
 	})))
@@ -148,7 +149,9 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 		case <-time.After(10 * time.Millisecond):
 			pos := audioStreamer.Position()
 			if pos >= endSample && endSample != -1 {
-				ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频
+				// ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频 (由于暂停后, 会永远的滞留在播放器中等待恢复, 无法进入结束状态而被正确回收, 因此我们暂时采用静音的方式解决问题)
+				volume.Silent = true // 静音的方式解决问题, 虽然可以保证最终的内存正常释放, 但如果音频文件过大, 仍是会在一定时间内造成不必要的短暂内存泄漏问题。
+				<-done               // 为了防止beep.Callback回调卡死而造成的内存泄漏, 这里必须如此处理(就算提前结束, 也要正确的等待Callback回调)
 				re = false
 			}
 		}
