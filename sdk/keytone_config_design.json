@@ -79,22 +79,23 @@
     }
   },
 
-  // 这里用于指定未独立配置的按键, 所播放的按键音。
-  "global": {
-    "key_sound": "",
-    "down": true,
-    "up": true
-    // 取消容器: 原因是, 似乎有些伪需求。
-    // * 容器本身是为了复用key_sound的, 比如可以在value中指定多个key_sound, 并按照随机或顺序的方式组合。
-    // * 比如组合多个随机 key_sound,  然后在使用容器的顺序或随机规则来随机播放这些。(注意, 这种需求是不能使用随机键音来解决的, 但可以使用嵌套的随机键音来解决。)
-    // * 但以上的需求, 似乎不太重要, 因为应用场景有限。(更重要的是, 若后续写代码过程中, 能顺便实现了键音嵌套定义功能, 甚至可以覆盖着着定义方式)
-  },
+  // 用key_tone表示最终的定义(感觉这样比较合适)
+  "key_tone": {
+    // global配置的优先级, 低于"independent"。
+    // * 只有当未定义"independent"
+    //   或
+    //   某个键中显式指定使用 global 配置时(此时的对json 文件的 处理, 是清空对象内容),
+    //   global配置才会起作用。
 
-  // 这里默认是空对象, 用户每主动配置一个, 就会增加一个。每删除一个或设置为空一个, 就会减少一个。
-  "independent": {
-    // "key_code": "key_sound"
+    // 默认对未做independent定义的按键, 应用global配置。
+    "global": {
+      "key_sound": "key_sound_name_1",
+      "is_down": true, // 是否使能按下时的声音, 默认为true
+      "is_up": true // 是否使能抬起时的声音, 默认为true
+    },
+    // "independent"为某个按键, 单独定义键音的区域
     "21": {
-      "key_sound": "key_sound_name_1", // 只能使用高级键音名称
+      "key_sound": "key_sound_name_1",
       "is_down": true, // 是否使能按下时的声音, 默认为true
       "is_up": true // 是否使能抬起时的声音, 默认为true
     }
