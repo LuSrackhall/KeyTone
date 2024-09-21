@@ -4,10 +4,17 @@
   "package_name": "示例键音包",
 
   // 原始音频文件列表，以别名为键
-  "audio_files": {
-    "sound_alias1": "sound1.mp3", // 别名: 原始音频文件名(用于索引当前包内可用的声音文件)
-    "sound_alias2": "sound2.mp3",
-    "sound_alias3": "sound3.ogg"
+  "audioFiles": {
+    // 名称到 sha256 的映射
+    "soundAlias1": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", // 名称: sha256
+    "soundAlias2": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "soundAlias3": "6dcd4ce23d88e2ee95691691e5a8eaa43dbe582f205e8ba5b754b56c94e0788e"
+  },
+  "sha256Files": {
+    // sha256 到音频文件名的映射
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855": "sound1.mp3",
+    "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824": "sound2.mp3",
+    "6dcd4ce23d88e2ee95691691e5a8eaa43dbe582f205e8ba5b754b56c94e0788e": "sound3.ogg"
   },
 
   // 定义音频。 ->  这个步骤, 是制作最终按键声音的必要过程。
