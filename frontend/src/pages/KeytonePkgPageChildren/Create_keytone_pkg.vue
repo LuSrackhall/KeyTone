@@ -18,19 +18,21 @@
 
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
           <div :class="['text-center font-semibold text-lg text-nowrap']">{{ text }}</div>
-          <q-step :name="1" title="原始声音文件" icon="settings" :done="step > 1">
+          <q-step :name="1" title="载入声音文件" icon="create_new_folder" :done="step > 1">
             <div>为此键音包载入原始的音频文件供后续步骤使用, 文件类型可以是WAV、MP3、OGG等。</div>
             <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div>
 
-            <q-card :class="['p-2']"> qq</q-card>
+            <q-card :class="['p-2']"> </q-card>
             <q-stepper-navigation>
               <q-btn @click="step = 2" color="primary" label="Continue" />
             </q-stepper-navigation>
           </q-step>
 
           <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
-          <q-step :name="2" title="键音制作" icon="create_new_folder" :done="step > 2">
-            <div>根据原始音频文件制作键音。</div>
+          <q-step :name="2" title="裁剪定义声音" icon="add_comment" :done="step > 2">
+            <div>根据载入的原始声音文件裁剪定义出需要的声音。</div>
+            <div>此步骤不会影响原始声音文件。</div>
+            <div>用户可针对同一声音文件裁剪定义出独立的多个需求声音。</div>
             <!-- <div>
               若您载入的原始音频文件本身就是一个独立完善的键音, 则性能更好。换言之, 原始键音文件越接近最终键音性能越好。
             </div> -->
@@ -44,19 +46,35 @@
             </q-stepper-navigation>
           </q-step>
 
-          <q-step :name="3" title="键音包全局设置" icon="add_comment" :done="step > 3">
-            <div>现在有了一定数量的键音, 开始在全局范围内配置它们的用途吧!</div>
+          <q-step :name="3" title="制作按键声音" icon="add_comment" :done="step > 3">
+            <div>根据裁剪定义好的声音, 制作按键声音。</div>
+            <div>每个按键音, 都包括了按下声音和抬起声音, 制作时需要分别定义它们。</div>
+            <div>当然, 如果只需要其中之一, 也可根据需求自由制作。</div>
             <q-stepper-navigation>
               <q-btn @click="step = 4" color="primary" label="Continue" />
               <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
-          <q-step :name="4" title="对某个特定按键单独设置键音" caption="本步骤可选(非必填)" icon="add_comment">
-            <div>有些情况下, 我们希望独立定义某个按键的键音, 而不是全局随机。</div>
+
+          <q-step :name="4" title="对全局按键统一设置键音" icon="settings" :done="step > 3">
+            <div>设置一个全局所有按键统一使用的按键声音。</div>
+            <div>小提示: 用随机按键声音进行此项设置, 可避免键音太过单调。</div>
+            <div>小提示: 如果您需要更加全面的键音定制, 可在下一步骤中处理。</div>
+            <q-stepper-navigation>
+              <q-btn @click="step = 5" color="primary" label="Continue" />
+              <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm" />
+            </q-stepper-navigation>
+          </q-step>
+
+          <q-step :name="5" title="对具体按键单独设置键音" caption="本步骤可选(非必填)" icon="settings">
+            <div>如果您希望单独禁用某几个按键的全局键音。</div>
+            <div>或是有些情况下, 我们希望独立定义某个按键的键音 。</div>
             <div>甚至, 更极端的情况, 我们希望键盘上所有的按键, 都拥有自己的独立键音。</div>
             <div>来吧!这一定制步骤将满足您的需求!!!</div>
+            <div>小提示: 本步骤所做的设置, 优先级高于全局键音设置。</div>
+            <div></div>
             <q-stepper-navigation>
-              <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm" />
+              <q-btn flat @click="step = 4" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
         </q-stepper>
