@@ -19,10 +19,67 @@
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
           <div :class="['text-center font-semibold text-lg text-nowrap']">{{ text }}</div>
           <q-step :name="1" title="载入声音文件" icon="create_new_folder" :done="step > 1">
-            <div>为此键音包载入原始的音频文件供后续步骤使用, 文件类型可以是WAV、MP3、OGG等。</div>
-            <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div>
+            <div>为此键音包载入原始的声音文件供后续步骤使用。</div>
+            <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
+            <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
+            <!-- <q-card class="bg-slate-500" :class="['p-2']"> -->
+            <!-- <q-btn :class="['bg-zinc-300']" label="添加新的声音源文件"></q-btn>
+            <div :class="['p-2 text-zinc-300']">或</div>
+            <q-btn :class="['bg-zinc-300']" label="选择声音源文件以进行编辑"></q-btn> -->
+            <!-- </q-card> -->
+            <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑 start -->
+            <div>
+              <!-- ------------------------------------------------------------------------------ 添加新的声音源文件 -->
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="添加新的声音源文件"
+                  @click="
+                    () => {
+                      addNewSoundFile = !addNewSoundFile;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-dialog v-model="addNewSoundFile" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 添加新的声音源文件 </q-card-section>
 
-            <q-card :class="['p-2']"> </q-card>
+                    <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section>
+
+                    <q-card-section>
+                      <q-file
+                        :class="['w-56']"
+                        dense
+                        v-model="files"
+                        label="Pick files"
+                        outlined
+                        use-chips
+                        multiple
+                        append
+                        accept=".wav,.mp3,.ogg"
+                        excludeAcceptAllOption
+                        style="max-width: 300px"
+                      />
+                    </q-card-section>
+
+                    <q-card-section>
+                      <div>数量不定, 跟随制作喜好添加即可</div>
+                      <div></div>
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+              <div :class="['p-2 text-zinc-600']">或</div>
+              <!-- -------------------------------------------------------------------------------编辑已有声音源文件 -->
+              <div>
+                <q-btn :class="['bg-zinc-300']" label="编辑已有声音源文件"></q-btn>
+              </div>
+            </div>
+            <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑   end -->
             <q-stepper-navigation>
               <q-btn @click="step = 2" color="primary" label="Continue" />
             </q-stepper-navigation>
@@ -84,10 +141,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useQuasar } from 'quasar';
+import { ref, watch } from 'vue';
 
 const text = ref('');
 const step = ref(1);
+
+const addNewSoundFile = ref(false);
+const files = ref<Array<File>>([]);
+
+watch(files, () => {
+  console.log(files.value);
+});
 </script>
 
 <style lang="scss" scoped></style>
