@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// 定义音频包根目录的路径
+var AudioPackagePath string
+
 var Viper *viper.Viper
 
 // 加载现有音频包时使用
