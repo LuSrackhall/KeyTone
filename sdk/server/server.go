@@ -68,6 +68,8 @@ func ServerRun() {
 
 	})
 
+	keytonePkgRouters(r)
+
 	// 运行gin
 	r.Run("0.0.0.0:38888")
 }
@@ -123,4 +125,34 @@ func mainRouters(r *gin.Engine) {
 		})
 	})
 
+}
+
+func keytonePkgRouters(r *gin.Engine) {
+
+	keytonePkgRouters := r.Group("/keytone_pkg")
+
+	// 接收前端上传的音频文件, 并存入本地路径
+	keytonePkgRouters.POST("/add_new_sound_file", func(ctx *gin.Context) {
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件添加失败, 传输问题:" + err.Error(),
+			})
+			return
+		}
+
+		// 保存文件
+		err = ctx.SaveUploadedFile(file, "./"+file.Filename)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件添加失败, 后端保存过程中发生错误:" + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+
+	})
 }
