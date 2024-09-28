@@ -1,6 +1,7 @@
 package main
 
 import (
+	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
 	"KeyTone/keySound"
 	"KeyTone/logger"
@@ -19,7 +20,7 @@ import (
 var ConfigPath string
 
 // 定义音频包根目录的路径
-var AudioPackagePath string
+// var AudioPackagePath string  // 定义位置不应该在此处, 已将其移动到音频包模块中去
 
 // 定义日志文件路径的命令行参数
 var LogPathAndName string
@@ -45,7 +46,7 @@ func init() {
 		// * 第三个参数是默认值（如果用户没有提供这个参数，则使用默认值）。
 		// * 第四个参数是这个参数的描述（帮助信息）。
 		flag.StringVar(&ConfigPath, "configPath", ".", "Path to the config file")
-		flag.StringVar(&AudioPackagePath, "audioPackagePath", "./temporaryDebug", "Path to the Audio Package Root Dir")
+		flag.StringVar(&audioPackageConfig.AudioPackagePath, "audioPackagePath", "./temporaryDebug", "Path to the Audio Package Root Dir")
 		flag.StringVar(&LogPathAndName, "logPathAndName", "./log.jsonl", "Path and name to the log file")
 
 		// 解析命令行参数
@@ -53,7 +54,7 @@ func init() {
 
 		// 使用命令行参数
 		// ...
-		slog.Info("命行参数已正确解析", "configPath", ConfigPath, "audioPackagePath", AudioPackagePath, "logPathAndName", LogPathAndName)
+		slog.Info("命行参数已正确解析", "configPath", ConfigPath, "audioPackagePath", audioPackageConfig.AudioPackagePath, "logPathAndName", LogPathAndName)
 	}
 
 	// 初始化模块
