@@ -1,11 +1,13 @@
 package server
 
 import (
+	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
 	"KeyTone/logger"
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -142,7 +144,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		// 保存文件
-		err = ctx.SaveUploadedFile(file, "./"+file.Filename)
+		err = ctx.SaveUploadedFile(file, filepath.Join(audioPackageConfig.AudioPackagePath, file.Filename))
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"message": "error: 文件添加失败, 后端保存过程中发生错误:" + err.Error(),
