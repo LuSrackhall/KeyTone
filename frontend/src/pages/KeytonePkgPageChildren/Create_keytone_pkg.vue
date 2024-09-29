@@ -92,9 +92,27 @@
                                   }
                                 } else {
                                   console.error(`File ${file.name} uploading error`);
+                                  q.notify({
+                                    type: 'negative',
+
+                                    position: 'top',
+
+                                    message: `File '${file.name}' addition failed`,
+
+                                    timeout: 5,
+                                  });
                                 }
                               } catch (error) {
                                 console.error(`Error uploading file ${file.name}:`, error);
+                                q.notify({
+                                  type: 'negative',
+
+                                  position: 'top',
+
+                                  message: `File '${file.name}' addition failed`,
+
+                                  timeout: 5,
+                                });
                               }
                             }
                           }
@@ -176,8 +194,11 @@
 
 <script setup lang="ts">
 import { nanoid } from 'nanoid';
+import { useQuasar } from 'quasar';
 import { SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { ref, watch } from 'vue';
+
+const q = useQuasar();
 
 // 此路径没必要进行状态管理, 当用户退出此页面时, 自动清除即符合逻辑。
 const pkgPath = nanoid();
