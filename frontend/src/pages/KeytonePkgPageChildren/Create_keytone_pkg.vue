@@ -82,7 +82,7 @@
                             // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
                             for (const file of files.slice()) {
                               try {
-                                const re = await SendFileToServer('123', file);
+                                const re = await SendFileToServer(pkgPath, file);
                                 if (re === true) {
                                   console.info(`File ${file.name} uploaded successfully`);
                                   // Remove the file from the list after successful upload
@@ -175,9 +175,12 @@
 </template>
 
 <script setup lang="ts">
-import { forEach } from 'lodash';
+import { nanoid } from 'nanoid';
 import { SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { ref, watch } from 'vue';
+
+// 此路径没必要进行状态管理, 当用户退出此页面时, 自动清除即符合逻辑。
+const pkgPath = nanoid();
 
 const text = ref('');
 const step = ref(1);
