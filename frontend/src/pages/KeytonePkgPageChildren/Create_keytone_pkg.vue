@@ -65,9 +65,43 @@
 
                     <q-card-section>
                       <div>数量不定, 跟随制作喜好添加即可</div>
-                      <div></div>
                     </q-card-section>
                     <q-card-actions align="right">
+                      <q-btn
+                        flat
+                        @click="
+                          async () => {
+                            // 循环files, 并在每次上传成功后, 删除对应file
+
+                            if (!files || files.length === 0) {
+                              console.warn('No files selected for upload');
+                              return;
+                            }
+
+                            // 使用slice()方法创建一个数组的浅拷贝, 避免因遍历过程中修改原始数组而导致的遍历中止
+                            // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
+                            for (const file of files.slice()) {
+                              try {
+                                const re = await SendFileToServer('123', file);
+                                if (re === true) {
+                                  console.info(`File ${file.name} uploaded successfully`);
+                                  // Remove the file from the list after successful upload
+                                  const index = files.indexOf(file);
+                                  if (index > -1) {
+                                    files.splice(index, 1);
+                                  }
+                                } else {
+                                  console.error(`File ${file.name} uploading error`);
+                                }
+                              } catch (error) {
+                                console.error(`Error uploading file ${file.name}:`, error);
+                              }
+                            }
+                          }
+                        "
+                        color="primary"
+                        label="确认添加"
+                      />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
@@ -141,7 +175,8 @@
 </template>
 
 <script setup lang="ts">
-import { useQuasar } from 'quasar';
+import { forEach } from 'lodash';
+import { SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { ref, watch } from 'vue';
 
 const text = ref('');
