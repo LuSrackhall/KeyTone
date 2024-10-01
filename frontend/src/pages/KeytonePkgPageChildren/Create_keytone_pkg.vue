@@ -9,7 +9,7 @@
   <q-page>
     <q-scroll-area class="w-[379px] h-[458.5px]">
       <div :class="['flex flex-col gap-5  p-8 ']">
-        <q-input outlined stack-label dense v-model="text" label="键音包名称" />
+        <q-input outlined stack-label dense v-model="PkgName" label="键音包名称" />
         <!-- <div>原始声音文件编辑</div>
         <div>键音</div>
         <div>键音列表, 编辑键音</div>
@@ -17,7 +17,7 @@
         <div>对某个特定按键单独设置键音</div> -->
 
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
-          <div :class="['text-center font-semibold text-lg text-nowrap']">{{ text }}</div>
+          <div :class="['text-center font-semibold text-lg text-nowrap']">{{ PkgName }}</div>
           <q-step :name="1" title="载入声音文件" icon="create_new_folder" :done="step > 1">
             <div>为此键音包载入原始的声音文件供后续步骤使用。</div>
             <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
@@ -195,7 +195,7 @@
 <script setup lang="ts">
 import { nanoid } from 'nanoid';
 import { useQuasar } from 'quasar';
-import { SendFileToServer } from 'src/boot/query/keytonePkg-query';
+import { LoadConfig, SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { ref, watch } from 'vue';
 
 const q = useQuasar();
@@ -203,7 +203,11 @@ const q = useQuasar();
 // 此路径没必要进行状态管理, 当用户退出此页面时, 自动清除即符合逻辑。
 const pkgPath = nanoid();
 
-const text = ref('');
+// 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
+LoadConfig(pkgPath, true);
+
+const PkgName = ref<string>('');
+
 const step = ref(1);
 
 const addNewSoundFile = ref(false);

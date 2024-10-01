@@ -2,6 +2,7 @@ package audioPackageConfig
 
 import (
 	"KeyTone/logger"
+	"os"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -12,8 +13,8 @@ var AudioPackagePath string
 
 var Viper *viper.Viper
 
-// 加载现有音频包时使用
-func LoadConfig(configPath string) {
+// 加载音频包时使用(也可用于创建新的音频包时)
+func LoadConfig(configPath string, isCreate bool) {
 	Viper = nil
 	Viper = viper.New()
 
@@ -31,15 +32,42 @@ func LoadConfig(configPath string) {
 	if err := Viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到
-			logger.Error("未找到正确的音频包配置", "path", configPath)
-			// TODO: 可以返回给前端, 供其提示用户
-			// SSE
+			if isCreate {
+				// 如果前端是选择创建的话, 属于已知预期行为,此时我们创建新的配置文件
+				{
+					// 创建新的配置文件前检查指定的路径是否存在
+					if _, err := os.Stat(configPath); os.IsNotExist(err) {
+						// 如果路径不存在，创建路径
+						err := os.MkdirAll(configPath, os.ModePerm)
+						if err != nil {
+							logger.Error("配置文件路径创建时出错。", "err", err.Error())
+						} else {
+							logger.Info("配置文件路径创建成功。", "你的配置文件路径为", configPath)
+						}
+					} else if err != nil {
+						logger.Error("检查配置文件路径时出错。", "err", err.Error())
+					} else {
+						logger.Info("配置文件路径已存在且无异常。", "你的配置文件路径为", configPath)
+					}
+				}
+				createDefaultConfig()
+			} else {
+				// 否则为正常的加载, 默认不会创建配置文件, 以识别出有问题的键音包
+				logger.Error("未找到正确的音频包配置", "path", configPath)
+				// TODO: 可以返回给前端, 供其提示用户
+				// SSE
+			}
 		} else {
 			// 其他错误
 			logger.Error("读取音频包配置时发生致命错误", "err", err.Error())
 			// TODO: 可以返回给前端, 供其提示用户
 			// SSE
 		}
+	} else {
+		logger.Info("音频包已加载, 正在与DefaultConfig进行diff和增量载入...")
+		// 如果正常加载了键音配置文件, 则进行增量式的检测与更新(以在键音包设置出现更新时, 最大程度的兼容旧版本)
+		diffAndUpdateDefaultConfig()
+		logger.Info("音频包diff和增量载入完成")
 	}
 }
 
@@ -72,9 +100,6 @@ func SetValue(key string, value any) {
 
 // var CreateViper *viper.Viper // 创建过程中, 播放的音频包理应是当前正在制作的。
 
-// 创建新的音频包时使用
-func CreateConfig(configPath string) {}
-
 // 音频包的名字, 不应该由目录名决定, 或者说目录名甚至可以是任意随机的UUID。
 // * 目录名的映射由前端处理, 前端将会在加载用户历史选择音频包前, 先遍历所有音频包, 以建立音频包名称与路径的映射。
 //   > 比如变量过程中, 可以反复使用LoadConfig和GetValue来获取每个 音频包的名称。
@@ -83,3 +108,27 @@ func CreateConfig(configPath string) {}
 //   * 因此, 会给一个默认名称, 比如: 新的音频包(New audio package)。
 
 // 创建过程中, 是默认保存的, 无需手动保存。 如果音频包不想要了, 需要手动删除。
+
+// 键音包名称
+const Package_name = "新的键音包" // 其实这个在此处无关紧要, 因为此默认名称的设置, 主要还是在前端进行, 以前端国际化为主。
+
+func settingDefaultConfig() {
+	// 手动打开应用时的默认设置
+	Viper.SetDefault("package_name", Package_name)
+
+}
+
+func createDefaultConfig() {
+	settingDefaultConfig()
+	if err := Viper.SafeWriteConfig(); err != nil {
+		logger.Error("创建默认音频包配置文件时发生致命错误", "err", err.Error())
+	}
+}
+
+// 将默认配置增量写入配置文件<不会影响配置文件中已有的配置>
+func diffAndUpdateDefaultConfig() {
+	settingDefaultConfig()
+	if err := Viper.WriteConfig(); err != nil {
+		logger.Error("diff并增量更新默认音频包配置至现有音频包配置文件时发生致命错误", "err", err.Error())
+	}
+}

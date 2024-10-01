@@ -133,6 +133,29 @@ func keytonePkgRouters(r *gin.Engine) {
 
 	keytonePkgRouters := r.Group("/keytone_pkg")
 
+	// 加载键音包
+	keytonePkgRouters.POST("/load_config", func(ctx *gin.Context) {
+		type Arg struct {
+			AudioPkgUUID string `json:"audioPkgUUID"`
+			IsCreate     bool   `json:"isCreate"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.AudioPkgUUID == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.LoadConfig(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID), arg.IsCreate)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
 	// 接收前端上传的音频文件, 并存入本地路径
 	keytonePkgRouters.POST("/add_new_sound_file", func(ctx *gin.Context) {
 		audioPkgUUID := ctx.PostForm("audioPkgUUID")
