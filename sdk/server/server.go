@@ -181,4 +181,51 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 
 	})
+
+	keytonePkgRouters.GET("/get", func(ctx *gin.Context) {
+
+		// key := ctx.Query("key")
+		key := ctx.DefaultQuery("key", "unknown")
+
+		if key == "unknown" || key == "" {
+			ctx.JSON(200, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容key值, 不符合接口规定格式:",
+			})
+			return
+		}
+
+		value := audioPackageConfig.GetValue(key)
+
+		fmt.Println("查询到的value= ", value)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"key":     key,
+			// 这里的value, 会自动转换为JSON字符串
+			"value": value,
+		})
+	})
+
+	keytonePkgRouters.POST("/set", func(ctx *gin.Context) {
+		type SettingStore struct {
+			Key   string `json:"key"`
+			Value any    `json:"value"`
+		}
+
+		var store_setting SettingStore
+		err := ctx.ShouldBind(&store_setting)
+		if err != nil || store_setting.Key == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容key值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.SetValue(store_setting.Key, store_setting.Value)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
 }
