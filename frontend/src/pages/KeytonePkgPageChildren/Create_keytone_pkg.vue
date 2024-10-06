@@ -13,7 +13,8 @@
           outlined
           stack-label
           dense
-          :rules="[(val: string) => { return val !== '' && val !== undefined && val !== null ||  $t('KeyTonePackage.new.name.errorMessage'); }]"
+          :error-message="$t('KeyTonePackage.new.name.errorMessage')"
+          :error="pkgName === '' || pkgName === undefined || pkgName === null"
           v-model="pkgName"
           :label="$t('KeyTonePackage.new.name.name')"
           :placeholder="$t('KeyTonePackage.new.name.defaultValue')"
