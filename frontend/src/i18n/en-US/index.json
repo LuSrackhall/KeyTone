@@ -13,7 +13,12 @@
   },
   "KeyTonePackage": {
     "new": {
-      "new": "Create new key sound pack"
+      "new": "Create new key sound pack",
+      "name": {
+        "name": "Key sound package name",
+        "defaultValue": "New key sound pack",
+        "errorMessage": "You must set a name for the key sound pack"
+      }
     },
     "edit": {
       "edit": "Edit existing key sound pack"

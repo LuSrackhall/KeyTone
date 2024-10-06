@@ -13,7 +13,12 @@
   },
   "KeyTonePackage": {
     "new": {
-      "new": "制作新的键音包"
+      "new": "制作新的键音包",
+      "name": {
+        "name": "键音包名称",
+        "defaultValue": "新的键音包",
+        "errorMessage": "您必须为键音包设置一个名字"
+      }
     },
     "edit": {
       "edit": "编辑现有键音包"
