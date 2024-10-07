@@ -4,6 +4,7 @@ import (
 	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
 	"KeyTone/logger"
+	"crypto"
 	"fmt"
 	"io"
 	"net/http"
@@ -167,19 +168,46 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 保存文件
-		err = ctx.SaveUploadedFile(file, filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", file.Filename))
+		// 打开上传的文件
+		src, err := file.Open()
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 无法打开上传的文件:" + err.Error(),
+			})
+			return
+		}
+		defer src.Close()
+
+		// 计算文件的SHA256哈希值
+		hash := crypto.SHA256.New()
+		if _, err := io.Copy(hash, src); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 计算文件哈希值失败:" + err.Error(),
+			})
+			return
+		}
+		hashSum := hash.Sum(nil)
+		hashString := fmt.Sprintf("%x", hashSum)
+
+		// 获取文件扩展名
+		ext := filepath.Ext(file.Filename)
+
+		// 使用哈希值作为文件名
+		newFileName := hashString + ext
+
+		// 保存文件
+		destPath := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", newFileName)
+		if err := ctx.SaveUploadedFile(file, destPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"message": "error: 文件添加失败, 后端保存过程中发生错误:" + err.Error(),
 			})
 			return
 		}
 
 		ctx.JSON(200, gin.H{
-			"message": "ok",
+			"message":  "ok",
+			"fileName": newFileName,
 		})
-
 	})
 
 	keytonePkgRouters.GET("/get", func(ctx *gin.Context) {
