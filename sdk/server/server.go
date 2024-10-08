@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -204,6 +205,28 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// 文件保存成功后, 将原文件名作为value值(裁掉扩展名,只要文件名字), sha256哈希值文件名作为key值(裁掉扩展名), 存入键音包配置文件中的audioFiles对象中。
+		// 源文件名作为value值, 是因为key值中不允许大写字符出现, 因此不能应对用户对音频名称的复杂设置需求。而且, 它本身也应该是作为value值存储的。
+		// 哈希值作为key值, 也刚好符合sha256哈希值通常用纯小写表示的惯例。至于真实文件后缀或者说文件类型, 则也存储至value中去。
+		// audioPackageConfig.SetValue("audioFiles."+hashString+".name", strings.Split(file.Filename, ".")[0])
+		// audioPackageConfig.SetValue("audioFiles."+hashString+".type", ext)
+		audioPackageConfig.SetValue("audioFiles."+hashString, map[string]any{
+			/**
+			 * filepath.Base(file.Filename)：
+			 *	- 这个函数返回路径中的最后一个元素（文件名）。
+			 *	- 例如，如果 file.Filename 是 "/path/to/myFile.txt"，这个函数会返回 "myFile.txt"。
+			 *	filepath.Ext(file.Filename)：
+			 *	- 这个函数返回文件名的扩展名，包括点号。
+			 *	- 对于 "myFile.txt"，它会返回 ".txt"。
+			 *	strings.TrimSuffix(base, ext)：
+			 *	- 这个函数从第一个参数（base）的末尾移除第二个参数（ext）指定的后缀。
+			 *	- 如果 base 是 "myFile.txt"，ext 是 ".txt"，结果就是 "myFile"。
+			 */
+			"name": strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
+			"type": ext,
+		})
+
+		// 全部处理完毕后, 将正确完成的消息返回给前端
 		ctx.JSON(200, gin.H{
 			"message":  "ok",
 			"fileName": newFileName,
