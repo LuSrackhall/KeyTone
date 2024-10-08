@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gin-contrib/cors"
@@ -196,6 +197,41 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 使用哈希值作为文件名
 		newFileName := hashString + ext
 
+		// 测试此文件是否已经存在(有些相同的文件, 可能文件名称不同。) 若不存在则获取结果为nil, 可以正常往下走。 若存在则获取结果不为nil, 仅需向后添加文件名即可返回给前端, 无需后续步骤中重复保存相同的文件。(但对于前端用户, 不影响其认为这是两个不同的文件, 因为我们对于名称单独进行了保存)
+		// * 至于文件名称重复的问题, 此处不作处理, 皆由用户自行管理名称, 不只是同一sha256uuid的名字可可重复, 甚至允许用户对不同sha256uuid的音频文件起相同的名字, 皆由用户自由发挥即可。
+		if audioPackageConfig.GetValue("audioFiles."+hashString) != nil {
+			count := 0
+			for audioPackageConfig.GetValue("audioFiles."+hashString+".name."+strconv.Itoa(count)) != nil {
+				count++
+			}
+			audioPackageConfig.SetValue("audioFiles."+hashString, map[string]any{
+				/**
+				 * filepath.Base(file.Filename)：
+				 *	- 这个函数返回路径中的最后一个元素（文件名）。
+				 *	- 例如，如果 file.Filename 是 "/path/to/myFile.txt"，这个函数会返回 "myFile.txt"。
+				 *	filepath.Ext(file.Filename)：
+				 *	- 这个函数返回文件名的扩展名，包括点号。
+				 *	- 对于 "myFile.txt"，它会返回 ".txt"。
+				 *	strings.TrimSuffix(base, ext)：
+				 *	- 这个函数从第一个参数（base）的末尾移除第二个参数（ext）指定的后缀。
+				 *	- 如果 base 是 "myFile.txt"，ext 是 ".txt"，结果就是 "myFile"。
+				 */
+				"name": map[string]any{
+					strconv.Itoa(count): strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
+				},
+				"type": ext,
+			})
+
+			// 因文件已存在与文件系统中, 故无需继续进行真实的文件保存。 这里直接将正确完成的消息返回给前端, 并退出此次请求的处理即可。
+			ctx.JSON(200, gin.H{
+				"message":  "ok",
+				"fileName": newFileName,
+			})
+
+			// 退出此次请求的处理 (TIPS: 单纯的向前端返回消息, 并不能自动return。 此处我们需要主动退出, 防止执行后续步骤造成画蛇添足。)
+			return
+		}
+
 		// 保存文件
 		destPath := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", newFileName)
 		if err := ctx.SaveUploadedFile(file, destPath); err != nil {
@@ -205,6 +241,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// 文件如果可以成功保存, 证明这是首次未重复过的文件, 因此 使用"0"作为名字的key值。(这是为了应对用户上传相同音频文件时但不想无辜增大键音包的策略)
 		// 文件保存成功后, 将原文件名作为value值(裁掉扩展名,只要文件名字), sha256哈希值文件名作为key值(裁掉扩展名), 存入键音包配置文件中的audioFiles对象中。
 		// 源文件名作为value值, 是因为key值中不允许大写字符出现, 因此不能应对用户对音频名称的复杂设置需求。而且, 它本身也应该是作为value值存储的。
 		// 哈希值作为key值, 也刚好符合sha256哈希值通常用纯小写表示的惯例。至于真实文件后缀或者说文件类型, 则也存储至value中去。
@@ -222,7 +259,9 @@ func keytonePkgRouters(r *gin.Engine) {
 			 *	- 这个函数从第一个参数（base）的末尾移除第二个参数（ext）指定的后缀。
 			 *	- 如果 base 是 "myFile.txt"，ext 是 ".txt"，结果就是 "myFile"。
 			 */
-			"name": strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
+			"name": map[string]any{
+				"0": strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
+			},
 			"type": ext,
 		})
 
