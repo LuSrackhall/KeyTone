@@ -3,6 +3,7 @@ package config
 import (
 	"KeyTone/logger"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -25,6 +26,23 @@ func ConfigRun(path string) {
 	// 添加配置文件路径
 	viper.AddConfigPath(path)
 	// viper.AddConfigPath(path2) // 越靠下, 优先级越高
+
+	// 读取配置文件
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// 配置文件未找到，创建默认设置的配置文件
+			logger.Info("未找到默认的配置文件，正在创建...")
+			createDefaultConfig()
+			logger.Info("配置文件创建并载入成功")
+		} else {
+			// 其他错误
+			logger.Error("读取设置文件时发生致命错误", "err", err.Error())
+		}
+	} else {
+		logger.Info("配置文件已加载, 正在与DefaultConfig进行diff和增量载入...")
+		diffAndUpdateDefaultConfig()
+		logger.Info("配置文件diff和增量载入完成")
+	}
 
 	// TIPS: 我们可能无法在此回调中, 直接获取被更改的配置是哪个
 	//       > 因此如果使用此回调, 我们只需对我们所关注的配置项, 手动建立历史值, 并在回调中重新获取这个值予以对比即可。
@@ -63,22 +81,6 @@ func ConfigRun(path string) {
 	//         > 若不调用WatchConfig(), 则只有通过viper的更改(如用`viper.Set`设置的更改), 才能够在下次`viper.Get`时读取到。
 	viper.WatchConfig()
 
-	// 读取配置文件
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// 配置文件未找到，创建默认设置的配置文件
-			logger.Info("未找到默认的配置文件，正在创建...")
-			createDefaultConfig()
-			logger.Info("配置文件创建并载入成功")
-		} else {
-			// 其他错误
-			logger.Error("读取设置文件时发生致命错误", "err", err.Error())
-		}
-	} else {
-		logger.Info("配置文件已加载, 正在与DefaultConfig进行diff和增量载入...")
-		diffAndUpdateDefaultConfig()
-		logger.Info("配置文件diff和增量载入完成")
-	}
 }
 
 // 恢复默认设置(删除掉已有配置文件后, 再调用“createDefaultConfig()"函数就好了)
@@ -111,6 +113,36 @@ func SetValue(key string, value any) {
 
 	// 由于viper.Set()在设计中拥有最高覆盖级别,因此需要在每次使用此api设置后, 清空viper.Set()的设置, 以使得文件监听的api可以正常工作。
 	viper.Set(key, nil)
+
+	// 等待 viper.WatchConfig 监听真实配置
+	sleep := true
+	ch := make(chan (struct{}))
+	defer close(ch)
+
+	go func(sleep *bool, ch chan struct{}) {
+		defer logger.Info("保护功能完成, 退出当前goroutine以结束保护--->应用配置项")
+		for {
+			select {
+			case <-ch:
+				logger.Info("符合预期的退出行为--->应用配置项")
+				return
+			case <-time.After(time.Millisecond * 100): // 这个最大退出时间, 由您自由指定
+				logger.Warn("到达等待时间上限, 而进行的自动强制退出行为, 以避免资源浪费式的长期甚至永久等待行为--->应用配置项")
+				*sleep = false
+				return
+			}
+		}
+	}(&sleep, ch)
+
+	for sleep {
+		if viper.Get(key) != nil {
+			sleep = false
+			// 如果函数结束, 通道自然会关闭, 从而解除阻塞行为。无需使用下行中可能引入新阻塞的逻辑。
+			// ch <- struct{}{}
+		} else {
+			logger.Info("阻止了一次可能存在的错误删除行为--->应用配置项")
+		}
+	}
 }
 
 // 手动打开应用时的默认设置

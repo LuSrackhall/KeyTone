@@ -4,6 +4,7 @@ import (
 	"KeyTone/logger"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -24,9 +25,6 @@ func LoadConfig(configPath string, isCreate bool) {
 
 	// 添加配置文件路径
 	Viper.AddConfigPath(configPath)
-
-	// 监听配置文件更改
-	Viper.WatchConfig()
 
 	// 读取配置文件
 	if err := Viper.ReadInConfig(); err != nil {
@@ -69,6 +67,10 @@ func LoadConfig(configPath string, isCreate bool) {
 		diffAndUpdateDefaultConfig()
 		logger.Info("音频包diff和增量载入完成")
 	}
+
+	// 监听配置文件更改
+	Viper.WatchConfig()
+
 }
 
 var viperRWMutex sync.RWMutex
@@ -94,6 +96,36 @@ func SetValue(key string, value any) {
 
 	// 由于viper.Set()在设计中拥有最高覆盖级别,因此需要在每次使用此api设置后, 清空viper.Set()的设置, 以使得文件监听的api可以正常工作。
 	Viper.Set(key, nil)
+
+	// 等待 viper.WatchConfig 监听真实配置
+	sleep := true
+	ch := make(chan (struct{}))
+	defer close(ch)
+
+	go func(sleep *bool, ch chan struct{}) {
+		defer logger.Info("保护功能完成, 退出当前goroutine以结束保护--->音频包配置项")
+		for {
+			select {
+			case <-ch:
+				logger.Info("符合预期的退出行为--->音频包配置项")
+				return
+			case <-time.After(time.Millisecond * 100): // 这个最大退出时间, 由您自由指定
+				logger.Warn("到达等待时间上限, 而进行的自动强制退出行为, 以避免资源浪费式的长期甚至永久等待行为--->音频包配置项")
+				*sleep = false
+				return
+			}
+		}
+	}(&sleep, ch)
+
+	for sleep {
+		if viper.Get(key) != nil {
+			sleep = false
+			// 如果函数结束, 通道自然会关闭, 从而解除阻塞行为。无需使用下行中可能引入新阻塞的逻辑。
+			// ch <- struct{}{}
+		} else {
+			logger.Info("阻止了一次可能存在的错误删除行为--->音频包配置项")
+		}
+	}
 }
 
 /**********************************************************************************************************************/
