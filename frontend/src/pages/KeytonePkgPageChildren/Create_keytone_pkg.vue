@@ -137,7 +137,86 @@
               <div :class="['p-2 text-zinc-600']">或</div>
               <!-- -------------------------------------------------------------------------------编辑已有声音源文件 -->
               <div>
-                <q-btn :class="['bg-zinc-300']" label="编辑已有声音源文件"></q-btn>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="编辑已有声音源文件"
+                  @click="
+                    () => {
+                      editSoundFile = !editSoundFile;
+                    }
+                  "
+                ></q-btn>
+                <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 编辑已有声音源文件 </q-card-section>
+
+                    <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section>
+
+                    <q-card-section>
+                      <!-- <q-select outlined v-model="model" :options="options" label="Outlined" /> -->
+                    </q-card-section>
+
+                    <q-card-section>
+                      <!-- 一个重命名的输入框, 一个删除按钮 -->
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn
+                        flat
+                        @click="
+                          async () => {
+                            // 循环files, 并在每次上传成功后, 删除对应file
+
+                            if (!files || files.length === 0) {
+                              console.warn('No files selected for upload');
+                              return;
+                            }
+
+                            // 使用slice()方法创建一个数组的浅拷贝, 避免因遍历过程中修改原始数组而导致的遍历中止
+                            // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
+                            for (const file of files.slice()) {
+                              try {
+                                const re = await SendFileToServer(pkgPath, file);
+                                if (re === true) {
+                                  console.info(`File ${file.name} uploaded successfully`);
+                                  // Remove the file from the list after successful upload
+                                  const index = files.indexOf(file);
+                                  if (index > -1) {
+                                    files.splice(index, 1);
+                                  }
+                                } else {
+                                  console.error(`File ${file.name} uploading error`);
+                                  q.notify({
+                                    type: 'negative',
+
+                                    position: 'top',
+
+                                    message: `File '${file.name}' addition failed`,
+
+                                    timeout: 5,
+                                  });
+                                }
+                              } catch (error) {
+                                console.error(`Error uploading file ${file.name}:`, error);
+                                q.notify({
+                                  type: 'negative',
+
+                                  position: 'top',
+
+                                  message: `File '${file.name}' addition failed`,
+
+                                  timeout: 5,
+                                });
+                              }
+                            }
+                          }
+                        "
+                        color="primary"
+                        label="确认添加"
+                      />
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
               </div>
             </div>
             <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑   end -->
@@ -228,6 +307,8 @@ const step = ref(1);
 
 const addNewSoundFile = ref(false);
 const files = ref<Array<File>>([]);
+
+const editSoundFile = ref(false);
 
 watch(files, () => {
   console.log(files.value);
