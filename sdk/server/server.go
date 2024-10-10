@@ -199,12 +199,12 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		// 测试此文件是否已经存在(有些相同的文件, 可能文件名称不同。) 若不存在则获取结果为nil, 可以正常往下走。 若存在则获取结果不为nil, 仅需向后添加文件名即可返回给前端, 无需后续步骤中重复保存相同的文件。(但对于前端用户, 不影响其认为这是两个不同的文件, 因为我们对于名称单独进行了保存)
 		// * 至于文件名称重复的问题, 此处不作处理, 皆由用户自行管理名称, 不只是同一sha256uuid的名字可可重复, 甚至允许用户对不同sha256uuid的音频文件起相同的名字, 皆由用户自由发挥即可。
-		if audioPackageConfig.GetValue("audioFiles."+hashString) != nil {
+		if audioPackageConfig.GetValue("audio_files."+hashString) != nil {
 			count := 0
-			for audioPackageConfig.GetValue("audioFiles."+hashString+".name."+strconv.Itoa(count)) != nil {
+			for audioPackageConfig.GetValue("audio_files."+hashString+".name."+strconv.Itoa(count)) != nil {
 				count++
 			}
-			audioPackageConfig.SetValue("audioFiles."+hashString, map[string]any{
+			audioPackageConfig.SetValue("audio_files."+hashString, map[string]any{
 				/**
 				 * filepath.Base(file.Filename)：
 				 *	- 这个函数返回路径中的最后一个元素（文件名）。
@@ -245,9 +245,9 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 文件保存成功后, 将原文件名作为value值(裁掉扩展名,只要文件名字), sha256哈希值文件名作为key值(裁掉扩展名), 存入键音包配置文件中的audioFiles对象中。
 		// 源文件名作为value值, 是因为key值中不允许大写字符出现, 因此不能应对用户对音频名称的复杂设置需求。而且, 它本身也应该是作为value值存储的。
 		// 哈希值作为key值, 也刚好符合sha256哈希值通常用纯小写表示的惯例。至于真实文件后缀或者说文件类型, 则也存储至value中去。
-		// audioPackageConfig.SetValue("audioFiles."+hashString+".name", strings.Split(file.Filename, ".")[0])
-		// audioPackageConfig.SetValue("audioFiles."+hashString+".type", ext)
-		audioPackageConfig.SetValue("audioFiles."+hashString, map[string]any{
+		// audioPackageConfig.SetValue("audio_files."+hashString+".name", strings.Split(file.Filename, ".")[0])
+		// audioPackageConfig.SetValue("audio_files."+hashString+".type", ext)
+		audioPackageConfig.SetValue("audio_files."+hashString, map[string]any{
 			/**
 			 * filepath.Base(file.Filename)：
 			 *	- 这个函数返回路径中的最后一个元素（文件名）。
