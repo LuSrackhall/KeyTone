@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -13,6 +14,15 @@ import (
 var AudioPackagePath string
 
 var Viper *viper.Viper
+
+// 定义sse相关变量
+type Store struct {
+	Key   string `json:"key"`
+	Value any    `json:"value"`
+}
+
+var Clients_sse_stores sync.Map
+var once_stores sync.Once
 
 // 加载音频包时使用(也可用于创建新的音频包时)
 func LoadConfig(configPath string, isCreate bool) {
@@ -67,6 +77,28 @@ func LoadConfig(configPath string, isCreate bool) {
 		diffAndUpdateDefaultConfig()
 		logger.Info("音频包diff和增量载入完成")
 	}
+
+	Viper.OnConfigChange(func(e fsnotify.Event) {
+		go func(Clients_sse_stores *sync.Map) {
+			stores := &Store{
+				Key:   "get_all_value",
+				Value: GetValue("get_all_value"),
+			}
+			Clients_sse_stores.Range(func(key, value interface{}) bool {
+				clientChan := key.(chan *Store)
+				serverChan := value.(chan bool)
+				select {
+				case clientChan <- stores:
+					return true
+				case <-serverChan:
+					once_stores.Do(func() {
+						close(serverChan)
+					})
+					return true
+				}
+			})
+		}(&Clients_sse_stores)
+	})
 
 	// 监听配置文件更改
 	Viper.WatchConfig()

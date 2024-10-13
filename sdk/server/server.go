@@ -34,13 +34,17 @@ func ServerRun() {
 		logger.Debug("新生成了一个线程............................")
 
 		clientStoresChan := make(chan *config.Store)
+		clientAudioPackageStoresChan := make(chan *audioPackageConfig.Store)
 
 		serverStoresChan := make(chan bool, 1)
+		serverAudioPackageStoresChan := make(chan bool, 1)
 
 		config.Clients_sse_stores.Store(clientStoresChan, serverStoresChan)
+		audioPackageConfig.Clients_sse_stores.Store(clientAudioPackageStoresChan, serverAudioPackageStoresChan)
 
 		defer func() {
 			config.Clients_sse_stores.Delete(clientStoresChan)
+			audioPackageConfig.Clients_sse_stores.Delete(clientAudioPackageStoresChan)
 
 			logger.Logger.Debug("一个线程退出了............................")
 			logger.Debug("一个线程退出了............................")
@@ -62,6 +66,13 @@ func ServerRun() {
 						return true
 					}
 					c.SSEvent("message", message)
+					return true
+				case messageAudioPackage, ok := <-clientAudioPackageStoresChan:
+					if !ok {
+						logger.Error("通道clientAudioPackageStoresChan非正常关闭")
+						return true
+					}
+					c.SSEvent("messageAudioPackage", messageAudioPackage)
 					return true
 				}
 			})
