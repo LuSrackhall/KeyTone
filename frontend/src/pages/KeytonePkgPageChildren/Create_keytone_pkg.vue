@@ -312,7 +312,7 @@ import { nanoid } from 'nanoid';
 import { useQuasar } from 'quasar';
 import { ConfigGet, ConfigSet, LoadConfig, SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
-import { ref, watch } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -323,10 +323,8 @@ const app_store = useAppStore();
 // 此路径没必要进行状态管理, 当用户退出此页面时, 自动清除即符合逻辑。
 const pkgPath = nanoid();
 
-// 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
-LoadConfig(pkgPath, true);
-
-const pkgName = ref<string>('');
+// 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
+const pkgName = ref<string>($t('KeyTonePackage.new.name.defaultValue'));
 
 const step = ref(1);
 
@@ -344,120 +342,129 @@ watch(files, () => {
   console.log(files.value);
 });
 
-await initData();
-// 将初始化数据的操作封装成一个函数, 并设置为异步函数, 以便使用await调用
-async function initData() {
-  await ConfigGet('get_all_value').then((req) => {
-    // console.debug('打印观察获取的值', req);
-    if (req === false) {
-      // 此时, 说明GetItem_sqlite请求过程中, 出错了, 因此需要错误通知, 并让用户重新启动, 防止用户因继续使用造成的存储设置被初始覆盖
-      q.notify({
-        type: 'negative',
-        position: 'top',
-        message: '键音包配置文件读取失败',
-        timeout: 100000,
+onBeforeMount(async () => {
+  // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
+  // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
+  await LoadConfig(pkgPath, true);
+
+  // 使用i18n, 初始化键音包名称, 在此处手动设置, 是为了防止后续初始化将sdk中默认的名称, 被初始化到pkgName中。
+  // 因此在初始化前按照提前设置好的i18n做为默认名称, 故手动发送请求以在数据初始化前更改sdk中的默认名称。
+  await ConfigSet('package_name', $t('KeyTonePackage.new.name.defaultValue'));
+
+  // 数据初始化
+  await initData();
+  // 将初始化数据的操作封装成一个函数, 并设置为异步函数, 以便使用await调用
+  async function initData() {
+    await ConfigGet('get_all_value').then((req) => {
+      // console.debug('打印观察获取的值', req);
+      if (req === false) {
+        // 此时, 说明GetItem_sqlite请求过程中, 出错了, 因此需要错误通知, 并让用户重新启动, 防止用户因继续使用造成的存储设置被初始覆盖
+        q.notify({
+          type: 'negative',
+          position: 'top',
+          message: '键音包配置文件读取失败',
+          timeout: 100000,
+        });
+        return;
+      }
+
+      // TIPS: 由于采取各设置独立的录入即判别方式, 不再依赖整体的JSON字符串, 因此此if判断后续可能没必要存在(目前暂时保留)
+      // 第一次进入本应用, 设置本就该是空的, 此时无需对我们的设置项进行任何操作, 也无需做任何通知。
+      // 但为防止后续的JSON.parse报错, 因此此处也是必不可少的(因为只要非首次, 就不可能为空, watchEffect是立即执行的, 也就是说至少整体的结构是正常入库的)
+      if (req === '' || req === '{}' || req === null) {
+        return;
+      }
+
+      // // 若有设置数据, 则取出 TIPS: 注意, 这里的设置是直接读出的一个json对象, 而不是需要解析的json字符串
+      // const settingStorage = JSON.parse(req);
+
+      const data = req;
+
+      // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
+      if (data.package_name !== undefined) {
+        pkgName.value = data.package_name;
+      }
+
+      // 以载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
+      if (data.audio_files !== undefined) {
+        // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
+        const audioFilesArray = Object.entries(data.audio_files).map(([key, value]) => ({
+          sha256: key,
+          value: value,
+        }));
+        audioFiles.value = audioFilesArray;
+      }
+    });
+
+    watch(pkgName, (newVal) => {
+      ConfigSet('package_name', pkgName.value);
+    });
+
+    // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
+    watch(audioFiles, (newVal) => {
+      console.log('观察audioFiles=', audioFiles.value);
+      // 为了更容易理解, 故引入audioFiles这一变量, 做初步映射, audioFiles只是过程值, 我们最终需要对此过程值做进一步映射, 形成soundFileList
+      const tempSoundFileList: Array<any> = [];
+
+      audioFiles.value.forEach((item) => {
+        Object.entries(item.value.name).forEach(([uuid, name]) => {
+          tempSoundFileList.push({ sha256: item.sha256, uuid: uuid, name: name, type: item.value.type });
+        });
       });
-      return;
-    }
+      soundFileList.value = tempSoundFileList;
+    });
 
-    // TIPS: 由于采取各设置独立的录入即判别方式, 不再依赖整体的JSON字符串, 因此此if判断后续可能没必要存在(目前暂时保留)
-    // 第一次进入本应用, 设置本就该是空的, 此时无需对我们的设置项进行任何操作, 也无需做任何通知。
-    // 但为防止后续的JSON.parse报错, 因此此处也是必不可少的(因为只要非首次, 就不可能为空, watchEffect是立即执行的, 也就是说至少整体的结构是正常入库的)
-    if (req === '' || req === '{}' || req === null) {
-      return;
-    }
+    // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
+    watch(soundFileList, (newVal) => {
+      console.log('观察soundFileList=', soundFileList.value);
+    });
 
-    // // 若有设置数据, 则取出 TIPS: 注意, 这里的设置是直接读出的一个json对象, 而不是需要解析的json字符串
-    // const settingStorage = JSON.parse(req);
+    //TODO:
+    // 4.观察selectedSoundFile的变化, 当selectedSoundFile变化时,
+    //   说明用户做了对应修改, 此时需要向sdk发送请求, 更新配置文件中的对应值, 然后触发sse形成闭环。
+    //   当然, 删除时同理, 但删除是独立的按钮点击后手动触发对应函数, 以向sdk发送请求, 不由此处的数据驱动。
+    watch(selectedSoundFile, (newVal) => {
+      console.log('观察selectedSoundFile=', selectedSoundFile.value);
+    });
+  }
 
-    const data = req;
-
+  // 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
+  function sseDataToKeyTonePkgData(keyTonePkgData: any) {
     // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
-    if (data.package_name !== undefined) {
-      pkgName.value = data.package_name;
+    if (keyTonePkgData.package_name !== undefined) {
+      pkgName.value = keyTonePkgData.package_name;
     }
 
-    // 以载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
-    if (data.audio_files !== undefined) {
+    // 1. 初步映射配置文件中的audio_files到audioFiles。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
+    //    使用audioFiles作为中间值, 而不是一步到位的映射, 是为代码的可读性, 后续阅读理解是方便。
+    if (keyTonePkgData.audio_files !== undefined) {
       // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-      const audioFilesArray = Object.entries(data.audio_files).map(([key, value]) => ({
+      const audioFilesArray = Object.entries(keyTonePkgData.audio_files).map(([key, value]) => ({
         sha256: key,
         value: value,
       }));
       audioFiles.value = audioFilesArray;
     }
-  });
-
-  watch(pkgName, (newVal) => {
-    ConfigSet('package_name', pkgName.value);
-  });
-
-  pkgName.value = $t('KeyTonePackage.new.name.defaultValue');
-
-  // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
-  watch(audioFiles, (newVal) => {
-    console.log('观察audioFiles=', audioFiles.value);
-    // 为了更容易理解, 故引入audioFiles这一变量, 做初步映射, audioFiles只是过程值, 我们最终需要对此过程值做进一步映射, 形成soundFileList
-    const tempSoundFileList: Array<any> = [];
-
-    audioFiles.value.forEach((item) => {
-      Object.entries(item.value.name).forEach(([uuid, name]) => {
-        tempSoundFileList.push({ sha256: item.sha256, uuid: uuid, name: name, type: item.value.type });
-      });
-    });
-    soundFileList.value = tempSoundFileList;
-  });
-
-  // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
-  watch(soundFileList, (newVal) => {
-    console.log('观察soundFileList=', soundFileList.value);
-  });
-
-  //TODO:
-  // 4.观察selectedSoundFile的变化, 当selectedSoundFile变化时,
-  //   说明用户做了对应修改, 此时需要向sdk发送请求, 更新配置文件中的对应值, 然后触发sse形成闭环。
-  //   当然, 删除时同理, 但删除是独立的按钮点击后手动触发对应函数, 以向sdk发送请求, 不由此处的数据驱动。
-  watch(selectedSoundFile, (newVal) => {
-    console.log('观察selectedSoundFile=', selectedSoundFile.value);
-  });
-}
-
-// 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-function sseDataToKeyTonePkgData(keyTonePkgData: any) {
-  // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
-  if (keyTonePkgData.package_name !== undefined) {
-    pkgName.value = keyTonePkgData.package_name;
   }
+  const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
+    trailing: true,
+  });
 
-  // 1. 初步映射配置文件中的audio_files到audioFiles。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-  //    使用audioFiles作为中间值, 而不是一步到位的映射, 是为代码的可读性, 后续阅读理解是方便。
-  if (keyTonePkgData.audio_files !== undefined) {
-    // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-    const audioFilesArray = Object.entries(keyTonePkgData.audio_files).map(([key, value]) => ({
-      sha256: key,
-      value: value,
-    }));
-    audioFiles.value = audioFilesArray;
-  }
-}
-const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
-  trailing: true,
+  app_store.eventSource.addEventListener(
+    'messageAudioPackage',
+    function (e) {
+      console.debug('后端钩子函数中的值 = ', e.data);
+
+      const data = JSON.parse(e.data);
+
+      if (data.key === 'get_all_value') {
+        debounced_sseDataToSettingStore.cancel;
+        debounced_sseDataToSettingStore(data.value);
+      }
+    },
+    false
+  );
 });
-
-app_store.eventSource.addEventListener(
-  'messageAudioPackage',
-  function (e) {
-    console.debug('后端钩子函数中的值 = ', e.data);
-
-    const data = JSON.parse(e.data);
-
-    if (data.key === 'get_all_value') {
-      debounced_sseDataToSettingStore.cancel;
-      debounced_sseDataToSettingStore(data.value);
-    }
-  },
-  false
-);
 </script>
 
 <style lang="scss" scoped></style>
