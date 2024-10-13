@@ -1,5 +1,5 @@
 /*
- * This file is part of the Habit Tracking project.
+ * This file is part of the KeyTone project.
  *
  * Copyright (C) 2024 LuSrackhall
  *
