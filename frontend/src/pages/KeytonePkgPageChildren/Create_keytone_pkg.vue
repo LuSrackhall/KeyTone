@@ -428,11 +428,20 @@ onBeforeMount(async () => {
     });
   }
 
+  const pkgNameDelayed = debounce(
+    (keyTonePkgData: any) => {
+      pkgName.value = keyTonePkgData.package_name;
+    },
+    800,
+    { trailing: true }
+  );
+
   // 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
   function sseDataToKeyTonePkgData(keyTonePkgData: any) {
     // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
     if (keyTonePkgData.package_name !== undefined) {
-      pkgName.value = keyTonePkgData.package_name;
+      pkgNameDelayed.cancel();
+      pkgNameDelayed(keyTonePkgData);
     }
 
     // 1. 初步映射配置文件中的audio_files到audioFiles。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
