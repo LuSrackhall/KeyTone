@@ -42,7 +42,7 @@
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="添加新的声音源文件"
+                  label="载入新的声音源文件"
                   @click="
                     () => {
                       addNewSoundFile = !addNewSoundFile;
@@ -52,7 +52,7 @@
                 </q-btn>
                 <q-dialog v-model="addNewSoundFile" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 添加新的声音源文件 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 载入新的声音源文件 </q-card-section>
 
                     <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section>
 
@@ -61,7 +61,7 @@
                         :class="['w-56']"
                         dense
                         v-model="files"
-                        label="Pick files"
+                        label="点此选择文件"
                         outlined
                         use-chips
                         multiple
@@ -139,7 +139,7 @@
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="编辑已有声音源文件"
+                  label="管理已载入的源文件"
                   @click="
                     () => {
                       editSoundFile = !editSoundFile;
@@ -148,17 +148,19 @@
                 ></q-btn>
                 <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 编辑已有声音源文件 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 管理已载入的源文件 </q-card-section>
 
-                    <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section>
+                    <!-- <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section> -->
 
                     <q-card-section>
                       <q-select
                         outlined
+                        stack-label
                         v-model="selectedSoundFile"
                         :options="soundFileList"
                         option-label="name"
-                        label="选择声音文件"
+                        label="选择要管理的源文件"
+                        dense
                       />
                       <!-- option-label="name"
                        如果 :options 的元素类型是对象, 则有必要指定其中某个类型为字符串的字段作为label显示。
