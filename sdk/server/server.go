@@ -329,4 +329,26 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	keytonePkgRouters.POST("/sound_file_rename", func(ctx *gin.Context) {
+		type Arg struct {
+			Sha256 string `json:"sha256"`
+			UUID   string `json:"uuid"`
+			Name   string `json:"name"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.Sha256 == "" || arg.UUID == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.SetValue("audio_files."+arg.Sha256+".name."+arg.UUID, arg.Name)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
 }

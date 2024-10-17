@@ -184,63 +184,29 @@
                         -->
                     </q-card-section>
 
-                    <q-card-section>
+                    <!-- 分割线 -->
+                    <q-separator
+                      :class="['mx-2']"
+                      v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''"
+                    />
+                    <q-card-section v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''">
                       <!-- 一个重命名的输入框, 一个删除按钮 -->
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        error-message="空文件名可能增加后续管理成本"
+                        :error="
+                          selectedSoundFile.name === '' ||
+                          selectedSoundFile.name === undefined ||
+                          selectedSoundFile.name === null
+                        "
+                        v-model="selectedSoundFile.name"
+                        label="文件名(可更改)"
+                      />
+                      <q-badge outline color="orange" :label="selectedSoundFile.name + selectedSoundFile.type" />
                     </q-card-section>
                     <q-card-actions align="right">
-                      <q-btn
-                        flat
-                        @click="
-                          async () => {
-                            // 循环files, 并在每次上传成功后, 删除对应file
-
-                            if (!files || files.length === 0) {
-                              console.warn('No files selected for upload');
-                              return;
-                            }
-
-                            // 使用slice()方法创建一个数组的浅拷贝, 避免因遍历过程中修改原始数组而导致的遍历中止
-                            // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
-                            for (const file of files.slice()) {
-                              try {
-                                const re = await SendFileToServer(pkgPath, file);
-                                if (re === true) {
-                                  console.info(`File ${file.name} uploaded successfully`);
-                                  // Remove the file from the list after successful upload
-                                  const index = files.indexOf(file);
-                                  if (index > -1) {
-                                    files.splice(index, 1);
-                                  }
-                                } else {
-                                  console.error(`File ${file.name} uploading error`);
-                                  q.notify({
-                                    type: 'negative',
-
-                                    position: 'top',
-
-                                    message: `File '${file.name}' addition failed`,
-
-                                    timeout: 5,
-                                  });
-                                }
-                              } catch (error) {
-                                console.error(`Error uploading file ${file.name}:`, error);
-                                q.notify({
-                                  type: 'negative',
-
-                                  position: 'top',
-
-                                  message: `File '${file.name}' addition failed`,
-
-                                  timeout: 5,
-                                });
-                              }
-                            }
-                          }
-                        "
-                        color="primary"
-                        label="确认添加"
-                      />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
@@ -312,7 +278,7 @@
 import { debounce } from 'lodash';
 import { nanoid } from 'nanoid';
 import { useQuasar } from 'quasar';
-import { ConfigGet, ConfigSet, LoadConfig, SendFileToServer } from 'src/boot/query/keytonePkg-query';
+import { ConfigGet, ConfigSet, LoadConfig, SendFileToServer, SoundFileRename } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -337,8 +303,13 @@ const editSoundFile = ref(false);
 // 用于初步映射配置文件中的 audio_files 对象, 并将其转换为数组, 并将数组元素转换成对象, 其中包含sha256和value两个key
 const audioFiles = ref<Array<any>>([]);
 // 用于audioFiles映射后的进一步映射, 主要拆分出value中name的每个值, 并一一对于sha256, 形成ui列表可用的最终数组。
-const soundFileList = ref<Array<any>>([]);
-const selectedSoundFile = ref<any>(null);
+const soundFileList = ref<Array<{ sha256: string; uuid: string; name: string; type: string }>>([]);
+const selectedSoundFile = ref<{ sha256: string; uuid: string; name: string; type: string }>({
+  sha256: '',
+  uuid: '',
+  name: '',
+  type: '',
+});
 
 watch(files, () => {
   console.log(files.value);
@@ -421,13 +392,18 @@ onBeforeMount(async () => {
       console.log('观察soundFileList=', soundFileList.value);
     });
 
-    //TODO:
+    //  - completed(已完成)   TODO:
     // 4.观察selectedSoundFile的变化, 当selectedSoundFile变化时,
     //   说明用户做了对应修改, 此时需要向sdk发送请求, 更新配置文件中的对应值, 然后触发sse形成闭环。
     //   当然, 删除时同理, 但删除是独立的按钮点击后手动触发对应函数, 以向sdk发送请求, 不由此处的数据驱动。
-    watch(selectedSoundFile, (newVal) => {
-      console.log('观察selectedSoundFile=', selectedSoundFile.value);
-    });
+    watch(
+      // TIPS: 对于ref的响应式变量, 如果直接整体监听, 则内部的某个值变化时, 不会触发监听。需要使用返回值的函数, 对固定字段进行监听。
+      () => selectedSoundFile.value.name,
+      (newVal) => {
+        console.log('观察selectedSoundFile=', selectedSoundFile.value);
+        SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.uuid, selectedSoundFile.value.name);
+      }
+    );
   }
 
   const pkgNameDelayed = debounce(
