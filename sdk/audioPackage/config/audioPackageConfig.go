@@ -15,6 +15,9 @@ var AudioPackagePath string
 
 var Viper *viper.Viper
 
+// 定义Viper删除某个配置项时需要用到的全局变量
+var deleteKeyValue []struct{} // 无法保证100%删除, 因为这种删除方式是利用了一些未知的黑盒bug。(tips: 千万不要完成其定义, 或者说千万不用对其进行任何形式的初始化。)
+
 // 定义sse相关变量
 type Store struct {
 	Key   string `json:"key"`
@@ -158,6 +161,32 @@ func SetValue(key string, value any) {
 			logger.Info("阻止了一次可能存在的错误删除行为--->音频包配置项")
 		}
 	}
+}
+
+// 删除某个配置项
+func DeleteValue(key string) {
+	Viper.Set(key, deleteKeyValue)
+	if err := Viper.WriteConfig(); err != nil {
+		logger.Error("删除键值对时发生致命错误", "err", err.Error())
+	}
+	Viper.Set(key, nil)
+
+	Viper.Set(key, deleteKeyValue)
+	if err := Viper.WriteConfig(); err != nil {
+		logger.Error("删除键值对时发生致命错误", "err", err.Error())
+	}
+	Viper.Set(key, nil)
+
+	Viper.Set(key, deleteKeyValue)
+	if err := Viper.WriteConfig(); err != nil {
+		logger.Error("删除键值对时发生致命错误", "err", err.Error())
+	}
+	Viper.Set(key, nil)
+
+	if err := Viper.WriteConfig(); err != nil {
+		logger.Error("删除键值对时发生致命错误", "err", err.Error())
+	}
+	Viper.Set(key, nil)
 }
 
 /**********************************************************************************************************************/

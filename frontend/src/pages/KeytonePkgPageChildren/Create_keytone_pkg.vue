@@ -236,6 +236,33 @@
                             no-caps
                             label="删除"
                             icon="flight_takeoff"
+                            @click="
+                              async () => {
+                                const re = await SoundFileDelete(selectedSoundFile.sha256, selectedSoundFile.uuid);
+                                if (re === true) {
+                                  q.notify({
+                                    type: 'positive',
+                                    position: 'top',
+                                    message: '删除成功',
+                                    timeout: 5,
+                                  });
+                                } else {
+                                  q.notify({
+                                    type: 'negative',
+                                    position: 'top',
+                                    message: '删除失败',
+                                    timeout: 5,
+                                  });
+                                }
+                                // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
+                                selectedSoundFile = {
+                                  sha256: '',
+                                  uuid: '',
+                                  name: '',
+                                  type: '',
+                                };
+                              }
+                            "
                           >
                           </q-btn>
                         </q-card-section>
@@ -313,7 +340,14 @@
 import { debounce } from 'lodash';
 import { nanoid } from 'nanoid';
 import { useQuasar } from 'quasar';
-import { ConfigGet, ConfigSet, LoadConfig, SendFileToServer, SoundFileRename } from 'src/boot/query/keytonePkg-query';
+import {
+  ConfigGet,
+  ConfigSet,
+  LoadConfig,
+  SendFileToServer,
+  SoundFileRename,
+  SoundFileDelete,
+} from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';

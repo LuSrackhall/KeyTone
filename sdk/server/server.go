@@ -351,4 +351,26 @@ func keytonePkgRouters(r *gin.Engine) {
 			"message": "ok",
 		})
 	})
+
+	keytonePkgRouters.POST("/sound_file_delete", func(ctx *gin.Context) {
+		type Arg struct {
+			Sha256 string `json:"sha256"`
+			UUID   string `json:"uuid"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.Sha256 == "" || arg.UUID == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.UUID)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
 }
