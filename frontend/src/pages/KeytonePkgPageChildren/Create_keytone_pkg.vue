@@ -147,7 +147,7 @@
                   "
                 ></q-btn>
                 <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
-                  <q-card>
+                  <q-card :class="['p-x-3']">
                     <q-card-section class="row items-center q-pb-none text-h6"> 管理已载入的源文件 </q-card-section>
 
                     <!-- <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section> -->
@@ -185,26 +185,61 @@
                     </q-card-section>
 
                     <!-- 分割线 -->
-                    <q-separator
-                      :class="['mx-2']"
+                    <q-separator v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''" />
+
+                    <!-- 以卡片形式展示选择的音频源文件 -->
+                    <q-card-section
                       v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''"
-                    />
-                    <q-card-section v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''">
-                      <!-- 一个重命名的输入框, 一个删除按钮 -->
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        error-message="空文件名可能增加后续管理成本"
-                        :error="
-                          selectedSoundFile.name === '' ||
-                          selectedSoundFile.name === undefined ||
-                          selectedSoundFile.name === null
-                        "
-                        v-model="selectedSoundFile.name"
-                        label="文件名(可更改)"
-                      />
-                      <q-badge outline color="orange" :label="selectedSoundFile.name + selectedSoundFile.type" />
+                      :class="['flex flex-col m-t-3']"
+                    >
+                      <q-card :class="['flex flex-col']">
+                        <q-badge
+                          transparent
+                          color="orange"
+                          :label="selectedSoundFile.name + selectedSoundFile.type"
+                          :class="['absolute  overflow-visible']"
+                          :style="{
+                            // left: 88% 是刚好在最右边的, 但是随着字符串的增长, 左侧不会动, 仅向右追加溢出。
+                            // 通过更改left的值, 可以通过左侧的溢出量, 来控制左侧的余量, 尽可能保持先向左增长, 右侧不动。
+                            // 当左侧占整体的比例达到一定程度后, 右侧开始追加, 左侧不动。
+                            // 计算长度前, 排除空格, 因为空格会引起长度计算错误
+                            // TODO: 这个算法只是临时的, 后续可通过计算其真实的实际宽度, 来决定偏移距离, 以真正做到完全可控的占右侧70%
+                            // TODO: 如果需要实现多选'编辑/删除'功能, 则需要将整个卡片, 抽离成独立的组件, 方便后续维护。
+                            left:
+                              selectedSoundFile.name.replace(/\s/g, '').length <= 20
+                                ? 88 - selectedSoundFile.name.replace(/\s/g, '').length * 2 + '%'
+                                : 88 - 20 * 2 + '%',
+                          }"
+                        />
+                        <q-card-section
+                          v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''"
+                          :class="['flex flex-col m-t-3']"
+                        >
+                          <!-- 一个重命名的输入框, 一个删除按钮 -->
+                          <q-input
+                            outlined
+                            stack-label
+                            dense
+                            error-message="空文件名可能增加后续管理成本"
+                            :error="
+                              selectedSoundFile.name === '' ||
+                              selectedSoundFile.name === undefined ||
+                              selectedSoundFile.name === null
+                            "
+                            v-model="selectedSoundFile.name"
+                            label="文件名(可更改)"
+                          />
+
+                          <q-btn
+                            :class="['w-20 self-center bg-pink-700 text-zinc-50']"
+                            dense
+                            no-caps
+                            label="删除"
+                            icon="flight_takeoff"
+                          >
+                          </q-btn>
+                        </q-card-section>
+                      </q-card>
                     </q-card-section>
                     <q-card-actions align="right">
                       <q-btn flat label="Close" color="primary" v-close-popup />
