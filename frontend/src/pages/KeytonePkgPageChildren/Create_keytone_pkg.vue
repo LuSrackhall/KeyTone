@@ -473,7 +473,9 @@ onBeforeMount(async () => {
       () => selectedSoundFile.value.name,
       (newVal) => {
         console.log('观察selectedSoundFile=', selectedSoundFile.value);
-        SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.uuid, selectedSoundFile.value.name);
+        if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.uuid !== '') {
+          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.uuid, selectedSoundFile.value.name);
+        }
       }
     );
   }
