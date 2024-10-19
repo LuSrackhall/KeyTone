@@ -449,9 +449,12 @@ onBeforeMount(async () => {
       const tempSoundFileList: Array<any> = [];
 
       audioFiles.value.forEach((item) => {
-        Object.entries(item.value.name).forEach(([uuid, name]) => {
-          tempSoundFileList.push({ sha256: item.sha256, uuid: uuid, name: name, type: item.value.type });
-        });
+        // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
+        if (item.value.name !== undefined && item.value.name !== null) {
+          Object.entries(item.value.name).forEach(([uuid, name]) => {
+            tempSoundFileList.push({ sha256: item.sha256, uuid: uuid, name: name, type: item.value.type });
+          });
+        }
       });
       soundFileList.value = tempSoundFileList;
     });
