@@ -510,6 +510,9 @@ onBeforeMount(async () => {
         value: value,
       }));
       audioFiles.value = audioFilesArray;
+    } else {
+      // 此处else是为防止最后一项的audio_files为undefined, 而导致的删除最后一项音频源文件后, audioFiles值无法清空, 从而导致无法触发soundFileList的变更, 从而ui界面导致无法删除最后一项音频源文件。
+      audioFiles.value = [];
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
