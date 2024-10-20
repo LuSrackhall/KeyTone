@@ -185,11 +185,11 @@
                     </q-card-section>
 
                     <!-- 分割线 -->
-                    <q-separator v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''" />
+                    <q-separator v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''" />
 
                     <!-- 以卡片形式展示选择的音频源文件 -->
                     <q-card-section
-                      v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''"
+                      v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''"
                       :class="['flex flex-col m-t-3']"
                     >
                       <q-card :class="['flex flex-col']">
@@ -212,7 +212,7 @@
                           }"
                         />
                         <q-card-section
-                          v-if="selectedSoundFile.name !== '' || selectedSoundFile.uuid !== ''"
+                          v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''"
                           :class="['flex flex-col m-t-3']"
                         >
                           <!-- 一个重命名的输入框, 一个删除按钮 -->
@@ -251,6 +251,13 @@
                                     message: '删除成功',
                                     timeout: 5,
                                   });
+                                  // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
+                                  selectedSoundFile = {
+                                    sha256: '',
+                                    uuid: '',
+                                    name: '',
+                                    type: '',
+                                  };
                                 } else {
                                   q.notify({
                                     type: 'negative',
@@ -259,13 +266,6 @@
                                     timeout: 5,
                                   });
                                 }
-                                // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
-                                selectedSoundFile = {
-                                  sha256: '',
-                                  uuid: '',
-                                  name: '',
-                                  type: '',
-                                };
                               }
                             "
                           >
@@ -386,7 +386,7 @@ const selectedSoundFile = ref<{ sha256: string; uuid: string; name: string; type
 });
 
 watch(files, () => {
-  console.log(files.value);
+  console.debug('观察files=', files.value);
 });
 
 onBeforeMount(async () => {
@@ -449,7 +449,7 @@ onBeforeMount(async () => {
 
     // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
     watch(audioFiles, (newVal) => {
-      console.log('观察audioFiles=', audioFiles.value);
+      console.debug('观察audioFiles=', audioFiles.value);
       // 为了更容易理解, 故引入audioFiles这一变量, 做初步映射, audioFiles只是过程值, 我们最终需要对此过程值做进一步映射, 形成soundFileList
       const tempSoundFileList: Array<any> = [];
 
@@ -466,7 +466,7 @@ onBeforeMount(async () => {
 
     // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
     watch(soundFileList, (newVal) => {
-      console.log('观察soundFileList=', soundFileList.value);
+      console.debug('观察soundFileList=', soundFileList.value);
     });
 
     //  - completed(已完成)   TODO:
@@ -477,7 +477,7 @@ onBeforeMount(async () => {
       // TIPS: 对于ref的响应式变量, 如果直接整体监听, 则内部的某个值变化时, 不会触发监听。需要使用返回值的函数, 对固定字段进行监听。
       () => selectedSoundFile.value.name,
       (newVal) => {
-        console.log('观察selectedSoundFile=', selectedSoundFile.value);
+        console.debug('观察selectedSoundFile=', selectedSoundFile.value);
         if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.uuid !== '') {
           SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.uuid, selectedSoundFile.value.name);
         }
