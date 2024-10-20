@@ -239,7 +239,7 @@
                             @click="
                               async () => {
                                 const re = await SoundFileDelete(selectedSoundFile.sha256, selectedSoundFile.uuid);
-                                if (re === true) {
+                                if (re) {
                                   q.notify({
                                     type: 'positive',
                                     position: 'top',

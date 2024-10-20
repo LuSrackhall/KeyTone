@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -368,6 +369,30 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.UUID)
+
+		// TIPS: 每次删除操作后, 都清除内存中的name字段, 并依赖viper提供的实时更新特性与实际文件保持一致。
+		// 			 * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
+		//         > 比如使用Get时, 获得的可能是name= map[0:<nil> 1:<nil>]
+		audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
+
+		// 查看name在内存中的值, 是否可配置文件一致(已检测一致)
+		// fmt.Println("audio_files."+arg.Sha256+".name=", audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name"))
+
+		// 每次删除后, 都需要判断是否需要删除音频文件(此处的判断, 依赖前一行对name的nil设置, 否则可能会获得内存中与实际文件中不一致的值, 参考上方tips)
+		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name") == nil {
+			// 删除音频源文件
+			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, "audioFiles", arg.Sha256))
+			fmt.Println("删除音频源文件, err=", err)
+			if err == nil {
+				// 音频源文件删除成功后，删除配置项中的音频文件配置项
+				audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
+			} else {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 删除音频文件失败:" + err.Error(),
+				})
+				return
+			}
+		}
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
