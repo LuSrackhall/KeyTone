@@ -238,7 +238,12 @@
                             icon="flight_takeoff"
                             @click="
                               async () => {
-                                const re = await SoundFileDelete(selectedSoundFile.sha256, selectedSoundFile.uuid);
+                                const re = await SoundFileDelete(
+                                  pkgPath,
+                                  selectedSoundFile.sha256,
+                                  selectedSoundFile.uuid,
+                                  selectedSoundFile.type
+                                );
                                 if (re) {
                                   q.notify({
                                     type: 'positive',

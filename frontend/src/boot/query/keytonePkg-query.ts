@@ -220,11 +220,13 @@ export async function SoundFileRename(sha256: string, uuid: string, name: string
     });
 }
 
-export async function SoundFileDelete(sha256: string, uuid: string) {
+export async function SoundFileDelete(audioPkgUUID: string, sha256: string, nameID: string, type: string) {
   return await api
     .post('/keytone_pkg/sound_file_delete', {
-      sha256: sha256,
-      uuid: uuid,
+      audioPkgUUID: audioPkgUUID, // 目录名/音频包名ID
+      sha256: sha256, // 文件名ID(实际文件名)
+      nameID: nameID, // 文件名ID(UI端使用, 用于索引虚拟文件名)
+      type: type, // 文件类型
     })
     .then((req) => {
       console.debug('status=', req.status, '->SoundFileDelete 请求已成功执行并返回->', req.data);

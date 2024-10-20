@@ -354,21 +354,25 @@ func keytonePkgRouters(r *gin.Engine) {
 	})
 
 	keytonePkgRouters.POST("/sound_file_delete", func(ctx *gin.Context) {
+		// 由于此接口, 可能会操作真实路径下的实际音频源文件, 因此需要AudioPkgUUID这个字段。(虽然不是每次都能用到)
 		type Arg struct {
-			Sha256 string `json:"sha256"`
-			UUID   string `json:"uuid"`
+			AudioPkgUUID string `json:"audioPkgUUID"` // 目录名/音频包名ID
+			Sha256       string `json:"sha256"`       // 文件名ID(实际文件名)
+			NameID       string `json:"nameID"`       // 文件名ID(UI端使用, 用于索引虚拟文件名)
+			Type         string `json:"type"`         // 文件类型
 		}
 
 		var arg Arg
 		err := ctx.ShouldBind(&arg)
-		if err != nil || arg.Sha256 == "" || arg.UUID == "" {
+		if err != nil || arg.AudioPkgUUID == "" || arg.Sha256 == "" || arg.NameID == "" || arg.Type == "" {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
 			})
+			logger.Error("message", "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:"+err.Error())
 			return
 		}
 
-		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.UUID)
+		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
 
 		// TIPS: 每次删除操作后, 都清除内存中的name字段, 并依赖viper提供的实时更新特性与实际文件保持一致。
 		// 			 * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
@@ -381,17 +385,16 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 每次删除后, 都需要判断是否需要删除音频文件(此处的判断, 依赖前一行对name的nil设置, 否则可能会获得内存中与实际文件中不一致的值, 参考上方tips)
 		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name") == nil {
 			// 删除音频源文件
-			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, "audioFiles", arg.Sha256))
-			fmt.Println("删除音频源文件, err=", err)
-			if err == nil {
-				// 音频源文件删除成功后，删除配置项中的音频文件配置项
-				audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
-			} else {
+			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
+			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"message": "error: 删除音频文件失败:" + err.Error(),
 				})
+				logger.Error("message", "error: 删除音频文件失败:"+err.Error())
 				return
 			}
+			// 音频源文件删除成功后，删除配置项中的音频文件配置项
+			audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
 		}
 
 		ctx.JSON(200, gin.H{
