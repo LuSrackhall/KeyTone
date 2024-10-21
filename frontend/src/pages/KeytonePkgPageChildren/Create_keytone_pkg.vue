@@ -185,11 +185,11 @@
                     </q-card-section>
 
                     <!-- 分割线 -->
-                    <q-separator v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''" />
+                    <q-separator v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''" />
 
                     <!-- 以卡片形式展示选择的音频源文件 -->
                     <q-card-section
-                      v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''"
+                      v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''"
                       :class="['flex flex-col m-t-3']"
                     >
                       <q-card :class="['flex flex-col']">
@@ -212,7 +212,7 @@
                           }"
                         />
                         <q-card-section
-                          v-if="selectedSoundFile.name !== '' && selectedSoundFile.uuid !== ''"
+                          v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''"
                           :class="['flex flex-col m-t-3']"
                         >
                           <!-- 一个重命名的输入框, 一个删除按钮 -->
@@ -241,7 +241,7 @@
                                 const re = await SoundFileDelete(
                                   pkgPath,
                                   selectedSoundFile.sha256,
-                                  selectedSoundFile.uuid,
+                                  selectedSoundFile.nameID,
                                   selectedSoundFile.type
                                 );
                                 if (re) {
@@ -254,7 +254,7 @@
                                   // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
                                   selectedSoundFile = {
                                     sha256: '',
-                                    uuid: '',
+                                    nameID: '',
                                     name: '',
                                     type: '',
                                   };
@@ -377,10 +377,10 @@ const editSoundFile = ref(false);
 // 用于初步映射配置文件中的 audio_files 对象, 并将其转换为数组, 并将数组元素转换成对象, 其中包含sha256和value两个key
 const audioFiles = ref<Array<any>>([]);
 // 用于audioFiles映射后的进一步映射, 主要拆分出value中name的每个值, 并一一对于sha256, 形成ui列表可用的最终数组。
-const soundFileList = ref<Array<{ sha256: string; uuid: string; name: string; type: string }>>([]);
-const selectedSoundFile = ref<{ sha256: string; uuid: string; name: string; type: string }>({
+const soundFileList = ref<Array<{ sha256: string; nameID: string; name: string; type: string }>>([]);
+const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; type: string }>({
   sha256: '',
-  uuid: '',
+  nameID: '',
   name: '',
   type: '',
 });
@@ -456,8 +456,8 @@ onBeforeMount(async () => {
       audioFiles.value.forEach((item) => {
         // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
         if (item.value.name !== undefined && item.value.name !== null) {
-          Object.entries(item.value.name).forEach(([uuid, name]) => {
-            tempSoundFileList.push({ sha256: item.sha256, uuid: uuid, name: name, type: item.value.type });
+          Object.entries(item.value.name).forEach(([nameID, name]) => {
+            tempSoundFileList.push({ sha256: item.sha256, nameID: nameID, name: name, type: item.value.type });
           });
         }
       });
@@ -478,8 +478,8 @@ onBeforeMount(async () => {
       () => selectedSoundFile.value.name,
       (newVal) => {
         console.debug('观察selectedSoundFile=', selectedSoundFile.value);
-        if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.uuid !== '') {
-          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.uuid, selectedSoundFile.value.name);
+        if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.nameID !== '') {
+          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.nameID, selectedSoundFile.value.name);
         }
       }
     );

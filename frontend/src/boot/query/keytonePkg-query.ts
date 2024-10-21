@@ -177,11 +177,11 @@ export async function ConfigGet(key: string): Promise<any | false> {
     });
 }
 
-export async function SoundFileRename(sha256: string, uuid: string, name: string) {
+export async function SoundFileRename(sha256: string, nameID: string, name: string) {
   return await api
     .post('/keytone_pkg/sound_file_rename', {
       sha256: sha256,
-      uuid: uuid,
+      nameID: nameID,
       name: name,
     })
     .then((req) => {
