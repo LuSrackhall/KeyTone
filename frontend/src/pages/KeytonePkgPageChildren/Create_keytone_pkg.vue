@@ -185,11 +185,11 @@
                     </q-card-section>
 
                     <!-- 分割线 -->
-                    <q-separator v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''" />
+                    <q-separator v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''" />
 
                     <!-- 以卡片形式展示选择的音频源文件 -->
                     <q-card-section
-                      v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''"
+                      v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''"
                       :class="['flex flex-col m-t-3']"
                     >
                       <q-card :class="['flex flex-col']">
@@ -212,7 +212,7 @@
                           }"
                         />
                         <q-card-section
-                          v-if="selectedSoundFile.name !== '' && selectedSoundFile.nameID !== ''"
+                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''"
                           :class="['flex flex-col m-t-3']"
                         >
                           <!-- 一个重命名的输入框, 一个删除按钮 -->
@@ -372,6 +372,9 @@ const step = ref(1);
 
 const addNewSoundFile = ref(false);
 const files = ref<Array<File>>([]);
+watch(files, () => {
+  console.debug('观察files=', files.value);
+});
 
 const editSoundFile = ref(false);
 // 用于初步映射配置文件中的 audio_files 对象, 并将其转换为数组, 并将数组元素转换成对象, 其中包含sha256和value两个key
@@ -383,10 +386,6 @@ const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; ty
   nameID: '',
   name: '',
   type: '',
-});
-
-watch(files, () => {
-  console.debug('观察files=', files.value);
 });
 
 onBeforeMount(async () => {
