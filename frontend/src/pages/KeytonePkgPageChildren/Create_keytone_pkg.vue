@@ -298,6 +298,91 @@
               若您载入的原始音频文件本身就是一个独立完善的键音, 则此步骤可跳过(因为其会在第一步时,
               被自动添加到键音列表中)。
             </div> -->
+
+            <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑 start -->
+            <div>
+              <!-- ------------------------------------------------------------------------------ 制作新的声音 -->
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="制作新的声音"
+                  @click="
+                    () => {
+                      createNewSound = !createNewSound;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-dialog v-model="createNewSound" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 制作新的声音 </q-card-section>
+                    <q-card-section>
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        v-model="soundName"
+                        label="为声音命名(非必填)"
+                        :placeholder="
+                          sourceFileForSound.name + '     - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
+                        "
+                        :input-style="{ textOverflow: 'ellipsis' }"
+                        :input-class="'text-truncate'"
+                      >
+                        <template v-slot:append>
+                          <q-icon name="info" color="primary">
+                            <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                              {{
+                                '声音的名称 : \n' +
+                                (soundName === ''
+                                  ? sourceFileForSound.name + ' - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
+                                  : soundName)
+                              }}
+                            </q-tooltip>
+                          </q-icon>
+                        </template>
+                      </q-input>
+                    </q-card-section>
+                    <q-card-section>
+                      <q-select
+                        outlined
+                        stack-label
+                        v-model="sourceFileForSound"
+                        :options="soundFileList"
+                        option-label="name"
+                        label="声音的源文件"
+                        dense
+                      />
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="text-[10px] text-gray-600">从声音源文件中裁剪定义出我们需要的声音</div>
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        v-model="soundStartTime"
+                        label="声音开始时间(毫秒)"
+                        type="number"
+                      />
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        v-model="soundEndTime"
+                        label="声音结束时间(毫秒)"
+                        type="number"
+                      />
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+              <!-- -------------------------------------------------------------------------------编辑已有声音 -->
+              <div></div>
+            </div>
+            <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑   end -->
             <q-stepper-navigation>
               <q-btn @click="step = 3" color="primary" label="Continue" />
               <q-btn flat @click="step = 1" color="primary" label="Back" class="q-ml-sm" />
@@ -387,6 +472,17 @@ const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; ty
   name: '',
   type: '',
 });
+
+const createNewSound = ref(false);
+const soundName = ref<string>('');
+const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; type: string }>({
+  sha256: '',
+  nameID: '',
+  name: '',
+  type: '',
+});
+const soundStartTime = ref<number>(0);
+const soundEndTime = ref<number>(0);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
