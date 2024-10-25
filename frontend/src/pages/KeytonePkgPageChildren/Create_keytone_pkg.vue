@@ -316,7 +316,7 @@
                 <q-dialog v-model="createNewSound" backdrop-filter="invert(70%)">
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6"> 制作新的声音 </q-card-section>
-                    <q-card-section>
+                    <q-card-section :class="['p-b-1']">
                       <q-input
                         outlined
                         stack-label
@@ -343,7 +343,7 @@
                         </template>
                       </q-input>
                     </q-card-section>
-                    <q-card-section>
+                    <q-card-section :class="['p-b-1']">
                       <q-select
                         outlined
                         stack-label
@@ -354,26 +354,48 @@
                         dense
                       />
                     </q-card-section>
-                    <q-card-section>
-                      <div class="text-[10px] text-gray-600">从声音源文件中裁剪定义出我们需要的声音</div>
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        v-model="soundStartTime"
-                        label="声音开始时间(毫秒)"
-                        type="number"
-                      />
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        v-model="soundEndTime"
-                        label="声音结束时间(毫秒)"
-                        type="number"
-                      />
+
+                    <q-card-section :class="['p-b-1']">
+                      <div class="text-[15px] text-gray-600">从声音源文件中裁剪定义出我们需要的声音</div>
+                      <!-- TIPS: 注意number类型使用时, 需要使用  v-model.number 。 因为使用后可以自动处理 01、 00.55 这种, 会将其自动变更为 1、 0.55 -->
+                      <div class="flex flex-row">
+                        <q-input
+                          :class="['w-1/2 p-r-1']"
+                          outlined
+                          stack-label
+                          dense
+                          v-model.number="soundStartTime"
+                          label="声音开始时间(毫秒)"
+                          type="number"
+                          error-message="时间不能为负数"
+                          :error="soundStartTime < 0"
+                        />
+                        <q-input
+                          :class="['w-1/2 p-l-1']"
+                          outlined
+                          stack-label
+                          dense
+                          v-model.number="soundEndTime"
+                          label="声音结束时间(毫秒)"
+                          type="number"
+                          error-message="时间不能为负数"
+                          :error="soundEndTime < 0"
+                        />
+                      </div>
+                    </q-card-section>
+                    <q-card-section :class="['p-y-0']">
+                      <q-input outlined stack-label dense v-model.number="soundVolume" label="声音音量" type="number">
+                        <template v-slot:append>
+                          <q-icon name="info" color="primary">
+                            <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                              0为原始音量, 大于0为提升音量, 小于0为降低音量
+                            </q-tooltip>
+                          </q-icon>
+                        </template>
+                      </q-input>
                     </q-card-section>
                     <q-card-actions align="right">
+                      <q-btn @click="confirmAddingSound" label="确定添加" color="primary" />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
@@ -473,6 +495,7 @@ const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; ty
   type: '',
 });
 
+// 声音制作
 const createNewSound = ref(false);
 const soundName = ref<string>('');
 const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; type: string }>({
@@ -483,6 +506,70 @@ const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; t
 });
 const soundStartTime = ref<number>(0);
 const soundEndTime = ref<number>(0);
+const soundVolume = ref<number>(0);
+
+function confirmAddingSound() {
+  // 必须选择一个源文件
+  if (sourceFileForSound.value.sha256 === '') {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '请选择一个源文件',
+      timeout: 5,
+    });
+    return;
+  }
+  // 结束时间必须大于开始时间
+  if (soundEndTime.value <= soundStartTime.value) {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '结束时间必须大于开始时间',
+      timeout: 5,
+    });
+    return;
+  }
+  ConfigSet('sound.' + nanoid(), {
+    source_file_for_sound: {
+      uuid: sourceFileForSound.value.sha256,
+      name_id: sourceFileForSound.value.nameID,
+      type: sourceFileForSound.value.type,
+    },
+    name: soundName.value, // 声音名称, 一般为空, 也可由用户自行定义
+    cut: {
+      start_time: soundStartTime.value,
+      end_time: soundEndTime.value,
+    },
+    // volume:
+  }).then((re) => {
+    if (re) {
+      // 添加成功
+      q.notify({
+        type: 'positive',
+        position: 'top',
+        message: '添加成功',
+        timeout: 5,
+      });
+      // 清空相关数据
+      soundName.value = '';
+      sourceFileForSound.value = {
+        sha256: '',
+        nameID: '',
+        name: '',
+        type: '',
+      };
+      soundStartTime.value = 0;
+      soundEndTime.value = 0;
+    } else {
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: '添加失败',
+        timeout: 5,
+      });
+    }
+  });
+}
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
