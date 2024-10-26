@@ -510,7 +510,11 @@ const soundVolume = ref<number>(0);
 
 function confirmAddingSound() {
   // 必须选择一个源文件
-  if (sourceFileForSound.value.sha256 === '') {
+  if (
+    sourceFileForSound.value.sha256 === '' &&
+    sourceFileForSound.value.type === '' &&
+    sourceFileForSound.value.nameID === ''
+  ) {
     q.notify({
       type: 'negative',
       position: 'top',
