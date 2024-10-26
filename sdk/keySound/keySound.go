@@ -49,8 +49,8 @@ type AudioFilePath struct {
 }
 
 type Cut struct {
-	StartMS int
-	EndMS   int // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
+	StartMS int64
+	EndMS   int64 // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
 }
 
 // 键音播放器

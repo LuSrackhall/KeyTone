@@ -3,6 +3,7 @@ package server
 import (
 	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
+	"KeyTone/keySound"
 	"KeyTone/logger"
 	"crypto"
 	"fmt"
@@ -396,6 +397,35 @@ func keytonePkgRouters(r *gin.Engine) {
 			// 音频源文件删除成功后，删除配置项中的音频文件配置项
 			audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
 		}
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
+	keytonePkgRouters.POST("/play_sound", func(ctx *gin.Context) {
+
+		type Arg struct {
+			AudioPkgUUID string  `json:"audioPkgUUID"`
+			Sha256       string  `json:"sha256"`
+			Type         string  `json:"type"`
+			StartTime    float64 `json:"startTime"`
+			EndTime      float64 `json:"endTime"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.Sha256 == "" || arg.Type == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		go keySound.PlayKeySound(&keySound.AudioFilePath{Part: filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID, "audioFiles", arg.Sha256+arg.Type)}, &keySound.Cut{
+			StartMS: int64(arg.StartTime),
+			EndMS:   int64(arg.EndTime),
+		})
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",

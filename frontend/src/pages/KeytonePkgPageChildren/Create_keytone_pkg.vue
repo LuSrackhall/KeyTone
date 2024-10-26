@@ -395,6 +395,7 @@
                       </q-input>
                     </q-card-section>
                     <q-card-actions align="right">
+                      <q-btn dense @click="previewSound" label="预览声音" color="secondary" />
                       <q-btn @click="confirmAddingSound" label="确定添加" color="primary" />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
@@ -459,6 +460,7 @@ import {
   SendFileToServer,
   SoundFileRename,
   SoundFileDelete,
+  PlaySound,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { onBeforeMount, ref, watch } from 'vue';
@@ -570,6 +572,59 @@ function confirmAddingSound() {
         position: 'top',
         message: '添加失败',
         timeout: 5,
+      });
+    }
+  });
+}
+
+function previewSound() {
+  console.debug('预览声音');
+  if (
+    sourceFileForSound.value.sha256 === '' &&
+    sourceFileForSound.value.type === '' &&
+    sourceFileForSound.value.nameID === ''
+  ) {
+    q.notify({
+      type: 'warning',
+      position: 'top',
+      message: '请先选择音频文件',
+      timeout: 5000,
+    });
+    return;
+  }
+  // 结束时间必须大于开始时间
+  if (soundEndTime.value <= soundStartTime.value) {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '结束时间必须大于开始时间',
+      timeout: 5,
+    });
+    return;
+  }
+  // 时间值不能为负数
+  if (soundStartTime.value < 0 || soundEndTime.value < 0) {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '时间值不能为负数',
+      timeout: 5,
+    });
+  }
+
+  PlaySound(
+    pkgPath,
+    sourceFileForSound.value.sha256,
+    sourceFileForSound.value.type,
+    soundStartTime.value,
+    soundEndTime.value
+  ).then((result) => {
+    if (!result) {
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: '播放失败',
+        timeout: 5000,
       });
     }
   });
