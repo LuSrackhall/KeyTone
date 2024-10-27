@@ -538,7 +538,7 @@ const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; t
 });
 const soundStartTime = ref<number>(0);
 const soundEndTime = ref<number>(0);
-const soundVolume = ref<number>(0);
+const soundVolume = ref<number>(0.0);
 
 function confirmAddingSound() {
   // 必须选择一个源文件
@@ -596,6 +596,7 @@ function confirmAddingSound() {
       };
       soundStartTime.value = 0;
       soundEndTime.value = 0;
+      soundVolume.value = 0.0;
     } else {
       q.notify({
         type: 'negative',
