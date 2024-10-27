@@ -288,9 +288,15 @@
 
           <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
           <q-step :name="2" title="裁剪定义声音" icon="add_comment" :done="step > 2">
-            <div>根据载入的原始声音文件裁剪定义出需要的声音。</div>
-            <div>此步骤不会影响原始声音文件。</div>
-            <div>用户可针对同一声音文件裁剪定义出独立的多个需求声音。</div>
+            <div>
+              根据载入的原始声音文件裁剪定义出需要的声音。
+              <q-icon name="info" color="primary">
+                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                  <div>通过此步骤制作的声音不会影响声音源文件。</div>
+                  <div>用户可针对同一声音源文件裁剪定义出多个独立的声音。</div>
+                </q-tooltip>
+              </q-icon>
+            </div>
             <!-- <div>
               若您载入的原始音频文件本身就是一个独立完善的键音, 则性能更好。换言之, 原始键音文件越接近最终键音性能越好。
             </div> -->
