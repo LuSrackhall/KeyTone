@@ -356,7 +356,14 @@
                     </q-card-section>
 
                     <q-card-section :class="['p-b-1']">
-                      <div class="text-[15px] text-gray-600">从声音源文件中裁剪定义出我们需要的声音</div>
+                      <div class="text-[15px] text-gray-600">
+                        从声音源文件中裁剪定义出我们需要的声音
+                        <q-icon name="info" color="primary">
+                          <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                            声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
+                          </q-tooltip>
+                        </q-icon>
+                      </div>
                       <!-- TIPS: 注意number类型使用时, 需要使用  v-model.number 。 因为使用后可以自动处理 01、 00.55 这种, 会将其自动变更为 1、 0.55 -->
                       <div class="flex flex-row">
                         <q-input
@@ -384,18 +391,35 @@
                       </div>
                     </q-card-section>
                     <q-card-section :class="['p-y-0']">
-                      <q-input outlined stack-label dense v-model.number="soundVolume" label="声音音量" type="number">
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        v-model.number="soundVolume"
+                        label="声音音量"
+                        type="number"
+                        :step="0.1"
+                      >
                         <template v-slot:append>
                           <q-icon name="info" color="primary">
                             <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                              0为原始音量, 大于0为提升音量, 小于0为降低音量
+                              0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
+                              当然您也可以手动输入以做更细腻的调整, 如0.0001等。请在每次音量调整后重新预览以查看效果,
+                              防止音量过小或过大。
                             </q-tooltip>
                           </q-icon>
                         </template>
                       </q-input>
                     </q-card-section>
                     <q-card-actions align="right">
-                      <q-btn dense @click="previewSound" label="预览声音" color="secondary" />
+                      <q-btn dense @click="previewSound" label="预览声音" color="secondary">
+                        <q-tooltip
+                          :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                          delay="600"
+                        >
+                          按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
+                        </q-tooltip>
+                      </q-btn>
                       <q-btn @click="confirmAddingSound" label="确定添加" color="primary" />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
@@ -617,7 +641,8 @@ function previewSound() {
     sourceFileForSound.value.sha256,
     sourceFileForSound.value.type,
     soundStartTime.value,
-    soundEndTime.value
+    soundEndTime.value,
+    soundVolume.value
   ).then((result) => {
     if (!result) {
       q.notify({

@@ -51,6 +51,7 @@ type AudioFilePath struct {
 type Cut struct {
 	StartMS int64
 	EndMS   int64 // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
+	Volume  float64
 }
 
 // 键音播放器
@@ -107,6 +108,7 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 
 	// 处理cut参数
 	endSample := -1 // 为保证cut=nil时, 也能正常保留原始工作。(当从配置文件获取的信息达不到构造cut时, cut将不会被构造。cut释放为nil的逻辑不应该在播放器端处理<如start和end都等于0时, cut就应该为nil, 即全量PlayKeySound播放>。)
+	initVolume := 0.0
 	// 如果cut=nil则全量播放
 	if cut != nil {
 		startSample := 0
@@ -118,9 +120,18 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 			return
 		}
 		endSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.EndMS))
+		initVolume = cut.Volume
 	}
 
-	volume := globalAudioVolumeAmplifyProcessing(reStreamer)
+	// 处理音量
+	volume := &effects.Volume{
+		Streamer: reStreamer,
+		Base:     1.6,
+		Volume:   initVolume,
+		Silent:   false,
+	}
+
+	volume = globalAudioVolumeAmplifyProcessing(volume)
 
 	volume = globalAudioVolumeNormalProcessing(volume)
 

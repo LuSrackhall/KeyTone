@@ -269,7 +269,8 @@ export async function PlaySound(
   sha256: string,
   type: string,
   startTime: number,
-  endTime: number
+  endTime: number,
+  volume: number
 ) {
   return await api
     .post('/keytone_pkg/play_sound', {
@@ -278,6 +279,7 @@ export async function PlaySound(
       type: type,
       startTime: startTime,
       endTime: endTime,
+      volume: volume,
     })
     .then((req) => {
       console.debug('status=', req.status, '->PlaySound 请求已成功执行并返回->', req.data);

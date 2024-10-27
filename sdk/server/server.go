@@ -411,6 +411,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			Type         string  `json:"type"`
 			StartTime    float64 `json:"startTime"`
 			EndTime      float64 `json:"endTime"`
+			Volume       float64 `json:"volume"`
 		}
 
 		var arg Arg
@@ -425,6 +426,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		go keySound.PlayKeySound(&keySound.AudioFilePath{Part: filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID, "audioFiles", arg.Sha256+arg.Type)}, &keySound.Cut{
 			StartMS: int64(arg.StartTime),
 			EndMS:   int64(arg.EndTime),
+			Volume:  arg.Volume,
 		})
 
 		ctx.JSON(200, gin.H{
