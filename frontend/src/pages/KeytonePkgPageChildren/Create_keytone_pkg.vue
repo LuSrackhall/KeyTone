@@ -565,7 +565,7 @@ function confirmAddingSound() {
     });
     return;
   }
-  ConfigSet('sound.' + nanoid(), {
+  ConfigSet('sounds.' + nanoid(), {
     source_file_for_sound: {
       uuid: sourceFileForSound.value.sha256,
       name_id: sourceFileForSound.value.nameID,
