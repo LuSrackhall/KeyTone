@@ -421,7 +421,7 @@
                       <q-btn dense @click="previewSound" label="预览声音" color="secondary">
                         <q-tooltip
                           :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
-                          delay="600"
+                          :delay="600"
                         >
                           按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
                         </q-tooltip>
