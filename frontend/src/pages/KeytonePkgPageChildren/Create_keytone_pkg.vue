@@ -432,8 +432,65 @@
                   </q-card>
                 </q-dialog>
               </div>
+
+              <div :class="['p-2 text-zinc-600']">或</div>
+
               <!-- -------------------------------------------------------------------------------编辑已有声音 -->
-              <div></div>
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="编辑已有声音"
+                  @click="
+                    () => {
+                      if (soundList.length === 0) {
+                        q.notify({
+                          type: 'warning',
+                          message: '当前没有可编辑的声音',
+                          position: 'top',
+                        });
+                        return;
+                      }
+                      showEditSoundDialog = true;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 编辑已有声音 </q-card-section>
+                    <q-card-section>
+                      <q-select
+                        outlined
+                        stack-label
+                        v-model="selectedSound"
+                        :options="soundList"
+                        :option-label="(item: any) => {
+                          // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+                          if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
+                            return item.soundValue.name
+                          } else {
+                            return soundFileList.find(
+                              (soundFile) =>
+                                soundFile.sha256 === item.soundValue.source_file_for_sound.uuid &&
+                                soundFile.nameID === item.soundValue.source_file_for_sound.name_id
+                            )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
+                          }
+                        }"
+                        label="选择要管理的声音"
+                        dense
+                      />
+                    </q-card-section>
+                    <!-- 以卡片形式展示选择的声音 -->
+                    <q-card-section :class="['flex flex-col m-t-3']">
+                      <q-card :class="['flex flex-col']"> 123 </q-card>
+                    </q-card-section>
+
+                    <q-card-actions align="right">
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
             </div>
             <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑   end -->
             <q-stepper-navigation>
@@ -527,7 +584,7 @@ const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; ty
   type: '',
 });
 
-// 声音制作
+// 声音制作(制作新的声音)
 const createNewSound = ref(false);
 const soundName = ref<string>('');
 const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; type: string }>({
@@ -662,6 +719,27 @@ function previewSound() {
   });
 }
 
+// 声音编辑(编辑已有声音)
+const showEditSoundDialog = ref(false);
+const soundList = ref<
+  Array<{
+    soundKey: string;
+    soundValue: {
+      cut: { start_time: number; end_time: number };
+      name: string;
+      source_file_for_sound: { sha256: string; name_id: string; type: string };
+    };
+  }>
+>([]); // TIPS: 此处类型一定要指定清楚, 否则在 组件<q-select :option-label="(item)=>{}"> 中, 会发生类型错误(且检测不到原因, 准确指定类型不使用any后, 才解决此问题)--- 我记得之前在做声音源文件的编辑列表时, 就好像遇到过, 但目前找不到注释内容了。
+const selectedSound = ref<{
+  soundKey: string;
+  soundValue: {
+    cut: { start_time: number; end_time: number };
+    name: string;
+    source_file_for_sound: { sha256: string; name_id: string; type: string };
+  };
+}>(); // 此处无需初始化, 但类型一定要指定清楚
+
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
   // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
@@ -705,7 +783,7 @@ onBeforeMount(async () => {
         pkgName.value = data.package_name;
       }
 
-      // 以载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
+      // 已载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
       if (data.audio_files !== undefined) {
         // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
         const audioFilesArray = Object.entries(data.audio_files).map(([key, value]) => ({
@@ -713,6 +791,22 @@ onBeforeMount(async () => {
           value: value,
         }));
         audioFiles.value = audioFilesArray;
+      }
+
+      // 已载入的声音列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
+      if (data.sound_list !== undefined) {
+        const sounds = Object.entries(data.sounds).map(([key, value]) => ({
+          soundKey: key,
+          soundValue: value,
+        }));
+        soundList.value = sounds as Array<{
+          soundKey: string;
+          soundValue: {
+            cut: { start_time: number; end_time: number };
+            name: string;
+            source_file_for_sound: { sha256: string; name_id: string; type: string };
+          };
+        }>;
       }
     });
 
@@ -756,6 +850,10 @@ onBeforeMount(async () => {
         }
       }
     );
+
+    watch(soundList, (newVal) => {
+      console.debug('观察soundList=', soundList.value);
+    });
   }
 
   const pkgNameDelayed = debounce(
@@ -786,6 +884,24 @@ onBeforeMount(async () => {
     } else {
       // 此处else是为防止最后一项的audio_files为undefined, 而导致的删除最后一项音频源文件后, audioFiles值无法清空, 从而导致无法触发soundFileList的变更, 从而ui界面导致无法删除最后一项音频源文件。
       audioFiles.value = [];
+    }
+
+    // 2. 映射配置文件中的sounds到ui中的soundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
+    if (keyTonePkgData.sounds !== undefined) {
+      const sounds = Object.entries(keyTonePkgData.sounds).map(([key, value]) => ({
+        soundKey: key,
+        soundValue: value,
+      }));
+      soundList.value = sounds as Array<{
+        soundKey: string;
+        soundValue: {
+          cut: { start_time: number; end_time: number };
+          name: string;
+          source_file_for_sound: { sha256: string; name_id: string; type: string };
+        };
+      }>;
+    } else {
+      soundList.value = [];
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
