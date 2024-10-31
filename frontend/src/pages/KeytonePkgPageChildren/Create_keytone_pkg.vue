@@ -540,7 +540,15 @@
                             stack-label
                             v-model="selectedSound.soundValue.source_file_for_sound"
                             :options="soundFileList"
-                            option-label="name"
+                            :option-label="(item: any) => {
+                              // 此处的:options本身就是soundFileList, 因此直接通过find查找并返回自身即可。
+                              // 此处仅是为了避免直接使用其中元素值的name字段, 以让selectedSound.soundValue.source_file_for_sound也可享受name变化时的实时更新。
+                              return soundFileList.find(
+                                (soundFile) =>
+                                  soundFile.sha256 === item.sha256 &&
+                                  soundFile.name_id === item.name_id
+                              )?.name
+                            }"
                             label="声音的源文件"
                             dense
                           />
@@ -862,6 +870,8 @@ const selectedSound = ref<{
 }>(); // 此处无需初始化, 但类型一定要指定清楚
 
 // 当编辑时, 获取实时的name值到我们的source_file_for_sound中。 (注意, 这个name字段是临时增加的, 因此需要使用any类型来强制变更过度)
+// TIPS: 主要目的并不是为了获取name值, 甚至我们根本用不到这个name值(我们仍通过sha256和name_id在数组中find的方式来寻找name, 以解决无法实时更新的bug)。
+//       * 使selectedSound中拥有name这个字段, 可以防止其因类型问题而报错就足够了。
 watch(selectedSound, () => {
   console.log('观察selectedSound=', selectedSound.value);
   if (selectedSound.value) {
