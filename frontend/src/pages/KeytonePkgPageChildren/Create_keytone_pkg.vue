@@ -185,11 +185,11 @@
                     </q-card-section>
 
                     <!-- 分割线 -->
-                    <q-separator v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''" />
+                    <q-separator v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''" />
 
                     <!-- 以卡片形式展示选择的音频源文件 -->
                     <q-card-section
-                      v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''"
+                      v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
                       :class="['flex flex-col m-t-3']"
                     >
                       <q-card :class="['flex flex-col']">
@@ -212,7 +212,7 @@
                           }"
                         />
                         <q-card-section
-                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.nameID !== ''"
+                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
                           :class="['flex flex-col m-t-3']"
                         >
                           <!-- 一个重命名的输入框, 一个删除按钮 -->
@@ -241,7 +241,7 @@
                                 const re = await SoundFileDelete(
                                   pkgPath,
                                   selectedSoundFile.sha256,
-                                  selectedSoundFile.nameID,
+                                  selectedSoundFile.name_id,
                                   selectedSoundFile.type
                                 );
                                 if (re) {
@@ -254,7 +254,7 @@
                                   // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
                                   selectedSoundFile = {
                                     sha256: '',
-                                    nameID: '',
+                                    name_id: '',
                                     name: '',
                                     type: '',
                                   };
@@ -472,7 +472,7 @@
                             return soundFileList.find(
                               (soundFile) =>
                                 soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                soundFile.nameID === item.soundValue.source_file_for_sound.name_id
+                                soundFile.name_id === item.soundValue.source_file_for_sound.name_id
                             )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
                           }
                         }"
@@ -497,7 +497,7 @@
                               soundFileList.find(
                                 (soundFile) =>
                                   soundFile.sha256 === selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                  soundFile.nameID === selectedSound?.soundValue.source_file_for_sound.name_id
+                                  soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
                               )?.name +
                               '     - ' +
                               ' [' +
@@ -519,7 +519,7 @@
                                           (soundFile) =>
                                             soundFile.sha256 ===
                                               selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.nameID === selectedSound?.soundValue.source_file_for_sound.name_id
+                                            soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
                                         )?.name +
                                         ' - ' +
                                         ' [' +
@@ -696,10 +696,10 @@ const editSoundFile = ref(false);
 // 用于初步映射配置文件中的 audio_files 对象, 并将其转换为数组, 并将数组元素转换成对象, 其中包含sha256和value两个key
 const audioFiles = ref<Array<any>>([]);
 // 用于audioFiles映射后的进一步映射, 主要拆分出value中name的每个值, 并一一对于sha256, 形成ui列表可用的最终数组。
-const soundFileList = ref<Array<{ sha256: string; nameID: string; name: string; type: string }>>([]);
-const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; type: string }>({
+const soundFileList = ref<Array<{ sha256: string; name_id: string; name: string; type: string }>>([]);
+const selectedSoundFile = ref<{ sha256: string; name_id: string; name: string; type: string }>({
   sha256: '',
-  nameID: '',
+  name_id: '',
   name: '',
   type: '',
 });
@@ -707,9 +707,9 @@ const selectedSoundFile = ref<{ sha256: string; nameID: string; name: string; ty
 // 声音制作(制作新的声音)
 const createNewSound = ref(false);
 const soundName = ref<string>('');
-const sourceFileForSound = ref<{ sha256: string; nameID: string; name: string; type: string }>({
+const sourceFileForSound = ref<{ sha256: string; name_id: string; name: string; type: string }>({
   sha256: '',
-  nameID: '',
+  name_id: '',
   name: '',
   type: '',
 });
@@ -722,7 +722,7 @@ function confirmAddingSound() {
   if (
     sourceFileForSound.value.sha256 === '' &&
     sourceFileForSound.value.type === '' &&
-    sourceFileForSound.value.nameID === ''
+    sourceFileForSound.value.name_id === ''
   ) {
     q.notify({
       type: 'negative',
@@ -745,7 +745,7 @@ function confirmAddingSound() {
   ConfigSet('sounds.' + nanoid(), {
     source_file_for_sound: {
       sha256: sourceFileForSound.value.sha256,
-      name_id: sourceFileForSound.value.nameID,
+      name_id: sourceFileForSound.value.name_id,
       type: sourceFileForSound.value.type,
     },
     name: soundName.value, // 声音名称, 一般为空, 也可由用户自行定义
@@ -768,7 +768,7 @@ function confirmAddingSound() {
       soundName.value = '';
       sourceFileForSound.value = {
         sha256: '',
-        nameID: '',
+        name_id: '',
         name: '',
         type: '',
       };
@@ -791,7 +791,7 @@ function previewSound() {
   if (
     sourceFileForSound.value.sha256 === '' &&
     sourceFileForSound.value.type === '' &&
-    sourceFileForSound.value.nameID === ''
+    sourceFileForSound.value.name_id === ''
   ) {
     q.notify({
       type: 'warning',
@@ -863,11 +863,12 @@ const selectedSound = ref<{
 
 // 当编辑时, 获取实时的name值到我们的source_file_for_sound中。 (注意, 这个name字段是临时增加的, 因此需要使用any类型来强制变更过度)
 watch(selectedSound, () => {
+  console.log('观察selectedSound=', selectedSound.value);
   if (selectedSound.value) {
     (selectedSound.value.soundValue.source_file_for_sound as any).name = soundFileList.value.find(
       (soundFile) =>
         soundFile.sha256 === selectedSound.value?.soundValue.source_file_for_sound.sha256 &&
-        soundFile.nameID === selectedSound.value?.soundValue.source_file_for_sound.name_id
+        soundFile.name_id === selectedSound.value?.soundValue.source_file_for_sound.name_id
     )?.name;
   }
 });
@@ -955,8 +956,8 @@ onBeforeMount(async () => {
       audioFiles.value.forEach((item) => {
         // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
         if (item.value.name !== undefined && item.value.name !== null) {
-          Object.entries(item.value.name).forEach(([nameID, name]) => {
-            tempSoundFileList.push({ sha256: item.sha256, nameID: nameID, name: name, type: item.value.type });
+          Object.entries(item.value.name).forEach(([name_id, name]) => {
+            tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
           });
         }
       });
@@ -977,8 +978,8 @@ onBeforeMount(async () => {
       () => selectedSoundFile.value.name,
       (newVal) => {
         console.debug('观察selectedSoundFile=', selectedSoundFile.value);
-        if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.nameID !== '') {
-          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.nameID, selectedSoundFile.value.name);
+        if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.name_id !== '') {
+          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.name_id, selectedSoundFile.value.name);
         }
       }
     );
