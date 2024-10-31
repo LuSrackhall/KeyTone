@@ -481,8 +481,128 @@
                       />
                     </q-card-section>
                     <!-- 以卡片形式展示选择的声音 -->
-                    <q-card-section :class="['flex flex-col m-t-3']">
-                      <q-card :class="['flex flex-col']"> 123 </q-card>
+                    <q-card-section
+                      :class="['flex flex-col m-t-3']"
+                      v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
+                    >
+                      <q-card :class="['flex flex-col p-3']">
+                        <q-card-section :class="['p-b-1']">
+                          <q-input
+                            outlined
+                            stack-label
+                            dense
+                            v-model="selectedSound.soundValue.name"
+                            label="为声音命名(非必填)"
+                            :placeholder="
+                              soundFileList.find(
+                                (soundFile) =>
+                                  soundFile.sha256 === selectedSound?.soundValue.source_file_for_sound.sha256 &&
+                                  soundFile.nameID === selectedSound?.soundValue.source_file_for_sound.name_id
+                              )?.name +
+                              '     - ' +
+                              ' [' +
+                              selectedSound.soundValue.cut.start_time +
+                              ' ~ ' +
+                              selectedSound.soundValue.cut.end_time +
+                              ']'
+                            "
+                            :input-style="{ textOverflow: 'ellipsis' }"
+                            :input-class="'text-truncate'"
+                          >
+                            <template v-slot:append>
+                              <q-icon name="info" color="primary">
+                                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                                  {{
+                                    '声音的名称 : \n' +
+                                    (selectedSound.soundValue.name === ''
+                                      ? soundFileList.find(
+                                          (soundFile) =>
+                                            soundFile.sha256 ===
+                                              selectedSound?.soundValue.source_file_for_sound.sha256 &&
+                                            soundFile.nameID === selectedSound?.soundValue.source_file_for_sound.name_id
+                                        )?.name +
+                                        ' - ' +
+                                        ' [' +
+                                        selectedSound.soundValue.cut.start_time +
+                                        ' ~ ' +
+                                        selectedSound.soundValue.cut.end_time +
+                                        ']'
+                                      : selectedSound.soundValue.name)
+                                  }}
+                                </q-tooltip>
+                              </q-icon>
+                            </template>
+                          </q-input>
+                        </q-card-section>
+                        <q-card-section :class="['p-b-1']">
+                          <q-select
+                            outlined
+                            stack-label
+                            v-model="selectedSound.soundValue.source_file_for_sound"
+                            :options="soundFileList"
+                            option-label="name"
+                            label="声音的源文件"
+                            dense
+                          />
+                        </q-card-section>
+
+                        <q-card-section :class="['p-b-1']">
+                          <div class="text-[15px] text-gray-600">
+                            从声音源文件中裁剪定义出我们需要的声音
+                            <q-icon name="info" color="primary">
+                              <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                                声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
+                              </q-tooltip>
+                            </q-icon>
+                          </div>
+                          <!-- TIPS: 注意number类型使用时, 需要使用  v-model.number 。 因为使用后可以自动处理 01、 00.55 这种, 会将其自动变更为 1、 0.55 -->
+                          <div class="flex flex-row">
+                            <q-input
+                              :class="['w-1/2 p-r-1']"
+                              outlined
+                              stack-label
+                              dense
+                              v-model.number="selectedSound.soundValue.cut.start_time"
+                              label="声音开始时间(毫秒)"
+                              type="number"
+                              error-message="时间不能为负数"
+                              :error="selectedSound.soundValue.cut.start_time < 0"
+                            />
+                            <q-input
+                              :class="['w-1/2 p-l-1']"
+                              outlined
+                              stack-label
+                              dense
+                              v-model.number="selectedSound.soundValue.cut.end_time"
+                              label="声音结束时间(毫秒)"
+                              type="number"
+                              error-message="时间不能为负数"
+                              :error="selectedSound.soundValue.cut.end_time < 0"
+                            />
+                          </div>
+                        </q-card-section>
+                        <q-card-section :class="['p-y-0']">
+                          <q-input
+                            outlined
+                            stack-label
+                            dense
+                            v-model.number="selectedSound.soundValue.cut.volume"
+                            label="声音音量"
+                            type="number"
+                            :step="0.1"
+                          >
+                            <template v-slot:append>
+                              <q-icon name="info" color="primary">
+                                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                                  0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
+                                  当然您也可以手动输入以做更细腻的调整,
+                                  如0.0001等。请在每次音量调整后重新预览以查看效果, 防止音量过小或过大。
+                                </q-tooltip>
+                              </q-icon>
+                            </template>
+                          </q-input>
+                        </q-card-section>
+                      </q-card>
                     </q-card-section>
 
                     <q-card-actions align="right">
@@ -740,6 +860,17 @@ const selectedSound = ref<{
     source_file_for_sound: { sha256: string; name_id: string; type: string };
   };
 }>(); // 此处无需初始化, 但类型一定要指定清楚
+
+// 当编辑时, 获取实时的name值到我们的source_file_for_sound中。 (注意, 这个name字段是临时增加的, 因此需要使用any类型来强制变更过度)
+watch(selectedSound, () => {
+  if (selectedSound.value) {
+    (selectedSound.value.soundValue.source_file_for_sound as any).name = soundFileList.value.find(
+      (soundFile) =>
+        soundFile.sha256 === selectedSound.value?.soundValue.source_file_for_sound.sha256 &&
+        soundFile.nameID === selectedSound.value?.soundValue.source_file_for_sound.name_id
+    )?.name;
+  }
+});
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
