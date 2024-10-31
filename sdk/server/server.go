@@ -89,7 +89,8 @@ func ServerRun() {
 	keytonePkgRouters(r)
 
 	// 运行gin
-	r.Run("0.0.0.0:38888")
+	// r.Run("0.0.0.0:38888")
+	r.Run("localhost:38888")
 }
 
 func mainRouters(r *gin.Engine) {
