@@ -471,7 +471,7 @@
                           } else {
                             return soundFileList.find(
                               (soundFile) =>
-                                soundFile.sha256 === item.soundValue.source_file_for_sound.uuid &&
+                                soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
                                 soundFile.nameID === item.soundValue.source_file_for_sound.name_id
                             )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
                           }
@@ -624,7 +624,7 @@ function confirmAddingSound() {
   }
   ConfigSet('sounds.' + nanoid(), {
     source_file_for_sound: {
-      uuid: sourceFileForSound.value.sha256,
+      sha256: sourceFileForSound.value.sha256,
       name_id: sourceFileForSound.value.nameID,
       type: sourceFileForSound.value.type,
     },
@@ -632,6 +632,7 @@ function confirmAddingSound() {
     cut: {
       start_time: soundStartTime.value,
       end_time: soundEndTime.value,
+      volume: soundVolume.value,
     },
     // volume:
   }).then((re) => {
@@ -725,7 +726,7 @@ const soundList = ref<
   Array<{
     soundKey: string;
     soundValue: {
-      cut: { start_time: number; end_time: number };
+      cut: { start_time: number; end_time: number; volume: number };
       name: string;
       source_file_for_sound: { sha256: string; name_id: string; type: string };
     };
@@ -734,7 +735,7 @@ const soundList = ref<
 const selectedSound = ref<{
   soundKey: string;
   soundValue: {
-    cut: { start_time: number; end_time: number };
+    cut: { start_time: number; end_time: number; volume: number };
     name: string;
     source_file_for_sound: { sha256: string; name_id: string; type: string };
   };
@@ -802,7 +803,7 @@ onBeforeMount(async () => {
         soundList.value = sounds as Array<{
           soundKey: string;
           soundValue: {
-            cut: { start_time: number; end_time: number };
+            cut: { start_time: number; end_time: number; volume: number };
             name: string;
             source_file_for_sound: { sha256: string; name_id: string; type: string };
           };
@@ -895,7 +896,7 @@ onBeforeMount(async () => {
       soundList.value = sounds as Array<{
         soundKey: string;
         soundValue: {
-          cut: { start_time: number; end_time: number };
+          cut: { start_time: number; end_time: number; volume: number };
           name: string;
           source_file_for_sound: { sha256: string; name_id: string; type: string };
         };
