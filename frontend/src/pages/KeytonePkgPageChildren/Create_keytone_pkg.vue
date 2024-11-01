@@ -457,7 +457,7 @@
                 </q-btn>
                 <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 编辑已有声音 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"> 编辑已有声音 </q-card-section>
                     <q-card-section>
                       <q-select
                         outlined
@@ -613,7 +613,7 @@
                       </q-card>
                     </q-card-section>
 
-                    <q-card-actions align="right">
+                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
