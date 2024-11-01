@@ -457,7 +457,11 @@
                 </q-btn>
                 <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"> 编辑已有声音 </q-card-section>
+                    <q-card-section
+                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
+                    >
+                      编辑已有声音
+                    </q-card-section>
                     <q-card-section>
                       <q-select
                         outlined
@@ -519,7 +523,8 @@
                                           (soundFile) =>
                                             soundFile.sha256 ===
                                               selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
+                                            soundFile.name_id ===
+                                              selectedSound?.soundValue.source_file_for_sound.name_id
                                         )?.name +
                                         ' - ' +
                                         ' [' +
@@ -989,7 +994,11 @@ onBeforeMount(async () => {
       (newVal) => {
         console.debug('观察selectedSoundFile=', selectedSoundFile.value);
         if (selectedSoundFile.value.sha256 !== '' && selectedSoundFile.value.name_id !== '') {
-          SoundFileRename(selectedSoundFile.value.sha256, selectedSoundFile.value.name_id, selectedSoundFile.value.name);
+          SoundFileRename(
+            selectedSoundFile.value.sha256,
+            selectedSoundFile.value.name_id,
+            selectedSoundFile.value.name
+          );
         }
       }
     );
