@@ -489,8 +489,26 @@
                       :class="['flex flex-col m-t-3']"
                       v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
                     >
-                      <q-card :class="['flex flex-col p-3']">
-                        <q-card-section :class="['p-b-1']">
+                      <q-card :class="['flex flex-col px-3 pb-3']">
+                        <q-badge
+                          transparent
+                          color="orange"
+                          :label=" selectedSound?.soundValue.name === ''
+                                ? soundFileList.find(
+                                    (soundFile:any) =>
+                                      soundFile.sha256 === selectedSound?.soundValue.source_file_for_sound.sha256 &&
+                                      soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
+                                  )?.name +
+                                    ' - ' +
+                                    ' [' +
+                                    selectedSound?.soundValue.cut.start_time +
+                                    ' ~ ' +
+                                    selectedSound?.soundValue.cut.end_time +
+                                    ']'
+                                : selectedSound?.soundValue.name"
+                          :class="['absolute  overflow-visible']"
+                        />
+                        <q-card-section :class="['p-b-1 mt-3']">
                           <q-input
                             outlined
                             stack-label
