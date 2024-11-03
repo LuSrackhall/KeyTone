@@ -450,6 +450,19 @@
                               end_time: soundEndTime,
                               volume: soundVolume,
                             },
+                            onSuccess: () => {
+                              // 重置表单状态
+                              soundName = '';
+                              sourceFileForSound = {
+                                sha256: '',
+                                name_id: '',
+                                name: '',
+                                type: '',
+                              };
+                              soundStartTime = 0;
+                              soundEndTime = 0;
+                              soundVolume = 0.0;
+                            },
                           })
                         "
                         label="确定添加"
@@ -776,7 +789,7 @@ const soundStartTime = ref<number>(0);
 const soundEndTime = ref<number>(0);
 const soundVolume = ref<number>(0.0);
 
-// 重构confirmAddingSound函数,参数结构与ConfigSet保持一致
+// 重构confirmAddingSound函数,添加onSuccess回调参数
 function confirmAddingSound(params: {
   source_file_for_sound: { sha256: string; name_id: string; type: string };
   name: string; // 声音名称, 一般为空, 也可由用户自行定义
@@ -785,6 +798,7 @@ function confirmAddingSound(params: {
     end_time: number;
     volume: number;
   };
+  onSuccess?: () => void; // 添加成功后的回调函数
 }) {
   // 必须选择一个源文件
   if (
@@ -811,7 +825,14 @@ function confirmAddingSound(params: {
     return;
   }
 
-  ConfigSet('sounds.' + nanoid(), params).then((re) => {
+  // 创建一个新对象,不包含onSuccess回调
+  const configParams = {
+    source_file_for_sound: params.source_file_for_sound,
+    name: params.name,
+    cut: params.cut,
+  };
+
+  ConfigSet('sounds.' + nanoid(), configParams).then((re) => {
     if (re) {
       q.notify({
         type: 'positive',
@@ -819,17 +840,8 @@ function confirmAddingSound(params: {
         message: '添加成功',
         timeout: 5,
       });
-      // 清空相关数据
-      soundName.value = '';
-      sourceFileForSound.value = {
-        sha256: '',
-        name_id: '',
-        name: '',
-        type: '',
-      };
-      soundStartTime.value = 0;
-      soundEndTime.value = 0;
-      soundVolume.value = 0.0;
+      // 通过回调函数重置状态
+      params.onSuccess?.();
     } else {
       q.notify({
         type: 'negative',
