@@ -418,7 +418,21 @@
                       </q-input>
                     </q-card-section>
                     <q-card-actions align="right">
-                      <q-btn dense @click="previewSound" label="预览声音" color="secondary">
+                      <q-btn
+                        dense
+                        @click="
+                          previewSound({
+                            source_file_for_sound: sourceFileForSound,
+                            cut: {
+                              start_time: soundStartTime,
+                              end_time: soundEndTime,
+                              volume: soundVolume,
+                            },
+                          })
+                        "
+                        label="预览声音"
+                        color="secondary"
+                      >
                         <q-tooltip
                           :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
                           :delay="600"
@@ -426,7 +440,21 @@
                           按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
                         </q-tooltip>
                       </q-btn>
-                      <q-btn @click="confirmAddingSound" label="确定添加" color="primary" />
+                      <q-btn
+                        @click="
+                          confirmAddingSound({
+                            source_file_for_sound: sourceFileForSound,
+                            name: soundName,
+                            cut: {
+                              start_time: soundStartTime,
+                              end_time: soundEndTime,
+                              volume: soundVolume,
+                            },
+                          })
+                        "
+                        label="确定添加"
+                        color="primary"
+                      />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
@@ -748,12 +776,21 @@ const soundStartTime = ref<number>(0);
 const soundEndTime = ref<number>(0);
 const soundVolume = ref<number>(0.0);
 
-function confirmAddingSound() {
+// 重构confirmAddingSound函数,参数结构与ConfigSet保持一致
+function confirmAddingSound(params: {
+  source_file_for_sound: { sha256: string; name_id: string; type: string };
+  name: string; // 声音名称, 一般为空, 也可由用户自行定义
+  cut: {
+    start_time: number;
+    end_time: number;
+    volume: number;
+  };
+}) {
   // 必须选择一个源文件
   if (
-    sourceFileForSound.value.sha256 === '' &&
-    sourceFileForSound.value.type === '' &&
-    sourceFileForSound.value.name_id === ''
+    params.source_file_for_sound.sha256 === '' &&
+    params.source_file_for_sound.type === '' &&
+    params.source_file_for_sound.name_id === ''
   ) {
     q.notify({
       type: 'negative',
@@ -764,7 +801,7 @@ function confirmAddingSound() {
     return;
   }
   // 结束时间必须大于开始时间
-  if (soundEndTime.value <= soundStartTime.value) {
+  if (params.cut.end_time <= params.cut.start_time) {
     q.notify({
       type: 'negative',
       position: 'top',
@@ -773,22 +810,9 @@ function confirmAddingSound() {
     });
     return;
   }
-  ConfigSet('sounds.' + nanoid(), {
-    source_file_for_sound: {
-      sha256: sourceFileForSound.value.sha256,
-      name_id: sourceFileForSound.value.name_id,
-      type: sourceFileForSound.value.type,
-    },
-    name: soundName.value, // 声音名称, 一般为空, 也可由用户自行定义
-    cut: {
-      start_time: soundStartTime.value,
-      end_time: soundEndTime.value,
-      volume: soundVolume.value,
-    },
-    // volume:
-  }).then((re) => {
+
+  ConfigSet('sounds.' + nanoid(), params).then((re) => {
     if (re) {
-      // 添加成功
       q.notify({
         type: 'positive',
         position: 'top',
@@ -817,12 +841,20 @@ function confirmAddingSound() {
   });
 }
 
-function previewSound() {
+// 重构previewSound函数,使用相同的参数结构
+function previewSound(params: {
+  source_file_for_sound: { sha256: string; name_id: string; type: string };
+  cut: {
+    start_time: number;
+    end_time: number;
+    volume: number;
+  };
+}) {
   console.debug('预览声音');
   if (
-    sourceFileForSound.value.sha256 === '' &&
-    sourceFileForSound.value.type === '' &&
-    sourceFileForSound.value.name_id === ''
+    params.source_file_for_sound.sha256 === '' &&
+    params.source_file_for_sound.type === '' &&
+    params.source_file_for_sound.name_id === ''
   ) {
     q.notify({
       type: 'warning',
@@ -833,7 +865,7 @@ function previewSound() {
     return;
   }
   // 结束时间必须大于开始时间
-  if (soundEndTime.value <= soundStartTime.value) {
+  if (params.cut.end_time <= params.cut.start_time) {
     q.notify({
       type: 'negative',
       position: 'top',
@@ -843,7 +875,7 @@ function previewSound() {
     return;
   }
   // 时间值不能为负数
-  if (soundStartTime.value < 0 || soundEndTime.value < 0) {
+  if (params.cut.start_time < 0 || params.cut.end_time < 0) {
     q.notify({
       type: 'negative',
       position: 'top',
@@ -854,11 +886,11 @@ function previewSound() {
 
   PlaySound(
     pkgPath,
-    sourceFileForSound.value.sha256,
-    sourceFileForSound.value.type,
-    soundStartTime.value,
-    soundEndTime.value,
-    soundVolume.value
+    params.source_file_for_sound.sha256,
+    params.source_file_for_sound.type,
+    params.cut.start_time,
+    params.cut.end_time,
+    params.cut.volume
   ).then((result) => {
     if (!result) {
       q.notify({
