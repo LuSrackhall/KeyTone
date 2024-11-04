@@ -443,7 +443,14 @@
                       <q-btn
                         @click="
                           saveSoundConfig({
-                            source_file_for_sound: sourceFileForSound,
+                            // source_file_for_sound: sourceFileForSound ,  // 由于js/ts中，传递对象时是通过引用传递的。这意味着函数接收到的是对象的引用，而不是对象的副本。因此，函数内部可以访问和修改对象的所有属性。包括不希望有的name字段。
+                            // source_file_for_sound: { ...sourceFileForSound },  // 使用对象解构（{ ...sourceFileForSound }）会复制sourceFileForSound对象的所有可枚举属性到一个新的对象中。因此，如果sourceFileForSound对象中包含name字段，解构操作会将其包含在新对象中, 本质仍是将一个包含name字段的对象, 赋值给所需参数。
+                            source_file_for_sound: {
+                              sha256: sourceFileForSound.sha256,
+                              name_id: sourceFileForSound.name_id,
+                              type: sourceFileForSound.type,
+                            }, //手动选择字段：通过手动选择字段，可以确保只传递所需的字段，而不会包含任何不需要的字段。
+
                             name: soundName,
                             cut: {
                               start_time: soundStartTime,
@@ -705,7 +712,11 @@
                             @click="
                               saveSoundConfig({
                                 soundKey: selectedSound.soundKey,
-                                source_file_for_sound: selectedSound.soundValue.source_file_for_sound,
+                                source_file_for_sound: {
+                                  sha256: selectedSound.soundValue.source_file_for_sound.sha256,
+                                  name_id: selectedSound.soundValue.source_file_for_sound.name_id,
+                                  type: selectedSound.soundValue.source_file_for_sound.type,
+                                },
                                 name: selectedSound.soundValue.name,
                                 cut: selectedSound.soundValue.cut,
                                 onSuccess: () => {
