@@ -332,6 +332,29 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	keytonePkgRouters.POST("/delete", func(ctx *gin.Context) {
+		// 前端使用 axios 发送 POST 请求时使用了 JSON 格式而不是 form 格式,
+		// 所以需要使用 ShouldBind 来绑定 JSON 数据而不是 PostForm
+		type DeleteArg struct {
+			Key string `json:"key"`
+		}
+
+		var arg DeleteArg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.Key == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容key值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.DeleteValue(arg.Key)
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
 	keytonePkgRouters.POST("/sound_file_rename", func(ctx *gin.Context) {
 		type Arg struct {
 			Sha256 string `json:"sha256"`
