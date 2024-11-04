@@ -158,7 +158,7 @@
                         stack-label
                         v-model="selectedSoundFile"
                         :options="soundFileList"
-                        option-label="name"
+                        :option-label="(item) => item.name + item.type"
                         label="选择要管理的源文件"
                         dense
                       />
@@ -355,7 +355,7 @@
                         stack-label
                         v-model="sourceFileForSound"
                         :options="soundFileList"
-                        option-label="name"
+                        :option-label="(item) => item.name + item.type"
                         label="声音的源文件"
                         dense
                       />
@@ -614,11 +614,12 @@
                             :option-label="(item: any) => {
                               // 此处的:options本身就是soundFileList, 因此直接通过find查找并返回自身即可。
                               // 此处仅是为了避免直接使用其中元素值的name字段, 以让selectedSound.soundValue.source_file_for_sound也可享受name变化时的实时更新。
-                              return soundFileList.find(
+                              const soundFile = soundFileList.find(
                                 (soundFile) =>
                                   soundFile.sha256 === item.sha256 &&
                                   soundFile.name_id === item.name_id
-                              )?.name
+                              )
+                              return soundFile ? soundFile.name + soundFile.type : ''
                             }"
                             label="声音的源文件"
                             dense
