@@ -442,7 +442,7 @@
                       </q-btn>
                       <q-btn
                         @click="
-                          confirmAddingSound({
+                          saveSoundConfig({
                             source_file_for_sound: sourceFileForSound,
                             name: soundName,
                             cut: {
@@ -789,8 +789,9 @@ const soundStartTime = ref<number>(0);
 const soundEndTime = ref<number>(0);
 const soundVolume = ref<number>(0.0);
 
-// 重构confirmAddingSound函数,添加onSuccess回调参数
-function confirmAddingSound(params: {
+// 修改 confirmAddingSound 函数为更通用的形式, 并将 confirmAddingSound 重构名称为 saveSoundConfig
+function saveSoundConfig(params: {
+  soundKey?: string; // 可选参数，存在则为修改操作，不存在则为添加操作
   source_file_for_sound: { sha256: string; name_id: string; type: string };
   name: string; // 声音名称, 一般为空, 也可由用户自行定义
   cut: {
@@ -798,7 +799,7 @@ function confirmAddingSound(params: {
     end_time: number;
     volume: number;
   };
-  onSuccess?: () => void; // 添加成功后的回调函数
+  onSuccess?: () => void; // 成功后的回调函数, 可用于一些清空操作
 }) {
   // 必须选择一个源文件
   if (
@@ -825,28 +826,30 @@ function confirmAddingSound(params: {
     return;
   }
 
-  // 创建一个新对象,不包含onSuccess回调
+  // 创建一个新对象,不包含soundKey和onSuccess回调
   const configParams = {
     source_file_for_sound: params.source_file_for_sound,
     name: params.name,
     cut: params.cut,
   };
 
-  ConfigSet('sounds.' + nanoid(), configParams).then((re) => {
+  // 如果有soundKey则为修改操作，否则为添加操作（生成新的key）
+  const key = params.soundKey || nanoid();
+
+  ConfigSet('sounds.' + key, configParams).then((re) => {
     if (re) {
       q.notify({
         type: 'positive',
         position: 'top',
-        message: '添加成功',
+        message: params.soundKey ? '修改成功' : '添加成功',
         timeout: 5,
       });
-      // 通过回调函数重置状态
       params.onSuccess?.();
     } else {
       q.notify({
         type: 'negative',
         position: 'top',
-        message: '添加失败',
+        message: params.soundKey ? '修改失败' : '添加失败',
         timeout: 5,
       });
     }
