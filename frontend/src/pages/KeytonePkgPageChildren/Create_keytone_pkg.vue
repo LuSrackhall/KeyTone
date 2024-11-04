@@ -674,6 +674,73 @@
                             </template>
                           </q-input>
                         </q-card-section>
+
+                        <!-- 添加按钮组 -->
+                        <q-card-section :class="['flex justify-center gap-4']">
+                          <q-btn
+                            dense
+                            color="secondary"
+                            icon="play_arrow"
+                            label="预览声音"
+                            @click="
+                              previewSound({
+                                source_file_for_sound: selectedSound.soundValue.source_file_for_sound,
+                                cut: selectedSound.soundValue.cut,
+                              })
+                            "
+                          >
+                            <q-tooltip
+                              :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                              :delay="600"
+                            >
+                              按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
+                            </q-tooltip>
+                          </q-btn>
+
+                          <q-btn
+                            dense
+                            color="primary"
+                            icon="save"
+                            label="确认修改"
+                            @click="
+                              saveSoundConfig({
+                                soundKey: selectedSound.soundKey,
+                                source_file_for_sound: selectedSound.soundValue.source_file_for_sound,
+                                name: selectedSound.soundValue.name,
+                                cut: selectedSound.soundValue.cut,
+                                onSuccess: () => {
+                                  // q.notify({
+                                  //   type: 'positive',
+                                  //   position: 'top',
+                                  //   message: '修改成功',
+                                  //   timeout: 5,
+                                  // });
+                                },
+                              })
+                            "
+                          />
+
+                          <q-btn
+                            dense
+                            color="negative"
+                            icon="delete"
+                            label="删除声音"
+                            @click="
+                              deleteSound({
+                                soundKey: selectedSound.soundKey,
+                                onSuccess: () => {
+                                  selectedSound = undefined;
+                                  q.notify({
+                                    type: 'positive',
+                                    position: 'top',
+                                    message: '删除成功',
+                                    timeout: 5,
+                                  });
+                                },
+                              })
+                            "
+                          />
+                        </q-card-section>
                       </q-card>
                     </q-card-section>
 
@@ -740,6 +807,7 @@ import {
   SoundFileRename,
   SoundFileDelete,
   PlaySound,
+  ConfigDelete,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { onBeforeMount, ref, watch } from 'vue';
@@ -850,6 +918,21 @@ function saveSoundConfig(params: {
         type: 'negative',
         position: 'top',
         message: params.soundKey ? '修改失败' : '添加失败',
+        timeout: 5,
+      });
+    }
+  });
+}
+
+function deleteSound(params: { soundKey: string; onSuccess?: () => void }) {
+  ConfigDelete('sounds.' + params.soundKey).then((re) => {
+    if (re) {
+      params.onSuccess?.();
+    } else {
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: '删除失败',
         timeout: 5,
       });
     }
