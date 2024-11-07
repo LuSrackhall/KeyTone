@@ -774,6 +774,75 @@
             <div>根据裁剪定义好的声音, 制作按键声音。</div>
             <div>每个按键音, 都包括了按下声音和抬起声音, 制作时需要分别定义它们。</div>
             <div>当然, 如果只需要其中之一, 也可根据需求自由制作。</div>
+
+            <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑 start -->
+            <div>
+              <!-- ------------------------------------------------------------------------------ 制作新的按键音 -->
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="制作新的按键音"
+                  @click="
+                    () => {
+                      createNewKeySound = !createNewKeySound;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-dialog v-model="createNewKeySound" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 制作新的按键音 </q-card-section>
+                    <q-card-section :class="['p-b-1']">
+                      <!-- 对话框内容 -->
+                    </q-card-section>
+                    <q-card-actions align="right">
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+
+              <div :class="['p-2 text-zinc-600']">或</div>
+
+              <!-- -------------------------------------------------------------------------------编辑已有按键音 -->
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="编辑已有按键音"
+                  @click="
+                    () => {
+                      if (soundList.length === 0) {
+                        q.notify({
+                          type: 'warning',
+                          message: '当前没有可编辑的按键音',
+                          position: 'top',
+                        });
+                        return;
+                      }
+                      editExistingKeySound = true;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-dialog v-model="editExistingKeySound" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section
+                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
+                    >
+                      编辑已有按键音
+                    </q-card-section>
+                    <q-card-section>
+                      <!-- 对话框内容 -->
+                    </q-card-section>
+                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
+                      <q-btn flat label="Close" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+            </div>
+            <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑   end -->
+
             <q-stepper-navigation>
               <q-btn @click="step = 4" color="primary" label="Continue" />
               <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm" />
@@ -1047,6 +1116,12 @@ watch(selectedSound, () => {
     )?.name;
   }
 });
+
+// 按键音制作
+const createNewKeySound = ref(false);
+
+// 按键音编辑
+const editExistingKeySound = ref(false);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
