@@ -790,12 +790,222 @@
                 >
                 </q-btn>
                 <q-dialog v-model="createNewKeySound" backdrop-filter="invert(70%)">
-                  <q-card>
+                  <q-card :class="['min-w-[90%]']">
                     <q-card-section class="row items-center q-pb-none text-h6"> 制作新的按键音 </q-card-section>
                     <q-card-section :class="['p-b-1']">
-                      <!-- 对话框内容 -->
+                      <q-input
+                        outlined
+                        stack-label
+                        dense
+                        v-model="keySoundName"
+                        label="按键音名称"
+                        :placeholder="'新的按键音'"
+                      />
+                      <div class="flex flex-col mt-3">
+                        <q-btn
+                          :class="['bg-zinc-300 my-7 w-70% self-center']"
+                          label="配置按下声音"
+                          @click="configureDownSound = true"
+                        />
+                        <q-dialog v-model="configureDownSound" backdrop-filter="invert(70%)">
+                          <q-card :class="['min-w-[80%]']">
+                            <q-card-section class="row items-center q-pb-none text-h6"> 配置按下声音 </q-card-section>
+                            <q-card-section>
+                              <!-- 使用选择框选择模式 -->
+                              <q-select
+                                outlined
+                                stack-label
+                                v-model="playModeForDown"
+                                :options="playModeOptions"
+                                label="选择播放模式"
+                                dense
+                              />
+                            </q-card-section>
+                            <q-card-section>
+                              <!-- 选择声音的选项，支持多选 -->
+                              <q-select
+                                outlined
+                                stack-label
+                                v-model="selectedSoundsForDown"
+                                :options="soundList"
+                                :option-label="
+                                  (item) => {
+                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+                                    if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
+                                      return item.soundValue.name;
+                                    } else {
+                                      return (
+                                        soundFileList.find(
+                                          (soundFile) =>
+                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
+                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                        )?.name +
+                                        '     - ' +
+                                        ' [' +
+                                        item.soundValue.cut.start_time +
+                                        ' ~ ' +
+                                        item.soundValue.cut.end_time +
+                                        ']'
+                                      );
+                                    }
+                                  }
+                                "
+                                label="选择声音 (多选)"
+                                multiple
+                                use-chips
+                                dense
+                                :max-values="maxSelectionForDown"
+                                counter
+                                error-message="独立模式下, 至多选择一个声音"
+                                :注释="
+                                  () => {
+                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
+                                    /* :error = '()=>{
+                                          return true
+                                        }'
+                                    */
+                                    // 你需要手动调用它(像下方这样)
+                                    /* :error = '(()=>{
+                                          return true
+                                        })()'
+                                    */
+                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
+                                    // 因此, 想要用函数的方式并且响应式生效
+                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
+                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
+                                  }
+                                "
+                                :error="
+                                  playModeForDown.mode === 'single'
+                                    ? selectedSoundsForDown.length > 1
+                                      ? true
+                                      : false
+                                    : false
+                                "
+                              />
+                            </q-card-section>
+                            <q-card-actions align="right">
+                              <q-btn flat label="Close" color="primary" v-close-popup />
+                            </q-card-actions>
+                          </q-card>
+                        </q-dialog>
+                        <q-btn
+                          :class="['bg-zinc-300  m-b-7 w-70% self-center']"
+                          label="配置抬起声音"
+                          @click="configureUpSound = true"
+                        />
+                        <q-dialog v-model="configureUpSound" backdrop-filter="invert(70%)">
+                          <q-card :class="['min-w-[80%]']">
+                            <q-card-section class="row items-center q-pb-none text-h6"> 配置抬起声音 </q-card-section>
+                            <q-card-section>
+                              <!-- 使用选择框选择模式 -->
+                              <q-select
+                                outlined
+                                stack-label
+                                v-model="playModeForUp"
+                                :options="playModeOptions"
+                                label="选择播放模式"
+                                dense
+                              />
+                            </q-card-section>
+                            <q-card-section>
+                              <!-- 选择声音的选项，支持多选 -->
+                              <q-select
+                                outlined
+                                stack-label
+                                v-model="selectedSoundsForUp"
+                                :options="soundList"
+                                :option-label="
+                                  (item) => {
+                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+                                    if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
+                                      return item.soundValue.name;
+                                    } else {
+                                      return (
+                                        soundFileList.find(
+                                          (soundFile) =>
+                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
+                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                        )?.name +
+                                        '     - ' +
+                                        ' [' +
+                                        item.soundValue.cut.start_time +
+                                        ' ~ ' +
+                                        item.soundValue.cut.end_time +
+                                        ']'
+                                      );
+                                    }
+                                  }
+                                "
+                                label="选择声音 (多选)"
+                                multiple
+                                use-chips
+                                dense
+                                :max-values="maxSelectionForUp"
+                                counter
+                                error-message="独立模式下, 至多选择一个声音"
+                                :注释="
+                                  () => {
+                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
+                                    /* :error = '()=>{
+                                          return true
+                                        }'
+                                    */
+                                    // 你需要手动调用它(像下方这样)
+                                    /* :error = '(()=>{
+                                          return true
+                                        })()'
+                                    */
+                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
+                                    // 因此, 想要用函数的方式并且响应式生效
+                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
+                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
+                                  }
+                                "
+                                :error="
+                                  playModeForUp.mode === 'single'
+                                    ? selectedSoundsForUp.length > 1
+                                      ? true
+                                      : false
+                                    : false
+                                "
+                              />
+                            </q-card-section>
+                            <q-card-actions align="right">
+                              <q-btn flat label="Close" color="primary" v-close-popup />
+                            </q-card-actions>
+                          </q-card>
+                        </q-dialog>
+                      </div>
                     </q-card-section>
                     <q-card-actions align="right">
+                      <q-btn
+                        color="primary"
+                        label="确认添加"
+                        @click="
+                          saveKeySoundConfig(
+                            {
+                              key: nanoid(),
+                              name: keySoundName,
+                              playModeForDown,
+                              selectedSoundsForDown,
+                              playModeForUp,
+                              selectedSoundsForUp,
+                            },
+                            () => {
+                              // 关闭对话框
+                              createNewKeySound = !createNewKeySound;
+
+                              // 重置表单变量
+                              keySoundName = '新的按键音';
+                              selectedSoundsForDown = [];
+                              playModeForDown = { label: '随机', mode: 'random' };
+                              selectedSoundsForUp = [];
+                              playModeForUp = { label: '随机', mode: 'random' };
+                            }
+                          )
+                        "
+                      />
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
@@ -825,7 +1035,7 @@
                 >
                 </q-btn>
                 <q-dialog v-model="editExistingKeySound" backdrop-filter="invert(70%)">
-                  <q-card>
+                  <q-card :class="['min-w-[90%]']">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
                     >
@@ -891,7 +1101,7 @@ import {
   ConfigDelete,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
-import { onBeforeMount, ref, watch } from 'vue';
+import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -1117,11 +1327,103 @@ watch(selectedSound, () => {
   }
 });
 
+// 按键音
+type PlayMode = { label: string; mode: string };
+const playModeOptions: Array<PlayMode> = [
+  { label: '独立', mode: 'single' },
+  { label: '随机', mode: 'random' },
+  { label: '循环', mode: 'loop' },
+];
+
 // 按键音制作
 const createNewKeySound = ref(false);
 
+// -- createNewKeySound
+const keySoundName = ref<string>('新的按键音');
+const configureDownSound = ref(false);
+const configureUpSound = ref(false);
+
+// -- configureDownSound
+const selectedSoundsForDown = ref<Array<any>>([]);
+const playModeForDown = ref<PlayMode>({ label: '随机', mode: 'random' });
+const maxSelectionForDown = computed(() => {
+  return playModeForDown.value.mode === 'single' ? 1 : Infinity;
+});
+
+// -- configureUpSound
+const selectedSoundsForUp = ref<Array<any>>([]);
+const playModeForUp = ref<PlayMode>({ label: '随机', mode: 'random' });
+const maxSelectionForUp = computed(() => {
+  return playModeForUp.value.mode === 'single' ? 1 : Infinity;
+});
+
 // 按键音编辑
 const editExistingKeySound = ref(false);
+
+// 按键音api
+function saveKeySoundConfig(
+  params: {
+    key: string;
+    name: string;
+    playModeForDown: PlayMode;
+    selectedSoundsForDown: Array<any>;
+    playModeForUp: PlayMode;
+    selectedSoundsForUp: Array<any>;
+  },
+  onSuccess?: () => void
+) {
+  let isReturn = false;
+  if (params.playModeForDown.mode === 'single' && params.selectedSoundsForDown.length > 1) {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '失败: "按下声音"不符合要求, 请检查修改后重试',
+      timeout: 3000,
+    });
+    isReturn = true;
+  }
+  if (params.playModeForUp.mode === 'single' && params.selectedSoundsForUp.length > 1) {
+    q.notify({
+      type: 'negative',
+      position: 'top',
+      message: '失败: "抬起声音"不符合要求, 请检查修改后重试',
+      timeout: 3000,
+    });
+    isReturn = true;
+  }
+  if (isReturn) {
+    return;
+  }
+
+  const configParams = {
+    name: params.name,
+    down: {
+      mode: params.playModeForDown.mode,
+      value: params.selectedSoundsForDown.map((item) => {
+        return item.soundKey;
+      }),
+    },
+    up: {
+      mode: params.playModeForUp.mode,
+      value: params.selectedSoundsForUp.map((item) => {
+        return item.soundKey;
+      }),
+    },
+  };
+  ConfigSet('key_sounds.' + params.key, configParams).then((re) => {
+    if (re) {
+      q.notify({
+        type: 'positive',
+        position: 'top',
+        message: '修改成功',
+        timeout: 5,
+      });
+      if (onSuccess) {
+        onSuccess();
+      }
+    }
+  });
+}
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
