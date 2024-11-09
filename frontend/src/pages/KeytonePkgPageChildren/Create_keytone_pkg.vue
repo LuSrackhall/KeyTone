@@ -882,6 +882,8 @@
                                       : false
                                     : false
                                 "
+                                ref="downSoundSelectDom"
+                                @update:model-value="downSoundSelectDom?.hidePopup()"
                               />
                             </q-card-section>
                             <q-card-actions align="right">
@@ -969,6 +971,8 @@
                                       : false
                                     : false
                                 "
+                                ref="upSoundSelectDom"
+                                @update:model-value="upSoundSelectDom?.hidePopup()"
                               />
                             </q-card-section>
                             <q-card-actions align="right">
@@ -1089,7 +1093,7 @@
 <script setup lang="ts">
 import { debounce } from 'lodash';
 import { nanoid } from 'nanoid';
-import { useQuasar } from 'quasar';
+import { QSelect, useQuasar } from 'quasar';
 import {
   ConfigGet,
   ConfigSet,
@@ -1101,7 +1105,7 @@ import {
   ConfigDelete,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import { computed, onBeforeMount, ref, watch, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -1349,6 +1353,9 @@ const playModeForDown = ref<PlayMode>({ label: '随机', mode: 'random' });
 const maxSelectionForDown = computed(() => {
   return playModeForDown.value.mode === 'single' ? 1 : Infinity;
 });
+/* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
+const downSoundSelectDom = ref<QSelect>(); // 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性*/
+const downSoundSelectDom = useTemplateRef<QSelect>('downSoundSelectDom');
 
 // -- configureUpSound
 const selectedSoundsForUp = ref<Array<any>>([]);
@@ -1356,6 +1363,9 @@ const playModeForUp = ref<PlayMode>({ label: '随机', mode: 'random' });
 const maxSelectionForUp = computed(() => {
   return playModeForUp.value.mode === 'single' ? 1 : Infinity;
 });
+/* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
+const upSoundSelectDom = ref<QSelect>();*/
+const upSoundSelectDom = useTemplateRef<QSelect>('upSoundSelectDom');
 
 // 按键音编辑
 const editExistingKeySound = ref(false);
