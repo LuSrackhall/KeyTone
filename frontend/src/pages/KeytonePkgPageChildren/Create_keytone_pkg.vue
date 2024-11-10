@@ -1046,7 +1046,15 @@
                       编辑已有按键音
                     </q-card-section>
                     <q-card-section>
-                      <!-- 对话框内容 -->
+                      <q-select
+                        outlined
+                        stack-label
+                        v-model="selectedKeySound"
+                        :options="keySoundList"
+                        label="选择要编辑的按键音"
+                        :option-label="(item) => item.keySoundValue.name"
+                        dense
+                      />
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                       <q-btn flat label="Close" color="primary" v-close-popup />
@@ -1369,6 +1377,8 @@ const upSoundSelectDom = useTemplateRef<QSelect>('upSoundSelectDom');
 
 // 按键音编辑
 const editExistingKeySound = ref(false);
+const keySoundList = ref<Array<any>>([]);
+const selectedKeySound = ref<any>();
 
 // 按键音api
 function saveKeySoundConfig(
@@ -1553,6 +1563,10 @@ onBeforeMount(async () => {
     watch(soundList, (newVal) => {
       console.debug('观察soundList=', soundList.value);
     });
+
+    watch(keySoundList, (newVal) => {
+      console.debug('观察keySoundList=', keySoundList.value);
+    });
   }
 
   const pkgNameDelayed = debounce(
@@ -1585,7 +1599,7 @@ onBeforeMount(async () => {
       audioFiles.value = [];
     }
 
-    // 2. 映射配置文件中的sounds到ui中的soundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
+    // 映射配置文件中的sounds到ui中的soundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
     if (keyTonePkgData.sounds !== undefined) {
       const sounds = Object.entries(keyTonePkgData.sounds).map(([key, value]) => ({
         soundKey: key,
@@ -1601,6 +1615,16 @@ onBeforeMount(async () => {
       }>;
     } else {
       soundList.value = [];
+    }
+
+    // 映射配置文件中的key_sounds到ui中的keySoundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
+    if (keyTonePkgData.key_sounds !== undefined) {
+      keySoundList.value = Object.entries(keyTonePkgData.key_sounds).map(([key, value]) => ({
+        keySoundKey: key,
+        keySoundValue: value,
+      }));
+    } else {
+      keySoundList.value = [];
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
