@@ -991,10 +991,8 @@
                             {
                               key: nanoid(),
                               name: keySoundName,
-                              playModeForDown,
-                              selectedSoundsForDown,
-                              playModeForUp,
-                              selectedSoundsForUp,
+                              down: { mode: playModeForDown.mode, value: selectedSoundsForDown },
+                              up: { mode: playModeForUp.mode, value: selectedSoundsForUp },
                             },
                             () => {
                               // 关闭对话框
@@ -1385,15 +1383,13 @@ function saveKeySoundConfig(
   params: {
     key: string;
     name: string;
-    playModeForDown: PlayMode;
-    selectedSoundsForDown: Array<any>;
-    playModeForUp: PlayMode;
-    selectedSoundsForUp: Array<any>;
+    down: { mode: string; value: Array<any> };
+    up: { mode: string; value: Array<any> };
   },
   onSuccess?: () => void
 ) {
   let isReturn = false;
-  if (params.playModeForDown.mode === 'single' && params.selectedSoundsForDown.length > 1) {
+  if (params.down.mode === 'single' && params.down.value.length > 1) {
     q.notify({
       type: 'negative',
       position: 'top',
@@ -1402,7 +1398,7 @@ function saveKeySoundConfig(
     });
     isReturn = true;
   }
-  if (params.playModeForUp.mode === 'single' && params.selectedSoundsForUp.length > 1) {
+  if (params.up.mode === 'single' && params.up.value.length > 1) {
     q.notify({
       type: 'negative',
       position: 'top',
@@ -1418,14 +1414,14 @@ function saveKeySoundConfig(
   const configParams = {
     name: params.name,
     down: {
-      mode: params.playModeForDown.mode,
-      value: params.selectedSoundsForDown.map((item) => {
+      mode: params.down.mode,
+      value: params.down.value.map((item) => {
         return item.soundKey;
       }),
     },
     up: {
-      mode: params.playModeForUp.mode,
-      value: params.selectedSoundsForUp.map((item) => {
+      mode: params.up.mode,
+      value: params.up.value.map((item) => {
         return item.soundKey;
       }),
     },
