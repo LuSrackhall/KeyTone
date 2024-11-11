@@ -1023,7 +1023,7 @@
                   label="编辑已有按键音"
                   @click="
                     () => {
-                      if (soundList.length === 0) {
+                      if (keySoundList.length === 0) {
                         q.notify({
                           type: 'warning',
                           message: '当前没有可编辑的按键音',
