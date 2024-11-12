@@ -1223,11 +1223,11 @@
                               })
                             "
                           />
-                          <!-- <q-btn
+                          <q-btn
                             dense
                             color="negative"
                             icon="delete"
-                            label="删除按键音"
+                            label="删除键音"
                             @click="
                               deleteKeySound({
                                 keySoundKey: selectedKeySound.keySoundKey,
@@ -1242,7 +1242,7 @@
                                 },
                               })
                             "
-                          /> -->
+                          />
                         </q-card-section>
                       </q-card>
                     </q-card-section>
@@ -1656,6 +1656,22 @@ function saveKeySoundConfig(
         type: 'negative',
         position: 'top',
         message: params.key ? '修改失败' : '添加失败',
+        timeout: 5,
+      });
+    }
+  });
+}
+
+// 删除键音
+function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void }) {
+  ConfigDelete('key_sounds.' + params.keySoundKey).then((re) => {
+    if (re) {
+      params.onSuccess?.();
+    } else {
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: '删除失败',
         timeout: 5,
       });
     }
