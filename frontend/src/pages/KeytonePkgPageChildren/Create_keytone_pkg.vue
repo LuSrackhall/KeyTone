@@ -1054,6 +1054,198 @@
                         dense
                       />
                     </q-card-section>
+                    <!-- 以卡片的形式, 展示选择的按键音 -->
+                    <q-card-section
+                      :class="['flex flex-col m-t-3']"
+                      v-if="selectedKeySound?.keySoundKey !== '' && selectedKeySound !== undefined"
+                    >
+                      <q-card :class="['flex flex-col px-3 pb-3']">
+                        <q-badge
+                          transparent
+                          color="orange"
+                          :label="selectedKeySound.keySoundValue.name"
+                          :class="['absolute overflow-visible']"
+                        />
+                        <q-card-section :class="['p-b-1 mt-3']">
+                          <q-input
+                            outlined
+                            stack-label
+                            dense
+                            v-model="selectedKeySound.keySoundValue.name"
+                            label="按键音名称"
+                            :placeholder="'新的按键音'"
+                          />
+                          <div class="flex flex-col mt-3">
+                            <q-btn
+                              :class="['bg-zinc-300 my-7 w-70% self-center']"
+                              label="配置按下声音"
+                              @click="edit_configureDownSound = true"
+                            />
+                            <q-dialog v-model="edit_configureDownSound" backdrop-filter="invert(70%)">
+                              <q-card :class="['min-w-[80%]']">
+                                <q-card-section class="row items-center q-pb-none text-h6">
+                                  配置按下声音
+                                </q-card-section>
+                                <q-card-section>
+                                  <q-select
+                                    outlined
+                                    stack-label
+                                    v-model="selectedKeySound.keySoundValue.down.mode"
+                                    :options="playModeOptions"
+                                    label="选择播放模式"
+                                    dense
+                                  />
+                                </q-card-section>
+                                <q-card-section>
+                                  <q-select
+                                    outlined
+                                    stack-label
+                                    v-model="selectedKeySound.keySoundValue.down.value"
+                                    :options="soundList"
+                                    :option-label="
+                                      (item) =>
+                                        item.soundValue.name ||
+                                        soundFileList.find(
+                                          (soundFile) =>
+                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
+                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                        )?.name +
+                                          ' - [' +
+                                          item.soundValue.cut.start_time +
+                                          ' ~ ' +
+                                          item.soundValue.cut.end_time +
+                                          ']'
+                                    "
+                                    label="选择声音 (多选)"
+                                    multiple
+                                    use-chips
+                                    dense
+                                    :max-values="
+                                      selectedKeySound.keySoundValue.down.mode.mode === 'single' ? 1 : Infinity
+                                    "
+                                    counter
+                                    error-message="独立模式下, 至多选择一个声音"
+                                    :error="
+                                      selectedKeySound.keySoundValue.down.mode.mode === 'single' &&
+                                      selectedKeySound.keySoundValue.down.value.length > 1
+                                    "
+                                    ref="edit_downSoundSelectDom"
+                                    @update:model-value="edit_downSoundSelectDom?.hidePopup()"
+                                  />
+                                </q-card-section>
+                                <q-card-actions align="right">
+                                  <q-btn flat label="Close" color="primary" v-close-popup />
+                                </q-card-actions>
+                              </q-card>
+                            </q-dialog>
+                            <q-btn
+                              :class="['bg-zinc-300 m-b-7 w-70% self-center']"
+                              label="配置抬起声音"
+                              @click="edit_configureUpSound = true"
+                            />
+                            <q-dialog v-model="edit_configureUpSound" backdrop-filter="invert(70%)">
+                              <q-card :class="['min-w-[80%]']">
+                                <q-card-section class="row items-center q-pb-none text-h6">
+                                  配置抬起声音
+                                </q-card-section>
+                                <q-card-section>
+                                  <q-select
+                                    outlined
+                                    stack-label
+                                    v-model="selectedKeySound.keySoundValue.up.mode"
+                                    :options="playModeOptions"
+                                    label="选择播放模式"
+                                    dense
+                                  />
+                                </q-card-section>
+                                <q-card-section>
+                                  <q-select
+                                    outlined
+                                    stack-label
+                                    v-model="selectedKeySound.keySoundValue.up.value"
+                                    :options="soundList"
+                                    :option-label="
+                                      (item) =>
+                                        item.soundValue.name ||
+                                        soundFileList.find(
+                                          (soundFile) =>
+                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
+                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                        )?.name +
+                                          ' - [' +
+                                          item.soundValue.cut.start_time +
+                                          ' ~ ' +
+                                          item.soundValue.cut.end_time +
+                                          ']'
+                                    "
+                                    label="选择声音 (多选)"
+                                    multiple
+                                    use-chips
+                                    dense
+                                    :max-values="
+                                      selectedKeySound.keySoundValue.up.mode.mode === 'single' ? 1 : Infinity
+                                    "
+                                    counter
+                                    error-message="独立模式下, 至多选择一个声音"
+                                    :error="
+                                      selectedKeySound.keySoundValue.up.mode.mode === 'single' &&
+                                      selectedKeySound.keySoundValue.up.value.length > 1
+                                    "
+                                    ref="edit_upSoundSelectDom"
+                                    @update:model-value="edit_upSoundSelectDom?.hidePopup()"
+                                  />
+                                </q-card-section>
+                                <q-card-actions align="right">
+                                  <q-btn flat label="Close" color="primary" v-close-popup />
+                                </q-card-actions>
+                              </q-card>
+                            </q-dialog>
+                          </div>
+                        </q-card-section>
+                        <q-card-section :class="['flex justify-center gap-4']">
+                          <q-btn
+                            dense
+                            color="primary"
+                            icon="save"
+                            label="确认修改"
+                            @click="
+                              saveKeySoundConfig({
+                                key: selectedKeySound.keySoundKey,
+                                name: selectedKeySound.keySoundValue.name,
+                                down: {
+                                  mode: selectedKeySound.keySoundValue.down.mode.mode,
+                                  value: selectedKeySound.keySoundValue.down.value,
+                                },
+                                up: {
+                                  mode: selectedKeySound.keySoundValue.up.mode.mode,
+                                  value: selectedKeySound.keySoundValue.up.value,
+                                },
+                              })
+                            "
+                          />
+                          <!-- <q-btn
+                            dense
+                            color="negative"
+                            icon="delete"
+                            label="删除按键音"
+                            @click="
+                              deleteKeySound({
+                                keySoundKey: selectedKeySound.keySoundKey,
+                                onSuccess: () => {
+                                  selectedKeySound = undefined;
+                                  q.notify({
+                                    type: 'positive',
+                                    position: 'top',
+                                    message: '删除成功',
+                                    timeout: 5,
+                                  });
+                                },
+                              })
+                            "
+                          /> -->
+                        </q-card-section>
+                      </q-card>
+                    </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                       <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
@@ -1375,8 +1567,28 @@ const upSoundSelectDom = useTemplateRef<QSelect>('upSoundSelectDom');
 
 // 按键音编辑
 const editExistingKeySound = ref(false);
+
+// -- editExistingKeySound
+const edit_configureDownSound = ref(false);
+const edit_configureUpSound = ref(false);
+
+// -- edit_configureDownSound / edit_configureUpSound
+const edit_downSoundSelectDom = useTemplateRef<QSelect>('edit_downSoundSelectDom');
+const edit_upSoundSelectDom = useTemplateRef<QSelect>('edit_upSoundSelectDom');
 const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
+
+watch(selectedKeySound, () => {
+  console.log('观察selectedKeySound=', selectedKeySound.value);
+  if (selectedKeySound.value) {
+    selectedKeySound.value.keySoundValue.down.value = soundList.value.filter((item) => {
+      return selectedKeySound.value.keySoundValue.down.value.includes(item.soundKey);
+    });
+    selectedKeySound.value.keySoundValue.up.value = soundList.value.filter((item) => {
+      return selectedKeySound.value.keySoundValue.up.value.includes(item.soundKey);
+    });
+  }
+});
 
 // 按键音api
 function saveKeySoundConfig(
