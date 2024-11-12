@@ -827,29 +827,35 @@
                                 outlined
                                 stack-label
                                 v-model="selectedSoundsForDown"
-                                :options="soundList"
-                                :option-label="
-                                  (item) => {
+                                :options="downSoundList"
+                                :option-label="(item: any) => {
+                                  if (item.key === 'audio_files') {
+                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                  }
+                                  if (item.key === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
-                                      return item.soundValue.name;
+                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+                                      return item.value.soundValue.name;
                                     } else {
-                                      return (
+                                      return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
-                                          (soundFile) =>
-                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                          (soundFile:any) =>
+                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
+                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
                                         )?.name +
                                         '     - ' +
                                         ' [' +
-                                        item.soundValue.cut.start_time +
+                                        item.value.soundValue?.cut?.start_time +
                                         ' ~ ' +
-                                        item.soundValue.cut.end_time +
+                                        item.value.soundValue?.cut?.end_time +
                                         ']'
                                       );
                                     }
                                   }
-                                "
+                                  if (item.key === 'key_sounds') {
+                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                  }
+                                }"
                                 label="选择声音 (多选)"
                                 multiple
                                 use-chips
@@ -885,6 +891,65 @@
                                 ref="downSoundSelectDom"
                                 @update:model-value="downSoundSelectDom?.hidePopup()"
                               />
+                              <div class="h-3">
+                                <q-option-group
+                                  dense
+                                  v-model="downTypeGroup"
+                                  :options="options"
+                                  type="checkbox"
+                                  class="absolute left-8"
+                                >
+                                  <template #label-0="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>本软件支持将源文件直接作为声音。</div>
+                                          <div>前提是</div>
+                                          <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-1="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>默认仅从声音列表中选择。</div>
+                                          <div>如有需求也可勾选其它受支持列表。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-2="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>本软件支持将其它按键音作为声音。</div>
+                                          <div>或者说</div>
+                                          <div>本软件支持继承其它按键音的配置。</div>
+                                          <div>⬇</div>
+                                          <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                </q-option-group>
+                              </div>
                             </q-card-section>
                             <q-card-actions align="right">
                               <q-btn flat label="Close" color="primary" v-close-popup />
@@ -916,29 +981,35 @@
                                 outlined
                                 stack-label
                                 v-model="selectedSoundsForUp"
-                                :options="soundList"
-                                :option-label="
-                                  (item) => {
+                                :options="upSoundList"
+                                :option-label="(item: any) => {
+                                  if (item.key === 'audio_files') {
+                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                  }
+                                  if (item.key === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
-                                      return item.soundValue.name;
+                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+                                      return item.value.soundValue.name;
                                     } else {
-                                      return (
+                                      return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
-                                          (soundFile) =>
-                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
+                                          (soundFile:any) =>
+                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
+                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
                                         )?.name +
                                         '     - ' +
                                         ' [' +
-                                        item.soundValue.cut.start_time +
+                                        item.value.soundValue?.cut?.start_time +
                                         ' ~ ' +
-                                        item.soundValue.cut.end_time +
+                                        item.value.soundValue?.cut?.end_time +
                                         ']'
                                       );
                                     }
                                   }
-                                "
+                                  if (item.key === 'key_sounds') {
+                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                  }
+                                }"
                                 label="选择声音 (多选)"
                                 multiple
                                 use-chips
@@ -974,6 +1045,65 @@
                                 ref="upSoundSelectDom"
                                 @update:model-value="upSoundSelectDom?.hidePopup()"
                               />
+                              <div class="h-3">
+                                <q-option-group
+                                  dense
+                                  v-model="upTypeGroup"
+                                  :options="options"
+                                  type="checkbox"
+                                  class="absolute left-8"
+                                >
+                                  <template #label-0="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>本软件支持将源文件直接作为声音。</div>
+                                          <div>前提是</div>
+                                          <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-1="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>默认仅从声音列表中选择。</div>
+                                          <div>如有需求也可勾选其它受支持列表。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-2="props">
+                                    <q-item-label>
+                                      {{ props.label }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>本软件支持将其它按键音作为声音。</div>
+                                          <div>或者说</div>
+                                          <div>本软件支持继承其它按键音的配置。</div>
+                                          <div>⬇</div>
+                                          <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                </q-option-group>
+                              </div>
                             </q-card-section>
                             <q-card-actions align="right">
                               <q-btn flat label="Close" color="primary" v-close-popup />
@@ -1529,6 +1659,13 @@ watch(selectedSound, () => {
   }
 });
 
+// 选项列表(其中包含: 源文件、声音、按键音 三种选项可供选择)
+const options = [
+  { label: '源文件', value: 'audio_files' },
+  { label: '声音', value: 'sounds' },
+  { label: '按键音', value: 'key_sounds' },
+];
+
 // 按键音
 type PlayMode = { label: string; mode: string };
 const playModeOptions: Array<PlayMode> = [
@@ -1554,6 +1691,27 @@ const maxSelectionForDown = computed(() => {
 /* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
 const downSoundSelectDom = ref<QSelect>(); // 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性*/
 const downSoundSelectDom = useTemplateRef<QSelect>('downSoundSelectDom');
+const downTypeGroup = ref<Array<string>>(['sounds']);
+const downSoundList = computed(() => {
+  const List: Array<any> = [];
+  if (downTypeGroup.value.includes('audio_files')) {
+    soundFileList.value.forEach((item) => {
+      List.push({ key: 'audio_files', value: item });
+    });
+  }
+  if (downTypeGroup.value.includes('sounds')) {
+    soundList.value.forEach((item) => {
+      List.push({ key: 'sounds', value: item });
+    });
+  }
+  if (downTypeGroup.value.includes('key_sounds')) {
+    keySoundList.value.forEach((item) => {
+      List.push({ key: 'key_sounds', value: item });
+    });
+  }
+  console.log('List=', List);
+  return List;
+});
 
 // -- configureUpSound
 const selectedSoundsForUp = ref<Array<any>>([]);
@@ -1564,6 +1722,26 @@ const maxSelectionForUp = computed(() => {
 /* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
 const upSoundSelectDom = ref<QSelect>();*/
 const upSoundSelectDom = useTemplateRef<QSelect>('upSoundSelectDom');
+const upTypeGroup = ref<Array<string>>(['sounds']);
+const upSoundList = computed(() => {
+  const List: Array<any> = [];
+  if (upTypeGroup.value.includes('audio_files')) {
+    soundFileList.value.forEach((item) => {
+      List.push({ key: 'audio_files', value: item });
+    });
+  }
+  if (upTypeGroup.value.includes('sounds')) {
+    soundList.value.forEach((item) => {
+      List.push({ key: 'sounds', value: item });
+    });
+  }
+  if (upTypeGroup.value.includes('key_sounds')) {
+    keySoundList.value.forEach((item) => {
+      List.push({ key: 'key_sounds', value: item });
+    });
+  }
+  return List;
+});
 
 // 按键音编辑
 const editExistingKeySound = ref(false);
@@ -1628,13 +1806,29 @@ function saveKeySoundConfig(
     down: {
       mode: params.down.mode,
       value: params.down.value.map((item) => {
-        return item.soundKey;
+        if (item.key === 'audio_files') {
+          return { type: 'audio_files', value: item.value.sha256 };
+        }
+        if (item.key === 'sounds') {
+          return { type: 'sounds', value: item.value.soundKey };
+        }
+        if (item.key === 'key_sounds') {
+          return { type: 'key_sounds', value: item.value.keySoundKey };
+        }
       }),
     },
     up: {
       mode: params.up.mode,
       value: params.up.value.map((item) => {
-        return item.soundKey;
+        if (item.key === 'audio_files') {
+          return { type: 'audio_files', value: item.value.sha256 };
+        }
+        if (item.key === 'sounds') {
+          return { type: 'sounds', value: item.value.soundKey };
+        }
+        if (item.key === 'key_sounds') {
+          return { type: 'key_sounds', value: item.value.keySoundKey };
+        }
       }),
     },
   };
