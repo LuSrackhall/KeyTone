@@ -989,7 +989,7 @@
                         @click="
                           saveKeySoundConfig(
                             {
-                              key: nanoid(),
+                              key: '',
                               name: keySoundName,
                               down: { mode: playModeForDown.mode, value: selectedSoundsForDown },
                               up: { mode: playModeForUp.mode, value: selectedSoundsForUp },
@@ -1638,17 +1638,26 @@ function saveKeySoundConfig(
       }),
     },
   };
-  ConfigSet('key_sounds.' + params.key, configParams).then((re) => {
+
+  const key = params.key || nanoid();
+  ConfigSet('key_sounds.' + key, configParams).then((re) => {
     if (re) {
       q.notify({
         type: 'positive',
         position: 'top',
-        message: '修改成功',
+        message: params.key ? '修改成功' : '添加成功',
         timeout: 5,
       });
       if (onSuccess) {
         onSuccess();
       }
+    } else {
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: params.key ? '修改失败' : '添加失败',
+        timeout: 5,
+      });
     }
   });
 }
