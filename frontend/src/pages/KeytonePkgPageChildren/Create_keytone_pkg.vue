@@ -1268,11 +1268,12 @@
                                     :option-label="
                                       (item: any) => {
                                         if (item.type === 'audio_files') {
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                          const soundFile = soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id);
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFile?.name + soundFile?.type;
                                         }
                                         if (item.type === 'sounds') {
 
-                                          const sound = soundList.find((sound) => sound.soundKey === item.value);
+                                          const sound = soundList.find((sound) => sound.soundKey === item.value.soundKey);
 
                                           if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
                                             return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
@@ -1293,7 +1294,7 @@
                                           }
                                         }
                                         if (item.type === 'key_sounds') {
-                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value);
+                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value.keySoundKey);
                                           return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
                                         }
                                       }
@@ -1310,10 +1311,10 @@
                                           return item.value.sha256 + item.value.name_id;
                                         }
                                         if (item.type === 'sounds') {
-                                          return item.value;
+                                          return item.value.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
-                                          return item.value;
+                                          return item.value.keySoundKey;
                                         }
                                       }
                                     "
@@ -1427,11 +1428,12 @@
                                     :option-label="
                                       (item: any) => {
                                         if (item.type === 'audio_files') {
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                          const soundFile = soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id);
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFile?.name + soundFile?.type;
                                         }
                                         if (item.type === 'sounds') {
 
-                                          const sound = soundList.find((sound) => sound.soundKey === item.value);
+                                          const sound = soundList.find((sound) => sound.soundKey === item.value.soundKey);
 
                                           if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
                                             return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
@@ -1452,27 +1454,29 @@
                                           }
                                         }
                                         if (item.type === 'key_sounds') {
-                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value);
+                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value.keySoundKey);
                                           return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
                                         }
                                       }
                                     "
                                     :option-value="
                                       /**
-                                       * json中的存储格式分别是
-                                       * {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-                                       * {key:'sounds', value:string} // 此处value, 是soundKey
-                                       * {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+                                       * 虽然json中的存储格式分别是
+                                       * - {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+                                       * - {key:'sounds', value:string} // 此处value, 是soundKey
+                                       * - {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+                                       * 但是, 我们通过watch对当前组件的model做了变更, 使其类型提前由uuid转换成了相关对象
+                                       * - 因此, 此处仍按照对应对象处理即可
                                        */
                                       (item) => {
                                         if (item.type === 'audio_files') {
                                           return item.value.sha256 + item.value.name_id;
                                         }
                                         if (item.type === 'sounds') {
-                                          return item.value;
+                                          return item.value.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
-                                          return item.value;
+                                          return item.value.keySoundKey;
                                         }
                                       }
                                     "
@@ -2016,8 +2020,71 @@ const edit_upSoundList = computed(() => {
 const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
+// 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
 watch(selectedKeySound, () => {
   console.debug('观察selectedKeySound=', selectedKeySound.value);
+  selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
+    /**
+     * json中的存储格式分别是
+     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+     *  {key:'sounds', value:string} // 此处value, 是soundKey
+     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+     */
+    if (item.type === 'audio_files') {
+      return {
+        type: 'audio_files',
+        value: soundFileList.value.find(
+          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        ),
+      };
+    }
+    if (item.type === 'sounds') {
+      return {
+        type: 'sounds',
+        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
+        value: soundList.value.find((sound) => sound.soundKey === item.value),
+      };
+    }
+    if (item.type === 'key_sounds') {
+      return {
+        type: 'key_sounds',
+        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
+        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+      };
+    }
+    return item;
+  });
+  selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
+    /**
+     * json中的存储格式分别是
+     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+     *  {key:'sounds', value:string} // 此处value, 是soundKey
+     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+     */
+    if (item.type === 'audio_files') {
+      return {
+        type: 'audio_files',
+        value: soundFileList.value.find(
+          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        ),
+      };
+    }
+    if (item.type === 'sounds') {
+      return {
+        type: 'sounds',
+        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
+        value: soundList.value.find((sound) => sound.soundKey === item.value),
+      };
+    }
+    if (item.type === 'key_sounds') {
+      return {
+        type: 'key_sounds',
+        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
+        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+      };
+    }
+    return item;
+  });
 });
 
 // 按键音api
