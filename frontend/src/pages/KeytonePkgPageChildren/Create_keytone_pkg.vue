@@ -864,6 +864,18 @@
                                     return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
                                   }
                                 }"
+                                :option-value="(item: any) => {
+                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                                  if (item.type === 'audio_files'){
+                                    return item.value.sha256 + item.value.name_id
+                                  }
+                                  if(item.type === 'sounds'){
+                                    return item.value.soundKey
+                                  }
+                                  if(item.type === 'key_sounds'){
+                                    return item.value.keySoundKey
+                                  }
+                                }"
                                 label="选择声音 (多选)"
                                 multiple
                                 use-chips
@@ -1016,6 +1028,18 @@
                                   }
                                   if (item.type === 'key_sounds') {
                                     return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                  }
+                                }"
+                                :option-value="(item: any) => {
+                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                                  if (item.type === 'audio_files'){
+                                    return item.value.sha256 + item.value.name_id
+                                  }
+                                  if(item.type === 'sounds'){
+                                    return item.value.soundKey
+                                  }
+                                  if(item.type === 'key_sounds'){
+                                    return item.value.keySoundKey
                                   }
                                 }"
                                 label="选择声音 (多选)"
