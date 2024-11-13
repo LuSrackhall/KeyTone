@@ -1807,7 +1807,10 @@ function saveKeySoundConfig(
       mode: params.down.mode,
       value: params.down.value.map((item) => {
         if (item.key === 'audio_files') {
-          return { type: 'audio_files', value: item.value.sha256 };
+          return {
+            type: 'audio_files',
+            value: { sha256: item.value.sha256, name_id: item.value.name_id, type: item.value.type },
+          };
         }
         if (item.key === 'sounds') {
           return { type: 'sounds', value: item.value.soundKey };
@@ -1821,7 +1824,10 @@ function saveKeySoundConfig(
       mode: params.up.mode,
       value: params.up.value.map((item) => {
         if (item.key === 'audio_files') {
-          return { type: 'audio_files', value: item.value.sha256 };
+          return {
+            type: 'audio_files',
+            value: { sha256: item.value.sha256, name_id: item.value.name_id, type: item.value.type },
+          };
         }
         if (item.key === 'sounds') {
           return { type: 'sounds', value: item.value.soundKey };
