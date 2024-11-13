@@ -1770,15 +1770,53 @@ const selectedKeySound = ref<any>();
  *     * 我们此处仍保留watch, 以便于观测selectedKeySound的值, 以更好的调试
  */
 watch(selectedKeySound, () => {
-  console.debug('观察selectedKeySound=', selectedKeySound.value);
-  // if (selectedKeySound.value) {
-  //   selectedKeySound.value.keySoundValue.down.value = soundList.value.filter((item) => {
-  //     return selectedKeySound.value.keySoundValue.down.value.includes(item.soundKey);
-  //   });
-  //   selectedKeySound.value.keySoundValue.up.value = soundList.value.filter((item) => {
-  //     return selectedKeySound.value.keySoundValue.up.value.includes(item.soundKey);
-  //   });
-  // }
+  console.log('观察selectedKeySound=', selectedKeySound.value);
+  selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
+    if (item.type === 'audio_files') {
+      return {
+        key: 'audio_files',
+        value: soundFileList.value.find(
+          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        ),
+      };
+    }
+    if (item.type === 'sounds') {
+      return {
+        key: 'sounds',
+        value: soundList.value.find((sound) => sound.soundKey === item.value),
+      };
+    }
+    if (item.type === 'key_sounds') {
+      return {
+        key: 'key_sounds',
+        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+      };
+    }
+    return item;
+  });
+  selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
+    if (item.type === 'audio_files') {
+      return {
+        key: 'audio_files',
+        value: soundFileList.value.find(
+          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        ),
+      };
+    }
+    if (item.type === 'sounds') {
+      return {
+        key: 'sounds',
+        value: soundList.value.find((sound) => sound.soundKey === item.value),
+      };
+    }
+    if (item.type === 'key_sounds') {
+      return {
+        key: 'key_sounds',
+        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+      };
+    }
+    return item;
+  });
 });
 
 // 按键音api
