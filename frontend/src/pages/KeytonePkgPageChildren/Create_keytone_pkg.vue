@@ -830,12 +830,12 @@
                                 :options="downSoundList"
                                 :option-label="(item: any) => {
                                   if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type
                                   }
                                   if (item.type === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
                                     if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.soundValue.name)
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
                                     } else {
                                       return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
@@ -984,12 +984,12 @@
                                 :options="upSoundList"
                                 :option-label="(item: any) => {
                                   if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
                                   }
                                   if (item.type === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
                                     if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (item.value.soundValue.name)
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
                                     } else {
                                       return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
