@@ -1264,7 +1264,7 @@
                                     outlined
                                     stack-label
                                     v-model="selectedKeySound.keySoundValue.down.value"
-                                    :options="soundList"
+                                    :options="edit_downSoundList"
                                     :option-label="
                                       (item: any) => {
                                         if (item.type === 'audio_files') {
@@ -1333,6 +1333,65 @@
                                     ref="edit_downSoundSelectDom"
                                     @update:model-value="edit_downSoundSelectDom?.hidePopup()"
                                   />
+                                  <div class="h-3">
+                                    <q-option-group
+                                      dense
+                                      v-model="edit_downTypeGroup"
+                                      :options="options"
+                                      type="checkbox"
+                                      class="absolute left-8"
+                                    >
+                                      <template #label-0="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>本软件支持将源文件直接作为声音。</div>
+                                              <div>前提是</div>
+                                              <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                      <template v-slot:label-1="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>默认仅从声音列表中选择。</div>
+                                              <div>如有需求也可勾选其它受支持列表。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                      <template v-slot:label-2="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>本软件支持将其它按键音作为声音。</div>
+                                              <div>或者说</div>
+                                              <div>本软件支持继承其它按键音的配置。</div>
+                                              <div>⬇</div>
+                                              <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                    </q-option-group>
+                                  </div>
                                 </q-card-section>
                                 <q-card-actions align="right">
                                   <q-btn flat label="Close" color="primary" v-close-popup />
@@ -1364,7 +1423,7 @@
                                     outlined
                                     stack-label
                                     v-model="selectedKeySound.keySoundValue.up.value"
-                                    :options="soundList"
+                                    :options="edit_upSoundList"
                                     :option-label="
                                       (item: any) => {
                                         if (item.type === 'audio_files') {
@@ -1433,6 +1492,65 @@
                                     ref="edit_upSoundSelectDom"
                                     @update:model-value="edit_upSoundSelectDom?.hidePopup()"
                                   />
+                                  <div class="h-3">
+                                    <q-option-group
+                                      dense
+                                      v-model="edit_upTypeGroup"
+                                      :options="options"
+                                      type="checkbox"
+                                      class="absolute left-8"
+                                    >
+                                      <template #label-0="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>本软件支持将源文件直接作为声音。</div>
+                                              <div>前提是</div>
+                                              <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                      <template v-slot:label-1="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>默认仅从声音列表中选择。</div>
+                                              <div>如有需求也可勾选其它受支持列表。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                      <template v-slot:label-2="props">
+                                        <q-item-label>
+                                          {{ props.label }}
+                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <div>本软件支持将其它按键音作为声音。</div>
+                                              <div>或者说</div>
+                                              <div>本软件支持继承其它按键音的配置。</div>
+                                              <div>⬇</div>
+                                              <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </q-item-label>
+                                      </template>
+                                    </q-option-group>
+                                  </div>
                                 </q-card-section>
                                 <q-card-actions align="right">
                                   <q-btn flat label="Close" color="primary" v-close-popup />
@@ -1808,7 +1926,7 @@ const downSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  console.log('List=', List);
+  console.debug('downSoundList=', List);
   return List;
 });
 
@@ -1839,6 +1957,7 @@ const upSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  console.debug('upSoundList=', List);
   return List;
 });
 
@@ -1852,6 +1971,48 @@ const edit_configureUpSound = ref(false);
 // -- edit_configureDownSound / edit_configureUpSound
 const edit_downSoundSelectDom = useTemplateRef<QSelect>('edit_downSoundSelectDom');
 const edit_upSoundSelectDom = useTemplateRef<QSelect>('edit_upSoundSelectDom');
+const edit_downTypeGroup = ref<Array<string>>(['sounds']);
+const edit_upTypeGroup = ref<Array<string>>(['sounds']);
+const edit_downSoundList = computed(() => {
+  const List: Array<any> = [];
+  if (edit_downTypeGroup.value.includes('audio_files')) {
+    soundFileList.value.forEach((item) => {
+      List.push({ type: 'audio_files', value: item });
+    });
+  }
+  if (edit_downTypeGroup.value.includes('sounds')) {
+    soundList.value.forEach((item) => {
+      List.push({ type: 'sounds', value: item });
+    });
+  }
+  if (edit_downTypeGroup.value.includes('key_sounds')) {
+    keySoundList.value.forEach((item) => {
+      List.push({ type: 'key_sounds', value: item });
+    });
+  }
+  console.debug('edit_downSoundList=', List);
+  return List;
+});
+const edit_upSoundList = computed(() => {
+  const List: Array<any> = [];
+  if (edit_upTypeGroup.value.includes('audio_files')) {
+    soundFileList.value.forEach((item) => {
+      List.push({ type: 'audio_files', value: item });
+    });
+  }
+  if (edit_upTypeGroup.value.includes('sounds')) {
+    soundList.value.forEach((item) => {
+      List.push({ type: 'sounds', value: item });
+    });
+  }
+  if (edit_upTypeGroup.value.includes('key_sounds')) {
+    keySoundList.value.forEach((item) => {
+      List.push({ type: 'key_sounds', value: item });
+    });
+  }
+  console.debug('edit_upSoundList=', List);
+  return List;
+});
 const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
