@@ -1213,6 +1213,7 @@
                         :options="keySoundList"
                         label="选择要编辑的按键音"
                         :option-label="(item) => item.keySoundValue.name"
+                        :option-value="(item) => item.keySoundKey"
                         dense
                       />
                     </q-card-section>
@@ -1265,18 +1266,56 @@
                                     v-model="selectedKeySound.keySoundValue.down.value"
                                     :options="soundList"
                                     :option-label="
-                                      (item) =>
-                                        item.soundValue.name ||
-                                        soundFileList.find(
-                                          (soundFile) =>
-                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
-                                        )?.name +
-                                          ' - [' +
-                                          item.soundValue.cut.start_time +
-                                          ' ~ ' +
-                                          item.soundValue.cut.end_time +
-                                          ']'
+                                      (item: any) => {
+                                        if (item.type === 'audio_files') {
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                        }
+                                        if (item.type === 'sounds') {
+
+                                          const sound = soundList.find((sound) => sound.soundKey === item.value);
+
+                                          if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
+                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
+                                          } else {
+                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                              soundFileList.find(
+                                                (soundFile:any) =>
+                                                  soundFile.sha256 === sound?.soundValue?.source_file_for_sound?.sha256 &&
+                                                  soundFile.name_id === sound?.soundValue?.source_file_for_sound?.name_id
+                                              )?.name +
+                                              '     - ' +
+                                              ' [' +
+                                              sound?.soundValue?.cut?.start_time +
+                                              ' ~ ' +
+                                              sound?.soundValue?.cut?.end_time +
+                                              ']'
+                                            );
+                                          }
+                                        }
+                                        if (item.type === 'key_sounds') {
+                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value);
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
+                                        }
+                                      }
+                                    "
+                                    :option-value="
+                                      (item) => {
+                                        /**
+                                         * json中的存储格式分别是
+                                         * {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+                                         * {key:'sounds', value:string} // 此处value, 是soundKey
+                                         * {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+                                         */
+                                        if (item.type === 'audio_files') {
+                                          return item.value.sha256 + item.value.name_id;
+                                        }
+                                        if (item.type === 'sounds') {
+                                          return item.value;
+                                        }
+                                        if (item.type === 'key_sounds') {
+                                          return item.value;
+                                        }
+                                      }
                                     "
                                     label="选择声音 (多选)"
                                     multiple
@@ -1327,18 +1366,56 @@
                                     v-model="selectedKeySound.keySoundValue.up.value"
                                     :options="soundList"
                                     :option-label="
-                                      (item) =>
-                                        item.soundValue.name ||
-                                        soundFileList.find(
-                                          (soundFile) =>
-                                            soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id === item.soundValue.source_file_for_sound.name_id
-                                        )?.name +
-                                          ' - [' +
-                                          item.soundValue.cut.start_time +
-                                          ' ~ ' +
-                                          item.soundValue.cut.end_time +
-                                          ']'
+                                      (item: any) => {
+                                        if (item.type === 'audio_files') {
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                        }
+                                        if (item.type === 'sounds') {
+
+                                          const sound = soundList.find((sound) => sound.soundKey === item.value);
+
+                                          if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
+                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
+                                          } else {
+                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                              soundFileList.find(
+                                                (soundFile:any) =>
+                                                  soundFile.sha256 === sound?.soundValue?.source_file_for_sound?.sha256 &&
+                                                  soundFile.name_id === sound?.soundValue?.source_file_for_sound?.name_id
+                                              )?.name +
+                                              '     - ' +
+                                              ' [' +
+                                              sound?.soundValue?.cut?.start_time +
+                                              ' ~ ' +
+                                              sound?.soundValue?.cut?.end_time +
+                                              ']'
+                                            );
+                                          }
+                                        }
+                                        if (item.type === 'key_sounds') {
+                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value);
+                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
+                                        }
+                                      }
+                                    "
+                                    :option-value="
+                                      /**
+                                       * json中的存储格式分别是
+                                       * {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+                                       * {key:'sounds', value:string} // 此处value, 是soundKey
+                                       * {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+                                       */
+                                      (item) => {
+                                        if (item.type === 'audio_files') {
+                                          return item.value.sha256 + item.value.name_id;
+                                        }
+                                        if (item.type === 'sounds') {
+                                          return item.value;
+                                        }
+                                        if (item.type === 'key_sounds') {
+                                          return item.value;
+                                        }
+                                      }
                                     "
                                     label="选择声音 (多选)"
                                     multiple
