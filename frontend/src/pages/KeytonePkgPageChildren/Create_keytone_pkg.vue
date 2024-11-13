@@ -528,6 +528,10 @@
                             )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
                           }
                         }"
+                        :option-value="(item:any) =>{
+                          // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                          return item.soundKey
+                        }"
                         label="选择要管理的声音"
                         dense
                       />
@@ -620,6 +624,10 @@
                                   soundFile.name_id === item.name_id
                               )
                               return soundFile ? soundFile.name + soundFile.type : ''
+                            }"
+                            :option-value="(item: any) => {
+                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                              return item.sha256 + item.name_id
                             }"
                             label="声音的源文件"
                             dense
