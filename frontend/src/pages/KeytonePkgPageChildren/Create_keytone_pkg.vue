@@ -829,15 +829,15 @@
                                 v-model="selectedSoundsForDown"
                                 :options="downSoundList"
                                 :option-label="(item: any) => {
-                                  if (item.key === 'audio_files') {
-                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                  if (item.type === 'audio_files') {
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
                                   }
-                                  if (item.key === 'sounds') {
+                                  if (item.type === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
                                     if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return item.value.soundValue.name;
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.soundValue.name)
                                     } else {
-                                      return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
                                           (soundFile:any) =>
                                             soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
@@ -852,8 +852,8 @@
                                       );
                                     }
                                   }
-                                  if (item.key === 'key_sounds') {
-                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                  if (item.type === 'key_sounds') {
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
                                   }
                                 }"
                                 label="选择声音 (多选)"
@@ -983,15 +983,15 @@
                                 v-model="selectedSoundsForUp"
                                 :options="upSoundList"
                                 :option-label="(item: any) => {
-                                  if (item.key === 'audio_files') {
-                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
+                                  if (item.type === 'audio_files') {
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item?.value?.name  + item?.value?.type);
                                   }
-                                  if (item.key === 'sounds') {
+                                  if (item.type === 'sounds') {
                                     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
                                     if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return item.value.soundValue.name;
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (item.value.soundValue.name)
                                     } else {
-                                      return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
                                         soundFileList.find(
                                           (soundFile:any) =>
                                             soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
@@ -1006,8 +1006,8 @@
                                       );
                                     }
                                   }
-                                  if (item.key === 'key_sounds') {
-                                    return (options.find((option) =>  item.key === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                  if (item.type === 'key_sounds') {
+                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
                                   }
                                 }"
                                 label="选择声音 (多选)"
@@ -1696,17 +1696,17 @@ const downSoundList = computed(() => {
   const List: Array<any> = [];
   if (downTypeGroup.value.includes('audio_files')) {
     soundFileList.value.forEach((item) => {
-      List.push({ key: 'audio_files', value: item });
+      List.push({ type: 'audio_files', value: item });
     });
   }
   if (downTypeGroup.value.includes('sounds')) {
     soundList.value.forEach((item) => {
-      List.push({ key: 'sounds', value: item });
+      List.push({ type: 'sounds', value: item });
     });
   }
   if (downTypeGroup.value.includes('key_sounds')) {
     keySoundList.value.forEach((item) => {
-      List.push({ key: 'key_sounds', value: item });
+      List.push({ type: 'key_sounds', value: item });
     });
   }
   console.log('List=', List);
@@ -1727,17 +1727,17 @@ const upSoundList = computed(() => {
   const List: Array<any> = [];
   if (upTypeGroup.value.includes('audio_files')) {
     soundFileList.value.forEach((item) => {
-      List.push({ key: 'audio_files', value: item });
+      List.push({ type: 'audio_files', value: item });
     });
   }
   if (upTypeGroup.value.includes('sounds')) {
     soundList.value.forEach((item) => {
-      List.push({ key: 'sounds', value: item });
+      List.push({ type: 'sounds', value: item });
     });
   }
   if (upTypeGroup.value.includes('key_sounds')) {
     keySoundList.value.forEach((item) => {
-      List.push({ key: 'key_sounds', value: item });
+      List.push({ type: 'key_sounds', value: item });
     });
   }
   return List;
@@ -1806,16 +1806,16 @@ function saveKeySoundConfig(
     down: {
       mode: params.down.mode,
       value: params.down.value.map((item) => {
-        if (item.key === 'audio_files') {
+        if (item.type === 'audio_files') {
           return {
             type: 'audio_files',
             value: { sha256: item.value.sha256, name_id: item.value.name_id, type: item.value.type },
           };
         }
-        if (item.key === 'sounds') {
+        if (item.type === 'sounds') {
           return { type: 'sounds', value: item.value.soundKey };
         }
-        if (item.key === 'key_sounds') {
+        if (item.type === 'key_sounds') {
           return { type: 'key_sounds', value: item.value.keySoundKey };
         }
       }),
@@ -1823,16 +1823,16 @@ function saveKeySoundConfig(
     up: {
       mode: params.up.mode,
       value: params.up.value.map((item) => {
-        if (item.key === 'audio_files') {
+        if (item.type === 'audio_files') {
           return {
             type: 'audio_files',
             value: { sha256: item.value.sha256, name_id: item.value.name_id, type: item.value.type },
           };
         }
-        if (item.key === 'sounds') {
+        if (item.type === 'sounds') {
           return { type: 'sounds', value: item.value.soundKey };
         }
-        if (item.key === 'key_sounds') {
+        if (item.type === 'key_sounds') {
           return { type: 'key_sounds', value: item.value.keySoundKey };
         }
       }),
