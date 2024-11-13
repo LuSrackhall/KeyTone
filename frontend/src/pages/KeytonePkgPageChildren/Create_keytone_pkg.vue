@@ -1653,25 +1653,8 @@ const selectedSound = ref<{
   };
 }>(); // 此处无需初始化, 但类型一定要指定清楚
 
-/**
- *   - errIdea(错误的思路,不必再考虑)   :
- *     * 首先, 我们没必要对其中无需使用的name字段做添加, 后面防止类型报错的TIPS似乎并不会发生。
- *     * 其次, 这种擅自改变select组件中, 绑定的model的方式, 会引发修改前和修改后, 引用不一致的问题。(不一致主要指的是已选项 和 列表中的某个选项 可以对应上, 即引用一致, 防止出现相同内容不同引用的情况)
- *     * 我们此处仍保留watch, 以便于观测selectedSound的值, 以更好的调试
- */
-//   - errIdea(错误的思路,不必再考虑)   :
-// 当编辑时, 获取实时的name值到我们的source_file_for_sound中。 (注意, 这个name字段是临时增加的, 因此需要使用any类型来强制变更过度)
-// TIPS: 主要目的并不是为了获取name值, 甚至我们根本用不到这个name值(我们仍通过sha256和name_id在数组中find的方式来寻找name, 以解决无法实时更新的bug)。
-//       * 使selectedSound中拥有name这个字段, 可以防止其因类型问题而报错就足够了。
 watch(selectedSound, () => {
   console.debug('观察selectedSound=', selectedSound.value);
-  //   if (selectedSound.value) {
-  //     (selectedSound.value.soundValue.source_file_for_sound as any).name = soundFileList.value.find(
-  //       (soundFile) =>
-  //         soundFile.sha256 === selectedSound.value?.soundValue.source_file_for_sound.sha256 &&
-  //         soundFile.name_id === selectedSound.value?.soundValue.source_file_for_sound.name_id
-  //     )?.name;
-  //   }
 });
 
 // 选项列表(其中包含: 源文件、声音、按键音 三种选项可供选择)
@@ -1771,22 +1754,8 @@ const edit_upSoundSelectDom = useTemplateRef<QSelect>('edit_upSoundSelectDom');
 const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
-/**
- *   - errIdea(错误的思路,不必再考虑)   :存在bug,  不只是思路错误。(见第一条)
- *     * 最关键的是这里的逻辑, 竟莫名奇妙的能影响到与之毫不相关的 制作新的按键音 中, 按下与抬起配置中声音选择输入框的逻辑。
- *     * 其次, 这种擅自改变select组件中, 绑定的model的方式, 会引发修改前和修改后, 引用不一致的问题。(不一致主要指的是已选项 和 列表中的某个选项 可以对应上, 即引用一致, 防止出现相同内容不同引用的情况)
- *     * 我们此处仍保留watch, 以便于观测selectedKeySound的值, 以更好的调试
- */
 watch(selectedKeySound, () => {
   console.debug('观察selectedKeySound=', selectedKeySound.value);
-  // if (selectedKeySound.value) {
-  //   selectedKeySound.value.keySoundValue.down.value = soundList.value.filter((item) => {
-  //     return selectedKeySound.value.keySoundValue.down.value.includes(item.soundKey);
-  //   });
-  //   selectedKeySound.value.keySoundValue.up.value = soundList.value.filter((item) => {
-  //     return selectedKeySound.value.keySoundValue.up.value.includes(item.soundKey);
-  //   });
-  // }
 });
 
 // 按键音api
