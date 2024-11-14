@@ -779,10 +779,17 @@
           </q-step>
 
           <q-step :name="3" title="制作按键声音" icon="add_comment" :done="step > 3">
-            <div>根据裁剪定义好的声音, 制作按键声音。</div>
-            <div>每个按键音, 都包括了按下声音和抬起声音, 制作时需要分别定义它们。</div>
-            <div>当然, 如果只需要其中之一, 也可根据需求自由制作。</div>
-
+            <div>
+              根据裁剪定义好的声音, 制作按键声音。
+              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                  <span>理论上每个按键音, 都应包括按下和抬起声音。<br /></span>
+                  <span>制作时需分别定义它们, 但这并不是强制的。<br /></span>
+                  <span>按下声音和抬起声音都可根据需要选择性定义。<br /></span>
+                  <span>可以都定义, 也可以只定义其中一个, 或者都不定义。<br /></span>
+                </q-tooltip>
+              </q-icon>
+            </div>
             <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑 start -->
             <div>
               <!-- ------------------------------------------------------------------------------ 制作新的按键音 -->
