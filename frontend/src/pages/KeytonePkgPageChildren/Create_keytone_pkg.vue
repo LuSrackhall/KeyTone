@@ -1652,13 +1652,104 @@
           </q-step> -->
           <q-step :name="4" title="按键联动声效" icon="settings" :done="step > 3">
             <div>
-              为按键设置联动声效，按键被按下或释放时，自动播放预设声效。
+              为按键设置联动声效，按下或释放按键时，自动播放预设声效。
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>"音频文件"、"声音"、"按键音" 均可与按键联动。<br /></span>
+                  <span>"音频文件"、"声音"、"键音" 均可与按键联动。<br /></span>
                 </q-tooltip>
               </q-icon>
             </div>
+
+            <q-stepper-navigation>
+              <div :class="['flex items-center -ml-3']">
+                <q-toggle v-model="isEnableEmbeddedTestSound" color="primary"> </q-toggle>
+                <span>
+                  内嵌测试音 -> 全键联动
+                  <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                    <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+                      <span>KeyTone内嵌了测试用的全键声效。<br /></span>
+                      <span>供用户检测软件是否正常运行。<br /></span>
+                      <span>默认开启, 如有需要可手动关闭。<br /></span>
+                      <span>播放优先级低于全/单键声效设置。<br /></span>
+                    </q-tooltip>
+                  </q-icon>
+                </span>
+              </div>
+            </q-stepper-navigation>
+            <q-stepper-navigation>
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="全键声效设置"
+                  @click="
+                    () => {
+                      showEveryKeyEffectDialog = true;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+                    <span>播放优先级高于内嵌测试音, 但低于单键声效设置。<br /></span>
+                  </q-tooltip>
+                </q-icon>
+                <q-dialog v-model="showEveryKeyEffectDialog" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section
+                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
+                    >
+                      全键声效设置
+                    </q-card-section>
+
+                    <q-card-section class="q-pt-none">
+                      <div class="text-subtitle1 q-mb-md">无需指定任何按键, 直接进行全局统一的声效设置。</div>
+                      <!-- 这里添加声效选择等具体设置内容 -->
+                    </q-card-section>
+
+                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
+                      <q-btn flat label="取消" color="primary" v-close-popup />
+                      <q-btn flat label="确定" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+              <div :class="['p-2 text-zinc-600']">或</div>
+              <div>
+                <q-btn
+                  :class="['bg-zinc-300']"
+                  label="单键声效设置"
+                  @click="
+                    () => {
+                      showSingleKeyEffectDialog = true;
+                    }
+                  "
+                >
+                </q-btn>
+                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+                    <span>播放优先级高于全键声效设置和内嵌测试音。<br /></span>
+                  </q-tooltip>
+                </q-icon>
+                <q-dialog v-model="showSingleKeyEffectDialog" backdrop-filter="invert(70%)">
+                  <q-card>
+                    <q-card-section
+                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
+                    >
+                      单键声效设置
+                    </q-card-section>
+
+                    <q-card-section class="q-pt-none">
+                      <div class="text-subtitle1 q-mb-md">指定某个或多个按键, 以进行局部独立的声效设置。</div>
+                      <!-- 这里添加按键选择和声效设置等具体内容 -->
+                    </q-card-section>
+                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
+                      <q-btn flat label="取消" color="primary" v-close-popup />
+                      <q-btn flat label="确定" color="primary" v-close-popup />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+              </div>
+            </q-stepper-navigation>
             <q-stepper-navigation>
               <q-btn @click="step = 5" color="primary" label="Continue" />
               <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm" />
@@ -2109,6 +2200,7 @@ watch(selectedKeySound, () => {
 });
 
 // 按键音api
+// -- 保存按键音配置
 function saveKeySoundConfig(
   params: {
     key: string;
@@ -2202,7 +2294,7 @@ function saveKeySoundConfig(
   });
 }
 
-// 删除键音
+// -- 删除键音
 function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void }) {
   ConfigDelete('key_sounds.' + params.keySoundKey).then((re) => {
     if (re) {
@@ -2217,6 +2309,11 @@ function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void })
     }
   });
 }
+
+// 按键联动声效
+const isEnableEmbeddedTestSound = ref(true);
+const showEveryKeyEffectDialog = ref(false);
+const showSingleKeyEffectDialog = ref(false);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
