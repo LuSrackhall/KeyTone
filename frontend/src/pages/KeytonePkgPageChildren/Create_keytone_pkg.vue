@@ -27,8 +27,8 @@
 
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
           <div :class="['text-center font-semibold text-lg text-nowrap']">{{ pkgName }}</div>
-          <q-step :name="1" title="载入声音文件" icon="create_new_folder" :done="step > 1">
-            <div>为此键音包载入原始的声音文件供后续步骤使用。</div>
+          <q-step :name="1" title="载入音频文件" icon="create_new_folder" :done="step > 1">
+            <div>为此键音包载入原始的音频文件供后续步骤使用。</div>
             <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
             <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
             <!-- <q-card class="bg-slate-500" :class="['p-2']"> -->
@@ -36,13 +36,13 @@
             <div :class="['p-2 text-zinc-300']">或</div>
             <q-btn :class="['bg-zinc-300']" label="选择声音源文件以进行编辑"></q-btn> -->
             <!-- </q-card> -->
-            <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑 start -->
+            <!-- ------------------------------------------------------------------------载入音频文件的业务逻辑 start -->
             <div>
-              <!-- ------------------------------------------------------------------------------ 添加新的声音源文件 -->
+              <!-- ------------------------------------------------------------------------------ 添加新的音频源文件 -->
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="载入新的声音源文件"
+                  label="载入新的音频源文件"
                   @click="
                     () => {
                       addNewSoundFile = !addNewSoundFile;
@@ -52,7 +52,7 @@
                 </q-btn>
                 <q-dialog v-model="addNewSoundFile" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 载入新的声音源文件 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6"> 载入新的音频源文件 </q-card-section>
 
                     <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section>
 
@@ -135,7 +135,7 @@
                 </q-dialog>
               </div>
               <div :class="['p-2 text-zinc-600']">或</div>
-              <!-- -------------------------------------------------------------------------------编辑已有声音源文件 -->
+              <!-- -------------------------------------------------------------------------------编辑已有音频源文件 -->
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
@@ -289,7 +289,7 @@
           <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
           <q-step :name="2" title="裁剪定义声音" icon="add_comment" :done="step > 2">
             <div>
-              根据载入的原始声音文件裁剪定义出需要的声音。
+              根据载入的原始音频文件裁剪定义出需要的声音。
               <q-icon name="info" color="primary">
                 <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                   <div>通过此步骤制作的声音不会影响声音源文件。</div>
@@ -778,9 +778,9 @@
             </q-stepper-navigation>
           </q-step>
 
-          <q-step :name="3" title="制作按键声音" icon="add_comment" :done="step > 3">
+          <q-step :name="3" title="铸造至臻键音" icon="add_comment" :done="step > 3">
             <div>
-              根据裁剪定义好的声音, 制作按键声音。
+              键音, 实际就是按键声音或称按键音, 本步骤默认根据裁剪定义好的声音, 制作按键音。
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
                   <span>理论上每个按键音, 都应包括按下和抬起声音。<br /></span>
@@ -1621,15 +1621,15 @@
                 </q-dialog>
               </div>
             </div>
-            <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑   end -->
-
             <q-stepper-navigation>
               <q-btn @click="step = 4" color="primary" label="Continue" />
               <q-btn flat @click="step = 2" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
 
-          <q-step :name="4" title="对全局按键统一设置键音" icon="settings" :done="step > 3">
+          <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑   end -->
+
+          <!-- <q-step :name="4" title="对全局按键统一设置键音" icon="settings" :done="step > 3">
             <div>设置一个全局所有按键统一使用的按键声音。</div>
             <div>小提示: 用随机按键声音进行此项设置, 可避免键音太过单调。</div>
             <div>小提示: 如果您需要更加全面的键音定制, 可在下一步骤中处理。</div>
@@ -1648,6 +1648,20 @@
             <div></div>
             <q-stepper-navigation>
               <q-btn flat @click="step = 4" color="primary" label="Back" class="q-ml-sm" />
+            </q-stepper-navigation>
+          </q-step> -->
+          <q-step :name="4" title="按键联动声效" icon="settings" :done="step > 3">
+            <div>
+              为按键设置联动声效，按键被按下或释放时，自动播放预设声效。
+              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                  <span>"音频文件"、"声音"、"按键音" 均可与按键联动。<br /></span>
+                </q-tooltip>
+              </q-icon>
+            </div>
+            <q-stepper-navigation>
+              <q-btn @click="step = 5" color="primary" label="Continue" />
+              <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
         </q-stepper>
