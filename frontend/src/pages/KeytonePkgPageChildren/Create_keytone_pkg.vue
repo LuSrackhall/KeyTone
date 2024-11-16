@@ -2311,8 +2311,11 @@ function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void })
 }
 
 // 按键联动声效
-const isEnableEmbeddedTestSound = ref(true);
+// -- 内嵌测试音是否使能
+const isEnableEmbeddedTestSound = ref(true); // 该字段"直接"与配置文件相映射
+// -- 全键声效
 const showEveryKeyEffectDialog = ref(false);
+// -- 单键声效
 const showSingleKeyEffectDialog = ref(false);
 
 onBeforeMount(async () => {
@@ -2437,6 +2440,14 @@ onBeforeMount(async () => {
     watch(keySoundList, (newVal) => {
       console.debug('观察keySoundList=', keySoundList.value);
     });
+
+    watch(
+      isEnableEmbeddedTestSound,
+      (newVal) => {
+        ConfigSet('key_tone.is_enable_embedded_test_sound', newVal);
+      },
+      { immediate: true }
+    );
   }
 
   const pkgNameDelayed = debounce(
@@ -2495,6 +2506,10 @@ onBeforeMount(async () => {
       }));
     } else {
       keySoundList.value = [];
+    }
+
+    if (keyTonePkgData.key_tone !== undefined) {
+      isEnableEmbeddedTestSound.value = keyTonePkgData.key_tone.is_enable_embedded_test_sound;
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
