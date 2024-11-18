@@ -246,15 +246,15 @@ func globalAudioVolumeNormalProcessing(audioStreamer beep.Streamer) *effects.Vol
 }
 
 func init() {
-	initKeyDownSoundBuffer()
-	initKeyUpSoundBuffer()
+	// initKeyDownSoundBuffer()
+	// initKeyUpSoundBuffer()
 }
 
 var bufferKeyDownSound *beep.Buffer
 var bufferKeyUpSound *beep.Buffer
 
 func initKeyDownSoundBuffer() {
-	audioFile, err := sounds.Open("sounds/test_down.wav")
+	audioFile, err := sounds.Open("sounds/down.wav")
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +273,7 @@ func initKeyDownSoundBuffer() {
 }
 
 func initKeyUpSoundBuffer() {
-	audioFile, err := sounds.Open("sounds/test_up.wav")
+	audioFile, err := sounds.Open("sounds/up.wav")
 	if err != nil {
 		panic(err)
 	}
