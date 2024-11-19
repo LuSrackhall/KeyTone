@@ -291,7 +291,7 @@
             <div>
               根据载入的原始音频文件裁剪定义出需要的声音。
               <q-icon name="info" color="primary">
-                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                   <div>通过此步骤制作的声音不会影响声音源文件。</div>
                   <div>用户可针对同一声音源文件裁剪定义出多个独立的声音。</div>
                 </q-tooltip>
@@ -337,7 +337,7 @@
                       >
                         <template v-slot:append>
                           <q-icon name="info" color="primary">
-                            <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                            <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                               {{
                                 '声音的名称 : \n' +
                                 (soundName === ''
@@ -365,7 +365,7 @@
                       <div class="text-[15px] text-gray-600">
                         从声音源文件中裁剪定义出我们需要的声音
                         <q-icon name="info" color="primary">
-                          <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                          <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                             声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
                           </q-tooltip>
                         </q-icon>
@@ -408,7 +408,7 @@
                       >
                         <template v-slot:append>
                           <q-icon name="info" color="primary">
-                            <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                            <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                               0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
                               当然您也可以手动输入以做更细腻的调整, 如0.0001等。请在每次音量调整后重新预览以查看效果,
                               防止音量过小或过大。
@@ -434,7 +434,7 @@
                         color="secondary"
                       >
                         <q-tooltip
-                          :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                          :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
                           :delay="600"
                         >
                           按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
@@ -585,7 +585,9 @@
                           >
                             <template v-slot:append>
                               <q-icon name="info" color="primary">
-                                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                                <q-tooltip
+                                  :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
+                                >
                                   {{
                                     '声音的名称 : \n' +
                                     (selectedSound.soundValue.name === ''
@@ -638,7 +640,7 @@
                           <div class="text-[15px] text-gray-600">
                             从声音源文件中裁剪定义出我们需要的声音
                             <q-icon name="info" color="primary">
-                              <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                                 声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
                               </q-tooltip>
                             </q-icon>
@@ -681,7 +683,9 @@
                           >
                             <template v-slot:append>
                               <q-icon name="info" color="primary">
-                                <q-tooltip :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
+                                <q-tooltip
+                                  :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
+                                >
                                   0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
                                   当然您也可以手动输入以做更细腻的调整,
                                   如0.0001等。请在每次音量调整后重新预览以查看效果, 防止音量过小或过大。
@@ -706,7 +710,7 @@
                             "
                           >
                             <q-tooltip
-                              :class="['bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                              :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
                               :delay="600"
                             >
                               按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
@@ -780,7 +784,8 @@
 
           <q-step :name="3" title="铸造至臻键音" icon="add_comment" :done="step > 3">
             <div>
-              键音, 实际就是按键声音或称按键音, 本步骤默认根据裁剪定义好的声音, 制作按键音。
+              <span>键音, 实际就是按键声音或称按键音。</span>
+              <span>本步骤默认根据裁剪定义好的声音, 制作按键音。</span>
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
                   <span>理论上每个按键音, 都应包括按下和抬起声音。<br /></span>
@@ -1652,10 +1657,10 @@
           </q-step> -->
           <q-step :name="4" title="按键联动声效" icon="settings" :done="step > 3">
             <div>
-              为按键设置联动声效，按下或释放按键时，自动播放预设声效。
+              为按键设置联动声效，按下或抬起按键时，自动播放预设声效。
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>"音频文件"、"声音"、"键音" 均可与按键联动。<br /></span>
+                  <span>"音频文件"、"声音"、"键音" 均可作为声效与按键联动。<br /></span>
                 </q-tooltip>
               </q-icon>
             </div>
@@ -1664,7 +1669,7 @@
               <div :class="['flex items-center -ml-3']">
                 <q-toggle v-model="isEnableEmbeddedTestSound" color="primary"> </q-toggle>
                 <span>
-                  内嵌测试音 -> 全键联动
+                  是否启用全局内嵌测试音
                   <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                     <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
                       <span>KeyTone内嵌了测试用的全键声效。<br /></span>
@@ -1690,7 +1695,7 @@
                 </q-btn>
                 <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                   <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>播放优先级高于内嵌测试音, 但低于单键声效设置。<br /></span>
+                    <span>播放优先级高于内嵌测试音, 但低于单键声效。<br /></span>
                   </q-tooltip>
                 </q-icon>
                 <q-dialog v-model="showEveryKeyEffectDialog" backdrop-filter="invert(70%)">
@@ -1727,7 +1732,7 @@
                 </q-btn>
                 <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                   <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>播放优先级高于全键声效设置和内嵌测试音。<br /></span>
+                    <span>播放优先级高于全键声效和内嵌测试音。<br /></span>
                   </q-tooltip>
                 </q-icon>
                 <q-dialog v-model="showSingleKeyEffectDialog" backdrop-filter="invert(70%)">
