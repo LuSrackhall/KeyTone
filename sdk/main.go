@@ -164,11 +164,12 @@ func handleKeyEvent(evChan chan hook.Event) {
 			if !key_down_soundIsRun {
 				println("仅播放 key_down 声音")
 				// go keySound.PlayKeySound("test_down.MP3")
-				go keySound.PlayKeySound(&keySound.AudioFilePath{
-					SS: "test_down.MP3",
-				}, nil)
+				// go keySound.PlayKeySound(&keySound.AudioFilePath{
+				// 	SS: "test_down.MP3",
+				// }, nil)
 				// go keySound.KeyDownSoundPlay()
 
+				go keySound.KeySoundHandler(keySound.KeyStateDown)
 				key_down_soundIsRun = true
 			}
 		}
@@ -185,10 +186,11 @@ func handleKeyEvent(evChan chan hook.Event) {
 			// TODO: 第一个参数 与 第二个参数组合的更多逻辑, 都需要逐渐适配。比如
 			//       * 配置中开启优先级时, 则按照优先级指定音频, 与默认音频, 否则将放弃相关逻辑
 			//         * 当开启优先级时, 第一个参数的全局配置, 应该是和相应的cut是强关联的, 否则无意义, 因此PlayKeySound的逻辑还要改。
-			go keySound.PlayKeySound(&keySound.AudioFilePath{
-				SS: "test_up.MP3",
-			}, nil) // 注意, 若第二个参数为nil, 则不论多长的音频, 都会全量播放
+			// go keySound.PlayKeySound(&keySound.AudioFilePath{
+			// 	SS: "test_up.MP3",
+			// }, nil) // 注意, 若第二个参数为nil, 则不论多长的音频, 都会全量播放
 			// go keySound.KeyUpSoundPlay()
+			go keySound.KeySoundHandler(keySound.KeyStateUp)
 
 			key_down_soundIsRun = false
 

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	audioPackageConfig "KeyTone/audioPackage/config"
+
 	"github.com/gopxl/beep/v2"
 	"github.com/gopxl/beep/v2/effects"
 	"github.com/gopxl/beep/v2/mp3"
@@ -317,4 +319,39 @@ func KeyUpSoundPlay() {
 
 	// // 等待播放完成
 	// <-done
+}
+
+// 添加常量定义按键状态
+const (
+	KeyStateDown = "down"
+	KeyStateUp   = "up"
+)
+
+// 音频包处理器
+// * 此函数会根据处理结果来调用播放器播放对应的音频结果。
+func KeySoundHandler(keyState string) {
+	// 如果没有选择音频包，则默认使用内嵌的测试音频进行播放
+	if audioPackageConfig.Viper == nil {
+		PlayKeySound(&AudioFilePath{
+			SS: "test_" + keyState + ".MP3",
+		}, nil)
+		return
+	}
+	// 从音频包配置中获取相关设置, 并根据配置决定如何播放
+
+	// TODO: 根据传入的具体按键Keycode, 来独立寻找其预设的播放配置, 以播放对应音频。
+
+	// TODO: 若具体按键配置为空, 则根据全局配置决定如何播放
+
+	// 若全局配置中为空, 则获取配置中内置测试音效的启用状态, 以决定是否使用默认音频进行播放。(优先级最低)
+	// * 我们没有对is_enable_embedded_test_sound做类型断言, 因此其可能为nil或bool,
+	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound")
+	// 只要不是主动设置为false, 我们都使用默认音频
+	if isEnableEmbeddedTestSound == true || isEnableEmbeddedTestSound == nil {
+		PlayKeySound(&AudioFilePath{
+			SS: "test_" + keyState + ".MP3",
+		}, nil)
+		return
+	}
+
 }
