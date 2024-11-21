@@ -1985,8 +1985,10 @@
                             <q-tooltip
                               :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
                             >
-                              <span class="text-sm">锚定至臻键音<br /></span>
-                              <span>此锚定仅在设置声效为按键音时有效。</span>
+                              <span class="text-sm">至臻键音</span>
+                              <span class="text-sm" v-if="isAnchoringUltimatePerfectionKeySound"> (已锚定)<br /></span>
+                              <span class="text-sm" v-else> (已解除锚定)<br /></span>
+                              <span>此锚定仅作用于在设置声效为至臻键音时。</span>
                             </q-tooltip>
                           </q-icon>
                         </div>
@@ -2046,8 +2048,8 @@
                       </div>
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat label="取消" color="primary" v-close-popup />
                       <q-btn flat label="确定" color="primary" v-close-popup />
+                      <q-btn flat label="取消" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
@@ -2082,8 +2084,8 @@
                       <!-- 这里添加按键选择和声效设置等具体内容 -->
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat label="取消" color="primary" v-close-popup />
                       <q-btn flat label="确定" color="primary" v-close-popup />
+                      <q-btn flat label="取消" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
@@ -2836,6 +2838,14 @@ onBeforeMount(async () => {
     { trailing: true }
   );
 
+  const isEnableEmbeddedTestSoundDelayed = debounce(
+    (val: boolean) => {
+      isEnableEmbeddedTestSound.value = val;
+    },
+    800,
+    { trailing: true }
+  );
+
   // 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
   function sseDataToKeyTonePkgData(keyTonePkgData: any) {
     // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
@@ -2887,7 +2897,8 @@ onBeforeMount(async () => {
     }
 
     if (keyTonePkgData.key_tone !== undefined) {
-      isEnableEmbeddedTestSound.value = keyTonePkgData.key_tone.is_enable_embedded_test_sound;
+      isEnableEmbeddedTestSoundDelayed.cancel();
+      isEnableEmbeddedTestSoundDelayed(keyTonePkgData.key_tone.is_enable_embedded_test_sound);
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
