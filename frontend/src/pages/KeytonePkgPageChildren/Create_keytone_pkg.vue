@@ -2004,9 +2004,7 @@
                                     'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                   ]"
                                 >
-                                  <div>本软件支持将源文件直接作为声音。</div>
-                                  <div>前提是</div>
-                                  <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                  <div>本软件支持将音频源文件直接设置为声效。</div>
                                 </q-tooltip>
                               </q-icon>
                             </q-item-label>
@@ -2020,8 +2018,7 @@
                                     'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                   ]"
                                 >
-                                  <div>默认仅从声音列表中选择。</div>
-                                  <div>如有需求也可勾选其它受支持列表。</div>
+                                  <div>本软件支持将裁剪定义好的声音设置为声效。</div>
                                 </q-tooltip>
                               </q-icon>
                             </q-item-label>
@@ -2035,11 +2032,9 @@
                                     'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                   ]"
                                 >
-                                  <div>本软件支持将其它按键音作为声音。</div>
-                                  <div>或者说</div>
-                                  <div>本软件支持继承其它按键音的配置。</div>
-                                  <div>⬇</div>
-                                  <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                  <div>本软件推荐用户使用至臻键音, 以设置更为丰富的声效。</div>
+                                  <div>若本选项勾选, 则自动提供可用于至臻键音的锚定功能。</div>
+                                  <div>此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效。</div>
                                 </q-tooltip>
                               </q-icon>
                             </q-item-label>
