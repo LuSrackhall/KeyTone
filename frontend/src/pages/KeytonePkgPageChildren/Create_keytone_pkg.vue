@@ -1777,8 +1777,11 @@
                             @popup-hide="
                               () => {
                                 if (
+                                  // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
                                   isShowUltimatePerfectionKeySoundAnchoring &&
-                                  isAnchoringUltimatePerfectionKeySound
+                                  isAnchoringUltimatePerfectionKeySound &&
+                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
+                                  keyDownUnifiedSoundEffectSelect?.type === 'key_sounds'
                                 ) {
                                   keyUpUnifiedSoundEffectSelect = keyDownUnifiedSoundEffectSelect;
                                 }
@@ -1837,9 +1840,12 @@
                             dense
                             @popup-hide="
                               () => {
+                                // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
                                 if (
                                   isShowUltimatePerfectionKeySoundAnchoring &&
-                                  isAnchoringUltimatePerfectionKeySound
+                                  isAnchoringUltimatePerfectionKeySound &&
+                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
+                                  keyUpUnifiedSoundEffectSelect?.type === 'key_sounds'
                                 ) {
                                   keyDownUnifiedSoundEffectSelect = keyUpUnifiedSoundEffectSelect;
                                 }
@@ -2712,16 +2718,28 @@ const isShowUltimatePerfectionKeySoundAnchoring = computed(() => {
   return unifiedTypeGroup.value.includes('key_sounds');
 });
 const isAnchoringUltimatePerfectionKeySound = ref(true);
-watch(keyDownUnifiedSoundEffectSelect, () => {
+watch(keyDownUnifiedSoundEffectSelect, (newVal, oldVal) => {
   console.debug('观察keyDownUnifiedSoundEffectSelect=', keyDownUnifiedSoundEffectSelect.value);
-  if (isShowUltimatePerfectionKeySoundAnchoring.value && isAnchoringUltimatePerfectionKeySound.value) {
-    keyUpUnifiedSoundEffectSelect.value = keyDownUnifiedSoundEffectSelect.value;
+  if (newVal === null && oldVal?.type === 'key_sounds') {
+    if (isShowUltimatePerfectionKeySoundAnchoring.value && isAnchoringUltimatePerfectionKeySound.value) {
+      // 这里?是为了防止其本身就为null时,访问不存在的type字段引发报错。(不需要处理null:我们本身就是对其做清空操作,没有值正好。)
+      if (keyUpUnifiedSoundEffectSelect.value?.type === 'key_sounds') {
+        // 如果对方有值, 且值为key_sounds, 则清空。
+        keyUpUnifiedSoundEffectSelect.value = keyDownUnifiedSoundEffectSelect.value;
+      }
+    }
   }
 });
-watch(keyUpUnifiedSoundEffectSelect, () => {
+watch(keyUpUnifiedSoundEffectSelect, (newVal, oldVal) => {
   console.debug('观察keyUpUnifiedSoundEffectSelect=', keyUpUnifiedSoundEffectSelect.value);
-  if (isShowUltimatePerfectionKeySoundAnchoring.value && isAnchoringUltimatePerfectionKeySound.value) {
-    keyDownUnifiedSoundEffectSelect.value = keyUpUnifiedSoundEffectSelect.value;
+  if (newVal === null && oldVal?.type === 'key_sounds') {
+    if (isShowUltimatePerfectionKeySoundAnchoring.value && isAnchoringUltimatePerfectionKeySound.value) {
+      // 这里?是为了防止其本身就为null时,访问不存在的type字段引发报错。(不需要处理null:我们本身就是对其做清空操作,没有值正好。)
+      if (keyDownUnifiedSoundEffectSelect.value?.type === 'key_sounds') {
+        // 如果对方有值, 且值为key_sounds, 则清空。
+        keyDownUnifiedSoundEffectSelect.value = keyUpUnifiedSoundEffectSelect.value;
+      }
+    }
   }
 });
 
