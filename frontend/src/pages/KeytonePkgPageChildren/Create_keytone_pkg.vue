@@ -1,8 +1,20 @@
 <!--
-  1、 用户可以为即将诞生的新的音频包起一个名字。
-  2、 要有音频文件的导入项, 以便于用户制作时传入音频文件。
-  3、 要有音频文件的裁切功能, 以便于用户制作时精准地选择出一个键音。
-
+ * This file is part of the KeyTone project.
+ *
+ * Copyright (C) 2024 LuSrackhall
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
 <template>

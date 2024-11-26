@@ -61,6 +61,12 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 欢迎任何形式的贡献！
 <!-- 请查看我们的贡献指南以了解详情。 -->
 
+## 著作权
+
+版权所有 (C) 2024 LuSrackhall
+
 ## 许可证
 
-本项目遵循GPL协议。
+本项目遵循[GPL许可证](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE)。
+
+<!-- * 部分代码（如与 Steam API 相关的代码）因包含敏感信息而不在 GPL 许可范围内。这些代码将按照符合Steam平台要求的专有许可发布，用于商业用途。 -->

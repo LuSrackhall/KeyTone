@@ -56,6 +56,12 @@ Any ideas are welcome!
 
 Contributions of any kind are welcome!
 
+## Copyright
+
+Copyright (C) 2024 LuSrackhall
+
 ## License
 
-This project follows the GPL license.
+This project follows the [GPL license](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).
+
+<!-- * Some parts of the code (such as those related to the Steam API) are not covered by the GPL license due to containing sensitive information. These parts will be released under a proprietary license that complies with Steam platform requirements for commercial use. -->
