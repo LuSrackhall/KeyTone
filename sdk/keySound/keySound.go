@@ -364,7 +364,7 @@ func KeySoundHandler(keyState string) {
 
 	// 若全局配置中为空, 则获取配置中内置测试音效的启用状态, 以决定是否使用默认音频进行播放。(优先级最低)
 	// * 我们没有对is_enable_embedded_test_sound做类型断言, 因此其可能为nil或bool,
-	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound")
+	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound." + keyState)
 	// 只要不是主动设置为false, 我们都使用默认音频
 	if isEnableEmbeddedTestSound == true || isEnableEmbeddedTestSound == nil {
 		PlayKeySound(&AudioFilePath{

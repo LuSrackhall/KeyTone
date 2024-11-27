@@ -1678,8 +1678,8 @@
             </div>
 
             <q-stepper-navigation>
-              <div :class="['flex items-center -ml-3']">
-                <q-toggle v-model="isEnableEmbeddedTestSound" color="primary"> </q-toggle>
+              <div :class="['flex items-center']">
+                <span class="text-gray-500 mr-0.7">•</span>
                 <span>
                   是否启用全局内嵌测试音
                   <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
@@ -1691,6 +1691,14 @@
                     </q-tooltip>
                   </q-icon>
                 </span>
+              </div>
+              <div :class="['flex items-center ml-3']">
+                <span class="text-gray-500 mr-1.5">•</span>
+                <q-toggle v-model="isEnableEmbeddedTestSound.down" color="primary" label="按下测试音" dense />
+              </div>
+              <div :class="['flex items-center ml-3']">
+                <span class="text-gray-500 mr-1.5">•</span>
+                <q-toggle v-model="isEnableEmbeddedTestSound.up" color="primary" label="抬起测试音" dense />
               </div>
             </q-stepper-navigation>
             <q-stepper-navigation>
@@ -2151,7 +2159,7 @@ import {
   ConfigDelete,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
-import { computed, onBeforeMount, ref, watch, useTemplateRef } from 'vue';
+import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -2686,8 +2694,13 @@ function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void })
 }
 
 // 按键联动声效
+
 // -- 内嵌测试音是否使能
-const isEnableEmbeddedTestSound = ref(true); // 该字段"直接"与配置文件相映射
+const isEnableEmbeddedTestSound = reactive({
+  down: true,
+  up: true,
+}); // 该字段"直接"与配置文件相映射
+
 // -- 全键声效
 const showEveryKeyEffectDialog = ref(false);
 
@@ -2945,8 +2958,9 @@ onBeforeMount(async () => {
   );
 
   const isEnableEmbeddedTestSoundDelayed = debounce(
-    (val: boolean) => {
-      isEnableEmbeddedTestSound.value = val;
+    (val: { down: boolean; up: boolean }) => {
+      isEnableEmbeddedTestSound.down = val.down;
+      isEnableEmbeddedTestSound.up = val.up;
     },
     800,
     { trailing: true }
