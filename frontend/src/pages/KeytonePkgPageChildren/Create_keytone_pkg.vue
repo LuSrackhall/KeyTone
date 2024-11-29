@@ -1676,31 +1676,28 @@
                 </q-tooltip>
               </q-icon>
             </div>
-
-            <q-stepper-navigation>
-              <div :class="['flex items-center']">
-                <span class="text-gray-500 mr-0.7">•</span>
-                <span>
-                  是否启用全局内嵌测试音
-                  <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                    <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                      <span>KeyTone内嵌了测试用的全键声效。<br /></span>
-                      <span>供用户检测软件是否正常运行。<br /></span>
-                      <span>默认开启, 如有需要可手动关闭。<br /></span>
-                      <span>播放优先级低于全/单键声效设置。<br /></span>
-                    </q-tooltip>
-                  </q-icon>
-                </span>
-              </div>
-              <div :class="['flex items-center ml-3']">
-                <span class="text-gray-500 mr-1.5">•</span>
-                <q-toggle v-model="isEnableEmbeddedTestSound.down" color="primary" label="按下测试音" dense />
-              </div>
-              <div :class="['flex items-center ml-3']">
-                <span class="text-gray-500 mr-1.5">•</span>
-                <q-toggle v-model="isEnableEmbeddedTestSound.up" color="primary" label="抬起测试音" dense />
-              </div>
-            </q-stepper-navigation>
+            <div :class="['flex items-center m-t-2']">
+              <span class="text-gray-500 mr-0.7">•</span>
+              <span>
+                是否启用内嵌测试音:
+                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+                    <span>KeyTone内嵌了测试用的全键声效。<br /></span>
+                    <span>供用户检测软件是否正常运行。<br /></span>
+                    <span>默认开启, 如有需要可手动关闭。<br /></span>
+                    <span>播放优先级低于全/单键声效设置。<br /></span>
+                  </q-tooltip>
+                </q-icon>
+              </span>
+            </div>
+            <div :class="['flex items-center ml-3']">
+              <span class="text-gray-500 mr-1.5">•</span>
+              <q-toggle v-model="isEnableEmbeddedTestSound.down" color="primary" label="按下测试音" dense />
+            </div>
+            <div :class="['flex items-center ml-3']">
+              <span class="text-gray-500 mr-1.5">•</span>
+              <q-toggle v-model="isEnableEmbeddedTestSound.up" color="primary" label="抬起测试音" dense />
+            </div>
             <q-stepper-navigation>
               <div>
                 <q-btn
