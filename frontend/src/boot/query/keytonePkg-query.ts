@@ -1,9 +1,8 @@
 import { api } from 'boot/axios';
 
-export async function SendFileToServer(audioPkgUUID: string, file: File) {
+export async function SendFileToServer(file: File) {
   const formData = new FormData();
 
-  formData.append('audioPkgUUID', audioPkgUUID);
   formData.append('file', file);
 
   return await api
@@ -261,10 +260,9 @@ export async function SoundFileRename(sha256: string, nameID: string, name: stri
     });
 }
 
-export async function SoundFileDelete(audioPkgUUID: string, sha256: string, nameID: string, type: string) {
+export async function SoundFileDelete(sha256: string, nameID: string, type: string) {
   return await api
     .post('/keytone_pkg/sound_file_delete', {
-      audioPkgUUID: audioPkgUUID, // 目录名/音频包名ID
       sha256: sha256, // 文件名ID(实际文件名)
       nameID: nameID, // 文件名ID(UI端使用, 用于索引虚拟文件名)
       type: type, // 文件类型
@@ -305,17 +303,9 @@ export async function SoundFileDelete(audioPkgUUID: string, sha256: string, name
     });
 }
 
-export async function PlaySound(
-  audioPkgUUID: string,
-  sha256: string,
-  type: string,
-  startTime: number,
-  endTime: number,
-  volume: number
-) {
+export async function PlaySound(sha256: string, type: string, startTime: number, endTime: number, volume: number) {
   return await api
     .post('/keytone_pkg/play_sound', {
-      audioPkgUUID: audioPkgUUID,
       sha256: sha256,
       type: type,
       startTime: startTime,

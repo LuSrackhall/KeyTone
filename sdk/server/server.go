@@ -194,7 +194,6 @@ func keytonePkgRouters(r *gin.Engine) {
 
 	// 接收前端上传的音频文件, 并存入本地路径
 	keytonePkgRouters.POST("/add_new_sound_file", func(ctx *gin.Context) {
-		audioPkgUUID := ctx.PostForm("audioPkgUUID")
 		file, err := ctx.FormFile("file")
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -262,6 +261,14 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 
 			// 退出此次请求的处理 (TIPS: 单纯的向前端返回消息, 并不能自动return。 此处我们需要主动退出, 防止执行后续步骤造成画蛇添足。)
+			return
+		}
+
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包UUID失败",
+			})
 			return
 		}
 
@@ -398,17 +405,15 @@ func keytonePkgRouters(r *gin.Engine) {
 	})
 
 	keytonePkgRouters.POST("/sound_file_delete", func(ctx *gin.Context) {
-		// 由于此接口, 可能会操作真实路径下的实际音频源文件, 因此需要AudioPkgUUID这个字段。(虽然不是每次都能用到)
 		type Arg struct {
-			AudioPkgUUID string `json:"audioPkgUUID"` // 目录名/音频包名ID
-			Sha256       string `json:"sha256"`       // 文件名ID(实际文件名)
-			NameID       string `json:"nameID"`       // 文件名ID(UI端使用, 用于索引虚拟文件名)
-			Type         string `json:"type"`         // 文件类型
+			Sha256 string `json:"sha256"` // 文件名ID(实际文件名)
+			NameID string `json:"nameID"` // 文件名ID(UI端使用, 用于索引虚拟文件名)
+			Type   string `json:"type"`   // 文件类型
 		}
 
 		var arg Arg
 		err := ctx.ShouldBind(&arg)
-		if err != nil || arg.AudioPkgUUID == "" || arg.Sha256 == "" || arg.NameID == "" || arg.Type == "" {
+		if err != nil || arg.Sha256 == "" || arg.NameID == "" || arg.Type == "" {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
 			})
@@ -428,8 +433,17 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		// 每次删除后, 都需要判断是否需要删除音频文件(此处的判断, 依赖前一行对name的nil设置, 否则可能会获得内存中与实际文件中不一致的值, 参考上方tips)
 		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name") == nil {
+
+			audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+			if !ok {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 获取音频包UUID失败",
+				})
+				return
+			}
+
 			// 删除音频源文件
-			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
+			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"message": "error: 删除音频文件失败:" + err.Error(),
@@ -449,12 +463,11 @@ func keytonePkgRouters(r *gin.Engine) {
 	keytonePkgRouters.POST("/play_sound", func(ctx *gin.Context) {
 
 		type Arg struct {
-			AudioPkgUUID string  `json:"audioPkgUUID"`
-			Sha256       string  `json:"sha256"`
-			Type         string  `json:"type"`
-			StartTime    float64 `json:"startTime"`
-			EndTime      float64 `json:"endTime"`
-			Volume       float64 `json:"volume"`
+			Sha256    string  `json:"sha256"`
+			Type      string  `json:"type"`
+			StartTime float64 `json:"startTime"`
+			EndTime   float64 `json:"endTime"`
+			Volume    float64 `json:"volume"`
 		}
 
 		var arg Arg
@@ -466,7 +479,15 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		go keySound.PlayKeySound(&keySound.AudioFilePath{Part: filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID, "audioFiles", arg.Sha256+arg.Type)}, &keySound.Cut{
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包UUID失败",
+			})
+			return
+		}
+
+		go keySound.PlayKeySound(&keySound.AudioFilePath{Part: filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type)}, &keySound.Cut{
 			StartMS: int64(arg.StartTime),
 			EndMS:   int64(arg.EndTime),
 			Volume:  arg.Volume,

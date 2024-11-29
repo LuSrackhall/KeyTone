@@ -103,7 +103,7 @@
                             // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
                             for (const file of files.slice()) {
                               try {
-                                const re = await SendFileToServer(pkgPath, file);
+                                const re = await SendFileToServer(file);
                                 if (re === true) {
                                   console.info(`File ${file.name} uploaded successfully`);
                                   // Remove the file from the list after successful upload
@@ -251,7 +251,6 @@
                             @click="
                               async () => {
                                 const re = await SoundFileDelete(
-                                  pkgPath,
                                   selectedSoundFile.sha256,
                                   selectedSoundFile.name_id,
                                   selectedSoundFile.type
@@ -2329,7 +2328,6 @@ function previewSound(params: {
   }
 
   PlaySound(
-    pkgPath,
     params.source_file_for_sound.sha256,
     params.source_file_for_sound.type,
     params.cut.start_time,
@@ -2822,6 +2820,8 @@ onBeforeMount(async () => {
   // 使用i18n, 初始化键音包名称, 在此处手动设置, 是为了防止后续初始化将sdk中默认的名称, 被初始化到pkgName中。
   // 因此在初始化前按照提前设置好的i18n做为默认名称, 故手动发送请求以在数据初始化前更改sdk中的默认名称。
   await ConfigSet('package_name', $t('KeyTonePackage.new.name.defaultValue'));
+
+  await ConfigSet('audio_pkg_uuid', pkgPath);
 
   // 数据初始化
   await initData();
