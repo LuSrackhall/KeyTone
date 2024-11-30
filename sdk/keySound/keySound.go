@@ -21,6 +21,7 @@ package keySound
 
 import (
 	"KeyTone/config"
+	"KeyTone/logger"
 	"embed"
 	"errors"
 	"fmt"
@@ -361,11 +362,69 @@ func KeySoundHandler(keyState string) {
 	// TODO: 根据传入的具体按键Keycode, 来独立寻找其预设的播放配置, 以播放对应音频。
 
 	// TODO: 若具体按键配置为空, 则根据全局配置决定如何播放
+	global := audioPackageConfig.GetValue("key_tone.global." + keyState)
+	fmt.Println("global====", global)
+	// * 如果global不为空, 则根据global的值来决定如何播放, 否则使用后续逻辑中的默认音频
+	if global != nil {
+		// 将global转换为map类型以便访问其中的值
+		soundEffectType := audioPackageConfig.GetValue("key_tone.global." + keyState + ".type")
+		// soundEffectValue := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok {
+			logger.Error("message", "error: 获取音频包UUID失败")
+			return
+		}
+
+		if soundEffectType == "audio_files" {
+			audio_file_name := audioPackageConfig.GetValue("key_tone.global."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.global."+keyState+".value.type").(string)
+			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+
+			PlayKeySound(&AudioFilePath{
+				Global: audio_file_path,
+			}, nil)
+			return
+		}
+
+		if soundEffectType == "sounds" {
+			value := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+			audio_file_name := audioPackageConfig.GetValue("sounds."+value.(string)+".source_file_for_sound"+".sha256").(string) + audioPackageConfig.GetValue("sounds."+value.(string)+".source_file_for_sound"+".type").(string)
+			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+			cut := &Cut{
+				StartMS: int64(audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.start_time").(float64)),
+				EndMS:   int64(audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.end_time").(float64)),
+				Volume:  audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.volume").(float64),
+			}
+
+			PlayKeySound(&AudioFilePath{
+				Global: audio_file_path,
+			}, cut)
+			return
+		}
+
+		if soundEffectType == "key_sounds" {
+			value := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+			mode := audioPackageConfig.GetValue("key_sounds." + value.(string) + "." + keyState + ".mode")
+			if mode == "single" {
+
+			}
+			if mode == "random" {
+
+			}
+			if mode == "loop" {
+
+			}
+
+			// PlayKeySound(&AudioFilePath{
+			// 	Global: audio_file_path,
+			// }, nil)
+		}
+
+	}
 
 	// 若全局配置中为空, 则获取配置中内置测试音效的启用状态, 以决定是否使用默认音频进行播放。(优先级最低)
 	// * 我们没有对is_enable_embedded_test_sound做类型断言, 因此其可能为nil或bool,
 	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound." + keyState)
-	// 只要不是主动设置为false, 我们都使用默认音频
+	// * 只要不是主动设置为false, 我们都使用默认音频
 	if isEnableEmbeddedTestSound == true || isEnableEmbeddedTestSound == nil {
 		PlayKeySound(&AudioFilePath{
 			SS: "test_" + keyState + ".MP3",
