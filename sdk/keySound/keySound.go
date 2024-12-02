@@ -48,6 +48,14 @@ var sounds embed.FS
 // 播放器的采样率为44100 Hz
 var formatGlobalSampleRate beep.SampleRate = beep.SampleRate(44100)
 
+// 在文件顶部添加变量
+var (
+	// 在文件顶部添加一个包级别的变量来存储循环播放的索引
+	loopCurrentIndex map[string]int
+	// 添加一个静态变量来跟踪上一次的音频包UUID, 以便在切换音频包时重置loopCurrentIndex这个循环索引变量
+	lastAudioPkgUUID string
+)
+
 func init() {
 
 	// 初始化speaker。
@@ -505,29 +513,52 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 	if mode == "loop" {
 		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
 		if value != nil {
+
+			// 检测音频包是否发生切换
+			if lastAudioPkgUUID != audioPkgUUID {
+				loopCurrentIndex = make(map[string]int) // 重置循环计数器
+				lastAudioPkgUUID = audioPkgUUID
+			}
+
 			values := value.([]interface{})
-			// 循环播放所有值
-			for _, v := range values {
-				vMap := v.(map[string]interface{})
-				if vMap["type"] == "audio_files" {
-					valueMap := vMap["value"].(map[string]interface{})
-					audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
-					audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
-					PlayKeySound(&AudioFilePath{
-						Global: audio_file_path,
-					}, nil)
-					return
-				}
-				if vMap["type"] == "sounds" {
-					sound_SHA256 := vMap["value"].(string)
-					soundParsePlay(sound_SHA256, audioPkgUUID)
-					return
-				}
-				if vMap["type"] == "key_sounds" {
-					key_sound_SHA256 := vMap["value"].(string)
-					keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
-					return
-				}
+
+			// 使用简单的key来标识不同的键音
+			key := key_sound_SHA256 + "_" + keyState
+
+			// 获取当前索引
+			currentIndex := loopCurrentIndex[key]
+
+			// 如果当前索引超出数组长度，重置为0
+			if currentIndex >= len(values) {
+				currentIndex = 0
+			}
+
+			// 获取当前要播放的值
+			v := values[currentIndex]
+			vMap := v.(map[string]interface{})
+
+			// 更新索引，简单加1即可
+			loopCurrentIndex[key] = currentIndex + 1
+
+			// 根据类型播放音频
+			if vMap["type"] == "audio_files" {
+				valueMap := vMap["value"].(map[string]interface{})
+				audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+				PlayKeySound(&AudioFilePath{
+					Global: audio_file_path,
+				}, nil)
+				return
+			}
+			if vMap["type"] == "sounds" {
+				sound_SHA256 := vMap["value"].(string)
+				soundParsePlay(sound_SHA256, audioPkgUUID)
+				return
+			}
+			if vMap["type"] == "key_sounds" {
+				key_sound_SHA256 := vMap["value"].(string)
+				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+				return
 			}
 		}
 	}
