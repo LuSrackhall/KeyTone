@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,6 +62,9 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 使用新的随机数生成器
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 }
 
@@ -386,37 +390,21 @@ func KeySoundHandler(keyState string) {
 		}
 
 		if soundEffectType == "sounds" {
-			value := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
-			audio_file_name := audioPackageConfig.GetValue("sounds."+value.(string)+".source_file_for_sound"+".sha256").(string) + audioPackageConfig.GetValue("sounds."+value.(string)+".source_file_for_sound"+".type").(string)
-			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
-			cut := &Cut{
-				StartMS: int64(audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.start_time").(float64)),
-				EndMS:   int64(audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.end_time").(float64)),
-				Volume:  audioPackageConfig.GetValue("sounds." + value.(string) + ".cut.volume").(float64),
-			}
+			sound_SHA256 := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
 
-			PlayKeySound(&AudioFilePath{
-				Global: audio_file_path,
-			}, cut)
+			soundParsePlay(sound_SHA256.(string), audioPkgUUID)
+
 			return
 		}
 
 		if soundEffectType == "key_sounds" {
-			value := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
-			mode := audioPackageConfig.GetValue("key_sounds." + value.(string) + "." + keyState + ".mode")
-			if mode == "single" {
+			key_sound_SHA256 := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
 
-			}
-			if mode == "random" {
-
-			}
-			if mode == "loop" {
-
-			}
-
+			keySoundParsePlay(key_sound_SHA256.(string), keyState, audioPkgUUID)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
+			return
 		}
 
 	}
@@ -432,4 +420,115 @@ func KeySoundHandler(keyState string) {
 		return
 	}
 
+}
+
+// 声音解析, 获取 实际音频文件的路径 以及 裁剪的参数
+// 参数:
+//   - sound_SHA256: 声音的SHA256值
+//   - audioPkgUUID: 音频包的UUID
+func soundParsePlay(sound_SHA256 string, audioPkgUUID string) {
+	audio_file_name := audioPackageConfig.GetValue("sounds."+sound_SHA256+".source_file_for_sound"+".sha256").(string) + audioPackageConfig.GetValue("sounds."+sound_SHA256+".source_file_for_sound"+".type").(string)
+	audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+	cut := &Cut{
+		StartMS: int64(audioPackageConfig.GetValue("sounds." + sound_SHA256 + ".cut.start_time").(float64)),
+		EndMS:   int64(audioPackageConfig.GetValue("sounds." + sound_SHA256 + ".cut.end_time").(float64)),
+		Volume:  audioPackageConfig.GetValue("sounds." + sound_SHA256 + ".cut.volume").(float64),
+	}
+	PlayKeySound(&AudioFilePath{
+		Global: audio_file_path,
+	}, cut)
+	return
+}
+
+func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID string) {
+	mode := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".mode")
+	if mode == "single" {
+		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
+
+		if value != nil {
+			for _, v := range value.([]interface{}) {
+				vMap := v.(map[string]interface{})
+				if vMap["type"] == "audio_files" {
+					valueMap := vMap["value"].(map[string]interface{})
+					audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+					audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+					PlayKeySound(&AudioFilePath{
+						Global: audio_file_path,
+					}, nil)
+					return
+				}
+				if vMap["type"] == "sounds" {
+					sound_SHA256 := vMap["value"].(string)
+					soundParsePlay(sound_SHA256, audioPkgUUID)
+					return
+				}
+				if vMap["type"] == "key_sounds" {
+					key_sound_SHA256 := vMap["value"].(string)
+					keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+					return
+				}
+			}
+		}
+	}
+	if mode == "random" {
+		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
+		if value != nil {
+			values := value.([]interface{})
+			// 创建一个新的随机数生成器实例
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			randomIndex := r.Intn(len(values))
+			logger.Debug("随机算法检测", "randomIndex====", randomIndex)
+			v := values[randomIndex]
+			vMap := v.(map[string]interface{})
+
+			if vMap["type"] == "audio_files" {
+				valueMap := vMap["value"].(map[string]interface{})
+				audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+				PlayKeySound(&AudioFilePath{
+					Global: audio_file_path,
+				}, nil)
+				return
+			}
+			if vMap["type"] == "sounds" {
+				sound_SHA256 := vMap["value"].(string)
+				soundParsePlay(sound_SHA256, audioPkgUUID)
+				return
+			}
+			if vMap["type"] == "key_sounds" {
+				key_sound_SHA256 := vMap["value"].(string)
+				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+				return
+			}
+		}
+	}
+	if mode == "loop" {
+		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
+		if value != nil {
+			values := value.([]interface{})
+			// 循环播放所有值
+			for _, v := range values {
+				vMap := v.(map[string]interface{})
+				if vMap["type"] == "audio_files" {
+					valueMap := vMap["value"].(map[string]interface{})
+					audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+					audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+					PlayKeySound(&AudioFilePath{
+						Global: audio_file_path,
+					}, nil)
+					return
+				}
+				if vMap["type"] == "sounds" {
+					sound_SHA256 := vMap["value"].(string)
+					soundParsePlay(sound_SHA256, audioPkgUUID)
+					return
+				}
+				if vMap["type"] == "key_sounds" {
+					key_sound_SHA256 := vMap["value"].(string)
+					keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+					return
+				}
+			}
+		}
+	}
 }
