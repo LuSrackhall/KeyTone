@@ -2754,33 +2754,35 @@ watch(keyUpUnifiedSoundEffectSelect, (newVal, oldVal) => {
 function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?: () => void) {
   const keyTone_global = {
     down: {
-      type: params.down.type,
+      type: params.down?.type || '',
       // TIPS: 此处需要注意, 我们需要的是此lambda表达式执行后的返回值赋值给value, 而不是直接将lambda表达式赋值给value。(此处用三元表达式会更为直观)
       value: (() => {
-        if (params.down.type === 'audio_files') {
+        if (params.down?.type === 'audio_files') {
           return { sha256: params.down.value.sha256, name_id: params.down.value.name_id, type: params.down.value.type };
         }
-        if (params.down.type === 'sounds') {
+        if (params.down?.type === 'sounds') {
           return params.down.value.soundKey;
         }
-        if (params.down.type === 'key_sounds') {
+        if (params.down?.type === 'key_sounds') {
           return params.down.value.keySoundKey;
         }
+        return '';
       })(),
     },
     up: {
-      type: params.up.type,
+      type: params.up?.type || '',
       // TIPS: 此处需要注意, 我们需要的是此lambda表达式执行后的返回值赋值给value, 而不是直接将lambda表达式赋值给value。(此处用三元表达式会更为直观)
       value: (() => {
-        if (params.up.type === 'audio_files') {
+        if (params.up?.type === 'audio_files') {
           return { sha256: params.up.value.sha256, name_id: params.up.value.name_id, type: params.up.value.type };
         }
-        if (params.up.type === 'sounds') {
+        if (params.up?.type === 'sounds') {
           return params.up.value.soundKey;
         }
-        if (params.up.type === 'key_sounds') {
+        if (params.up?.type === 'key_sounds') {
           return params.up.value.keySoundKey;
         }
+        return '';
       })(),
     },
   };
