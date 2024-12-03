@@ -188,7 +188,7 @@ func handleKeyEvent(evChan chan hook.Event) {
 				// }, nil)
 				// go keySound.KeyDownSoundPlay()
 
-				go keySound.KeySoundHandler(keySound.KeyStateDown)
+				go keySound.KeySoundHandler(keySound.KeyStateDown, ev.Keycode)
 				key_down_soundIsRun = true
 			}
 		}
@@ -209,7 +209,7 @@ func handleKeyEvent(evChan chan hook.Event) {
 			// 	SS: "test_up.MP3",
 			// }, nil) // 注意, 若第二个参数为nil, 则不论多长的音频, 都会全量播放
 			// go keySound.KeyUpSoundPlay()
-			go keySound.KeySoundHandler(keySound.KeyStateUp)
+			go keySound.KeySoundHandler(keySound.KeyStateUp, ev.Keycode)
 
 			key_down_soundIsRun = false
 

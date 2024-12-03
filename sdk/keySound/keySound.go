@@ -51,7 +51,7 @@ var formatGlobalSampleRate beep.SampleRate = beep.SampleRate(44100)
 // 在文件顶部添加变量
 var (
 	// 在文件顶部添加一个包级别的变量来存储循环播放的索引
-	loopCurrentIndex map[string]int
+	loopCurrentIndex map[string]uint
 	// 添加一个静态变量来跟踪上一次的音频包UUID, 以便在切换音频包时重置loopCurrentIndex这个循环索引变量
 	lastAudioPkgUUID string
 )
@@ -361,7 +361,7 @@ const (
 
 // 音频包处理器
 // * 此函数会根据处理结果来调用播放器播放对应的音频结果。
-func KeySoundHandler(keyState string) {
+func KeySoundHandler(keyState string, keycode uint16) {
 	// 如果没有选择音频包，则默认使用内嵌的测试音频进行播放
 	if audioPackageConfig.Viper == nil {
 		PlayKeySound(&AudioFilePath{
@@ -408,7 +408,7 @@ func KeySoundHandler(keyState string) {
 		if soundEffectType == "key_sounds" {
 			key_sound_SHA256 := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
 
-			keySoundParsePlay(key_sound_SHA256.(string), keyState, audioPkgUUID)
+			keySoundParsePlay(key_sound_SHA256.(string), keyState, audioPkgUUID, true, keycode)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
@@ -448,7 +448,21 @@ func soundParsePlay(sound_SHA256 string, audioPkgUUID string) {
 	return
 }
 
-func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID string) {
+// 声音解析, 获取 实际音频文件的路径 以及 播放参数
+// 参数:
+//   - key_sound_SHA256: 至臻键音的sha256索引值
+//   - keyState: 按键状态 (如 "down", "up" 等)
+//   - audioPkgUUID: 音频包的UUID
+//   - isGlobal: 是否为全局音效
+//   - keycode: 按键码
+//
+// 功能说明:
+//
+// 1. 根据mode判断播放模式:
+//   - single: 单一音效模式,按顺序播放配置的音效
+//   - random: 随机音效模式,随机选择一个音效播放
+//   - loop:   循环音效模式,循环播放配置的音效
+func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID string, isGlobal bool, keycode uint16) {
 	mode := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".mode")
 	if mode == "single" {
 		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
@@ -472,7 +486,7 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 				}
 				if vMap["type"] == "key_sounds" {
 					key_sound_SHA256 := vMap["value"].(string)
-					keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+					keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID, isGlobal, keycode)
 					return
 				}
 			}
@@ -505,7 +519,7 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_SHA256 := vMap["value"].(string)
-				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID, isGlobal, keycode)
 				return
 			}
 		}
@@ -516,20 +530,25 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 
 			// 检测音频包是否发生切换
 			if lastAudioPkgUUID != audioPkgUUID {
-				loopCurrentIndex = make(map[string]int) // 重置循环计数器
+				loopCurrentIndex = make(map[string]uint) // 重置循环计数器
 				lastAudioPkgUUID = audioPkgUUID
 			}
 
 			values := value.([]interface{})
 
 			// 使用简单的key来标识不同的键音
-			key := key_sound_SHA256 + "_" + keyState
+			var key string
+			if isGlobal {
+				key = fmt.Sprintf("global_%d_%s_%s", keycode, key_sound_SHA256, keyState)
+			} else {
+				key = fmt.Sprintf("%d_%s_%s", keycode, key_sound_SHA256, keyState)
+			}
 
 			// 获取当前索引
 			currentIndex := loopCurrentIndex[key]
 
 			// 如果当前索引超出数组长度，重置为0
-			if currentIndex >= len(values) {
+			if currentIndex >= uint(len(values)) {
 				currentIndex = 0
 			}
 
@@ -557,7 +576,7 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_SHA256 := vMap["value"].(string)
-				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID)
+				keySoundParsePlay(key_sound_SHA256, keyState, audioPkgUUID, isGlobal, keycode)
 				return
 			}
 		}
