@@ -2,9 +2,19 @@ package keyEvent
 
 import (
 	"KeyTone/keySound"
+	"sync"
 
 	hook "github.com/robotn/gohook"
 )
+
+// 定义sse相关变量
+type Store struct {
+	Keycode uint16 `json:"keycode"`
+	State   string `json:"state"`
+}
+
+var Clients_sse_stores sync.Map
+var once_stores sync.Once
 
 func KeyEventListen() {
 	evChan := hook.Start()
@@ -68,6 +78,10 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 				go keySound.KeySoundHandler(keySound.KeyStateDown, ev.Keycode)
 				key_down_soundIsRun = true
+				go sseBroadcast(&Clients_sse_stores, &Store{
+					Keycode: ev.Keycode,
+					State:   keySound.KeyStateDown,
+				})
 			}
 		}
 
@@ -91,6 +105,26 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 			key_down_soundIsRun = false
 
+			go sseBroadcast(&Clients_sse_stores, &Store{
+				Keycode: ev.Keycode,
+				State:   keySound.KeyStateUp,
+			})
 		}
 	}
+}
+
+func sseBroadcast(Clients_sse_stores *sync.Map, store *Store) {
+	Clients_sse_stores.Range(func(key, value interface{}) bool {
+		clientChan := key.(chan *Store)
+		serverChan := value.(chan bool)
+		select {
+		case clientChan <- store:
+			return true
+		case <-serverChan:
+			once_stores.Do(func() {
+				close(serverChan)
+			})
+			return true
+		}
+	})
 }

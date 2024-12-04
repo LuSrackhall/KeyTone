@@ -22,6 +22,7 @@ package server
 import (
 	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
+	"KeyTone/keyEvent"
 	"KeyTone/keySound"
 	"KeyTone/logger"
 	"crypto"
@@ -36,6 +37,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+type KeyStateMessage struct {
+	Type    string `json:"type"`
+	Keycode uint16 `json:"keycode"`
+	State   string `json:"state"`
+}
 
 func ServerRun() {
 	// 启动gin
@@ -56,16 +63,20 @@ func ServerRun() {
 
 		clientStoresChan := make(chan *config.Store)
 		clientAudioPackageStoresChan := make(chan *audioPackageConfig.Store)
+		clientKeyEventStoresChan := make(chan *keyEvent.Store)
 
 		serverStoresChan := make(chan bool, 1)
 		serverAudioPackageStoresChan := make(chan bool, 1)
+		serverKeyEventStoresChan := make(chan bool, 1)
 
 		config.Clients_sse_stores.Store(clientStoresChan, serverStoresChan)
 		audioPackageConfig.Clients_sse_stores.Store(clientAudioPackageStoresChan, serverAudioPackageStoresChan)
+		keyEvent.Clients_sse_stores.Store(clientKeyEventStoresChan, serverKeyEventStoresChan)
 
 		defer func() {
 			config.Clients_sse_stores.Delete(clientStoresChan)
 			audioPackageConfig.Clients_sse_stores.Delete(clientAudioPackageStoresChan)
+			keyEvent.Clients_sse_stores.Delete(clientKeyEventStoresChan)
 
 			logger.Logger.Debug("一个线程退出了............................")
 			logger.Debug("一个线程退出了............................")
@@ -78,6 +89,8 @@ func ServerRun() {
 				select {
 				case <-clientGone:
 					serverStoresChan <- false
+					serverAudioPackageStoresChan <- false
+					serverKeyEventStoresChan <- false
 
 					return false
 
@@ -94,6 +107,13 @@ func ServerRun() {
 						return true
 					}
 					c.SSEvent("messageAudioPackage", messageAudioPackage)
+					return true
+				case messageKeyEvent, ok := <-clientKeyEventStoresChan:
+					if !ok {
+						logger.Error("通道clientKeyEventStoresChan非正常关闭")
+						return true
+					}
+					c.SSEvent("messageKeyEvent", messageKeyEvent)
 					return true
 				}
 			})

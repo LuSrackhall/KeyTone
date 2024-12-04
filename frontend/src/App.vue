@@ -26,9 +26,11 @@ import { onBeforeMount } from 'vue';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useAppStore } from './stores/app-store';
 import { debounce } from 'lodash';
+import { useKeyEventStore } from './stores/keyEvent-store';
 
 const app_store = useAppStore();
 const setting_store = useSettingStore();
+const keyEvent_store = useKeyEventStore();
 
 onBeforeMount(async () => {
   setting_store.settingInitAndRealTimeStorage();
@@ -110,5 +112,31 @@ onBeforeMount(async () => {
   // ...
   // ...
   //!endregion ----->>>>>>>>>>>>>>>>>>>> -- save setting end   -_-^_^-_- ^_^-_-^_^-_-
+
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- keyEvent start ^_^-_-^_^
+
+  app_store.eventSource.addEventListener('messageKeyEvent', function (e) {
+    console.group('[Debug] 键盘事件SSE消息处理');
+    console.debug('后端钩子函数中的值 = ', e.data);
+    try {
+      const data = JSON.parse(e.data);
+      console.debug('后端钩子函数中的值(解析后) = ', data);
+
+      keyEvent_store.keyCodeState.set(data.keycode, data.state);
+
+      console.group('[Debug] 键盘事件状态更新');
+      console.debug('keycode为', data.keycode, '的按键的当前状态 ->  ', data.state);
+      console.debug('keyEvent_store.keyCodeState = ', keyEvent_store.keyCodeState);
+      console.groupEnd();
+    } catch (err) {
+      console.error('键盘事件处理失败:', {
+        error: err,
+        rawData: e.data,
+      });
+    } finally {
+      console.groupEnd();
+    }
+  });
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
 });
 </script>
