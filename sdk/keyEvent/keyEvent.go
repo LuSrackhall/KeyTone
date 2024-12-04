@@ -1,3 +1,22 @@
+/**
+ * This file is part of the KeyTone project.
+ *
+ * Copyright (C) 2024 LuSrackhall
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package keyEvent
 
 import (
@@ -66,10 +85,19 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 	for ev := range evChan {
 		if ev.Kind == 4 {
-			println("hold")
-			println(ev.Keycode) // 按下时, 由于goHook的bug, 无法判断实际的keyCode。 但由于hold的触发实际与down几乎一致, 且可判断实际的keyCode, 因此可使用此事件代替down
+			// println("hold")
+			// println(ev.Keycode) // 按下时, 由于goHook的bug, 无法判断实际的keyCode。 但由于hold的触发实际与down几乎一致, 且可判断实际的keyCode, 因此可使用此事件代替down
 			if !key_down_soundIsRun {
+				println("")
+				println("")
+				println("=====down=====")
+				println("   ********")
+				println("hold | down ======>", "keycode=", ev.Keycode, "  down")
+				// println("keyAll=", ev.String())
 				println("仅播放 key_down 声音")
+				println("   ********")
+				println("=====down=====")
+				println("")
 				// go keySound.PlayKeySound("test_down.MP3")
 				// go keySound.PlayKeySound(&keySound.AudioFilePath{
 				// 	SS: "test_down.MP3",
@@ -87,10 +115,16 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 		if ev.Kind == 5 {
 
-			println("up")
-			println(ev.Keycode)
-
+			println("")
+			println("")
+			println("======up======")
+			println("   ********")
+			println("up          ======>", "keycode=", ev.Keycode, "  up")
+			// println("keyAll=", ev.String())
 			println("仅播放 key_up 声音")
+			println("   ********")
+			println("======up======")
+			println("")
 			// go keySound.PlayKeySound("test_up.MP3")
 			// TODO: 第一个参数何时为nil, 由配置决定。(比如可以设置个bool值, 代表是否关闭此音频, 如果为true, 则为nil。)
 			// TODO: 第二个参数何时为nil, 由配置决定。(比如当配置中, 未对开始, 结束时间做任何设置, 则默认为nil的全量播放)
