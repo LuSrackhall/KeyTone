@@ -137,6 +137,14 @@ onBeforeMount(async () => {
       console.groupEnd();
     }
   });
+
+  window.addEventListener('keyup', function (event) {
+    // console.log('录制的输入:', event.key);
+    console.log('录制的输入code:', event.code);
+    console.log('录制的输入All:', event);
+    // TIPS: 在浏览器标准中keyCode已被弃用, 现今由code代替它。
+    // console.log('录制的输入keyCode:', event.keyCode);
+  });
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
 });
 </script>
