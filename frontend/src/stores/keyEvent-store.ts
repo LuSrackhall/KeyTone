@@ -30,14 +30,15 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
       if (count_down > 1) {
         // 清空keyDownStateName_ui, 防止 dik 与 name 的错误映射。
         keyDownStateName_ui.value = '';
-        q.notify({
-          message: '按键名称识别时, 检测到有多个按键被同时按下。',
-          color: 'red',
-        });
-        q.notify({
-          message: '为保证识别准确性, 请确保仅单个按键从按下至抬起。',
-          color: 'red',
-        });
+        // 不希望这通知, 在应用未获取焦点时被意外触发, 因此将此部分移动至前端键盘事件的相关逻辑中去。 但 清空keyDownStateName_ui 的逻辑仍需保留, 以保证映射的准确性。
+        // q.notify({
+        //   message: '按键名称识别时, 检测到有多个按键被同时按下。',
+        //   color: 'red',
+        // });
+        // q.notify({
+        //   message: '为保证识别准确性, 请确保仅单个按键从按下至抬起。',
+        //   color: 'red',
+        // });
         return;
       }
 
@@ -75,12 +76,44 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
     previous_keyCodeState = new Map(keyCodeState);
   });
 
+  //////////////////////////////////frontend----ui//////////////////////////////////////////////
+
   // 由于需要时间差, 因此对应ui的按键状态, 不需要监听按下并抬起, 而是仅监听按下, 并记录按键名称。
   // const keyCodeState_ui = reactive<Map<string, string>>(new Map<string, string>());
+
+  // 用于记录前端按键状态的bool值, 主要用于防止持续按下的按键被重复触发。
+  // * 也可以在其它逻辑中, 当作keyCodeState_ui来的使用。(使用过程中请注意确保只读式使用, 以免破坏它的主要用途)
+  //   > 只读使用的过程中, 当其为true时代表此按键为抬起状态, 为false时代表按键为按下状态。
+  const frontendKeyEventStateBool = reactive<Map<string, boolean>>(new Map<string, boolean>());
+
+  watch(frontendKeyEventStateBool, (newVal, oldVal) => {
+    if (isOpeningTheRecord.value) {
+      let count_down = 0;
+      // 遍历新值, 若发现有多个按键被同时按下, 则触发提示并退出。
+      frontendKeyEventStateBool.forEach((state, keycode) => {
+        if (state === false) {
+          count_down++;
+        }
+      });
+      if (count_down > 1) {
+        // 不希望这通知, 在应用未获取焦点时触发, 因此将此部分移动至此, 此处仅作为通知触发, 不参与 按键Dik码 与 name 的实时映射逻辑。
+        q.notify({
+          message: '按键名称识别时, 检测到有多个按键被同时按下。',
+          color: 'red',
+        });
+        q.notify({
+          message: '为保证识别准确性, 请确保仅单个按键从按下至抬起。',
+          color: 'red',
+        });
+        return;
+      }
+    }
+  });
+
   const keyDownStateName_ui = ref<string>('');
 
   // TIPS: 作为是否要启用'按键Dik码与name实时映射 与 持久化记录功能'的开关。(当某些ui组件需要时, 主动的开启它即可)
   const isOpeningTheRecord = ref<boolean>(false);
 
-  return { keyCodeState, keyDownStateName_ui, isOpeningTheRecord };
+  return { keyCodeState, frontendKeyEventStateBool, keyDownStateName_ui, isOpeningTheRecord };
 });

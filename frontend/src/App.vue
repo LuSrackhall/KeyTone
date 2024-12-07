@@ -138,7 +138,6 @@ onBeforeMount(async () => {
     }
   });
 
-  const frontendKeyEventStateBool = new Map<string, boolean>();
   window.addEventListener('keydown', function (event) {
     // 如以此按下(不抬起) `ctrl`+`alt`+`任意字母键如j`, 会意外的触发出一个Dik为0, 名称为'Unidentified'的键
     // * 因此我们利用代码逻辑, 禁止此触发。
@@ -148,10 +147,10 @@ onBeforeMount(async () => {
     }
 
     const frontendKeyUUID = identified + event.location;
-    if (!frontendKeyEventStateBool.has(frontendKeyUUID)) {
-      frontendKeyEventStateBool.set(frontendKeyUUID, true);
+    if (!keyEvent_store.frontendKeyEventStateBool.has(frontendKeyUUID)) {
+      keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, true);
     }
-    if (frontendKeyEventStateBool.get(frontendKeyUUID) === true) {
+    if (keyEvent_store.frontendKeyEventStateBool.get(frontendKeyUUID) === true) {
       // console.log('按键', event.code ? event.code : event.key, '的触发状态是: ', event.type);
       // console.debug('录制的输入key:', event.key);
       // console.debug('录制的输入code:', event.code);
@@ -167,7 +166,7 @@ onBeforeMount(async () => {
         keyEvent_store.keyDownStateName_ui = identified;
       }
 
-      frontendKeyEventStateBool.set(frontendKeyUUID, false);
+      keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, false);
     }
   });
   window.addEventListener('keyup', function (event) {
@@ -186,7 +185,7 @@ onBeforeMount(async () => {
     // TIPS: 在浏览器标准中keyCode已被弃用, 现今由code代替它。
     // console.debug('录制的输入keyCode:', event.keyCode);
 
-    frontendKeyEventStateBool.set(frontendKeyUUID, true);
+    keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, true);
   });
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
