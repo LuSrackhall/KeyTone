@@ -63,8 +63,12 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
 
             if (keyDownStateName_ui.value) {
               console.info('[info]:keycode为', keycode, '的按键从down变为up。其名称可能是', keyDownStateName_ui.value);
-              // TODO: 用于记录的逻辑写在此处
+              // TIPS: 用于记录的逻辑写在此处
               // ...
+
+              if (onKeyStateCallback) {
+                onKeyStateCallback(keycode, keyDownStateName_ui.value);
+              }
 
               // 记录行为结束后, 清空keyDownStateName_ui
               keyDownStateName_ui.value = '';
@@ -115,5 +119,27 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
   // TIPS: 作为是否要启用'按键Dik码与name实时映射 与 持久化记录功能'的开关。(当某些ui组件需要时, 主动的开启它即可)
   const isOpeningTheRecord = ref<boolean>(false);
 
-  return { keyCodeState, frontendKeyEventStateBool, keyDownStateName_ui, isOpeningTheRecord };
+  // 定义可配置的回调函数
+  let onKeyStateCallback: ((keycode: number, keyName: string) => void) | null = null;
+
+  // 设置回调的方法
+  function setKeyStateCallback(callback: (keycode: number, keyName: string) => void) {
+    isOpeningTheRecord.value = true;
+    onKeyStateCallback = callback;
+  }
+
+  // 清除回调的方法
+  function clearKeyStateCallback() {
+    isOpeningTheRecord.value = false;
+    onKeyStateCallback = null;
+  }
+
+  return {
+    keyCodeState,
+    frontendKeyEventStateBool,
+    keyDownStateName_ui,
+    isOpeningTheRecord,
+    setKeyStateCallback,
+    clearKeyStateCallback,
+  };
 });
