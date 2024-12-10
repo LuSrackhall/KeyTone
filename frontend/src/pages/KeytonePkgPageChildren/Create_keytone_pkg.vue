@@ -2136,6 +2136,7 @@
                         />
                         快速增设单键声效
                         <q-dialog
+                          :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
                           v-model="isShowAddOrSettingSingleKeyEffectDialog"
                           backdrop-filter="invert(70%)"
                         >
@@ -2152,6 +2153,7 @@
                                 <div class="flex flex-row items-center gap-2">
                                   <!--
                                     // 此选择组件增加录制功能且默认启用。(停止录制的应用场景全配列键盘的用户可能用不到, 但当某些用户使用的键盘不是全配列, 无法录制一些常用按键时(如小键盘数字区)会非常有用。)
+                                    //   ↓    - completed(已完成)    只不过方法不是太优雅而已 -> 采用了其中提到的比较啰嗦的其余方式。
                                     // TODO: 在使用录制功能录制按键的过程中会存在一些干扰录制过程的功能键, 最影响的就数`BACKSPACE`键了。
                                              但是说实话, 目前我没有很好的解决此问题的方式, 因为即使阻止@keydown事件的按键默认行为也无效。
                                              对于 input 组件上删除事件监听的做法, 由于无法针对性删除, 因此也无济于事。
@@ -2189,6 +2191,7 @@
                                       }
                                     "
                                     :maxlength="isRecordingSingleKeys ? 0 : Infinity"
+                                    @keydown="preventDefaultKeyBehaviorWhenRecording"
                                   >
                                     <template v-slot:append>
                                       <q-btn
@@ -2284,7 +2287,7 @@ import {
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
-import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive } from 'vue';
+import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -3002,6 +3005,47 @@ watch(isGetsFocused, (newVal) => {
     keyEvent_store.clearKeyStateCallback();
   }
 });
+
+//   - completed(已完成)   FIXME: 修复'Backspace'按键, 在录制过程中, 删除已选择列表中最后一项的bug
+let oldSelectedSingleKeys: Array<any> = [];
+
+function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
+  if (isRecordingSingleKeys.value) {
+    console.debug('event.key=', event.key);
+
+    //   - completed(已完成)   FIXME: 修复'Enter'按键无法被录制的bug
+    if (event.key === 'Enter') {
+      // 虽然无法录制'Enter'事件的原因就是select组件阻止了默认的'Enter'事件的冒泡行为,
+      // * 但为防止quasar后续更新改变它, 便再次手动阻止一次, 以防止本次修复被quasar的更新影响。
+      event.stopPropagation(); // 阻止事件冒泡
+      // 手动创建并分发一个新的键盘事件
+      const newEvent = new KeyboardEvent('keydown', {
+        key: event.key,
+        code: event.code,
+        keyCode: event.keyCode,
+        which: event.which,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        metaKey: event.metaKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      document.dispatchEvent(newEvent);
+    }
+
+    //   - completed(已完成)   FIXME: 修复'Backspace'按键, 在录制过程中, 删除已选择列表中最后一项的bug
+    if (event.key === 'Backspace') {
+      // nextTick是为了确保selectedSingleKeys.value = oldSelectedSingleKeys的逻辑, 发生在元素被删除之后。
+      nextTick(() => {
+        selectedSingleKeys.value = oldSelectedSingleKeys;
+      });
+    }
+  }
+
+  // 更新oldSelectedSingleKeys, 以备下次使用
+  oldSelectedSingleKeys = selectedSingleKeys.value.slice();
+}
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
