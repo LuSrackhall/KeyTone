@@ -2118,8 +2118,136 @@
                     </q-card-section>
 
                     <q-card-section class="q-pt-none">
-                      <div class="text-subtitle1 q-mb-md">指定某个或多个按键, 以进行局部独立的声效设置。</div>
+                      <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">
+                        指定单个或多个按键, 以进行局部独立的声效设置。
+                      </div>
                       <!-- 这里添加按键选择和声效设置等具体内容 -->
+                      <div class="flex flex-row items-center gap-2 mb-2 ml-2">
+                        <q-btn
+                          flat
+                          round
+                          color="primary"
+                          icon="add"
+                          @click="
+                            () => {
+                              isShowAddOrSettingSingleKeyEffectDialog = true;
+                            }
+                          "
+                        />
+                        快速增设单键声效
+                        <q-dialog
+                          v-model="isShowAddOrSettingSingleKeyEffectDialog"
+                          backdrop-filter="invert(70%)"
+                        >
+                          <q-card>
+                            <q-card-section
+                              class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
+                            >
+                              添加单键声效
+                            </q-card-section>
+
+                            <q-card-section class="q-pt-none">
+                              <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">请选择按键和对应的声效设置</div>
+                              <div class="flex flex-col gap-4">
+                                <div class="flex flex-row items-center gap-2">
+                                  <!--
+                                    // 此选择组件增加录制功能且默认启用。(停止录制的应用场景全配列键盘的用户可能用不到, 但当某些用户使用的键盘不是全配列, 无法录制一些常用按键时(如小键盘数字区)会非常有用。)
+                                    // TODO: 在使用录制功能录制按键的过程中会存在一些干扰录制过程的功能键, 最影响的就数`BACKSPACE`键了。
+                                             但是说实话, 目前我没有很好的解决此问题的方式, 因为即使阻止@keydown事件的按键默认行为也无效。
+                                             对于 input 组件上删除事件监听的做法, 由于无法针对性删除, 因此也无济于事。
+                                             而其余的方式, 有点太啰嗦了, 并且此bug对用户体验也是有利有弊的(弊大于利吧),索性就暂时不适配了。
+                                             何时适配? 等待quasar的更新中提供相关的选项后, 再适配此TODO。
+                                    //
+                                    // 组件的关键使用注释
+                                    // 单纯而new-value-mode满足不了我的需求, 我需要@new-value事件来更进一步的使用。
+                                    new-value-mode="add-unique"  // 一开始想通过此属性来实现录制功能, 不过之后使用其它方案了
+                                    // 为了在 录制单键 功能启用时, 阻止正常输入的内容。(使用此方式, 可以便捷的阻止输入)
+                                    :maxlength="isRecordingSingleKeys ? 0 : Infinity"
+                                  -->
+                                  <q-select
+                                    ref="singleKeysSelectRef"
+                                    v-model="selectedSingleKeys"
+                                    :options="keyOptions"
+                                    dense
+                                    filled
+                                    hide-dropdown-icon
+                                    multiple
+                                    outlined
+                                    stack-label
+                                    :placeholder="isRecordingSingleKeys ? '在此键入录制单键' : '在此键入搜寻单键'"
+                                    use-input
+                                    use-chips
+                                    class="flex-1"
+                                    @focus="
+                                      () => {
+                                        isGetsFocused = true;
+                                      }
+                                    "
+                                    @blur="
+                                      () => {
+                                        isGetsFocused = false;
+                                      }
+                                    "
+                                    :maxlength="isRecordingSingleKeys ? 0 : Infinity"
+                                  >
+                                    <template v-slot:append>
+                                      <q-btn
+                                        dense
+                                        flat
+                                        :color="isRecordingSingleKeys ? 'primary' : ''"
+                                        icon="keyboard"
+                                        @click="isRecordingSingleKeys = !isRecordingSingleKeys"
+                                      >
+                                        <q-tooltip>
+                                          {{ isRecordingSingleKeys ? '停止录制单键' : '开始录制单键' }}
+                                        </q-tooltip>
+                                      </q-btn>
+                                    </template>
+                                  </q-select>
+                                </div>
+
+                                <!-- <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" /> -->
+                              </div>
+                            </q-card-section>
+
+                            <q-card-actions
+                              align="right"
+                              :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']"
+                            >
+                              <!-- <q-btn flat label="确定" color="primary" v-close-popup @click="addSingleKeyEffect" /> -->
+                              <q-btn flat label="取消" color="primary" v-close-popup />
+                            </q-card-actions>
+                          </q-card>
+                        </q-dialog>
+                      </div>
+
+                      <!-- <div class="flex flex-col gap-4">
+                        <q-select filled v-model="selectedKeys" :options="keyOptions" multiple label="选择按键" />
+                        <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" />
+                      </div> -->
+                      <!-- <div class="flex flex-row items-center gap-2 mb-2">
+                        <q-select
+                          class="w-1/2"
+                          filled
+                          v-model="selectedKeys"
+                          :options="keyOptions"
+                          multiple
+                          label="选择按键"
+                        />
+                        <q-select
+                          class="w-1/2"
+                          filled
+                          v-model="selectedEffect"
+                          :options="effectOptions"
+                          label="选择声效"
+                        />
+                        <q-btn flat round color="primary" icon="add" @click="addSingleKeyEffect" />
+                      </div>
+                      <q-card-section
+                        class="row items-center q-pb-none text-sm font-bold sticky top-0 z-10 bg-white/30 backdrop-blur-sm -m-l-4 m-b-2"
+                      >
+                        查看已设置的单键声效
+                      </q-card-section> -->
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                       <q-btn flat label="确定" color="primary" v-close-popup />
@@ -2155,6 +2283,7 @@ import {
   ConfigDelete,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
+import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -2813,6 +2942,66 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
 
 // -- 单键声效
 const showSingleKeyEffectDialog = ref(false);
+
+const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
+const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
+const selectedSingleKeys = ref<Array<number>>([]);
+const keyOptions = computed(() => {
+  // return keySoundList.value.map((item) => item.keySoundKey);
+  return [];
+});
+
+const keyEvent_store = useKeyEventStore();
+
+const isRecordingSingleKeys = ref(false);
+const isGetsFocused = ref(false);
+const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
+  console.debug('keycode=', keycode, 'keyName=', keyName);
+
+  // 如果按键不在列表中，则添加
+  if (!selectedSingleKeys.value.includes(keycode)) {
+    selectedSingleKeys.value.push(keycode);
+  } else {
+    q.notify({
+      type: 'info',
+      position: 'top',
+      message: '所录制按键已在选择框中',
+      timeout: 1000,
+    });
+  }
+
+  console.debug('当前已选择的按键:', selectedSingleKeys.value);
+};
+
+watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
+  if (!newVal) {
+    keyEvent_store.clearKeyStateCallback();
+
+    // 当通过点击对话框外使得对话框关闭时, 不会触发失去焦点的事件(因此此时isGetsFocused的值不会被置为false, 故补充此逻辑)
+    isGetsFocused.value = false;
+  }
+});
+
+watch(isRecordingSingleKeys, (newVal) => {
+  if (newVal) {
+    // 录制单键时, 清空输入框。(由于是录制, 因此需要清空输入框, 防止用户输入内容。)
+    // * 如何防止用户输入内容?
+    // * * 当然也可以利用updateInputValue。但有更简单的解决思路, 即定义组件特有属性maxlength为0即可阻止用户输入内容。
+    singleKeysSelectRef.value?.updateInputValue('');
+
+    keyEvent_store.setKeyStateCallback(recordingSingleKeysCallback);
+  } else {
+    keyEvent_store.clearKeyStateCallback();
+  }
+});
+
+watch(isGetsFocused, (newVal) => {
+  if (newVal && isRecordingSingleKeys.value) {
+    keyEvent_store.setKeyStateCallback(recordingSingleKeysCallback);
+  } else {
+    keyEvent_store.clearKeyStateCallback();
+  }
+});
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
