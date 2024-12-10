@@ -3011,6 +3011,10 @@ let oldSelectedSingleKeys: Array<any> = [];
 
 function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
   if (isRecordingSingleKeys.value) {
+    // TIPS: 这里被打印两次的原因可能是以下, 不过不用担心和处理, 因为没有bug。
+    // 1. 首先触发 input 元素的 keydown 事件
+    // 2. 然后冒泡到 q-select 组件
+    // 3. 最后最后冒泡到全局监听器
     console.debug('event.key=', event.key);
 
     //   - completed(已完成)   FIXME: 修复'Enter'按键无法被录制的bug
@@ -3018,20 +3022,31 @@ function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
       // 虽然无法录制'Enter'事件的原因就是select组件阻止了默认的'Enter'事件的冒泡行为,
       // * 但为防止quasar后续更新改变它, 便再次手动阻止一次, 以防止本次修复被quasar的更新影响。
       event.stopPropagation(); // 阻止事件冒泡
-      // 手动创建并分发一个新的键盘事件
-      const newEvent = new KeyboardEvent('keydown', {
-        key: event.key,
-        code: event.code,
-        keyCode: event.keyCode,
-        which: event.which,
-        altKey: event.altKey,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        metaKey: event.metaKey,
-        bubbles: true,
-        cancelable: true,
-      });
+
+      //   ↓    - completed(已完成)   增加location字段即可。原理:这是手动构建事件时, 缺少了构建UUID必要的location字段, 导致小数字键盘中的'Enter'被按下时, 在前端事件状态集中, 创建了一个并不存在的 UUID 的及对应的按下状态 的假按键。
+      // FIXME: 在数字键盘'enter'按键按下后, 再次按下任何按键都 报多个按键同时按下的消息, 这是一个bug。
+      // 手动创建并分发一个新的键盘事件 TIPS: 没必要(虽然修复了, 但我并不打算继续这样用)
+      // const newEvent = new KeyboardEvent('keydown', {
+      //   key: event.key,
+      //   code: event.code,
+      //   keyCode: event.keyCode,
+      //   which: event.which,
+      //   altKey: event.altKey,
+      //   location: event.location, // 增加此字段, 以修复FIXME。
+      //   ctrlKey: event.ctrlKey,
+      //   shiftKey: event.shiftKey,
+      //   metaKey: event.metaKey,
+      //   bubbles: true,
+      //   cancelable: true,
+      // });
+      // document.dispatchEvent(newEvent);
+
+      // 其实干脆直接使用当前事件创建新事件也行( TIPS: 不要直接使用event, 不然会因重复分发相同引用的事件而报错)
+      const newEvent = new KeyboardEvent('keydown', event);
       document.dispatchEvent(newEvent);
+
+      // TIPS: 这样是不对的-> 直接将当前事件, 原封不动的, 给到全局。 会引发意外的报错。
+      // document.dispatchEvent(event); // 报错原因是由于这个事件是已经分发过的事件。
     }
 
     //   - completed(已完成)   FIXME: 修复'Backspace'按键, 在录制过程中, 删除已选择列表中最后一项的bug
