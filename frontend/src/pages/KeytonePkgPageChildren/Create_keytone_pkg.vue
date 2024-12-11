@@ -2975,10 +2975,14 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
 
   console.debug('当前已选择的按键:', selectedSingleKeys.value);
 };
+const persistentSingleKeysDataCallback = (keycode: number, keyName: string) => {
+  ConfigSet('cursorSingleKeysName.' + keycode, keyName);
+};
 
 watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
   if (!newVal) {
     keyEvent_store.clearKeyStateCallback_Record();
+    keyEvent_store.clearKeyStateCallback_PersistentData();
 
     // 当通过点击对话框外使得对话框关闭时, 不会触发失去焦点的事件(因此此时isGetsFocused的值不会被置为false, 故补充此逻辑)
     isGetsFocused.value = false;
@@ -2993,16 +2997,20 @@ watch(isRecordingSingleKeys, (newVal) => {
     singleKeysSelectRef.value?.updateInputValue('');
 
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
+    keyEvent_store.setKeyStateCallback_PersistentData(persistentSingleKeysDataCallback);
   } else {
     keyEvent_store.clearKeyStateCallback_Record();
+    keyEvent_store.clearKeyStateCallback_PersistentData();
   }
 });
 
 watch(isGetsFocused, (newVal) => {
   if (newVal && isRecordingSingleKeys.value) {
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
+    keyEvent_store.setKeyStateCallback_PersistentData(persistentSingleKeysDataCallback);
   } else {
     keyEvent_store.clearKeyStateCallback_Record();
+    keyEvent_store.clearKeyStateCallback_PersistentData();
   }
 });
 
