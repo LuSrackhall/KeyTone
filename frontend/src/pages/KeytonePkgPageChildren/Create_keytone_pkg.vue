@@ -2978,7 +2978,7 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
 
 watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
   if (!newVal) {
-    keyEvent_store.clearKeyStateCallback();
+    keyEvent_store.clearKeyStateCallback_Record();
 
     // 当通过点击对话框外使得对话框关闭时, 不会触发失去焦点的事件(因此此时isGetsFocused的值不会被置为false, 故补充此逻辑)
     isGetsFocused.value = false;
@@ -2992,17 +2992,17 @@ watch(isRecordingSingleKeys, (newVal) => {
     // * * 当然也可以利用updateInputValue。但有更简单的解决思路, 即定义组件特有属性maxlength为0即可阻止用户输入内容。
     singleKeysSelectRef.value?.updateInputValue('');
 
-    keyEvent_store.setKeyStateCallback(recordingSingleKeysCallback);
+    keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
   } else {
-    keyEvent_store.clearKeyStateCallback();
+    keyEvent_store.clearKeyStateCallback_Record();
   }
 });
 
 watch(isGetsFocused, (newVal) => {
   if (newVal && isRecordingSingleKeys.value) {
-    keyEvent_store.setKeyStateCallback(recordingSingleKeysCallback);
+    keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
   } else {
-    keyEvent_store.clearKeyStateCallback();
+    keyEvent_store.clearKeyStateCallback_Record();
   }
 });
 

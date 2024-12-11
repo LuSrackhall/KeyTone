@@ -59,15 +59,18 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
             // - 播放音效等
             console.debug('[debug]: keycode为', keycode, '的按键从down变为up。其名称可能是', keyDownStateName_ui.value);
 
-            // 使用keyDownStateName_ui, 来记录按键名称
+            // TIPS: 用于录制按键的相关的逻辑在此处执行
+            if (keyStateCallback_Record) {
+              keyStateCallback_Record(keycode, keyDownStateName_ui.value);
+            }
 
+            // 使用keyDownStateName_ui, 来记录按键名称
             if (keyDownStateName_ui.value) {
               console.info('[info]:keycode为', keycode, '的按键从down变为up。其名称可能是', keyDownStateName_ui.value);
-              // TIPS: 用于记录的逻辑写在此处
-              // ...
 
-              if (onKeyStateCallback) {
-                onKeyStateCallback(keycode, keyDownStateName_ui.value);
+              // TIPS: 用于记录的数据持久化相关的逻辑在此处执行
+              if (keyStateCallback_PersistentData) {
+                keyStateCallback_PersistentData(keycode, keyDownStateName_ui.value);
               }
 
               // 记录行为结束后, 清空keyDownStateName_ui
@@ -101,13 +104,20 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
       });
       if (count_down > 1) {
         // 不希望这通知, 在应用未获取焦点时触发, 因此将此部分移动至此, 此处仅作为通知触发, 不参与 按键Dik码 与 name 的实时映射逻辑。
+        // q.notify({
+        //   message: '按键名称识别时, 检测到有多个按键被同时按下。',
+        //   color: 'red',
+        // });
+        // q.notify({
+        //   message: '为保证识别准确性, 请确保仅单个按键从按下至抬起。',
+        //   color: 'red',
+        // });
+
+        // 在录制逻辑不依赖记录逻辑后, 此处通知将不再重要, 因此改为简单的告警提示。
+        // * 不移除的原因是, 在项目未成熟的现阶段, 记录逻辑仍可在一定程度上作为更新前保底的最后防线(虽然很小,但还是有点用的)。
         q.notify({
-          message: '按键名称识别时, 检测到有多个按键被同时按下。',
-          color: 'red',
-        });
-        q.notify({
-          message: '为保证识别准确性, 请确保仅单个按键从按下至抬起。',
-          color: 'red',
+          type: 'warning',
+          message: '按键录制期间, 尽量避免同时按下多个按键',
         });
         return;
       }
@@ -119,27 +129,63 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
   // TIPS: 作为是否要启用'按键Dik码与name实时映射 与 持久化记录功能'的开关。(当某些ui组件需要时, 主动的开启它即可)
   const isOpeningTheRecord = ref<boolean>(false);
 
-  // 定义可配置的回调函数
-  let onKeyStateCallback: ((keycode: number, keyName: string) => void) | null = null;
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // 声明可配置的 '录制' 用的回调函数
+  // - (或者说用于录制按键的回调函数)
+  let keyStateCallback_Record: ((keycode: number, keyName: string) => void) | null = null;
 
-  // 设置回调的方法
-  function setKeyStateCallback(callback: (keycode: number, keyName: string) => void) {
+  /**
+   * 此方法的作用是给回调用的函数变量'keyStateCallback_Record', 设置真实逻辑, 以完成其定义。
+   * @param callback 回调函数(即要设置执行的真实逻辑)
+   */
+  function setKeyStateCallback_Record(callback: (keycode: number, keyName: string) => void) {
     isOpeningTheRecord.value = true;
-    onKeyStateCallback = callback;
+    keyStateCallback_Record = callback;
   }
 
-  // 清除回调的方法
-  function clearKeyStateCallback() {
+  /**
+   * 此方法的作用是给回调用的函数变量'keyStateCallback_Record', 做清除处理, 使得其不再执行。
+   */
+  function clearKeyStateCallback_Record() {
     isOpeningTheRecord.value = false;
-    onKeyStateCallback = null;
+    keyStateCallback_Record = null;
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // 定义可配置的 '记录' 用的回调函数
+  // - (或者说持久化数据用的回调函数)
+  let keyStateCallback_PersistentData: ((keycode: number, keyName: string) => void) | null = null;
+
+  /**
+   * 此方法的作用是给回调用的函数变量'keyStateCallback_PersistentData', 设置真实逻辑, 以完成其定义。
+   * @param callback 回调函数(即要设置执行的真实逻辑)
+   */
+  function setKeyStateCallback_PersistentData(callback: (keycode: number, keyName: string) => void) {
+    // 因为记录的逻辑, 是为了服务与录制按键逻辑的, 因此这里无需重复的开启录制逻辑。
+    // isOpeningTheRecord.value = true;
+    keyStateCallback_PersistentData = callback;
+  }
+
+  /**
+   * 此方法的作用是为回调用的函数变量'keyStateCallback_PersistentData', 做清除处理, 使得其不再执行。
+   */
+  function clearKeyStateCallback_PersistentData(): void {
+    // 因为记录的逻辑, 是为了服务与录制按键逻辑的, 因此这里无需重复的关闭录制逻辑。
+    // isOpeningTheRecord.value = false;
+    keyStateCallback_PersistentData = null;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   return {
     keyCodeState,
     frontendKeyEventStateBool,
     keyDownStateName_ui,
     isOpeningTheRecord,
-    setKeyStateCallback,
-    clearKeyStateCallback,
+    setKeyStateCallback_Record,
+    clearKeyStateCallback_Record,
+    setKeyStateCallback_PersistentData,
+    clearKeyStateCallback_PersistentData,
   };
 });
