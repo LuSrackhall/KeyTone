@@ -178,6 +178,16 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  // 用于记录按键的Dik码与name的映射(初版由libuiohook库中对应的定义转换而来, 后续会不断的更新, 直到映射出所有按键的名称)
+  const dikCodeToName = reactive<Map<number, string>>(new Map<number, string>());
+
+  // 对于类似与Meta的按键, 在windows系统中对应名称是'Windows', 在macos系统中对应名称是'Command', 在linux系统中对应名称是'Super'
+  // 因此后续考虑将某些在特定系统中名称不同的按键, 进行区分处理。(这也是符合设计图纸的, 不过是否有必要仍待定。)
+  // const dikCodeToName_system_windows = reactive<Map<number, string>>(new Map<number, string>());
+  // const dikCodeToName_system_macos = reactive<Map<number, string>>(new Map<number, string>());
+  // const dikCodeToName_system_linux = reactive<Map<number, string>>(new Map<number, string>());
+  // const dikCodeToName_system_custom = reactive<Map<number, string>>(new Map<number, string>());
+
   return {
     keyCodeState,
     frontendKeyEventStateBool,
@@ -187,5 +197,6 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
     clearKeyStateCallback_Record,
     setKeyStateCallback_PersistentData,
     clearKeyStateCallback_PersistentData,
+    dikCodeToName,
   };
 });

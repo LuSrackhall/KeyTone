@@ -2192,6 +2192,14 @@
                                     "
                                     :maxlength="isRecordingSingleKeys ? 0 : Infinity"
                                     @keydown="preventDefaultKeyBehaviorWhenRecording"
+                                    :option-label="
+                                      (option) => {
+                                        return keyEvent_store.dikCodeToName.get(option) || // 优先从项目作者制作的特定于 dik码 与 按键名称 的映射码表中取按键名。
+                                          dikCodeToName_custom.get(option) // 其次从项目作者所编写的 dik码 与 前端keycode/key名 的自动映射逻辑生成的码表中取按键名。(这一步后续可能移除: 因为这一步只是作者为快速制作第一步中的码表, 才编写的特定程序, 以尽可能轻松定义特定的按键名称--毕竟定义每一个按键的名称, 且不能重复的工作量不小, 因此想借助前端已有的keycode或key的定义来加快进度。)
+                                          ? 'Temp-{' + dikCodeToName_custom.get(option) + '}' // 防止影响优先级流程
+                                          : '' || 'Dik-{' + option + '}'; // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
+                                      }
+                                    "
                                   >
                                     <template v-slot:append>
                                       <q-btn
@@ -2949,6 +2957,7 @@ const showSingleKeyEffectDialog = ref(false);
 const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
 const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
 const selectedSingleKeys = ref<Array<number>>([]);
+const dikCodeToName_custom = reactive<Map<number, string>>(new Map<number, string>()); // 用于被持久化的实时映射数据的同步工作。(优先级很低, 甚至会被更新的版本覆盖, 仅勉强起个保底作用, 甚至项目完善后有可能删除这个)
 const keyOptions = computed(() => {
   // return keySoundList.value.map((item) => item.keySoundKey);
   return [];
@@ -2976,7 +2985,8 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('当前已选择的按键:', selectedSingleKeys.value);
 };
 const persistentSingleKeysDataCallback = (keycode: number, keyName: string) => {
-  ConfigSet('cursorSingleKeysName.' + keycode, keyName);
+  dikCodeToName_custom.set(keycode, keyName);
+  ConfigSet('custom_single_keys_name.' + keycode, keyName);
 };
 
 watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
@@ -3140,6 +3150,14 @@ onBeforeMount(async () => {
           };
         }>;
       }
+
+      // 后续极大可能会删除它(单键声效的Temp的单键名称)(TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证)
+      if (data.custom_single_keys_name !== undefined) {
+        // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
+        Object.entries(data.custom_single_keys_name).forEach(([dikCode, name]) => {
+          dikCodeToName_custom.set(Number(dikCode), name as string);
+        });
+      }
     });
 
     watch(pkgName, (newVal) => {
@@ -3274,6 +3292,16 @@ onBeforeMount(async () => {
     if (keyTonePkgData.key_tone !== undefined) {
       isEnableEmbeddedTestSoundDelayed.cancel();
       isEnableEmbeddedTestSoundDelayed(keyTonePkgData.key_tone.is_enable_embedded_test_sound);
+    }
+
+    // 后续极大可能会删除它(Temp的单键名称)
+    // * 若仅依赖此逻辑, 添加声效时会因读取延迟使得第一时间仅能看到Dik码, 短暂的后续方可看到此项逻辑带来的Temp临时名称。
+    // * 若想直接看到, 就改变逻辑中在ConfigSet前注释掉的dikCodeToName_custom.set相关逻辑。(启用)
+    if (keyTonePkgData.custom_single_keys_name !== undefined) {
+      // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
+      Object.entries(keyTonePkgData.custom_single_keys_name).forEach(([dikCode, name]) => {
+        dikCodeToName_custom.set(Number(dikCode), name as string);
+      });
     }
   }
   const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
