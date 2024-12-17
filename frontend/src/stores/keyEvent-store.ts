@@ -259,17 +259,17 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
     '3639': 'PrintScreen',
     '70': 'ScrollLock',
     '3653': 'Pause',
-    '3666': 'Insert',
-    '3667': 'Delete',
-    '3655': 'Home',
-    '3663': 'End',
-    '3657': 'PageUp',
-    '3665': 'PageDown',
-    '57416': 'ArrowUp',
-    '57419': 'ArrowLeft',
-    '57420': 'Clear',
-    '57421': 'ArrowRight',
-    '57424': 'ArrowDown',
+    '3666': 'NumpadInsert',
+    '3667': 'NumpadDelete',
+    '3655': 'NumpadHome',
+    '3663': 'NumpadEnd',
+    '3657': 'NumpadPageUp',
+    '3665': 'NumpadPageDown',
+    '57416': 'NumpadUp',
+    '57419': 'NumpadLeft',
+    '57420': 'NumpadClear',
+    '57421': 'NumpadRight',
+    '57424': 'NumpadDown',
     '69': 'NumLock',
     '3637': 'NumpadDivide',
     '55': 'NumpadMultiply',
@@ -354,6 +354,65 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
   }).forEach(([dikCode, name]) => {
     dikCodeToName.set(Number(dikCode), name as string);
   });
+
+  // custom  TIPS: 用于存储在/不在dik原始码表内, 不确定平台的 dik码与name 的映射。(暂时不确定平台的也放于此处)
+  Object.entries({
+    //   ↓    - completed(已完成)   : #47的bug在解决的同时, 就无需在处理#50的bug了, 因为temp值将会被覆盖, 即使去解决它也是毫无意义的(或者说在 记录 与 录制 逻辑分开后, [#50]这个问题就不应该存在)。
+    // FIXME: [#47](https://github.com/LuSrackhall/KeyTone/issues/47#:~:text=%E5%AF%B9%E4%B8%8A%E8%BF%B0json,%E5%8F%AA%E6%9C%89windows%E6%9C%BA%E5%99%A8)
+    // FIXME: [#50](https://github.com/LuSrackhall/KeyTone/issues/50#:~:text=%E7%AE%AD%E5%A4%B4%E5%8C%BA%E5%9F%9F%E4%B8%8D%E8%83%BD,%E4%B8%8D%E5%BA%94%E8%AF%A5%E5%AD%98%E5%9C%A8)
+    /**
+     *
+     * 虽然像 Home, End 之类的原始码表中也有, 但我似乎无法正确的具体区分,
+     * 目前仅根据我自己发现的, 力所能及的修改这些码表(包括 原始码表、自定义码表、和 各平台码表)。
+     * 因此, 因个人能力问题, 本项目暂时无法完全避免name重复现象, 只能在不断更新中完善dik码所对应的name名称, 以做到最终完全的标准化。
+     * 但目前, 个人手中仅拥有win设备, 因此在拥有其它设备前, 仅会针对win平台做适配。
+     * 本项目虽然是开源的, 但目前看来除了我本人外, 应该不会有其余贡献者了, 因此其它平台的适配需等到作者我本人获取对应设备之后再进行了, 可能是遥远的将来。
+     * 当然, 如果您是用户, 又恰好有能力pr的话, 也欢迎您作出贡献, 但我需要对应平台的实际运行时按键按下和识别的对应视频才会合并到分支, 因为我作为唯一负责人, 要保证其映射的准确性。
+     */
+    60999: 'Home',
+    61001: 'PageUp',
+
+    61011: 'Delete',
+    61007: 'End',
+    61009: 'PageDown',
+
+    61000: 'Up',
+    61008: 'Down',
+    61003: 'Left',
+    61005: 'Right',
+  }).forEach(([dikCode, name]) => {
+    dikCodeToName.set(Number(dikCode), name as string);
+  });
+
+  // win     TIPS: 用于存储在/不在dik原始码表内, 需要对win平台特定name名称的 dik码与name 的映射。
+  if (q.platform.is.win) {
+    Object.entries({
+      3675: 'WinLeft',
+      3676: 'WinRight',
+    }).forEach(([dikCode, name]) => {
+      dikCodeToName.set(Number(dikCode), name as string);
+    });
+  }
+
+  // mac   TIPS: 用于存储在/不在dik原始码表内, 需要对mac平台特定name名称的 dik码与name 的映射。
+  if (q.platform.is.mac) {
+    Object.entries({
+      3675: 'CommandLeft',
+      3676: 'CommandRight',
+    }).forEach(([dikCode, name]) => {
+      dikCodeToName.set(Number(dikCode), name as string);
+    });
+  }
+
+  // linux   TIPS: 用于存储在/不在dik原始码表内, 需要对linux平台特定name名称的 dik码与name 的映射。
+  if (q.platform.is.linux) {
+    Object.entries({
+      3675: 'SuperLeft',
+      3676: 'SuperRight',
+    }).forEach(([dikCode, name]) => {
+      dikCodeToName.set(Number(dikCode), name as string);
+    });
+  }
 
   return {
     keyCodeState,
