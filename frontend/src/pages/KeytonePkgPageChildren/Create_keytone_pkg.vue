@@ -2194,10 +2194,13 @@
                                     @keydown="preventDefaultKeyBehaviorWhenRecording"
                                     :option-label="
                                       (option) => {
-                                        return keyEvent_store.dikCodeToName.get(option) || // 优先从项目作者制作的特定于 dik码 与 按键名称 的映射码表中取按键名。
-                                          dikCodeToName_custom.get(option) // 其次从项目作者所编写的 dik码 与 前端keycode/key名 的自动映射逻辑生成的码表中取按键名。(这一步后续可能移除: 因为这一步只是作者为快速制作第一步中的码表, 才编写的特定程序, 以尽可能轻松定义特定的按键名称--毕竟定义每一个按键的名称, 且不能重复的工作量不小, 因此想借助前端已有的keycode或key的定义来加快进度。)
-                                          ? 'Temp-{' + dikCodeToName_custom.get(option) + '}' // 防止影响优先级流程
-                                          : '' || 'Dik-{' + option + '}'; // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
+                                        return (
+                                          keyEvent_store.dikCodeToName.get(option) || // 优先从项目作者制作的特定于 dik码 与 按键名称 的映射码表中取按键名。
+                                          (dikCodeToName_custom.get(option) // 其次从项目作者所编写的 dik码 与 前端keycode/key名 的自动映射逻辑生成的码表中取按键名。(这一步后续可能移除: 因为这一步只是作者为快速制作第一步中的码表, 才编写的特定程序, 以尽可能轻松定义特定的按键名称--毕竟定义每一个按键的名称, 且不能重复的工作量不小, 因此想借助前端已有的keycode或key的定义来加快进度。)
+                                            ? 'Temp-{' + dikCodeToName_custom.get(option) + '}' // 防止影响优先级流程
+                                            : '') || // 中间这个需要加上括号, 不然 '||' 运算符的优先级大于 '?'
+                                          'Dik-{' + option + '}'
+                                        ); // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
                                       }
                                     "
                                   >
