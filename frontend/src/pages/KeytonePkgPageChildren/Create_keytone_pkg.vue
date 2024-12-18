@@ -2169,7 +2169,7 @@
                                   <q-select
                                     ref="singleKeysSelectRef"
                                     v-model="selectedSingleKeys"
-                                    :options="keyOptions"
+                                    :options="filterOptions"
                                     dense
                                     filled
                                     hide-dropdown-icon
@@ -2201,6 +2201,46 @@
                                             : '') || // 中间这个需要加上括号, 不然 '||' 运算符的优先级大于 '?'
                                           'Dik-{' + option + '}'
                                         ); // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
+                                      }
+                                    "
+                                    @filter="
+                                      (inputValue, doneFn) => {
+                                        if (inputValue === '') {
+                                          doneFn(() => {
+                                            filterOptions = keyOptions;
+                                          });
+                                          return;
+                                        }
+
+                                        doneFn(() => {
+                                          const inputValueLowerCase = inputValue.toLowerCase();
+                                          filterOptions = keyOptions.filter((item) => {
+                                            // 首先过滤系统 TIPS: 由于结果0也是符合预期的(即第一个字符), 因此不能使用||来处理, 否则会造成第一个字符无法被识别。
+                                            let ifre = keyEvent_store.dikCodeToName
+                                              .get(item)
+                                              ?.toLowerCase()
+                                              ?.indexOf(inputValueLowerCase);
+
+                                            if (ifre !== undefined && ifre > -1) {
+                                              return true;
+                                            }
+
+                                            // 其次过滤temp(由于名称中字符串'temp_'是显示时候加的, 因此不影响实际过滤行为)   TIPS: 由于结果0也是符合预期的(即第一个字符), 因此不能使用||来处理, 否则会造成第一个字符无法被识别。
+                                            ifre = dikCodeToName_custom
+                                              .get(item)
+                                              ?.toLowerCase()
+                                              ?.indexOf(inputValueLowerCase);
+                                            if (ifre !== undefined && ifre > -1) {
+                                              // TIPS: 举例子, 如系统a在temp中是 keyA, 且temp中所有的字母键都有key三个字符, 这就造成了当按下 k 或 e 或 y 时, 被误触发。
+                                              //       而此处的if, 就是防止被误触发的。(因为只要这个dik码在主表中存在并过滤过, 就没必要过滤temp表了。因为我们是以主表为主的, 这样判断可避免误触发。)
+                                              //       只要在主表中不存在即get结果为undefined时, 我们才启用temp表的过滤。
+                                              if (keyEvent_store.dikCodeToName.get(item) === undefined) {
+                                                return true;
+                                              }
+                                            }
+                                            return false;
+                                          });
+                                        });
                                       }
                                     "
                                   >
@@ -2961,14 +3001,32 @@ const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
 const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
 const selectedSingleKeys = ref<Array<number>>([]);
 const dikCodeToName_custom = reactive<Map<number, string>>(new Map<number, string>()); // 用于被持久化的实时映射数据的同步工作。(优先级很低, 甚至会被更新的版本覆盖, 仅勉强起个保底作用, 甚至项目完善后有可能删除这个)
-const keyOptions = computed(() => {
-  // return keySoundList.value.map((item) => item.keySoundKey);
-  return [];
-});
 
 const keyEvent_store = useKeyEventStore();
 
 const isRecordingSingleKeys = ref(false);
+
+const keyOptions = computed(() => {
+  // 将 Map 转换为数组形式的选项
+  if (isRecordingSingleKeys.value) {
+    return [];
+  } else {
+    // 默认以系统主映射表的keys为主
+    const reArray = Array.from(keyEvent_store.dikCodeToName.keys());
+
+    // 其次是temp的keys(虽然后续可能会删除相关逻辑。)
+    Array.from(dikCodeToName_custom.keys()).forEach((item) => {
+      // 在遍历temp映射表的过程中, 检查其每个key是否在主映射表的keys中。如果主映射表中没有, 才会往里加(因为会始终以主映射表为主)。
+      if (!reArray.includes(item)) {
+        reArray.push(item);
+      }
+    });
+
+    return reArray;
+  }
+});
+const filterOptions = ref(keyOptions.value); // 用于过滤选项
+
 const isGetsFocused = ref(false);
 const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('keycode=', keycode, 'keyName=', keyName);
