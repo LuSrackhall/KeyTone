@@ -2269,6 +2269,11 @@
                                       </q-btn>
                                     </template>
                                   </q-select>
+
+                                  <div class="flex flex-row items-center justify-center gap-10 w-[86%]">
+                                    <q-checkbox dense v-model="isDownSoundEffectSelectEnabled" label="按下声效" />
+                                    <q-checkbox dense v-model="isUpSoundEffectSelectEnabled" label="抬起声效" />
+                                  </div>
                                 </div>
 
                                 <!-- <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" /> -->
@@ -3006,6 +3011,8 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
 }
 
 // -- 单键声效
+
+// -- -- 选择按键
 const showSingleKeyEffectDialog = ref(false);
 
 const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
@@ -3151,6 +3158,10 @@ function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
   // 更新oldSelectedSingleKeys, 以备下次使用
   oldSelectedSingleKeys = selectedSingleKeys.value.slice();
 }
+
+// -- -- 选择声效
+const isDownSoundEffectSelectEnabled = ref(true);
+const isUpSoundEffectSelectEnabled = ref(true);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
