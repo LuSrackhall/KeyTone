@@ -2167,6 +2167,7 @@
                                     :maxlength="isRecordingSingleKeys ? 0 : Infinity"
                                   -->
                                   <q-select
+                                    label="选择单键(数量任意)"
                                     ref="singleKeysSelectRef"
                                     v-model="selectedSingleKeys"
                                     :options="filterOptions"
