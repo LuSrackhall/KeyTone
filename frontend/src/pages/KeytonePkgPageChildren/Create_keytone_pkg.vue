@@ -2170,6 +2170,16 @@
                                     ref="singleKeysSelectRef"
                                     v-model="selectedSingleKeys"
                                     :options="filterOptions"
+                                    :virtual-scroll-slice-size="
+                                      (() => {
+                                        // TIPS: 此处如此写, 只是为了添加注释。因此没使用正常的双引号内直接写9999的方式。
+                                        // TIPS: select组件默认启用了虚拟滚动行为, 初始值是10, 因此每次只会渲染10个, 超出就会触发虚拟滚动。
+                                        // TIPS: 我不喜欢quasar的虚拟滚动, 但quasar不支持关闭。 因此将此值设置的足够大来满足禁用虚拟滚动的需求。
+                                        // TIPS: 就算我需要使用虚拟滚动, 也会使用专门的虚拟滚动库, 而不是quasar的虚拟滚动(因为quasar的虚拟滚动影响显示)。
+                                        //       不过似乎不现实, 因为即使自定义菜单时, 似乎也被要求加上虚拟滚动类 -> https://quasar.dev/vue-components/select#customizing-menu-options:~:text=Customizing%20menu%20options,the%20first%20one
+                                        return 9999;
+                                      })()
+                                    "
                                     dense
                                     filled
                                     hide-dropdown-icon
