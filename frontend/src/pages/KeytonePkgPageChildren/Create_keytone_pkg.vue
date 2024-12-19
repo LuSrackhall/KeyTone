@@ -2150,7 +2150,7 @@
                             <q-card-section class="q-pt-none">
                               <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">请选择按键和对应的声效设置</div>
                               <div class="flex flex-col gap-4">
-                                <div class="flex flex-row items-center gap-2">
+                                <div class="flex flex-row items-center gap-2 w-full">
                                   <!--
                                     // 此选择组件增加录制功能且默认启用。(停止录制的应用场景全配列键盘的用户可能用不到, 但当某些用户使用的键盘不是全配列, 无法录制一些常用按键时(如小键盘数字区)会非常有用。)
                                     //   ↓    - completed(已完成)    只不过方法不是太优雅而已 -> 采用了其中提到的比较啰嗦的其余方式。
@@ -2166,6 +2166,7 @@
                                     // 为了在 录制单键 功能启用时, 阻止正常输入的内容。(使用此方式, 可以便捷的阻止输入)
                                     :maxlength="isRecordingSingleKeys ? 0 : Infinity"
                                   -->
+                                  <!-- 按键选择 start -->
                                   <q-select
                                     label="选择单键(数量任意)"
                                     ref="singleKeysSelectRef"
@@ -2269,11 +2270,377 @@
                                       </q-btn>
                                     </template>
                                   </q-select>
+                                  <!-- 按键选择 end -->
 
-                                  <div class="flex flex-row items-center justify-center gap-10 w-[86%]">
+                                  <!-- 声效选择 start -->
+                                  <div class="flex flex-row items-center justify-center gap-9 w-[88%]">
                                     <q-checkbox dense v-model="isDownSoundEffectSelectEnabled" label="按下声效" />
                                     <q-checkbox dense v-model="isUpSoundEffectSelectEnabled" label="抬起声效" />
                                   </div>
+                                  <div class="w-full">
+                                    <q-card-section>
+                                      <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
+                                        <div class="flex flex-col space-y-4 w-6.5/8">
+                                          <!-- 选择单键按下声效的选项, 仅支持单选 -->
+                                          <q-select
+                                            v-show="isDownSoundEffectSelectEnabled"
+                                            outlined
+                                            stack-label
+                                            v-model="keyDownSingleKeySoundEffectSelect"
+                                            :options="keySingleKeySoundEffectOptions"
+                                            :option-label="(item: any) => {
+                                              if (item.type === 'audio_files') {
+                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                              }
+                                              if (item.type === 'sounds') {
+                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
+                                                } else {
+                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                                    soundFileList.find(
+                                                      (soundFile:any) =>
+                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
+                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
+                                                    )?.name +
+                                                    '     - ' +
+                                                    ' [' +
+                                                    item.value.soundValue?.cut?.start_time +
+                                                    ' ~ ' +
+                                                    item.value.soundValue?.cut?.end_time +
+                                                    ']'
+                                                  );
+                                                }
+                                              }
+                                              if (item.type === 'key_sounds') {
+                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                              }
+                                            }"
+                                            :option-value="(item: any) => {
+                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                                              if (item.type === 'audio_files'){
+                                                return item.value.sha256 + item.value.name_id
+                                              }
+                                              if(item.type === 'sounds'){
+                                                return item.value.soundKey
+                                              }
+                                              if(item.type === 'key_sounds'){
+                                                return item.value.keySoundKey
+                                              }
+                                            }"
+                                            label="设置按下声效"
+                                            use-chips
+                                            dense
+                                            @popup-hide="
+                                              () => {
+                                                if (
+                                                  // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
+                                                  isShowUltimatePerfectionKeySoundAnchoring &&
+                                                  isAnchoringUltimatePerfectionKeySound &&
+                                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
+                                                  keyDownUnifiedSoundEffectSelect?.type === 'key_sounds'
+                                                ) {
+                                                  keyUpUnifiedSoundEffectSelect = keyDownUnifiedSoundEffectSelect;
+                                                }
+                                              }
+                                            "
+                                            class="max-w-full"
+                                          />
+                                          <!-- 选择单键抬起声效的选项, 仅支持单选 -->
+                                          <q-select
+                                            v-show="isUpSoundEffectSelectEnabled"
+                                            outlined
+                                            stack-label
+                                            v-model="keyUpSingleKeySoundEffectSelect"
+                                            :options="keySingleKeySoundEffectOptions"
+                                            :option-label="(item: any) => {
+                                              if (item.type === 'audio_files') {
+                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
+                                              }
+                                              if (item.type === 'sounds') {
+                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
+                                                } else {
+                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
+                                                    soundFileList.find(
+                                                      (soundFile:any) =>
+                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
+                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
+                                                    )?.name +
+                                                    '     - ' +
+                                                    ' [' +
+                                                    item.value.soundValue?.cut?.start_time +
+                                                    ' ~ ' +
+                                                    item.value.soundValue?.cut?.end_time +
+                                                    ']'
+                                                  );
+                                                }
+                                              }
+                                              if (item.type === 'key_sounds') {
+                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
+                                              }
+                                            }"
+                                            :option-value="(item: any) => {
+                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
+                                              if (item.type === 'audio_files'){
+                                                return item.value.sha256 + item.value.name_id
+                                              }
+                                              if(item.type === 'sounds'){
+                                                return item.value.soundKey
+                                              }
+                                              if(item.type === 'key_sounds'){
+                                                return item.value.keySoundKey
+                                              }
+                                            }"
+                                            label="设置抬起声效"
+                                            use-chips
+                                            dense
+                                            @popup-hide="
+                                              () => {
+                                                // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
+                                                if (
+                                                  isShowUltimatePerfectionKeySoundAnchoring &&
+                                                  isAnchoringUltimatePerfectionKeySound &&
+                                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
+                                                  keyUpUnifiedSoundEffectSelect?.type === 'key_sounds'
+                                                ) {
+                                                  keyDownUnifiedSoundEffectSelect = keyUpUnifiedSoundEffectSelect;
+                                                }
+                                              }
+                                            "
+                                            class="max-w-full"
+                                          />
+                                        </div>
+                                        <div
+                                          v-show="isDownSoundEffectSelectEnabled && isUpSoundEffectSelectEnabled"
+                                          class="flex justify-end -m-l-2"
+                                        >
+                                          <q-icon
+                                            @click="
+                                              isAnchoringUltimatePerfectionKeySound_singleKey =
+                                                !isAnchoringUltimatePerfectionKeySound_singleKey
+                                            "
+                                            size="2.75rem"
+                                            v-if="isShowUltimatePerfectionKeySoundAnchoring_singleKey"
+                                          >
+                                            <template v-if="isAnchoringUltimatePerfectionKeySound_singleKey">
+                                              <!-- 锚定 -->
+                                              <svg
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 27.838698814764143 45.55476707640558"
+                                                width="27.838698814764143"
+                                                height="45.55476707640558"
+                                              >
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10.257971830020665 11.315110817092783) rotate(0 3.661377577361293 4.912529303576154)"
+                                                >
+                                                  <path
+                                                    d="M1.83 0 C3.09 0, 4.34 0, 5.49 0 M1.83 0 C2.76 0, 3.69 0, 5.49 0 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M7.32 1.83 C7.32 4.07, 7.32 6.3, 7.32 7.99 M7.32 1.83 C7.32 3.67, 7.32 5.51, 7.32 7.99 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M5.49 9.83 C4.52 9.83, 3.56 9.83, 1.83 9.83 M5.49 9.83 C4.3 9.83, 3.12 9.83, 1.83 9.83 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M0 7.99 C0 6.74, 0 5.48, 0 1.83 M0 7.99 C0 6.56, 0 5.12, 0 1.83 M0 1.83 C0 0.61, 0.61 0, 1.83 0 M0 1.83 C0 0.61, 0.61 0, 1.83 0"
+                                                    stroke="#1e1e1e"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                                <g stroke-linecap="round">
+                                                  <g
+                                                    transform="translate(13.900885269327091 18.0363210366226) rotate(0 -0.0030445053470202765 2.3801245195212495)"
+                                                  >
+                                                    <path
+                                                      d="M0 0 C0 0.79, -0.01 3.97, -0.01 4.76 M0 0 C0 0.79, -0.01 3.97, -0.01 4.76"
+                                                      stroke="#1e1e1e"
+                                                      stroke-width="1"
+                                                      fill="none"
+                                                    ></path>
+                                                  </g>
+                                                </g>
+                                                <mask></mask>
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10.257971830020665 24.438144439265034) rotate(0 3.661377577361293 4.912529303576154)"
+                                                >
+                                                  <path
+                                                    d="M1.83 0 C2.75 0, 3.67 0, 5.49 0 M1.83 0 C2.98 0, 4.12 0, 5.49 0 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M7.32 1.83 C7.32 4.09, 7.32 6.36, 7.32 7.99 M7.32 1.83 C7.32 4.06, 7.32 6.28, 7.32 7.99 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M5.49 9.83 C4.11 9.83, 2.73 9.83, 1.83 9.83 M5.49 9.83 C4.08 9.83, 2.67 9.83, 1.83 9.83 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M0 7.99 C0 6.4, 0 4.8, 0 1.83 M0 7.99 C0 6.46, 0 4.92, 0 1.83 M0 1.83 C0 0.61, 0.61 0, 1.83 0 M0 1.83 C0 0.61, 0.61 0, 1.83 0"
+                                                    stroke="#1e1e1e"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                                <g stroke-linecap="round">
+                                                  <g
+                                                    transform="translate(13.900885269326977 27.541992826887526) rotate(0 -0.0030445053470202765 -2.3801245195212495)"
+                                                  >
+                                                    <path
+                                                      d="M0 0 C0 -0.79, -0.01 -3.97, -0.01 -4.76 M0 0 C0 -0.79, -0.01 -3.97, -0.01 -4.76"
+                                                      stroke="#1e1e1e"
+                                                      stroke-width="1"
+                                                      fill="none"
+                                                    ></path>
+                                                  </g>
+                                                </g>
+                                                <mask></mask>
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10 10) rotate(0 3.9193494073820716 12.77738353820279)"
+                                                >
+                                                  <path
+                                                    d="M1.96 0 C3.5 0, 5.03 0, 5.88 0 M1.96 0 C3.41 0, 4.86 0, 5.88 0 M5.88 0 C7.19 0, 7.84 0.65, 7.84 1.96 M5.88 0 C7.19 0, 7.84 0.65, 7.84 1.96 M7.84 1.96 C7.84 8.03, 7.84 14.11, 7.84 23.6 M7.84 1.96 C7.84 7.33, 7.84 12.7, 7.84 23.6 M7.84 23.6 C7.84 24.9, 7.19 25.55, 5.88 25.55 M7.84 23.6 C7.84 24.9, 7.19 25.55, 5.88 25.55 M5.88 25.55 C4.57 25.55, 3.25 25.55, 1.96 25.55 M5.88 25.55 C4.56 25.55, 3.25 25.55, 1.96 25.55 M1.96 25.55 C0.65 25.55, 0 24.9, 0 23.6 M1.96 25.55 C0.65 25.55, 0 24.9, 0 23.6 M0 23.6 C0 16.78, 0 9.97, 0 1.96 M0 23.6 C0 15.66, 0 7.72, 0 1.96 M0 1.96 C0 0.65, 0.65 0, 1.96 0 M0 1.96 C0 0.65, 0.65 0, 1.96 0"
+                                                    stroke="transparent"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                              </svg>
+                                            </template>
+                                            <template v-else>
+                                              <!-- 锚定解除 -->
+                                              <svg
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 27.838698814764143 45.55476707640558"
+                                                width="27.838698814764143"
+                                                height="45.55476707640558"
+                                              >
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10.257971830020779 10.375546926705098) rotate(0 3.661377577361293 4.912529303576154)"
+                                                >
+                                                  <path
+                                                    d="M1.83 0 C3.09 0, 4.34 0, 5.49 0 M1.83 0 C2.76 0, 3.69 0, 5.49 0 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M7.32 1.83 C7.32 4.07, 7.32 6.3, 7.32 7.99 M7.32 1.83 C7.32 3.67, 7.32 5.51, 7.32 7.99 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M5.49 9.83 C4.52 9.83, 3.56 9.83, 1.83 9.83 M5.49 9.83 C4.3 9.83, 3.12 9.83, 1.83 9.83 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M0 7.99 C0 6.74, 0 5.48, 0 1.83 M0 7.99 C0 6.56, 0 5.12, 0 1.83 M0 1.83 C0 0.61, 0.61 0, 1.83 0 M0 1.83 C0 0.61, 0.61 0, 1.83 0"
+                                                    stroke="#1e1e1e"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                                <g stroke-linecap="round">
+                                                  <g
+                                                    transform="translate(13.900885269327205 17.096757146234918) rotate(0 -0.0030445053470202765 2.3801245195212513)"
+                                                  >
+                                                    <path
+                                                      d="M0 0 C0 0.79, -0.01 3.97, -0.01 4.76 M0 0 C0 0.79, -0.01 3.97, -0.01 4.76"
+                                                      stroke="#1e1e1e"
+                                                      stroke-width="1"
+                                                      fill="none"
+                                                    ></path>
+                                                  </g>
+                                                </g>
+                                                <mask></mask>
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10.257971830020779 25.379515181404656) rotate(0 3.661377577361293 4.912529303576154)"
+                                                >
+                                                  <path
+                                                    d="M1.83 0 C2.75 0, 3.67 0, 5.49 0 M1.83 0 C2.98 0, 4.12 0, 5.49 0 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M5.49 0 C6.71 0, 7.32 0.61, 7.32 1.83 M7.32 1.83 C7.32 4.09, 7.32 6.36, 7.32 7.99 M7.32 1.83 C7.32 4.06, 7.32 6.28, 7.32 7.99 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M7.32 7.99 C7.32 9.21, 6.71 9.83, 5.49 9.83 M5.49 9.83 C4.11 9.83, 2.73 9.83, 1.83 9.83 M5.49 9.83 C4.08 9.83, 2.67 9.83, 1.83 9.83 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M1.83 9.83 C0.61 9.83, 0 9.21, 0 7.99 M0 7.99 C0 6.4, 0 4.8, 0 1.83 M0 7.99 C0 6.46, 0 4.92, 0 1.83 M0 1.83 C0 0.61, 0.61 0, 1.83 0 M0 1.83 C0 0.61, 0.61 0, 1.83 0"
+                                                    stroke="#1e1e1e"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                                <g stroke-linecap="round">
+                                                  <g
+                                                    transform="translate(13.900885269327091 28.483363569027148) rotate(0 -0.0030445053470202765 -2.3801245195212495)"
+                                                  >
+                                                    <path
+                                                      d="M0 0 C0 -0.79, -0.01 -3.97, -0.01 -4.76 M0 0 C0 -0.79, -0.01 -3.97, -0.01 -4.76"
+                                                      stroke="#1e1e1e"
+                                                      stroke-width="1"
+                                                      fill="none"
+                                                    ></path>
+                                                  </g>
+                                                </g>
+                                                <mask></mask>
+                                                <g
+                                                  stroke-linecap="round"
+                                                  transform="translate(10 10) rotate(0 3.9193494073820716 12.777383538202791)"
+                                                >
+                                                  <path
+                                                    d="M1.96 0 C3.5 0, 5.03 0, 5.88 0 M1.96 0 C3.41 0, 4.86 0, 5.88 0 M5.88 0 C7.19 0, 7.84 0.65, 7.84 1.96 M5.88 0 C7.19 0, 7.84 0.65, 7.84 1.96 M7.84 1.96 C7.84 8.03, 7.84 14.11, 7.84 23.6 M7.84 1.96 C7.84 7.33, 7.84 12.7, 7.84 23.6 M7.84 23.6 C7.84 24.9, 7.19 25.55, 5.88 25.55 M7.84 23.6 C7.84 24.9, 7.19 25.55, 5.88 25.55 M5.88 25.55 C4.57 25.55, 3.25 25.55, 1.96 25.55 M5.88 25.55 C4.56 25.55, 3.25 25.55, 1.96 25.55 M1.96 25.55 C0.65 25.55, 0 24.9, 0 23.6 M1.96 25.55 C0.65 25.55, 0 24.9, 0 23.6 M0 23.6 C0 16.78, 0 9.97, 0 1.96 M0 23.6 C0 15.66, 0 7.72, 0 1.96 M0 1.96 C0 0.65, 0.65 0, 1.96 0 M0 1.96 C0 0.65, 0.65 0, 1.96 0"
+                                                    stroke="transparent"
+                                                    stroke-width="1"
+                                                    fill="none"
+                                                  ></path>
+                                                </g>
+                                              </svg>
+                                            </template>
+                                            <q-tooltip
+                                              :class="[
+                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                              ]"
+                                            >
+                                              <span class="text-sm">至臻键音</span>
+                                              <span
+                                                class="text-sm"
+                                                v-if="isAnchoringUltimatePerfectionKeySound_singleKey"
+                                              >
+                                                (已锚定)<br
+                                              /></span>
+                                              <span class="text-sm" v-else> (已解除锚定)<br /></span>
+                                              <span>此锚定仅作用于在设置声效为至臻键音时。</span>
+                                            </q-tooltip>
+                                          </q-icon>
+                                        </div>
+                                      </div>
+                                      <div
+                                        class="h-16 m-l-9"
+                                        v-show="isDownSoundEffectSelectEnabled || isUpSoundEffectSelectEnabled"
+                                      >
+                                        <q-option-group
+                                          dense
+                                          v-model="singleKeyTypeGroup"
+                                          :options="options"
+                                          type="checkbox"
+                                        >
+                                          <template #label-0="props">
+                                            <q-item-label>
+                                              {{ props.label }}
+                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                                <q-tooltip
+                                                  :class="[
+                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                                  ]"
+                                                >
+                                                  <div>本软件支持将音频源文件直接设置为声效。</div>
+                                                </q-tooltip>
+                                              </q-icon>
+                                            </q-item-label>
+                                          </template>
+                                          <template v-slot:label-1="props">
+                                            <q-item-label>
+                                              {{ props.label }}
+                                              <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                                <q-tooltip
+                                                  :class="[
+                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                                  ]"
+                                                >
+                                                  <div>本软件支持将裁剪定义好的声音设置为声效。</div>
+                                                </q-tooltip>
+                                              </q-icon>
+                                            </q-item-label>
+                                          </template>
+                                          <template v-slot:label-2="props">
+                                            <q-item-label>
+                                              {{ props.label }}
+                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                                <q-tooltip
+                                                  :class="[
+                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                                  ]"
+                                                >
+                                                  <div>本软件推荐用户使用至臻键音, 以设置更为丰富的声效。</div>
+                                                  <div>若本选项勾选, 则自动提供可用于至臻键音的锚定功能。</div>
+                                                  <div>此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效。</div>
+                                                </q-tooltip>
+                                              </q-icon>
+                                            </q-item-label>
+                                          </template>
+                                        </q-option-group>
+                                      </div>
+                                    </q-card-section>
+                                  </div>
+                                  <!-- 声效选择 end -->
                                 </div>
 
                                 <!-- <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" /> -->
@@ -3162,6 +3529,124 @@ function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
 // -- -- 选择声效
 const isDownSoundEffectSelectEnabled = ref(true);
 const isUpSoundEffectSelectEnabled = ref(true);
+
+const keyDownSingleKeySoundEffectSelect = ref<any>();
+const keyUpSingleKeySoundEffectSelect = ref<any>();
+const singleKeyTypeGroup = ref<Array<string>>(['sounds']);
+const keySingleKeySoundEffectOptions = computed(() => {
+  const List: Array<any> = [];
+  if (singleKeyTypeGroup.value.includes('audio_files')) {
+    soundFileList.value.forEach((item) => {
+      List.push({ type: 'audio_files', value: item });
+    });
+  }
+  if (singleKeyTypeGroup.value.includes('sounds')) {
+    soundList.value.forEach((item) => {
+      List.push({ type: 'sounds', value: item });
+    });
+  }
+  if (singleKeyTypeGroup.value.includes('key_sounds')) {
+    keySoundList.value.forEach((item) => {
+      List.push({ type: 'key_sounds', value: item });
+    });
+  }
+  console.debug('观察keyUnifiedSoundEffectOptions=', List);
+  return List;
+});
+const isShowUltimatePerfectionKeySoundAnchoring_singleKey = computed(() => {
+  return singleKeyTypeGroup.value.includes('key_sounds');
+});
+const isAnchoringUltimatePerfectionKeySound_singleKey = ref(true);
+watch(keyDownSingleKeySoundEffectSelect, (newVal, oldVal) => {
+  console.debug('观察keyDownSingleKeySoundEffectSelect=', keyDownSingleKeySoundEffectSelect.value);
+  if (newVal === null && oldVal?.type === 'key_sounds') {
+    if (
+      isShowUltimatePerfectionKeySoundAnchoring_singleKey.value &&
+      isAnchoringUltimatePerfectionKeySound_singleKey.value
+    ) {
+      // 这里?是为了防止其本身就为null时,访问不存在的type字段引发报错。(不需要处理null:我们本身就是对其做清空操作,没有值正好。)
+      if (keyUpSingleKeySoundEffectSelect.value?.type === 'key_sounds') {
+        // 如果对方有值, 且值为key_sounds, 则清空。
+        keyUpSingleKeySoundEffectSelect.value = keyDownSingleKeySoundEffectSelect.value;
+      }
+    }
+  }
+});
+watch(keyUpSingleKeySoundEffectSelect, (newVal, oldVal) => {
+  console.debug('观察keyUpSingleKeySoundEffectSelect=', keyUpSingleKeySoundEffectSelect.value);
+  if (newVal === null && oldVal?.type === 'key_sounds') {
+    if (
+      isShowUltimatePerfectionKeySoundAnchoring_singleKey.value &&
+      isAnchoringUltimatePerfectionKeySound_singleKey.value
+    ) {
+      // 这里?是为了防止其本身就为null时,访问不存在的type字段引发报错。(不需要处理null:我们本身就是对其做清空操作,没有值正好。)
+      if (keyDownSingleKeySoundEffectSelect.value?.type === 'key_sounds') {
+        // 如果对方有值, 且值为key_sounds, 则清空。
+        keyDownSingleKeySoundEffectSelect.value = keyUpSingleKeySoundEffectSelect.value;
+      }
+    }
+  }
+});
+
+function saveSingleKeySoundEffectConfig(params: { down: any; up: any }, onSuccess?: () => void) {
+  const keyTone_global = {
+    down: {
+      type: params.down?.type || '',
+      // TIPS: 此处需要注意, 我们需要的是此lambda表达式执行后的返回值赋值给value, 而不是直接将lambda表达式赋值给value。(此处用三元表达式会更为直观)
+      value: (() => {
+        if (params.down?.type === 'audio_files') {
+          return { sha256: params.down.value.sha256, name_id: params.down.value.name_id, type: params.down.value.type };
+        }
+        if (params.down?.type === 'sounds') {
+          return params.down.value.soundKey;
+        }
+        if (params.down?.type === 'key_sounds') {
+          return params.down.value.keySoundKey;
+        }
+        return '';
+      })(),
+    },
+    up: {
+      type: params.up?.type || '',
+      // TIPS: 此处需要注意, 我们需要的是此lambda表达式执行后的返回值赋值给value, 而不是直接将lambda表达式赋值给value。(此处用三元表达式会更为直观)
+      value: (() => {
+        if (params.up?.type === 'audio_files') {
+          return { sha256: params.up.value.sha256, name_id: params.up.value.name_id, type: params.up.value.type };
+        }
+        if (params.up?.type === 'sounds') {
+          return params.up.value.soundKey;
+        }
+        if (params.up?.type === 'key_sounds') {
+          return params.up.value.keySoundKey;
+        }
+        return '';
+      })(),
+    },
+  };
+
+  ConfigSet('key_tone.global', keyTone_global)
+    .then((re) => {
+      if (re) {
+        onSuccess?.();
+      } else {
+        q.notify({
+          type: 'negative',
+          position: 'top',
+          message: '单键声效配置失败',
+          timeout: 5000,
+        });
+      }
+    })
+    .catch((err) => {
+      console.error('单键声效配置时发生错误:', err);
+      q.notify({
+        type: 'negative',
+        position: 'top',
+        message: '单键声效配置失败',
+        timeout: 5000,
+      });
+    });
+}
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
