@@ -2651,7 +2651,29 @@
                               align="right"
                               :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']"
                             >
-                              <!-- <q-btn flat label="确定" color="primary" v-close-popup @click="addSingleKeyEffect" /> -->
+                              <q-btn
+                                flat
+                                label="确定"
+                                color="primary"
+                                v-close-popup
+                                @click="
+                                  saveSingleKeySoundEffectConfig(
+                                    {
+                                      singleKeys: selectedSingleKeys,
+                                      down: keyDownSingleKeySoundEffectSelect,
+                                      up: keyUpSingleKeySoundEffectSelect,
+                                    },
+                                    () => {
+                                      q.notify({
+                                        type: 'positive',
+                                        position: 'top',
+                                        message: '单键声效配置成功',
+                                        timeout: 2000,
+                                      });
+                                    }
+                                  )
+                                "
+                              />
                               <q-btn flat label="取消" color="primary" v-close-popup />
                             </q-card-actions>
                           </q-card>
@@ -3588,8 +3610,11 @@ watch(keyUpSingleKeySoundEffectSelect, (newVal, oldVal) => {
   }
 });
 
-function saveSingleKeySoundEffectConfig(params: { down: any; up: any }, onSuccess?: () => void) {
-  const keyTone_global = {
+function saveSingleKeySoundEffectConfig(
+  params: { singleKeys: Array<number>; down: any; up: any },
+  onSuccess?: () => void
+) {
+  const keyTone_single = {
     down: {
       type: params.down?.type || '',
       // TIPS: 此处需要注意, 我们需要的是此lambda表达式执行后的返回值赋值给value, 而不是直接将lambda表达式赋值给value。(此处用三元表达式会更为直观)
@@ -3624,28 +3649,78 @@ function saveSingleKeySoundEffectConfig(params: { down: any; up: any }, onSucces
     },
   };
 
-  ConfigSet('key_tone.global', keyTone_global)
-    .then((re) => {
-      if (re) {
-        onSuccess?.();
-      } else {
+  // 需要保证只有在对应的down或up声效设置被使能时, 才会修改对应的设置。(避免意外修改到不希望修改的配置)
+  let downOrUpIfEnable: string;
+  if (isDownSoundEffectSelectEnabled.value && !isUpSoundEffectSelectEnabled.value) {
+    downOrUpIfEnable = '.down';
+  } else if (!isDownSoundEffectSelectEnabled.value && isUpSoundEffectSelectEnabled.value) {
+    downOrUpIfEnable = '.up';
+  } else if (isDownSoundEffectSelectEnabled.value && isUpSoundEffectSelectEnabled.value) {
+    downOrUpIfEnable = '';
+  } else {
+    // !isDownSoundEffectSelectEnabled.value && !isUpSoundEffectSelectEnabled.value
+    // 此时, 说明用户未选择任何声效, 因此无需配置, 直接跳过。没必要继续执行后续的保存至 配置文件的步骤。
+    q.notify({
+      type: 'info',
+      position: 'top',
+      message: '未进行任何单键声效配置',
+      timeout: 5000,
+    });
+    return;
+  }
+
+  let allSuccess = true;
+  const promises = params.singleKeys.map((item) => {
+    return ConfigSet(
+      'key_tone.single.' + item + downOrUpIfEnable,
+      // `downOrUpIfEnable.slice(1)` 是去掉字符串开头的 . 如  '.down' -> 'down'
+      // `as keyof typeof keyTone_single` 是 TypeScript 类型断言，确保属性名是 `keyTone_single` 对象的有效键名
+      downOrUpIfEnable ? keyTone_single[downOrUpIfEnable.slice(1) as keyof typeof keyTone_single] : keyTone_single
+    )
+      .then((re) => {
+        if (!re) {
+          allSuccess = false;
+          q.notify({
+            type: 'negative',
+            position: 'top',
+            message: `单键 ${
+              keyEvent_store.dikCodeToName.get(item) ||
+              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
+              'Dik-{' + item + '}'
+            } 声效配置失败`,
+            timeout: 5000,
+          });
+        }
+        return re;
+      })
+      .catch((err) => {
+        allSuccess = false;
+        console.error(`单键 ${item} 声效配置时发生错误:`, err);
         q.notify({
           type: 'negative',
           position: 'top',
-          message: '单键声效配置失败',
+          message: `单键 ${
+            keyEvent_store.dikCodeToName.get(item) ||
+            (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
+            'Dik-{' + item + '}'
+          } 声效配置失败`,
           timeout: 5000,
         });
-      }
-    })
-    .catch((err) => {
-      console.error('单键声效配置时发生错误:', err);
+      });
+  });
+
+  Promise.all(promises).then(() => {
+    if (allSuccess) {
+      onSuccess?.();
+    } else {
       q.notify({
-        type: 'negative',
+        type: 'warning',
         position: 'top',
-        message: '单键声效配置失败',
+        message: '仅部分单键声效配置成功',
         timeout: 5000,
       });
-    });
+    }
+  });
 }
 
 onBeforeMount(async () => {
