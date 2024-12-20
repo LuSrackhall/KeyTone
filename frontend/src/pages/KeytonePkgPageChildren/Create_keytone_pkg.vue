@@ -2335,12 +2335,12 @@
                                               () => {
                                                 if (
                                                   // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                                  isShowUltimatePerfectionKeySoundAnchoring &&
-                                                  isAnchoringUltimatePerfectionKeySound &&
+                                                  isShowUltimatePerfectionKeySoundAnchoring_singleKey &&
+                                                  isAnchoringUltimatePerfectionKeySound_singleKey &&
                                                   // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                                  keyDownUnifiedSoundEffectSelect?.type === 'key_sounds'
+                                                  keyDownSingleKeySoundEffectSelect?.type === 'key_sounds'
                                                 ) {
-                                                  keyUpUnifiedSoundEffectSelect = keyDownUnifiedSoundEffectSelect;
+                                                  keyUpSingleKeySoundEffectSelect = keyDownSingleKeySoundEffectSelect;
                                                 }
                                               }
                                             "
@@ -2400,12 +2400,12 @@
                                               () => {
                                                 // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
                                                 if (
-                                                  isShowUltimatePerfectionKeySoundAnchoring &&
-                                                  isAnchoringUltimatePerfectionKeySound &&
+                                                  isShowUltimatePerfectionKeySoundAnchoring_singleKey &&
+                                                  isAnchoringUltimatePerfectionKeySound_singleKey &&
                                                   // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                                  keyUpUnifiedSoundEffectSelect?.type === 'key_sounds'
+                                                  keyUpSingleKeySoundEffectSelect?.type === 'key_sounds'
                                                 ) {
-                                                  keyDownUnifiedSoundEffectSelect = keyUpUnifiedSoundEffectSelect;
+                                                  keyDownSingleKeySoundEffectSelect = keyUpSingleKeySoundEffectSelect;
                                                 }
                                               }
                                             "
