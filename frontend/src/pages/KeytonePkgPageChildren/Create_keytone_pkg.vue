@@ -2708,11 +2708,11 @@
                         查看已设置的单键声效
                       </q-card-section> -->
                     </q-card-section>
-                    <q-card-section class="pt-0">
+                    <q-card-section>
                       <div v-if="keysWithSoundEffect.length === 0" class="text-[1.06rem]">
                         目前没有已设置单键声效的按键
                       </div>
-                      <div v-else class="text-[1.06rem] pb-1 flex flex-row items-center">
+                      <div v-else class="text-[1.06rem] pb-2 font-600 text-gray-700 flex flex-row items-center">
                         已设置单键声效的按键
                         <div class="text-[0.88rem] ml-1">(点击查看声效)</div>
                       </div>
