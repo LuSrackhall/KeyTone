@@ -2117,7 +2117,7 @@
                       单键声效设置
                     </q-card-section>
 
-                    <q-card-section class="q-pt-none">
+                    <q-card-section class="q-pt-none pb-0">
                       <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">
                         指定单个或多个按键, 以进行局部独立的声效设置。
                       </div>
@@ -2707,6 +2707,32 @@
                       >
                         查看已设置的单键声效
                       </q-card-section> -->
+                    </q-card-section>
+                    <q-card-section class="pt-0">
+                      <div v-if="keysWithSoundEffect.length === 0" class="text-[1.06rem]">
+                        目前没有已设置单键声效的按键
+                      </div>
+                      <div v-else class="text-[1.06rem] pb-1 flex flex-row items-center">
+                        已设置单键声效的按键
+                        <div class="text-[0.88rem] ml-1">(点击查看声效)</div>
+                      </div>
+                      <div class="flex flex-wrap gap-0.1">
+                        <q-chip
+                          v-for="item in keysWithSoundEffect"
+                          :key="item"
+                          dense
+                          square
+                          class="p-t-1.5 p-b-1 p-x-2.5"
+                        >
+                          {{
+                            keyEvent_store.dikCodeToName.get(Number(item)) ||
+                            (dikCodeToName_custom.get(Number(item))
+                              ? 'Temp-{' + dikCodeToName_custom.get(Number(item)) + '}'
+                              : '') ||
+                            'Dik-{' + item + '}'
+                          }}
+                        </q-chip>
+                      </div>
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                       <q-btn flat label="确定" color="primary" v-close-popup />
@@ -3723,6 +3749,17 @@ function saveSingleKeySoundEffectConfig(
   });
 }
 
+// -- -- 编辑声效
+const keysWithSoundEffect = ref<string[]>([]);
+
+watch(
+  // TIPS: 注意, 如果要监听的ref对象是数组或对象等js/ts中的默认引用类型, 要使用此种方式才可触发监听。(或者也可以弃用ref, 改用reactive。)
+  () => keysWithSoundEffect.value,
+  (newVal) => {
+    console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
+  }
+);
+
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
   // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
@@ -3799,6 +3836,13 @@ onBeforeMount(async () => {
         // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
         Object.entries(data.custom_single_keys_name).forEach(([dikCode, name]) => {
           dikCodeToName_custom.set(Number(dikCode), name as string);
+        });
+      }
+
+      // TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证
+      if (data.key_tone?.single !== undefined) {
+        keysWithSoundEffect.value = Object.entries(data.key_tone.single).map(([dikCode, value]) => {
+          return dikCode;
         });
       }
     });
@@ -3944,6 +3988,12 @@ onBeforeMount(async () => {
       // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
       Object.entries(keyTonePkgData.custom_single_keys_name).forEach(([dikCode, name]) => {
         dikCodeToName_custom.set(Number(dikCode), name as string);
+      });
+    }
+
+    if (keyTonePkgData.key_tone?.single !== undefined) {
+      keysWithSoundEffect.value = Object.entries(keyTonePkgData.key_tone.single).map(([dikCode, value]) => {
+        return dikCode;
       });
     }
   }
