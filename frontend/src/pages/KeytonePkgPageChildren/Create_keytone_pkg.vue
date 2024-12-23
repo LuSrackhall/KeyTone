@@ -2709,7 +2709,7 @@
                       </q-card-section> -->
                     </q-card-section>
                     <q-card-section>
-                      <div v-if="keysWithSoundEffect.length === 0" class="text-[1.06rem]">
+                      <div v-if="keysWithSoundEffect.size === 0" class="text-[1.06rem]">
                         目前没有已设置单键声效的按键
                       </div>
                       <div v-else class="text-[1.06rem] pb-2 font-600 text-gray-700 flex flex-row items-center">
@@ -2719,7 +2719,7 @@
                       <div class="flex flex-wrap gap-0.8">
                         <q-chip
                           v-for="item in keysWithSoundEffect"
-                          :key="item"
+                          :key="item[0]"
                           dense
                           square
                           class="p-t-3.25 p-b-3.25 p-x-2.5 bg-gradient-to-b from-gray-50 to-gray-200 border-2 border-gray-300 rounded-[0.18rem] shadow-[1px_2px_1px_3px_rgba(0,0,0,0.2),inset_1px_1px_1px_rgba(255,255,255,0.6)] inset_1px_1px_1px_rgba(255,255,255,0.6)]"
@@ -2728,17 +2728,17 @@
                             () => {
                               // 打开查看声效的对话框
                               isShowSingleKeySoundEffectEditDialog = true;
-                              currentEditingKey = Number(item);
+                              currentEditingKey = Number(item[0]);
                               // TODO: 进一步, 需要在此处读取对应单键的声效设置, 并用读取的数据来初始化对话框, 以供用户的后续编辑。
                             }
                           "
                         >
                           {{
-                            keyEvent_store.dikCodeToName.get(Number(item)) ||
-                            (dikCodeToName_custom.get(Number(item))
-                              ? 'Temp-{' + dikCodeToName_custom.get(Number(item)) + '}'
+                            keyEvent_store.dikCodeToName.get(Number(item[0])) ||
+                            (dikCodeToName_custom.get(Number(item[0]))
+                              ? 'Temp-{' + dikCodeToName_custom.get(Number(item[0])) + '}'
                               : '') ||
-                            'Dik-{' + item + '}'
+                            'Dik-{' + item[0] + '}'
                           }}
                         </q-chip>
                         <q-dialog v-model="isShowSingleKeySoundEffectEditDialog">
@@ -4154,7 +4154,16 @@ function saveSingleKeySoundEffectConfig(
 }
 
 // -- -- 查看编辑声效
-const keysWithSoundEffect = ref<string[]>([]);
+// const keysWithSoundEffect = ref<string[]>([]);
+// watch(
+//   // TIPS: 注意, 如果要监听的ref对象是数组或对象等js/ts中的默认引用类型, 要使用此种方式才可触发监听。(或者也可以弃用ref, 改用reactive。)
+//   () => keysWithSoundEffect.value,
+//   (newVal) => {
+//     console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
+//   }
+// );
+
+const keysWithSoundEffect = ref<Map<string, any>>(new Map());
 watch(
   // TIPS: 注意, 如果要监听的ref对象是数组或对象等js/ts中的默认引用类型, 要使用此种方式才可触发监听。(或者也可以弃用ref, 改用reactive。)
   () => keysWithSoundEffect.value,
@@ -4162,7 +4171,6 @@ watch(
     console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
   }
 );
-
 const isShowSingleKeySoundEffectEditDialog = ref(false);
 
 const currentEditingKey = ref<number | null>(null);
@@ -4319,8 +4327,9 @@ onBeforeMount(async () => {
 
       // TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证
       if (data.key_tone?.single !== undefined) {
-        keysWithSoundEffect.value = Object.entries(data.key_tone.single).map(([dikCode, value]) => {
-          return dikCode;
+        keysWithSoundEffect.value.clear();
+        Object.entries(data.key_tone.single).forEach(([dikCode, value]) => {
+          keysWithSoundEffect.value.set(dikCode, value);
         });
       }
     });
@@ -4470,8 +4479,9 @@ onBeforeMount(async () => {
     }
 
     if (keyTonePkgData.key_tone?.single !== undefined) {
-      keysWithSoundEffect.value = Object.entries(keyTonePkgData.key_tone.single).map(([dikCode, value]) => {
-        return dikCode;
+      keysWithSoundEffect.value.clear();
+      Object.entries(keyTonePkgData.key_tone.single).forEach(([dikCode, value]) => {
+        keysWithSoundEffect.value.set(dikCode, value);
       });
     }
   }
