@@ -2716,13 +2716,13 @@
                         已设置单键声效的按键
                         <div class="text-[0.88rem] ml-1">(点击查看声效)</div>
                       </div>
-                      <div class="flex flex-wrap gap-0.1">
+                      <div class="flex flex-wrap gap-0.8">
                         <q-chip
                           v-for="item in keysWithSoundEffect"
                           :key="item"
                           dense
                           square
-                          class="p-t-1.5 p-b-1 p-x-2.5"
+                          class="p-t-3.25 p-b-3.25 p-x-2.5 bg-gradient-to-b from-gray-50 to-gray-200 border-2 border-gray-300 rounded-[0.18rem] shadow-[1px_2px_1px_3px_rgba(0,0,0,0.2),inset_1px_1px_1px_rgba(255,255,255,0.6)] inset_1px_1px_1px_rgba(255,255,255,0.6)]"
                           clickable
                           @click="
                             () => {
