@@ -4363,7 +4363,10 @@ onBeforeMount(async () => {
       if (data.key_tone?.single !== undefined) {
         keysWithSoundEffect.value.clear();
         Object.entries(data.key_tone.single).forEach(([dikCode, value]) => {
-          keysWithSoundEffect.value.set(dikCode, value);
+          // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
+          if ((value as any)?.down?.value || (value as any)?.up?.value) {
+            keysWithSoundEffect.value.set(dikCode, value);
+          }
         });
       }
     });
@@ -4515,7 +4518,10 @@ onBeforeMount(async () => {
     if (keyTonePkgData.key_tone?.single !== undefined) {
       keysWithSoundEffect.value.clear();
       Object.entries(keyTonePkgData.key_tone.single).forEach(([dikCode, value]) => {
-        keysWithSoundEffect.value.set(dikCode, value);
+        // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
+        if ((value as any)?.down?.value || (value as any)?.up?.value) {
+          keysWithSoundEffect.value.set(dikCode, value);
+        }
       });
     }
   }
