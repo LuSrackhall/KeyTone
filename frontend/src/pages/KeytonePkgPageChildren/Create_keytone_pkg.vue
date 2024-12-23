@@ -4202,7 +4202,7 @@ function convertValue(item: any) {
       value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
     };
   }
-  return item;
+  return null;
 }
 
 const isShowSingleKeySoundEffectEditDialog = ref(false);
