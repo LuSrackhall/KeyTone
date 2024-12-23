@@ -2728,15 +2728,16 @@
                             () => {
                               // 打开查看声效的对话框
                               isShowSingleKeySoundEffectEditDialog = true;
+                              currentEditingKey_old = currentEditingKey;
                               currentEditingKey = Number(item[0]);
                               // TODO: 进一步, 需要在此处读取对应单键的声效设置, 并用读取的数据来初始化对话框, 以供用户的后续编辑。
-                              isDownSoundEffectSelectEnabled_edit = item[1].down !== undefined;
-                              isUpSoundEffectSelectEnabled_edit = item[1].up !== undefined;
-                              if (isDownSoundEffectSelectEnabled_edit) {
-                                keyDownSingleKeySoundEffectSelect_edit = convertValue(item[1].down);
-                              }
-                              if (isUpSoundEffectSelectEnabled_edit) {
-                                keyUpSingleKeySoundEffectSelect_edit = convertValue(item[1].up);
+                              if (currentEditingKey !== currentEditingKey_old) {
+                                // 如果点击的是同一个按键, 则没必要重新初始值。(即默认持久化刚才的操作记录)
+                                singleKeyTypeGroup_edit = ['sounds']; // 为了防止初始有'key_sounds'时触发的锚定, 会影响原数据的初始化(如因锚定错误的同步双方等连锁反应)
+                                const down = item[1].down;
+                                const up = item[1].up;
+                                keyDownSingleKeySoundEffectSelect_edit = convertValue(down ? down : '');
+                                keyUpSingleKeySoundEffectSelect_edit = convertValue(up ? up : '');
                               }
                             }
                           "
@@ -2766,17 +2767,12 @@
                             <q-card-section class="q-pt-none">
                               <!-- 这里之后添加编辑内容 -->
                               <!-- 声效编辑  start -->
-                              <div class="flex flex-row items-center justify-center gap-9 w-[88%]">
-                                <q-checkbox dense v-model="isDownSoundEffectSelectEnabled_edit" label="按下声效" />
-                                <q-checkbox dense v-model="isUpSoundEffectSelectEnabled_edit" label="抬起声效" />
-                              </div>
                               <div class="w-full">
                                 <q-card-section>
                                   <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
                                     <div class="flex flex-col space-y-4 w-6.5/8">
                                       <!-- 选择单键按下声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
-                                        v-show="isDownSoundEffectSelectEnabled_edit"
                                         outlined
                                         stack-label
                                         v-model="keyDownSingleKeySoundEffectSelect_edit"
@@ -2842,7 +2838,6 @@
                                       />
                                       <!-- 选择单键抬起声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
-                                        v-show="isUpSoundEffectSelectEnabled_edit"
                                         outlined
                                         stack-label
                                         v-model="keyUpSingleKeySoundEffectSelect_edit"
@@ -2907,10 +2902,7 @@
                                         class="max-w-full"
                                       />
                                     </div>
-                                    <div
-                                      v-show="isDownSoundEffectSelectEnabled_edit && isUpSoundEffectSelectEnabled_edit"
-                                      class="flex justify-end -m-l-2"
-                                    >
+                                    <div class="flex justify-end -m-l-2">
                                       <q-icon
                                         @click="
                                           isAnchoringUltimatePerfectionKeySound_singleKey_edit =
@@ -3077,10 +3069,7 @@
                                       </q-icon>
                                     </div>
                                   </div>
-                                  <div
-                                    class="h-16 m-l-9"
-                                    v-show="isDownSoundEffectSelectEnabled_edit || isUpSoundEffectSelectEnabled_edit"
-                                  >
+                                  <div class="h-16 m-l-9">
                                     <q-option-group
                                       dense
                                       v-model="singleKeyTypeGroup_edit"
@@ -4208,6 +4197,13 @@ function convertValue(item: any) {
 const isShowSingleKeySoundEffectEditDialog = ref(false);
 
 const currentEditingKey = ref<number | null>(null);
+let currentEditingKey_old = currentEditingKey.value; // TIPS: 此处旧值的记录, 在实际的使用逻辑中进行。
+// TIPS: 如果currentEditingKey不变, 则watch就不会触发, 或者说这种做法无法实时记录正确的old值, 留此注释是警示下->不是所有场景都适合使用watch正确记录旧值的。
+//       * 3 -> 2 后 old为3 ,  2 -> 3 后, old 为2。(不相同是符合预期的。)
+//       * 3 -> 2 后 old为3 ,  2 -> 2 后, old 仍为3(但应该是2相同才对, 但只能判别不相同, 不符合预期, 或者说这种做法无法实时记录正确的old值)。
+// watch(currentEditingKey, (newVal, oldVal) => {
+//   currentEditingKey_old = oldVal;
+// });
 const currentEditingKeyOfName = computed(() => {
   return currentEditingKey.value !== null
     ? keyEvent_store.dikCodeToName.get(currentEditingKey.value) ||
@@ -4219,9 +4215,6 @@ const currentEditingKeyOfName = computed(() => {
 });
 
 // -- -- -- 编辑声效(重新选择声效)
-const isDownSoundEffectSelectEnabled_edit = ref(true);
-const isUpSoundEffectSelectEnabled_edit = ref(true);
-
 const keyDownSingleKeySoundEffectSelect_edit = ref<any>();
 const keyUpSingleKeySoundEffectSelect_edit = ref<any>();
 const singleKeyTypeGroup_edit = ref<Array<string>>(['sounds']);
