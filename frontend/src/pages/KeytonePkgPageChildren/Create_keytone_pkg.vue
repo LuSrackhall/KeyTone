@@ -2730,6 +2730,14 @@
                               isShowSingleKeySoundEffectEditDialog = true;
                               currentEditingKey = Number(item[0]);
                               // TODO: 进一步, 需要在此处读取对应单键的声效设置, 并用读取的数据来初始化对话框, 以供用户的后续编辑。
+                              isDownSoundEffectSelectEnabled_edit = item[1].down !== undefined;
+                              isUpSoundEffectSelectEnabled_edit = item[1].up !== undefined;
+                              if (isDownSoundEffectSelectEnabled_edit) {
+                                keyDownSingleKeySoundEffectSelect_edit = convertValue(item[1].down);
+                              }
+                              if (isUpSoundEffectSelectEnabled_edit) {
+                                keyUpSingleKeySoundEffectSelect_edit = convertValue(item[1].up);
+                              }
                             }
                           "
                         >
@@ -4171,6 +4179,32 @@ watch(
     console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
   }
 );
+function convertValue(item: any) {
+  if (item.type === 'audio_files') {
+    return {
+      type: 'audio_files',
+      value: soundFileList.value.find(
+        (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+      ),
+    };
+  }
+  if (item.type === 'sounds') {
+    return {
+      type: 'sounds',
+      // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
+      value: soundList.value.find((sound) => sound.soundKey === item.value),
+    };
+  }
+  if (item.type === 'key_sounds') {
+    return {
+      type: 'key_sounds',
+      // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
+      value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+    };
+  }
+  return item;
+}
+
 const isShowSingleKeySoundEffectEditDialog = ref(false);
 
 const currentEditingKey = ref<number | null>(null);
