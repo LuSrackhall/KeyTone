@@ -2730,6 +2730,29 @@
                               isShowSingleKeySoundEffectEditDialog = true;
                               currentEditingKey = Number(item);
                               // TODO: 进一步, 需要在此处读取对应单键的声效设置, 并用读取的数据来初始化对话框, 以供用户的后续编辑。
+                              // keyDownSingleKeySoundEffectSelect_edit
+                              // TIPS: 由于golang中 viper 的限制, 当仅有 down 或 up 时, 我们无法正确获取其对应的值(只能显示null)。 因此我觉得持久化回调中的所有数据, 并加以使用, 而不是只使用其keys。
+                              ConfigGet('key_tone.single.' + item).then((res) => {
+                                console.log('res=', res);
+                                if (res.down === undefined && res.up !== undefined) {
+                                  isDownSoundEffectSelectEnabled_edit = false;
+                                  keyUpSingleKeySoundEffectSelect_edit = res.up;
+                                  return;
+                                }
+                                if (res.down !== undefined && res.up === undefined) {
+                                  isUpSoundEffectSelectEnabled_edit = false;
+                                  keyDownSingleKeySoundEffectSelect_edit = res.down;
+                                  return;
+                                }
+                                if (res.down === undefined && res.up === undefined) {
+                                  isDownSoundEffectSelectEnabled_edit = false;
+                                  isUpSoundEffectSelectEnabled_edit = false;
+                                  return;
+                                }
+                                // res.down !== undefined && res.up !=undefined
+                                keyDownSingleKeySoundEffectSelect_edit = res.down;
+                                keyUpSingleKeySoundEffectSelect_edit = res.up;
+                              });
                             }
                           "
                         >
