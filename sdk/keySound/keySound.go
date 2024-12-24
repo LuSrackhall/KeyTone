@@ -538,6 +538,10 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 		value := audioPackageConfig.GetValue("key_sounds." + key_sound_SHA256 + "." + keyState + ".value")
 		if value != nil {
 			values := value.([]interface{})
+			// TIPS: 防止因空值造成后续步骤panic。
+			if len(values) == 0 {
+				return
+			}
 			// 创建一个新的随机数生成器实例
 			r := rand.New(rand.NewSource(time.Now().UnixNano()))
 			randomIndex := r.Intn(len(values))
@@ -577,6 +581,10 @@ func keySoundParsePlay(key_sound_SHA256 string, keyState string, audioPkgUUID st
 			}
 
 			values := value.([]interface{})
+			// TIPS: 防止因空值造成后续步骤panic。
+			if len(values) == 0 {
+				return
+			}
 
 			// 使用简单的key来标识不同的键音
 			var key string
