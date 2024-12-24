@@ -372,6 +372,48 @@ func KeySoundHandler(keyState string, keycode uint16) {
 	// 从音频包配置中获取相关设置, 并根据配置决定如何播放
 
 	// TODO: 根据传入的具体按键Keycode, 来独立寻找其预设的播放配置, 以播放对应音频。
+	singleKey := fmt.Sprint(keycode)
+	single := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState)
+	fmt.Println("single====", single)
+	if single != nil {
+		// 将single转换为map类型以便访问其中的值
+		soundEffectType := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".type")
+		// soundEffectValue := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok {
+			logger.Error("message", "error: 获取音频包UUID失败")
+			return
+		}
+
+		if soundEffectType == "audio_files" {
+			audio_file_name := audioPackageConfig.GetValue("key_tone.single."+singleKey+"."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.single."+singleKey+"."+keyState+".value.type").(string)
+			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
+
+			PlayKeySound(&AudioFilePath{
+				Global: audio_file_path,
+			}, nil)
+			return
+		}
+
+		if soundEffectType == "sounds" {
+			sound_SHA256 := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".value")
+
+			soundParsePlay(sound_SHA256.(string), audioPkgUUID)
+
+			return
+		}
+
+		if soundEffectType == "key_sounds" {
+			key_sound_SHA256 := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".value")
+
+			keySoundParsePlay(key_sound_SHA256.(string), keyState, audioPkgUUID, true, keycode)
+			// PlayKeySound(&AudioFilePath{
+			// 	Global: audio_file_path,
+			// }, nil)
+			return
+		}
+
+	}
 
 	// TODO: 若具体按键配置为空, 则根据全局配置决定如何播放
 	global := audioPackageConfig.GetValue("key_tone.global." + keyState)
