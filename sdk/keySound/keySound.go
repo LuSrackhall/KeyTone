@@ -474,7 +474,19 @@ func KeySoundHandler(keyState string, keycode uint16) {
 //   - sound_UUID: 声音的UUID值
 //   - audioPkgUUID: 音频包的UUID
 func soundParsePlay(sound_UUID string, audioPkgUUID string) {
-	audio_file_name := audioPackageConfig.GetValue("sounds."+sound_UUID+".source_file_for_sound"+".sha256").(string) + audioPackageConfig.GetValue("sounds."+sound_UUID+".source_file_for_sound"+".type").(string)
+	sha256, ok := audioPackageConfig.GetValue("sounds." + sound_UUID + ".source_file_for_sound" + ".sha256").(string)
+	if !ok {
+		logger.Error("message", "error: sha256 value is nil or not a string")
+		return
+	}
+
+	fileType, ok := audioPackageConfig.GetValue("sounds." + sound_UUID + ".source_file_for_sound" + ".type").(string)
+	if !ok {
+		logger.Error("message", "error: file type value is nil or not a string")
+		return
+	}
+
+	audio_file_name := sha256 + fileType
 	audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 	cut := &Cut{
 		StartMS: int64(audioPackageConfig.GetValue("sounds." + sound_UUID + ".cut.start_time").(float64)),
