@@ -107,30 +107,26 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 	var ext string // 用于判断音频类型
 	if audioFilePath.Part != "" {
 		audioFile, err = os.Open(audioFilePath.Part)
-		if err != nil {
-			panic(err)
-		}
 		ext = strings.ToLower(filepath.Ext(audioFilePath.Part))
 	} else if audioFilePath.Global != "" {
 		audioFile, err = os.Open(audioFilePath.Global)
-		if err != nil {
-			panic(err)
-		}
 		ext = strings.ToLower(filepath.Ext(audioFilePath.Global))
 	} else {
 		audioFile, err = sounds.Open("sounds/" + audioFilePath.SS)
-		if err != nil {
-			panic(err)
-		}
 		ext = strings.ToLower(filepath.Ext(audioFilePath.SS))
 	}
 
+	if err != nil {
+		logger.Error("message", fmt.Sprintf("error: failed to open audio file: %v", err))
+		return
+	}
 	defer audioFile.Close()
 
 	// 对文件进行解码
 	audioStreamer, format, err := decodeAudioFile(audioFile, ext)
 	if err != nil {
-		panic(err)
+		logger.Error("message", fmt.Sprintf("error: failed to decode audio file: %v", err))
+		return
 	}
 	defer audioStreamer.Close()
 
