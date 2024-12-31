@@ -2670,6 +2670,9 @@
                                         message: '单键声效配置成功',
                                         timeout: 2000,
                                       });
+                                      selectedSingleKeys = []
+                                      keyDownSingleKeySoundEffectSelect = null
+                                      keyUpSingleKeySoundEffectSelect = null
                                     }
                                   )
                                 "
