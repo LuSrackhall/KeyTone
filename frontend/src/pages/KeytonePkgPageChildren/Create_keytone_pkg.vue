@@ -3123,11 +3123,58 @@
                                     </q-option-group>
                                   </div>
                                   <div class="flex justify-center gap-8 -m-l-3 m-t-5">
-                                    <q-btn class="p-r-2" dense label="保存编辑" color="primary" icon="save">
+                                    <q-btn
+                                      class="p-r-2"
+                                      dense
+                                      label="保存编辑"
+                                      color="primary"
+                                      icon="save"
+                                      @click="
+                                        saveSingleKeySoundEffectConfig(
+                                          {
+                                            singleKeys: currentEditingKey ? [currentEditingKey] : [],
+                                            down: keyDownSingleKeySoundEffectSelect_edit,
+                                            up: keyUpSingleKeySoundEffectSelect_edit,
+                                          },
+                                          () => {
+                                            q.notify({
+                                              type: 'positive',
+                                              position: 'top',
+                                              message: '保存成功',
+                                              timeout: 2000,
+                                            });
+                                          }
+                                        )
+                                      "
+                                    >
                                       <q-tooltip>保存当前编辑的内容</q-tooltip>
                                     </q-btn>
-                                    <q-btn class="p-r-2" dense label="快速删除" color="negative" icon="delete">
-                                      <q-tooltip>删除当前选中的内容</q-tooltip>
+                                    <q-btn
+                                      class="p-r-2"
+                                      dense
+                                      label="快速删除"
+                                      color="negative"
+                                      icon="delete"
+                                      v-close-popup
+                                      @click="
+                                        saveSingleKeySoundEffectConfig(
+                                          {
+                                            singleKeys: currentEditingKey ? [currentEditingKey] : [],
+                                            down: null,
+                                            up: null,
+                                          },
+                                          () => {
+                                            q.notify({
+                                              type: 'positive',
+                                              position: 'top',
+                                              message: '删除成功',
+                                              timeout: 2000,
+                                            });
+                                          }
+                                        )
+                                      "
+                                    >
+                                      <q-tooltip>删除当前单键的按下和抬起声效</q-tooltip>
                                     </q-btn>
                                   </div>
                                 </q-card-section>
