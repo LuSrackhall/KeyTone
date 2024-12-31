@@ -3122,16 +3122,22 @@
                                       </template>
                                     </q-option-group>
                                   </div>
+                                  <div class="flex justify-center gap-8 -m-l-3 m-t-5">
+                                    <q-btn class="p-r-2" dense label="保存编辑" color="primary" icon="save">
+                                      <q-tooltip>保存当前编辑的内容</q-tooltip>
+                                    </q-btn>
+                                    <q-btn class="p-r-2" dense label="快速删除" color="negative" icon="delete">
+                                      <q-tooltip>删除当前选中的内容</q-tooltip>
+                                    </q-btn>
+                                  </div>
                                 </q-card-section>
                               </div>
-                              <!-- 声效编辑  end -->
                             </q-card-section>
-
                             <q-card-actions align="right">
-                              <q-btn flat label="取消" color="primary" v-close-popup />
-                              <q-btn flat label="确定" color="primary" v-close-popup />
+                              <q-btn flat label="CLOSE" color="primary" v-close-popup />
                             </q-card-actions>
                           </q-card>
+                          <!-- 声效编辑  end -->
                         </q-dialog>
                       </div>
                     </q-card-section>
