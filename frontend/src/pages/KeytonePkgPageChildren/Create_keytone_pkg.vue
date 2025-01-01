@@ -46,9 +46,8 @@
             :done="step > 1"
             :disable="step === 99 && soundFileList.length === 0"
             :header-nav="false"
-            class="cursor-pointer hover:bg-gray-100"
             @click="
-              () => {
+              (event:MouseEvent) => {
                 // TIPS: 由于:header-nav=true是此组件默认的行为,
                 //       他会为此组件添加默认的点击事件
                 //       这个默认事件的作用是会自动将step其设置为1, 且发生在我们当前的click事件之前。
@@ -57,7 +56,12 @@
                 //       而因为禁用默认 header-nav 后, 组件会失去可点击的样式, 因此我们手动添加相关的 class 可点击样式
                 //       TODO: 由于我希望其关闭时, 可以简单的校验是否已完成, 因此我们使用disable和error两个组件状态来完成简单校验(目前仅使用disable, 后续完善时再说)
                 // step = step === 99 ? 1 : 99;  // 由于还有其它步骤(如step=2,3,4等)要作此操作, 为了不影响, 我们更改判断方式为step===1,而不是现在的step===99。
-                step = step === 1 ? 99 : 1;
+                // step = step === 1 ? 99 : 1; // 我们只需要在内部组件的标题部分响应此事件, 因此需要先检查判断点击的区域。
+                // 检查点击是否发生在标题区域
+                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
+                if (header) {
+                  step = step === 1 ? 99 : 1;
+                }
               }
             "
           >
@@ -326,10 +330,13 @@
             :done="step > 2"
             :disable="step === 99 && soundList.length === 0"
             :header-nav="false"
-            class="cursor-pointer hover:bg-gray-100"
             @click="
-              () => {
-                step = step === 2 ? 99 : 2;
+              (event: MouseEvent) => {
+                // 检查点击是否发生在标题区域
+                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
+                if (header) {
+                  step = step === 2 ? 99 : 2;
+                }
               }
             "
           >
@@ -834,9 +841,8 @@
             :done="step > 3"
             :disable="step === 99 && keySoundList.length === 0"
             :header-nav="false"
-            class="cursor-pointer hover:bg-gray-100"
             @click="
-              () => {
+              (event: MouseEvent) => {
                 // if (soundList.length === 0) {
                 //   q.notify({
                 //     type: 'warning',
@@ -846,7 +852,11 @@
                 //   });
                 //   return;
                 // }
-                step = step === 3 ? 99 : 3;
+                // 检查点击是否发生在标题区域
+                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
+                if (header) {
+                  step = step === 3 ? 99 : 3;
+                }
               }
             "
           >
@@ -1736,10 +1746,12 @@
               selectedSingleKeys.length === 0
             "
             :header-nav="false"
-            class="cursor-pointer hover:bg-gray-100"
             @click="
-              () => {
-                step = step === 4 ? 99 : 4;
+              (event: MouseEvent) => {
+                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
+                if (header) {
+                  step = step === 4 ? 99 : 4;
+                }
               }
             "
           >
@@ -4674,4 +4686,18 @@ onBeforeMount(async () => {
 });
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+// :deep(.q-stepper__tab) {
+//   cursor: pointer;
+// }
+
+// :deep(.q-stepper__tab:hover) {
+//   background-color: rgb(243 244 246);
+// }
+
+// TIPS: 注意 unocss 的默认预设中, 默认情况下是不支持以下这种特定的 tailwindcss 语法的 - 即 @apply 的用法不受支持。
+//       * 需要通过手动更改相应的 配置文件uno.config.ts 来支持此转换语法。 -[参考链接](https://unocss.jiangruyi.com/transformers/directives)
+:deep(.q-stepper__tab) {
+  @apply cursor-pointer hover:bg-gray-100;
+}
+</style>
