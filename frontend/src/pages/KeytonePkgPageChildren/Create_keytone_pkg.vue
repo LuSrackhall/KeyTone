@@ -39,7 +39,28 @@
 
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
           <div :class="['text-center font-semibold text-lg text-nowrap']">{{ pkgName }}</div>
-          <q-step :name="1" title="载入音频文件" icon="create_new_folder" :done="step > 1">
+          <q-step
+            :name="1"
+            title="载入音频文件"
+            icon="create_new_folder"
+            :done="step > 1"
+            :disable="step === 99 && soundFileList.length === 0"
+            :header-nav="false"
+            class="cursor-pointer hover:bg-gray-100"
+            @click="
+              () => {
+                // TIPS: 由于:header-nav=true是此组件默认的行为,
+                //       他会为此组件添加默认的点击事件
+                //       这个默认事件的作用是会自动将step其设置为1, 且发生在我们当前的click事件之前。
+                //       因此若不手动将  :header-nav 设置为false, 我们就无法得到预期效果, 只能在点击关闭后望而却步
+                //       故再次之前, 将 :header-nav 手动设置为false, 以禁用默认的事件
+                //       而因为禁用默认 header-nav 后, 组件会失去可点击的样式, 因此我们手动添加相关的 class 可点击样式
+                //       TODO: 由于我希望其关闭时, 可以简单的校验是否已完成, 因此我们使用disable和error两个组件状态来完成简单校验(目前仅使用disable, 后续完善时再说)
+                // step = step === 99 ? 1 : 99;  // 由于还有其它步骤(如step=2,3,4等)要作此操作, 为了不影响, 我们更改判断方式为step===1,而不是现在的step===99。
+                step = step === 1 ? 99 : 1;
+              }
+            "
+          >
             <div>为此键音包载入原始的音频文件供后续步骤使用。</div>
             <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
             <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
@@ -298,7 +319,20 @@
           </q-step>
 
           <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
-          <q-step :name="2" title="裁剪定义声音" icon="add_comment" :done="step > 2">
+          <q-step
+            :name="2"
+            title="裁剪定义声音"
+            icon="add_comment"
+            :done="step > 2"
+            :disable="step === 99 && soundList.length === 0"
+            :header-nav="false"
+            class="cursor-pointer hover:bg-gray-100"
+            @click="
+              () => {
+                step = step === 2 ? 99 : 2;
+              }
+            "
+          >
             <div>
               根据载入的原始音频文件裁剪定义出需要的声音。
               <q-icon name="info" color="primary">
@@ -793,7 +827,29 @@
             </q-stepper-navigation>
           </q-step>
 
-          <q-step :name="3" title="铸造至臻键音" icon="add_comment" :done="step > 3">
+          <q-step
+            :name="3"
+            title="铸造至臻键音"
+            icon="add_comment"
+            :done="step > 3"
+            :disable="step === 99 && keySoundList.length === 0"
+            :header-nav="false"
+            class="cursor-pointer hover:bg-gray-100"
+            @click="
+              () => {
+                // if (soundList.length === 0) {
+                //   q.notify({
+                //     type: 'warning',
+                //     position: 'top',
+                //     message: '请先定义声音',
+                //     timeout: 5,
+                //   });
+                //   return;
+                // }
+                step = step === 3 ? 99 : 3;
+              }
+            "
+          >
             <div>
               <span>键音, 实际就是按键声音或称按键音。</span>
               <span>本步骤默认根据裁剪定义好的声音, 制作按键音。</span>
@@ -1666,7 +1722,27 @@
               <q-btn flat @click="step = 4" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step> -->
-          <q-step :name="4" title="按键联动声效" icon="settings" :done="step > 3">
+          <q-step
+            :name="4"
+            title="按键联动声效"
+            icon="settings"
+            :done="step > 3"
+            :disable="
+              step === 99 &&
+              isEnableEmbeddedTestSound.down === true &&
+              isEnableEmbeddedTestSound.up === true &&
+              keyDownUnifiedSoundEffectSelect === undefined &&
+              keyUpUnifiedSoundEffectSelect === undefined &&
+              selectedSingleKeys.length === 0
+            "
+            :header-nav="false"
+            class="cursor-pointer hover:bg-gray-100"
+            @click="
+              () => {
+                step = step === 4 ? 99 : 4;
+              }
+            "
+          >
             <div>
               为按键设置联动声效，按下或抬起按键时，自动播放预设声效。
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
@@ -3240,7 +3316,10 @@ const pkgPath = nanoid();
 // 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
 const pkgName = ref<string>($t('KeyTonePackage.new.name.defaultValue'));
 
-const step = ref(1);
+const step = ref(99);
+// watch(step, () => {
+//   console.log('step-------------=', step.value);
+// });
 
 const addNewSoundFile = ref(false);
 const files = ref<Array<File>>([]);
