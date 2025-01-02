@@ -2227,6 +2227,7 @@
                           :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
                           v-model="isShowAddOrSettingSingleKeyEffectDialog"
                           backdrop-filter="invert(70%)"
+                          ref="addOrSettingSingleKeyEffectDialogRef"
                         >
                           <q-card>
                             <q-card-section
@@ -2236,7 +2237,20 @@
                             </q-card-section>
 
                             <q-card-section class="q-pt-none">
-                              <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">请选择按键和对应的声效设置</div>
+                              <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">
+                                请选择按键和对应的声效设置。
+                                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                  <q-tooltip
+                                    :class="[
+                                      'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                    ]"
+                                  >
+                                    <div>也可利用空的按下/抬起声效设置来快速批量的删除按键。</div>
+                                    <div></div>
+                                    <div></div>
+                                  </q-tooltip>
+                                </q-icon>
+                              </div>
                               <div class="flex flex-col gap-4">
                                 <div class="flex flex-row items-center gap-2 w-full">
                                   <!--
@@ -2743,26 +2757,35 @@
                                 flat
                                 label="确定"
                                 color="primary"
-                                v-close-popup
                                 @click="
-                                  saveSingleKeySoundEffectConfig(
-                                    {
-                                      singleKeys: selectedSingleKeys,
-                                      down: keyDownSingleKeySoundEffectSelect,
-                                      up: keyUpSingleKeySoundEffectSelect,
-                                    },
-                                    () => {
-                                      q.notify({
-                                        type: 'positive',
-                                        position: 'top',
-                                        message: '单键声效配置成功',
-                                        timeout: 2000,
-                                      });
-                                      selectedSingleKeys = [];
-                                      keyDownSingleKeySoundEffectSelect = null;
-                                      keyUpSingleKeySoundEffectSelect = null;
-                                    }
-                                  )
+                                  if (selectedSingleKeys.length !== 0) {
+                                    saveSingleKeySoundEffectConfig(
+                                      {
+                                        singleKeys: selectedSingleKeys,
+                                        down: keyDownSingleKeySoundEffectSelect,
+                                        up: keyUpSingleKeySoundEffectSelect,
+                                      },
+                                      () => {
+                                        q.notify({
+                                          type: 'positive',
+                                          position: 'top',
+                                          message: '单键声效配置成功',
+                                          timeout: 2000,
+                                        });
+                                        selectedSingleKeys = [];
+                                        keyDownSingleKeySoundEffectSelect = null;
+                                        keyUpSingleKeySoundEffectSelect = null;
+                                        addOrSettingSingleKeyEffectDialogRef?.hide();
+                                      }
+                                    );
+                                  } else {
+                                    q.notify({
+                                      type: 'warning',
+                                      position: 'top',
+                                      message: '请选择声效',
+                                      timeout: 2000,
+                                    });
+                                  }
                                 "
                               />
                               <q-btn flat label="取消" color="primary" v-close-popup />
@@ -3301,7 +3324,7 @@
 <script setup lang="ts">
 import { debounce } from 'lodash';
 import { nanoid } from 'nanoid';
-import { QSelect, useQuasar } from 'quasar';
+import { QDialog, QSelect, useQuasar } from 'quasar';
 import {
   ConfigGet,
   ConfigSet,
@@ -3979,6 +4002,8 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
 const showSingleKeyEffectDialog = ref(false);
 
 const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
+const addOrSettingSingleKeyEffectDialogRef = useTemplateRef<QDialog>('addOrSettingSingleKeyEffectDialogRef');
+
 const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
 const selectedSingleKeys = ref<Array<number>>([]);
 const dikCodeToName_custom = reactive<Map<number, string>>(new Map<number, string>()); // 用于被持久化的实时映射数据的同步工作。(优先级很低, 甚至会被更新的版本覆盖, 仅勉强起个保底作用, 甚至项目完善后有可能删除这个)
@@ -4128,6 +4153,8 @@ const isUpSoundEffectSelectEnabled = ref(true);
 
 const keyDownSingleKeySoundEffectSelect = ref<any>();
 const keyUpSingleKeySoundEffectSelect = ref<any>();
+// const keyDownSingleKeySoundEffectSelect_diff = keyDownSingleKeySoundEffectSelect.value;
+// const keyUpSingleKeySoundEffectSelect_diff = keyUpSingleKeySoundEffectSelect.value;
 const singleKeyTypeGroup = ref<Array<string>>(['sounds']);
 const keySingleKeySoundEffectOptions = computed(() => {
   const List: Array<any> = [];
