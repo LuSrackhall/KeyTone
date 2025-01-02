@@ -2227,7 +2227,6 @@
                           :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
                           v-model="isShowAddOrSettingSingleKeyEffectDialog"
                           backdrop-filter="invert(70%)"
-                          ref="addOrSettingSingleKeyEffectDialogRef"
                         >
                           <q-card>
                             <q-card-section
@@ -2839,7 +2838,7 @@
                                             selectedSingleKeys = [];
                                             keyDownSingleKeySoundEffectSelect = null;
                                             keyUpSingleKeySoundEffectSelect = null;
-                                            addOrSettingSingleKeyEffectDialogRef?.hide();
+                                            isShowAddOrSettingSingleKeyEffectDialog = false;
                                             return;
                                           }
                                         }
@@ -2853,7 +2852,7 @@
                                         selectedSingleKeys = [];
                                         keyDownSingleKeySoundEffectSelect = null;
                                         keyUpSingleKeySoundEffectSelect = null;
-                                        addOrSettingSingleKeyEffectDialogRef?.hide();
+                                        isShowAddOrSettingSingleKeyEffectDialog = false;
                                       }
                                     );
                                   } else {
@@ -2942,7 +2941,10 @@
                             'Dik-{' + item[0] + '}'
                           }}
                         </q-chip>
-                        <q-dialog v-model="isShowSingleKeySoundEffectEditDialog">
+                        <q-dialog
+                          v-model="isShowSingleKeySoundEffectEditDialog"
+                          ref="singleKeySoundEffectEditDialogRef"
+                        >
                           <q-card style="min-width: 350px">
                             <q-card-section>
                               <div class="text-base flex flex-row items-center">
@@ -4080,7 +4082,6 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
 const showSingleKeyEffectDialog = ref(false);
 
 const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
-const addOrSettingSingleKeyEffectDialogRef = useTemplateRef<QDialog>('addOrSettingSingleKeyEffectDialogRef');
 
 const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
 const selectedSingleKeys = ref<Array<number>>([]);
