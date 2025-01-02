@@ -2759,6 +2759,9 @@
                                 color="primary"
                                 @click="
                                   if (selectedSingleKeys.length !== 0) {
+                                    // 保存之前先记录下keysWithSoundEffect的值, 用于保存成功回调中的判断。 保证保存成功的回调中, 判断逻辑的正确性。
+                                    const keysWithSoundEffect_old = [...keysWithSoundEffect]; // 注意,这里我们直接将解构的map给到了数组, 因此后续需要使用数组的some函数判断,而不是map的has。
+
                                     saveSingleKeySoundEffectConfig(
                                       {
                                         singleKeys: selectedSingleKeys,
@@ -2766,6 +2769,81 @@
                                         up: keyUpSingleKeySoundEffectSelect,
                                       },
                                       () => {
+                                        if (!keyDownSingleKeySoundEffectSelect && !keyUpSingleKeySoundEffectSelect) {
+                                          const isDeletes: number[] = [];
+                                          const isNotSoundEffectSelect: number[] = [];
+                                          selectedSingleKeys.forEach((key) => {
+                                            // if (keysWithSoundEffect.has(String(key))) { // TIPS: 由于onSuccess发生在保存成功后, 此时的keysWithSoundEffect已经是更改过的值了(判断的结果是不可用的), 我们应该就更改前的值来做判断才是正确的逻辑。
+                                            if (keysWithSoundEffect_old.some((item) => item[0] === String(key))) {
+                                              isDeletes.push(key);
+                                            } else {
+                                              isNotSoundEffectSelect.push(key);
+                                            }
+                                          });
+                                          if (isNotSoundEffectSelect.length !== 0) {
+                                            if (isDeletes.length === 0) {
+                                              q.notify({
+                                                type: 'warning',
+                                                position: 'top',
+                                                message: '请选择声效',
+                                                timeout: 2000,
+                                              });
+                                              return;
+                                            } else {
+                                              // 此时代表isDeletes.length !== 0, 即本次操作同时存在删除单键声效配置的操作, 和一些未知目的的错误录制的按键
+                                              let deleteString: string = '';
+                                              let notSoundEffectSelectString: string = '';
+                                              isDeletes.forEach((key) => {
+                                                deleteString +=
+                                                  '-[' +
+                                                  (keyEvent_store.dikCodeToName.get(key) ||
+                                                    (dikCodeToName_custom.get(key)
+                                                      ? 'Temp-{' + dikCodeToName_custom.get(key) + '}'
+                                                      : '') ||
+                                                    'Dik-{' + key + '}') +
+                                                  ']';
+                                              });
+                                              isNotSoundEffectSelect.forEach((key) => {
+                                                notSoundEffectSelectString +=
+                                                  '-[' +
+                                                  (keyEvent_store.dikCodeToName.get(key) ||
+                                                    (dikCodeToName_custom.get(key)
+                                                      ? 'Temp-{' + dikCodeToName_custom.get(key) + '}'
+                                                      : '') ||
+                                                    'Dik-{' + key + '}') +
+                                                  ']';
+                                              });
+                                              q.notify({
+                                                type: 'warning',
+                                                position: 'top',
+                                                message: '请为所选的单键 ' + notSoundEffectSelectString + '- 选择声效',
+                                                timeout: 8000,
+                                              });
+                                              q.notify({
+                                                type: 'positive',
+                                                position: 'top',
+                                                message: '单键 ' + deleteString + '- 的声效删除成功',
+                                                timeout: 3000,
+                                              });
+                                              selectedSingleKeys = isNotSoundEffectSelect;
+                                              return;
+                                            }
+                                          } else {
+                                            // 此时代表isNotSoundEffectSelect.length === 0, 即本次操作为专门的删除按键配置的操作
+                                            q.notify({
+                                              type: 'positive',
+                                              position: 'top',
+                                              message: '单键声效删除成功',
+                                              timeout: 2000,
+                                            });
+                                            selectedSingleKeys = [];
+                                            keyDownSingleKeySoundEffectSelect = null;
+                                            keyUpSingleKeySoundEffectSelect = null;
+                                            addOrSettingSingleKeyEffectDialogRef?.hide();
+                                            return;
+                                          }
+                                        }
+
                                         q.notify({
                                           type: 'positive',
                                           position: 'top',
@@ -2782,7 +2860,7 @@
                                     q.notify({
                                       type: 'warning',
                                       position: 'top',
-                                      message: '请选择声效',
+                                      message: '请选择按键',
                                       timeout: 2000,
                                     });
                                   }
