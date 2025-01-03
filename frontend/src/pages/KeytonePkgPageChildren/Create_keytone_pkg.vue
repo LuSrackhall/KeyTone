@@ -3342,41 +3342,99 @@
                                             uuid(keyUpSingleKeySoundEffectSelect_edit) !==
                                               uuid(keyUpSingleKeySoundEffectSelect_edit_old)
                                           ) {
-                                            saveSingleKeySoundEffectConfig(
-                                              {
-                                                singleKeys: currentEditingKey ? [currentEditingKey] : [],
-                                                down: keyDownSingleKeySoundEffectSelect_edit,
-                                                up: keyUpSingleKeySoundEffectSelect_edit,
-                                              },
-                                              () => {
-                                                if (
-                                                  !keyDownSingleKeySoundEffectSelect_edit &&
-                                                  !keyUpSingleKeySoundEffectSelect_edit
-                                                ) {
-                                                  // TODO: 此时毕竟有可能存在误操作(即用户可能并不是主观的想要删除此单键声效的配置, 因此最好能有个二次提示的窗口来警告操作后果会删除单键, 并询问用户是否继续操作)
-                                                  q.notify({
-                                                    type: 'positive',
-                                                    position: 'top',
-                                                    message: '删除成功',
-                                                    timeout: 2000,
-                                                  });
-                                                } else {
-                                                  q.notify({
-                                                    type: 'positive',
-                                                    position: 'top',
-                                                    message: '保存成功',
-                                                    timeout: 2000,
-                                                  });
+                                            // TIPS: 此时毕竟有可能存在误操作(即用户可能并不是主观的想要删除此单键声效的配置, 因此最好能有个二次提示的窗口来警告操作后果会删除单键, 并询问用户是否继续操作)
+                                            if (
+                                              !keyDownSingleKeySoundEffectSelect_edit &&
+                                              !keyUpSingleKeySoundEffectSelect_edit
+                                            ) {
+                                              q.dialog({
+                                                title: '您确定要删除此单键声效配置吗？',
+                                                message:
+                                                  '您的当前配置中, 按下和抬起音效均为空, 故本次保存操作相当于快速删除。',
+                                                ok: {
+                                                  label: '取消',
+                                                  color: 'primary',
+                                                  flat: true,
+                                                },
+                                                cancel: {
+                                                  label: '确定',
+                                                  color: 'primary',
+                                                  flat: true,
+                                                },
+                                                persistent: true,
+                                                focus: 'cancel',
+                                              }).onCancel(() => {
+                                                saveSingleKeySoundEffectConfig(
+                                                  {
+                                                    singleKeys: currentEditingKey ? [currentEditingKey] : [],
+                                                    down: keyDownSingleKeySoundEffectSelect_edit,
+                                                    up: keyUpSingleKeySoundEffectSelect_edit,
+                                                  },
+                                                  () => {
+                                                    if (
+                                                      !keyDownSingleKeySoundEffectSelect_edit &&
+                                                      !keyUpSingleKeySoundEffectSelect_edit
+                                                    ) {
+                                                      q.notify({
+                                                        type: 'positive',
+                                                        position: 'top',
+                                                        message: '删除成功',
+                                                        timeout: 2000,
+                                                      });
+                                                    } else {
+                                                      q.notify({
+                                                        type: 'positive',
+                                                        position: 'top',
+                                                        message: '保存成功',
+                                                        timeout: 2000,
+                                                      });
+                                                    }
+                                                    // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
+                                                    keyDownSingleKeySoundEffectSelect_edit_old =
+                                                      keyDownSingleKeySoundEffectSelect_edit;
+                                                    keyUpSingleKeySoundEffectSelect_edit_old =
+                                                      keyUpSingleKeySoundEffectSelect_edit;
+                                                    // 关闭对话框
+                                                    isShowSingleKeySoundEffectEditDialog = false;
+                                                  }
+                                                );
+                                              });
+                                            } else {
+                                              saveSingleKeySoundEffectConfig(
+                                                {
+                                                  singleKeys: currentEditingKey ? [currentEditingKey] : [],
+                                                  down: keyDownSingleKeySoundEffectSelect_edit,
+                                                  up: keyUpSingleKeySoundEffectSelect_edit,
+                                                },
+                                                () => {
+                                                  if (
+                                                    !keyDownSingleKeySoundEffectSelect_edit &&
+                                                    !keyUpSingleKeySoundEffectSelect_edit
+                                                  ) {
+                                                    q.notify({
+                                                      type: 'positive',
+                                                      position: 'top',
+                                                      message: '删除成功',
+                                                      timeout: 2000,
+                                                    });
+                                                  } else {
+                                                    q.notify({
+                                                      type: 'positive',
+                                                      position: 'top',
+                                                      message: '保存成功',
+                                                      timeout: 2000,
+                                                    });
+                                                  }
+                                                  // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
+                                                  keyDownSingleKeySoundEffectSelect_edit_old =
+                                                    keyDownSingleKeySoundEffectSelect_edit;
+                                                  keyUpSingleKeySoundEffectSelect_edit_old =
+                                                    keyUpSingleKeySoundEffectSelect_edit;
+                                                  // 关闭对话框
+                                                  isShowSingleKeySoundEffectEditDialog = false;
                                                 }
-                                                // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
-                                                keyDownSingleKeySoundEffectSelect_edit_old =
-                                                  keyDownSingleKeySoundEffectSelect_edit;
-                                                keyUpSingleKeySoundEffectSelect_edit_old =
-                                                  keyUpSingleKeySoundEffectSelect_edit;
-                                                // 关闭对话框
-                                                isShowSingleKeySoundEffectEditDialog = false;
-                                              }
-                                            );
+                                              );
+                                            }
                                           } else {
                                             q.notify({
                                               type: 'warning',
