@@ -23,7 +23,7 @@
    q-layout 有个 style="min-height: 803.2px" 的样式, 会造成滚动条的出现 进而无法展示窗口底部 进而无法通过css实现圆角
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
-  <q-page style="min-height: 0px">
+  <q-page style="min-height: 0px" class="w-[379px] h-[458.5px]">
     <div
       :class="[
         '',
@@ -109,6 +109,29 @@
         />
       </div>
     </div>
+    <div
+      :class="[
+        'text-center text-xs text-gray-500 absolute bottom-8.5 w-full',
+        // 使页面文本无法选择, 免得影响界面体验。
+        'select-none',
+      ]"
+    >
+      <div class="flex justify-center items-center">
+        Copyright © 2024&nbsp;
+        <div class="cursor-pointer hover:bg-gray-100" @click="openExternal('https://github.com/LuSrackhall')">
+          LuSrackhall
+        </div>
+      </div>
+      <div class="flex justify-center items-center">
+        KeyTone is licensed under&nbsp;
+        <div
+          class="cursor-pointer hover:bg-gray-100"
+          @click="openExternal('https://choosealicense.com/licenses/gpl-3.0/')"
+        >
+          GNU GPLv3
+        </div>
+      </div>
+    </div>
   </q-page>
 </template>
 
@@ -170,6 +193,12 @@ const isSilent = (event: any) => {
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
+
+function openExternal(url: string) {
+  if (process.env.MODE === 'electron') {
+    window.myWindowAPI.openExternal(url);
+  }
+}
 </script>
 
 <style lang="scss" scoped></style>
