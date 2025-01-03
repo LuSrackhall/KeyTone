@@ -55,8 +55,48 @@
           icon="flight_takeoff"
           @click="() => router.push('/keytone_pkg-create')"
         />
-        <q-btn no-caps :label="$t('KeyTonePackage.edit.edit')" icon="flight_takeoff" />
-        <q-btn no-caps :label="$t('KeyTonePackage.import.import')" icon="flight_takeoff" />
+        <q-btn
+          no-caps
+          :label="$t('KeyTonePackage.edit.edit')"
+          icon="flight_takeoff"
+          @click="
+            () => {
+              q.notify({
+                type: 'info',
+                position: 'top',
+                message: '键音包编辑功能正在积极开发中...',
+                timeout: 2000,
+              });
+              // q.notify({
+              //   type: 'info',
+              //   position: 'top',
+              //   message: '赞助作者或是前往steam购买本软件来支持该项目, 以进一步增加作者的开发动力。',
+              //   timeout: 2000,
+              // });
+            }
+          "
+        />
+        <q-btn
+          no-caps
+          :label="$t('KeyTonePackage.import.import')"
+          icon="flight_takeoff"
+          @click="
+            () => {
+              q.notify({
+                type: 'info',
+                position: 'top',
+                message: '键音包导入功能正在积极开发中...',
+                timeout: 2000,
+              });
+              // q.notify({
+              //   type: 'info',
+              //   position: 'top',
+              //   message: '赞助作者或是前往steam购买本软件来支持该项目, 以进一步增加作者的开发动力。',
+              //   timeout: 2000,
+              // });
+            }
+          "
+        />
       </div>
     </q-scroll-area>
   </q-page>
@@ -64,8 +104,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 
 const router = useRouter();
+const q = useQuasar();
 </script>
 
 <style lang="scss" scoped></style>
