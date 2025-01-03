@@ -3323,13 +3323,24 @@
                                       color="primary"
                                       icon="save"
                                       @click="
-                                        () => {
-                                          // TODO: 只是这样简单的对比, 无法在用户操作后, 仍选择相同声效时作出正确的判断, 因此后续可以更精确的对uuid进行比较。
+                                        async () => {
+                                          // TIPS: 只是这样简单的对比, 无法在用户操作后, 仍选择相同声效时作出正确的判断, 因此后续可以更精确的对uuid进行比较。
+                                          const uuid = (item: any) => {
+                                            if (item?.type === 'audio_files') {
+                                              return item?.value.sha256 + item?.value.name_id;
+                                            }
+                                            if (item?.type === 'sounds') {
+                                              return item?.value.soundKey;
+                                            }
+                                            if (item?.type === 'key_sounds') {
+                                              return item?.value.keySoundKey;
+                                            }
+                                          };
                                           if (
-                                            keyDownSingleKeySoundEffectSelect_edit !==
-                                              keyDownSingleKeySoundEffectSelect_edit_old ||
-                                            keyUpSingleKeySoundEffectSelect_edit !==
-                                              keyUpSingleKeySoundEffectSelect_edit_old
+                                            uuid(keyDownSingleKeySoundEffectSelect_edit) !==
+                                              uuid(keyDownSingleKeySoundEffectSelect_edit_old) ||
+                                            uuid(keyUpSingleKeySoundEffectSelect_edit) !==
+                                              uuid(keyUpSingleKeySoundEffectSelect_edit_old)
                                           ) {
                                             saveSingleKeySoundEffectConfig(
                                               {
