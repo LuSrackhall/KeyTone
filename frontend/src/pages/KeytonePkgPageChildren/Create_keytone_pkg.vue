@@ -2929,6 +2929,8 @@
                                 const up = item[1].up;
                                 keyDownSingleKeySoundEffectSelect_edit = convertValue(down ? down : '');
                                 keyUpSingleKeySoundEffectSelect_edit = convertValue(up ? up : '');
+                                keyDownSingleKeySoundEffectSelect_edit_old = keyDownSingleKeySoundEffectSelect_edit;
+                                keyUpSingleKeySoundEffectSelect_edit_old = keyUpSingleKeySoundEffectSelect_edit;
                               }
                             }
                           "
@@ -2941,10 +2943,7 @@
                             'Dik-{' + item[0] + '}'
                           }}
                         </q-chip>
-                        <q-dialog
-                          v-model="isShowSingleKeySoundEffectEditDialog"
-                          ref="singleKeySoundEffectEditDialogRef"
-                        >
+                        <q-dialog v-model="isShowSingleKeySoundEffectEditDialog">
                           <q-card style="min-width: 350px">
                             <q-card-section>
                               <div class="text-base flex flex-row items-center">
@@ -3324,21 +3323,58 @@
                                       color="primary"
                                       icon="save"
                                       @click="
-                                        saveSingleKeySoundEffectConfig(
-                                          {
-                                            singleKeys: currentEditingKey ? [currentEditingKey] : [],
-                                            down: keyDownSingleKeySoundEffectSelect_edit,
-                                            up: keyUpSingleKeySoundEffectSelect_edit,
-                                          },
-                                          () => {
+                                        () => {
+                                          // TODO: 只是这样简单的对比, 无法在用户操作后, 仍选择相同声效时作出正确的判断, 因此后续可以更精确的对uuid进行比较。
+                                          if (
+                                            keyDownSingleKeySoundEffectSelect_edit !==
+                                              keyDownSingleKeySoundEffectSelect_edit_old ||
+                                            keyUpSingleKeySoundEffectSelect_edit !==
+                                              keyUpSingleKeySoundEffectSelect_edit_old
+                                          ) {
+                                            saveSingleKeySoundEffectConfig(
+                                              {
+                                                singleKeys: currentEditingKey ? [currentEditingKey] : [],
+                                                down: keyDownSingleKeySoundEffectSelect_edit,
+                                                up: keyUpSingleKeySoundEffectSelect_edit,
+                                              },
+                                              () => {
+                                                if (
+                                                  !keyDownSingleKeySoundEffectSelect_edit &&
+                                                  !keyUpSingleKeySoundEffectSelect_edit
+                                                ) {
+                                                  // TODO: 此时毕竟有可能存在误操作(即用户可能并不是主观的想要删除此单键声效的配置, 因此最好能有个二次提示的窗口来警告操作后果会删除单键, 并询问用户是否继续操作)
+                                                  q.notify({
+                                                    type: 'positive',
+                                                    position: 'top',
+                                                    message: '删除成功',
+                                                    timeout: 2000,
+                                                  });
+                                                } else {
+                                                  q.notify({
+                                                    type: 'positive',
+                                                    position: 'top',
+                                                    message: '保存成功',
+                                                    timeout: 2000,
+                                                  });
+                                                }
+                                                // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
+                                                keyDownSingleKeySoundEffectSelect_edit_old =
+                                                  keyDownSingleKeySoundEffectSelect_edit;
+                                                keyUpSingleKeySoundEffectSelect_edit_old =
+                                                  keyUpSingleKeySoundEffectSelect_edit;
+                                                // 关闭对话框
+                                                isShowSingleKeySoundEffectEditDialog = false;
+                                              }
+                                            );
+                                          } else {
                                             q.notify({
-                                              type: 'positive',
+                                              type: 'warning',
                                               position: 'top',
-                                              message: '保存成功',
+                                              message: '未检测到更改',
                                               timeout: 2000,
                                             });
                                           }
-                                        )
+                                        }
                                       "
                                     >
                                       <q-tooltip>保存当前编辑的内容</q-tooltip>
@@ -4470,6 +4506,9 @@ const currentEditingKeyOfName = computed(() => {
 // -- -- -- 编辑声效(重新选择声效)
 const keyDownSingleKeySoundEffectSelect_edit = ref<any>();
 const keyUpSingleKeySoundEffectSelect_edit = ref<any>();
+let keyDownSingleKeySoundEffectSelect_edit_old = keyDownSingleKeySoundEffectSelect_edit.value;
+let keyUpSingleKeySoundEffectSelect_edit_old = keyUpSingleKeySoundEffectSelect_edit.value;
+
 const singleKeyTypeGroup_edit = ref<Array<string>>(['sounds']);
 const keySingleKeySoundEffectOptions_edit = computed(() => {
   const List: Array<any> = [];
