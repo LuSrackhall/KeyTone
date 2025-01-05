@@ -215,12 +215,15 @@ const isSilent = (event: any) => {
 
 const main_store = useMainStore();
 
+// 每次用户的主动选择, 都会触发实际选择的键音包重新进行加载。
 watch(
   () => setting_store.mainHome.selectedKeyTonePkg,
   () => {
-    console.log('setting_store.mainHome.selectedKeyTonePkg', setting_store.mainHome.selectedKeyTonePkg);
-    LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
-  }
+    // 即使多次调用此函数也无妨, 相同uuid的键音包动作, 不会影响已加载并使用中的键音包。
+    main_store.LoadSelectedKeyTonePkg();
+  },
+  // 立即执行, 使得每次进入主界面时, 都会加载用户所选的键音包。(主要是软件启动时, 适配加载用户所选的键音包)
+  { immediate: true }
 );
 
 function openExternal(url: string) {

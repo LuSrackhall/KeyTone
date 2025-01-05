@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
-import { GetAudioPackageList, GetAudioPackageName } from 'src/boot/query/keytonePkg-query';
+import { ConfigGet, GetAudioPackageList, GetAudioPackageName, LoadConfig } from 'src/boot/query/keytonePkg-query';
 import { ref } from 'vue';
+import { useSettingStore } from './setting-store';
+import { useQuasar } from 'quasar';
+
 export const useMainStore = defineStore('main', () => {
   const keyTonePkgOptions = ref([]);
   const keyTonePkgOptionsName = ref(new Map());
@@ -17,5 +20,46 @@ export const useMainStore = defineStore('main', () => {
     });
   });
 
-  return { keyTonePkgOptions, keyTonePkgOptionsName };
+  const setting_store = useSettingStore();
+  const q = useQuasar();
+
+  /**
+   * 加载用户所选的键音包
+   * * 这个函数能够保证, 不会重复加载与目前正在使用键音包相同uuid的键音包。
+   * * -- 比如, 从设置页面或是其它页面 返回主页面时, 不会重复加载。
+   */
+  function LoadSelectedKeyTonePkg() {
+    ConfigGet('audio_pkg_uuid').then((res) => {
+      console.log('res= ', res);
+      console.log('setting_store.mainHome.selectedKeyTonePkg= ', setting_store.mainHome.selectedKeyTonePkg);
+      // 这里的路径处理, 是为了兼容不同操作系统。(我们简单使用了quasar的platform.is.win来判断)
+      // * TIPS: 若后续发现兼容性问题, 可考虑替换为node的path.basename:
+      // *       * 利用vite的vite - plugin - node - polyfills插件引入(推荐)
+      // *       * 或是第三方的path - browserify这个前端简单的路径处理库引入
+      // *       * 以上两者均可(不过据目前所知, 只有win系统是使用'\\'作为路径分隔符的, 其他系统都是使用'/'作为路径分隔符)
+      // *       * * Windows:          '\'  (反斜杠)
+      // *       * * macOS:            '/'  (正斜杠)
+      // *       * * Linux:            '/'  (正斜杠)
+      // *       * * Unix:             '/'  (正斜杠)
+      // *       * * Android:          '/'  (正斜杠)
+      // *       * * iOS:              '/'  (正斜杠)
+      // *       * * HarmonyOS:        '/'  (正斜杠)
+      // *       * * HarmonyOS Next:   '/'  (正斜杠)
+      // *       * 也就是说, 我们此处甚至可以无需借助quasar的platform.is.win来判断, 直接对字符串使用.replace(/\\/g, '/')后, 统一转换为正斜杠来处理即可。
+      const UUID = setting_store.mainHome.selectedKeyTonePkg.split(q.platform.is.win ? '\\' : '/').pop();
+      console.log('UUID= ', UUID);
+
+      if (res !== UUID) {
+        // 若当前的配置文件中的uuid 与 实际使用的键音包uuid不一致, 以配置文件中用户选择的键音包uuid为准, 重新加载对应键音包。
+        // * setting_store.mainHome.selectedKeyTonePkg 由SSE保证,始终与配置文件的相关配置一致。
+        // * ConfigGet('audio_pkg_uuid')读取到的uuid, 可能受 新建/编辑 键音包操作的影响, 导致与配置文件中的uuid不一致。
+        // * 因此, 此处需要以配置文件中用户选择的键音包uuid为准, 重新加载对应键音包。否则无需重新加载。(比如从设置页面返回主页面时。)
+        LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
+          console.log('重新加载用户所选的键音包成功');
+        });
+      }
+    });
+  }
+
+  return { keyTonePkgOptions, keyTonePkgOptionsName, LoadSelectedKeyTonePkg };
 });
