@@ -111,6 +111,7 @@ export const useSettingStore = defineStore('setting', () => {
       volumeSilent: false,
       isOpenVolumeDebugSlider: false,
     },
+    selectedKeyTonePkg: '',
   });
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
@@ -199,6 +200,9 @@ export const useSettingStore = defineStore('setting', () => {
       if (settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider !== undefined) {
         mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider =
           settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
+      }
+      if (settingStorage.main_home.selected_key_tone_pkg !== undefined) {
+        mainHome.value.selectedKeyTonePkg = settingStorage.main_home.selected_key_tone_pkg;
       }
     });
 
@@ -293,6 +297,13 @@ export const useSettingStore = defineStore('setting', () => {
           'main_home.audio_volume_processing.is_open_volume_debug_slider',
           mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider
         );
+      }
+    );
+
+    watch(
+      () => mainHome.value.selectedKeyTonePkg,
+      () => {
+        StoreSet('main_home.selected_key_tone_pkg', mainHome.value.selectedKeyTonePkg);
       }
     );
   }

@@ -48,10 +48,10 @@
 
     <div :class="['w-[58%] flex flex-col ml-[21.8%] mr-[20.2%]']">
       <q-select
-        v-model="selectedKeyTonePkg"
-        :options="keyTonePkgOptions"
+        v-model="setting_store.mainHome.selectedKeyTonePkg"
+        :options="main_store.keyTonePkgOptions"
         :option-label="(item: any) => {
-          return keyTonePkgOptionsName.get(item)
+          return main_store.keyTonePkgOptionsName.get(item)
         }"
         :label="$t('选择要使用的键音包')"
         outlined
@@ -155,6 +155,7 @@
 <script setup lang="ts">
 import logoUrl from 'assets/img/KeyTone.png?url';
 import { GetAudioPackageList, GetAudioPackageName, LoadConfig } from 'src/boot/query/keytonePkg-query';
+import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, ref, watch } from 'vue';
 
@@ -212,26 +213,15 @@ const isSilent = (event: any) => {
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
 
-const selectedKeyTonePkg = ref('');
-const keyTonePkgOptions = ref([]);
-const keyTonePkgOptionsName = new Map();
+const main_store = useMainStore();
 
-GetAudioPackageList().then((res) => {
-  keyTonePkgOptions.value = res.list;
-  console.log('keyTonePkgOptions', keyTonePkgOptions.value);
-  keyTonePkgOptionsName.clear();
-  keyTonePkgOptions.value.forEach((item: any) => {
-    GetAudioPackageName(item).then((res) => {
-      console.log('res', res);
-      keyTonePkgOptionsName.set(item, res.name);
-    });
-  });
-});
-
-watch(selectedKeyTonePkg, () => {
-  console.log('selectedKeyTonePkg', selectedKeyTonePkg.value);
-  LoadConfig(selectedKeyTonePkg.value, false);
-});
+watch(
+  () => setting_store.mainHome.selectedKeyTonePkg,
+  () => {
+    console.log('setting_store.mainHome.selectedKeyTonePkg', setting_store.mainHome.selectedKeyTonePkg);
+    LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+  }
+);
 
 function openExternal(url: string) {
   if (process.env.MODE === 'electron') {
