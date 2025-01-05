@@ -21,6 +21,7 @@ package server
 
 import (
 	audioPackageConfig "KeyTone/audioPackage/config"
+	audioPackageList "KeyTone/audioPackage/list"
 	"KeyTone/config"
 	"KeyTone/keyEvent"
 	"KeyTone/keySound"
@@ -205,7 +206,13 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		audioPackageConfig.LoadConfig(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID), arg.IsCreate)
+		if arg.IsCreate {
+			// 如果创建新的键音包, 我们只知道最终的uuid(不知道存放uuid文件夹的路径)
+			audioPackageConfig.LoadConfig(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID), arg.IsCreate)
+		} else {
+			// 如果加载已有的键音包, 我们只知道键音包的完整路径(包括uuid与即uuid文件夹所在的路径)
+			audioPackageConfig.LoadConfig(arg.AudioPkgUUID, arg.IsCreate)
+		}
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
@@ -515,6 +522,36 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
+		})
+	})
+
+	keytonePkgRouters.GET("/get_audio_package_list", func(ctx *gin.Context) {
+		list, err := audioPackageList.GetAudioPackageList(audioPackageConfig.AudioPackagePath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包列表失败:" + err.Error(),
+			})
+			return
+		}
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"list":    list,
+		})
+	})
+
+	keytonePkgRouters.GET("/get_audio_package_name", func(ctx *gin.Context) {
+
+		path := ctx.DefaultQuery("path", "unknown")
+		if path == "unknown" || path == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容path值, 不符合接口规定格式:",
+			})
+			return
+		}
+		name := audioPackageList.GetAudioPackageName(path)
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"name":    name,
 		})
 	})
 }

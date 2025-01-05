@@ -20,10 +20,15 @@
 package audioPackageList
 
 import (
+	"KeyTone/logger"
 	"os"
 	"path/filepath"
+	"sync"
+
+	"github.com/spf13/viper"
 )
 
+// 用于获取键音包根目录中, 所有键音包的完整路径的列表。
 func GetAudioPackageList(rootDir string) ([]string, error) {
 	var directories []string
 
@@ -36,4 +41,38 @@ func GetAudioPackageList(rootDir string) ([]string, error) {
 	}
 
 	return directories, err
+}
+
+// 用于获取具体路径下的键音包的名称。
+var viperRWMutex sync.RWMutex
+
+func GetAudioPackageName(configPath string) any {
+	// 加载配置文件
+	Viper := viper.New()
+	defer func() {
+		Viper = nil
+	}()
+
+	// 设置配置文件名称和类型
+	Viper.SetConfigName("config")
+	Viper.SetConfigType("json")
+
+	// 添加配置文件路径
+	Viper.AddConfigPath(configPath)
+
+	// 读取配置文件
+	if err := Viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// 否则为正常的加载, 默认不会创建配置文件, 以识别出有问题的键音包
+			logger.Error("未找到正确的音频包配置", "path", configPath)
+		} else {
+			// 其他错误
+			logger.Error("读取音频包配置时发生致命错误", "err", err.Error())
+		}
+	}
+
+	// 从加载的配置文件中, 读取 package_name 字段
+	viperRWMutex.RLock()
+	defer viperRWMutex.RUnlock()
+	return Viper.Get("package_name")
 }

@@ -23,6 +23,7 @@
    q-layout 有个 style="min-height: 803.2px" 的样式, 会造成滚动条的出现 进而无法展示窗口底部 进而无法通过css实现圆角
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
+
   <q-page style="min-height: 0px" class="w-[379px] h-[458.5px]">
     <div
       :class="[
@@ -43,6 +44,22 @@
         <!-- draggable="false"使得图片无法拖动, 免得影响界面体验 -->
         <img :src="logoUrl" draggable="false" />
       </q-avatar>
+    </div>
+
+    <div :class="['w-[58%] flex flex-col ml-[21.8%] mr-[20.2%]']">
+      <q-select
+        v-model="selectedKeyTonePkg"
+        :options="keyTonePkgOptions"
+        :option-label="(item: any) => {
+          return keyTonePkgOptionsName.get(item)
+        }"
+        :label="$t('选择要使用的键音包')"
+        outlined
+        dense
+        emit-value
+        map-options
+        behavior="dialog"
+      />
     </div>
     <!--
       * TIPS: 对于主页的音量调整, 理念是最终原始音频, 即最大音量等于原始音频的正常音量(或是最大音量), 也就是说保持为0。
@@ -137,8 +154,9 @@
 
 <script setup lang="ts">
 import logoUrl from 'assets/img/KeyTone.png?url';
+import { GetAudioPackageList, GetAudioPackageName, LoadConfig } from 'src/boot/query/keytonePkg-query';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const setting_store = useSettingStore();
 
@@ -193,6 +211,27 @@ const isSilent = (event: any) => {
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
+
+const selectedKeyTonePkg = ref('');
+const keyTonePkgOptions = ref([]);
+const keyTonePkgOptionsName = new Map();
+
+GetAudioPackageList().then((res) => {
+  keyTonePkgOptions.value = res.list;
+  console.log('keyTonePkgOptions', keyTonePkgOptions.value);
+  keyTonePkgOptionsName.clear();
+  keyTonePkgOptions.value.forEach((item: any) => {
+    GetAudioPackageName(item).then((res) => {
+      console.log('res', res);
+      keyTonePkgOptionsName.set(item, res.name);
+    });
+  });
+});
+
+watch(selectedKeyTonePkg, () => {
+  console.log('selectedKeyTonePkg', selectedKeyTonePkg.value);
+  LoadConfig(selectedKeyTonePkg.value, false);
+});
 
 function openExternal(url: string) {
   if (process.env.MODE === 'electron') {
