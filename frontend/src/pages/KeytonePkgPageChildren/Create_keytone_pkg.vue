@@ -3522,7 +3522,8 @@ import {
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
-import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick } from 'vue';
+import { useMainStore } from 'src/stores/main-store';
+import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const q = useQuasar();
@@ -4897,6 +4898,12 @@ onBeforeMount(async () => {
     },
     false
   );
+});
+
+// 在退出创建键音包的页面后, 载入 持久化的 用户选择的 键音包。(在 创建 键音包界面 退出时, 重新加载 用户持久化至 设置 文件中的 键音包。)
+const main_store = useMainStore();
+onUnmounted(() => {
+  main_store.LoadSelectedKeyTonePkg();
 });
 </script>
 
