@@ -28,6 +28,7 @@ import { useAppStore } from './stores/app-store';
 import { debounce } from 'lodash';
 import { useKeyEventStore } from './stores/keyEvent-store';
 import { useMainStore } from './stores/main-store';
+import { LoadConfig } from './boot/query/keytonePkg-query';
 
 const app_store = useAppStore();
 const setting_store = useSettingStore();
@@ -38,7 +39,17 @@ const keyEvent_store = useKeyEventStore();
 const main_store = useMainStore();
 
 onBeforeMount(async () => {
-  setting_store.settingInitAndRealTimeStorage();
+  await setting_store.settingInitAndRealTimeStorage();
+
+  // 在此处调用, 只是为了提前初始化sdk中用户所选键音包的加载。
+  // * 放在setting_store.settingInitAndRealTimeStorage()后面(并对齐施以await), 是为了确保能够加载配置文件中持久化的用户所选的键音包。
+  // * > 毕竟此函数内部所依赖的setting_store.mainHome.selectedKeyTonePkg 是由setting_store.settingInitAndRealTimeStorage()调用完成后才给予赋值的。
+  // main_store.LoadSelectedKeyTonePkg();// TIPS: 由于函数内部, 还会依赖ConfigGet('audio_pkg_uuid')的返回值, 而首次加载时, sdk中没有任何键音包的加载, 因此会返回错误。
+  // 为了防止出现以上TIPS中的报错, 我们首次加载无需判断 ConfigGet('audio_pkg_uuid')的返回值, 也也就是此处直接调用LoadConfig()函数即可。
+  LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
+    console.log('已在首次启动时, 成功加载持久化中用户所选的键音包');
+  });
+
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- save setting start ^_^-_-^_^
 
   function sseDataToSettingStore(settingStorage: any) {
@@ -91,6 +102,10 @@ onBeforeMount(async () => {
     }
     if (settingStorage.main_home.selected_key_tone_pkg !== undefined) {
       setting_store.mainHome.selectedKeyTonePkg = settingStorage.main_home.selected_key_tone_pkg;
+      // 每次用户的主动选择, 都会在SSE中触发实际选择的键音包重新进行加载。
+      // 也就是说, 不止在主页面中通过watch监听触发此函数, 在sse回调中也再次调用此函数, 以保证用户的选择能够最大程度上被可靠的加载。
+      // 并且无需担心, 重复调用此函数也不会引发重复加载相同的键音包。
+      main_store.LoadSelectedKeyTonePkg();
     }
   }
   const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 30, {
