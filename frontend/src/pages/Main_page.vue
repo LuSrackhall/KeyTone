@@ -54,6 +54,7 @@
           return main_store.keyTonePkgOptionsName.get(item)
         }"
         :label="$t('选择要使用的键音包')"
+        :virtual-scroll-slice-size="999999"
         outlined
         dense
         emit-value
