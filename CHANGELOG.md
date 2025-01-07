@@ -3,6 +3,19 @@
 
 ### Bug Fixes
 
+* **sdk:** 经验证, 即使键音包不存在, 也不会引发报错之类的问题, 而初始化时所选键音包为空字符串的情况实际上也可以归为此类, 因此sdk中无需对空字符串的restful返回错误。 ([75d8dce](https://github.com/LuSrackhall/KeyTone/commit/75d8dce448abf175bf124b82ddd865602359a30a)), closes [#56](https://github.com/LuSrackhall/KeyTone/issues/56)
+* **ui:** 解决在主界面中当用户选择某个键音包后, 焦点仍保持在选择组件而造成的容易引发误触的问题。 ([c45c4bd](https://github.com/LuSrackhall/KeyTone/commit/c45c4bdb7350b0e3812f984fca259f4c22574228)), closes [#56](https://github.com/LuSrackhall/KeyTone/issues/56)
+* **ui:** 修复了 键音包列表 为空时 引发的界面卡死问题。 ([e2dbf2d](https://github.com/LuSrackhall/KeyTone/commit/e2dbf2d8b2b55ae3493321cafc33968081c6c818)), closes [#56](https://github.com/LuSrackhall/KeyTone/issues/56)
+* **ui:** 修复了 用户新建键音包并返回主页面后,  键音包列表未能更新至最新的问题。 并且本次提交中, 将键音包列表的初始化逻辑移动至其本该在的App.vue文件中。 ([6f94635](https://github.com/LuSrackhall/KeyTone/commit/6f9463557b77f56d249eb2a2797d7bdd60a78959)), closes [#56](https://github.com/LuSrackhall/KeyTone/issues/56)
+* **ui:** 在主界面上提供相应的 快速的清楚所选键音包 的按钮, 以解决当前选择键音包后, 无法清空所选键音包 至 软件初始状态的问题。 ([8db1a47](https://github.com/LuSrackhall/KeyTone/commit/8db1a47085019e0df3feb6ebb0b21544c19d418a)), closes [#56](https://github.com/LuSrackhall/KeyTone/issues/56)
+
+
+
+#  (2025-01-07)
+
+
+### Bug Fixes
+
 * 解决 全键声效设置 时, 无法对按下或抬起的全键声效 设置空值, 以至于无法单独地仅定义 按下声效 或 抬起声效, 甚至是全都取消定义。解决方式是, 使用空字符串。 ([a9d56b8](https://github.com/LuSrackhall/KeyTone/commit/a9d56b80b17bf8e6e0d442dc4d5ab2b736bec4ca)), closes [#45](https://github.com/LuSrackhall/KeyTone/issues/45)
 * 修复了 单键Dik码 与 name 实时映射是,  多个按键被按下 时的通知 在应用未获取焦点时被意外触发的bug。 ([1c51e42](https://github.com/LuSrackhall/KeyTone/commit/1c51e4271c1e781ed1cb8c62b08d70ed94d3c941)), closes [#47](https://github.com/LuSrackhall/KeyTone/issues/47)
 * **sdk:** 当音频包内某个 声音 被删除被, 在播放过程中不应该panic, 仅通过log记录对应的错误事件即可。 ([36502ba](https://github.com/LuSrackhall/KeyTone/commit/36502ba55f83fd69617f98ef52b6fb43cc97ab0d)), closes [#52](https://github.com/LuSrackhall/KeyTone/issues/52)
