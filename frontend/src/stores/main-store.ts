@@ -8,19 +8,26 @@ export const useMainStore = defineStore('main', () => {
   const keyTonePkgOptions = ref([]);
   const keyTonePkgOptionsName = ref(new Map());
 
-  GetAudioPackageList().then((res) => {
-    if (res.list) {
-      keyTonePkgOptions.value = res.list;
-      console.log('keyTonePkgOptions', keyTonePkgOptions.value);
-      keyTonePkgOptionsName.value.clear();
-      keyTonePkgOptions.value.forEach((item: any) => {
-        GetAudioPackageName(item).then((res) => {
-          // console.log('res', res);
-          keyTonePkgOptionsName.value.set(item, res.name);
+  /**
+   * 获取键音包列表
+   * * 可用于在应用启动时初始化键音包列表, 或是在创建/编辑键音包后, 更新键音包列表。
+   */
+  function GetKeyTonePackageList() {
+    // 获取键音包列表的初始化逻辑, 没必要在main_store中进行, 而是应该在其所相关的对应逻辑中进行(比如在App.vue或是boot中)。
+    GetAudioPackageList().then((res) => {
+      if (res.list) {
+        keyTonePkgOptions.value = res.list;
+        console.log('keyTonePkgOptions', keyTonePkgOptions.value);
+        keyTonePkgOptionsName.value.clear();
+        keyTonePkgOptions.value.forEach((item: any) => {
+          GetAudioPackageName(item).then((res) => {
+            // console.log('res', res);
+            keyTonePkgOptionsName.value.set(item, res.name);
+          });
         });
-      });
-    }
-  });
+      }
+    });
+  }
 
   const setting_store = useSettingStore();
   const q = useQuasar();
@@ -63,5 +70,5 @@ export const useMainStore = defineStore('main', () => {
     });
   }
 
-  return { keyTonePkgOptions, keyTonePkgOptionsName, LoadSelectedKeyTonePkg };
+  return { keyTonePkgOptions, keyTonePkgOptionsName, GetKeyTonePackageList, LoadSelectedKeyTonePkg };
 });

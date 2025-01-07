@@ -39,6 +39,9 @@ const keyEvent_store = useKeyEventStore();
 const main_store = useMainStore();
 
 onBeforeMount(async () => {
+  // 首次加载时, 加载键音包列表
+  main_store.GetKeyTonePackageList();
+
   await setting_store.settingInitAndRealTimeStorage();
 
   // 在此处调用, 只是为了提前初始化sdk中用户所选键音包的加载。

@@ -4903,6 +4903,9 @@ onBeforeMount(async () => {
 // 在退出创建键音包的页面后, 载入 持久化的 用户选择的 键音包。(在 创建 键音包界面 退出时, 重新加载 用户持久化至 设置 文件中的 键音包。)
 const main_store = useMainStore();
 onUnmounted(() => {
+  // 卸载组件后, 更新键音包列表
+  main_store.GetKeyTonePackageList();
+  // 卸载组件后, 重新载入持久化配置中用户所选的键音包
   main_store.LoadSelectedKeyTonePkg();
 });
 </script>
