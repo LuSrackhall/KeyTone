@@ -9,15 +9,17 @@ export const useMainStore = defineStore('main', () => {
   const keyTonePkgOptionsName = ref(new Map());
 
   GetAudioPackageList().then((res) => {
-    keyTonePkgOptions.value = res.list;
-    console.log('keyTonePkgOptions', keyTonePkgOptions.value);
-    keyTonePkgOptionsName.value.clear();
-    keyTonePkgOptions.value.forEach((item: any) => {
-      GetAudioPackageName(item).then((res) => {
-        // console.log('res', res);
-        keyTonePkgOptionsName.value.set(item, res.name);
+    if (res.list) {
+      keyTonePkgOptions.value = res.list;
+      console.log('keyTonePkgOptions', keyTonePkgOptions.value);
+      keyTonePkgOptionsName.value.clear();
+      keyTonePkgOptions.value.forEach((item: any) => {
+        GetAudioPackageName(item).then((res) => {
+          // console.log('res', res);
+          keyTonePkgOptionsName.value.set(item, res.name);
+        });
       });
-    });
+    }
   });
 
   const setting_store = useSettingStore();
