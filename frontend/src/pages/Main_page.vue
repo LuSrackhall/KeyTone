@@ -60,7 +60,16 @@
         emit-value
         map-options
         behavior="dialog"
-      />
+      >
+        <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
+          <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
+          <q-icon
+            name="cancel"
+            @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
+            class="cursor-pointer text-lg"
+          />
+        </template>
+      </q-select>
     </div>
     <!--
       * TIPS: 对于主页的音量调整, 理念是最终原始音频, 即最大音量等于原始音频的正常音量(或是最大音量), 也就是说保持为0。
