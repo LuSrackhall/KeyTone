@@ -34,7 +34,9 @@ const downloadMenu = computed(() => {
           // text: `Windows ${version} x64 (.zip) - 推荐`,
           // text: `Windows x64 (.zip) - 推荐`,
           text: `Windows x64 (.zip)`,
-          link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+          // 这个不再区分, 仅链接github的下载。
+          // link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
           icon: Windows,
           event: "download",
           eventPlatform: "windows",
@@ -45,7 +47,9 @@ const downloadMenu = computed(() => {
         {
           // text: `Windows ${version} x64 安装包 (.exe)`,
           text: `Windows x64 安装包 (.exe)`,
-          link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64.exe`,
+          // 这个不再区分, 仅链接github的下载。
+          // link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64.exe`,
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64.exe`,
           icon: Windows,
           event: "download",
           eventPlatform: "windows",
