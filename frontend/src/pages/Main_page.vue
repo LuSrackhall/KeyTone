@@ -60,6 +60,8 @@
         emit-value
         map-options
         behavior="dialog"
+        ref="selectedKeyTonePkgRef"
+        @popup-hide="blur()"
       >
         <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
           <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
@@ -164,10 +166,10 @@
 
 <script setup lang="ts">
 import logoUrl from 'assets/img/KeyTone.png?url';
-import { GetAudioPackageList, GetAudioPackageName, LoadConfig } from 'src/boot/query/keytonePkg-query';
+import { QSelect } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, ref, watch } from 'vue';
+import { computed, useTemplateRef, watch } from 'vue';
 
 const setting_store = useSettingStore();
 
@@ -238,6 +240,15 @@ watch(
   // ~~立即执行, 使得每次进入主界面时, 都会加载用户所选的键音包。(主要是软件启动时, 适配加载用户所选的键音包)~~
   // ~~{ immediate: true }~~
 );
+
+const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
+
+const blur = () => {
+  setTimeout(() => {
+    selectedKeyTonePkgRef?.value?.blur();
+    // TIPS: 这里需要延迟后再blur, 以确保blur的正确触发(太早触发blur会不起作用, 经验证, 本人电脑延迟10ms后, 可以正确触发blur使焦点丧失, 为确保适配更多的低性能设备, 这里保险起见设置为66ms)
+  }, 66);
+};
 
 function openExternal(url: string) {
   if (process.env.MODE === 'electron') {
