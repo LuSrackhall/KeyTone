@@ -199,7 +199,7 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		var arg Arg
 		err := ctx.ShouldBind(&arg)
-		if err != nil || arg.AudioPkgUUID == "" {
+		if err != nil {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
 				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
 			})
