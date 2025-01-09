@@ -263,7 +263,14 @@ module.exports = configure(function (/* ctx */) {
           rfc3161TimeStampServer: 'http://timestamp.entrust.net/TSS/RFC3161sha2TS', //这个配置项用于指定一个RFC 3161兼容的时间戳服务器的URL。当你的应用程序进行代码签名时，时间戳能确保签名在证书过期之后仍然有效。
           //这个网址不是私人的，它是一个公开的RFC 3161兼容时间戳服务的URL。时间戳服务由Entrust公司提供，是用来为数字签名生成时间戳的。这对于确保在软件开发和分发过程中代码签名的完整性和长期有效性非常重要。当您对软件进行数字签名时，时间戳服务会记录和证明签名是在证书有效期内完成的。这样，即使证书在未来某个时候过期，带有时间戳的签名也仍然会被操作系统和用户视为有效和可信的。
           // 通常情况下，使用公开的RFC 3161时间戳服务，如Entrust提供的服务，是不需要付费的。这些服务一般是免费提供给公众使用的，以便于签名过程中实现时间戳的功能。但是，有一些服务提供商可能会对频繁或大量的使用提出收费，所以具体是否需要付费可能取决于你的使用情况以及服务提供商的政策。如果你是商业用户或对时间戳服务有高要求，建议直接咨询服务提供商，以了解其服务详情和是否需要付费。
-          target: 'nsis', // 这个配置是特定于 Windows 平台的。target 指定生成安装程序的类型。这里设置为 "NSIS"（Nullsoft Scriptable Install System），它是一个流行的 Windows 安装程序制作工具，允许开发者创建带有自定义逻辑和界面的安装程序。
+          // target: 'nsis', // 这个配置是特定于 Windows 平台的。target 指定生成安装程序的类型。这里设置为 "NSIS"（Nullsoft Scriptable Install System），它是一个流行的 Windows 安装程序制作工具，允许开发者创建带有自定义逻辑和界面的安装程序。
+          target: [
+            'nsis', // 普通安装包
+            {
+              target: 'appx',
+              arch: ['x64'],
+            },
+          ],
         },
         // 定制安装程序流程和相关操作。
         nsis: {
@@ -281,7 +288,20 @@ module.exports = configure(function (/* ctx */) {
           // installerSidebar: 'nsis/installerSidebar.bmp', // 安装侧边栏使用的图片。
           // uninstallerSidebar: 'nsis/uninstallerSidebar.bmp', // 卸载侧边栏使用的图片。
         },
-
+        appx: {
+          applicationId: 'top.srackhall.keytone', // 应用程序在 Windows Store 中的唯一标识符
+          displayName: 'KeyTone', // Windows Store 中显示的应用名称
+          publisher: 'CN=LuSrackhall', // 发布者信息
+          publisherDisplayName: 'LuSrackhall', // Windows Store 中显示的发布者名称
+          identityName: 'top.srackhall.keytone', // 应用的身份名称
+          languages: ['zh-CN', 'en-US'], // 支持的语言
+          backgroundColor: '#ffffff', // 应用启动时的背景色
+          showNameOnTiles: true, // 在磁贴上显示应用名称
+          addAutoLaunchExtension: false, // 是否添加自动启动扩展
+          // identityType: 'Store', // 指定应用程序的认证类型。'Store' 表示应用程序已经通过微软的认证，可以在Windows Store中发布。
+          // identityCertificate: '../../KeyTone.pfx', // 指定应用程序的证书文件路径。这个文件通常用于对应用程序进行数字签名，以确保应用程序的完整性和安全性。
+          // identityCertificatePassword: '12345678', // 指定应用程序的证书密码。这个密码用于解密和验证应用程序的数字签名。
+        },
         linux: {
           // icon: 'src/assets/icon.icns', // 错误的论点: ~~某些应用模板或框架（如 Quasar），已经在项目中包含了默认的图标文件，并在构建过程中自动配置好了这些图标, 因此无需在此处配置。~~
           icon: 'icons/icon.icns', // 不指定的话, 安装后是没有图标的。(Linux下, 使用icns格式结尾的图标名)// 某些应用模板或框架（如 Quasar）, 只会帮助你将图标处理到指定路径和指定尺寸, 但用于何处还是要自己主动指定的。
