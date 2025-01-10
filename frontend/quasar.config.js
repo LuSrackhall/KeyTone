@@ -289,11 +289,11 @@ module.exports = configure(function (/* ctx */) {
           // uninstallerSidebar: 'nsis/uninstallerSidebar.bmp', // 卸载侧边栏使用的图片。
         },
         appx: {
-          applicationId: 'top.srackhall.keytone', // 应用程序在 Windows Store 中的唯一标识符
+          applicationId: 'LuSrackhall.KeyTone', // 应用程序在 Windows Store 中的唯一标识符
           displayName: 'KeyTone', // Windows Store 中显示的应用名称
-          publisher: 'CN=LuSrackhall', // 发布者信息
+          publisher: 'CN=54940991-8DDB-4049-B299-2C3D65A6BBCC', // 发布者信息
           publisherDisplayName: 'LuSrackhall', // Windows Store 中显示的发布者名称
-          identityName: 'top.srackhall.keytone', // 应用的身份名称
+          identityName: 'LuSrackhall.KeyTone', // 应用的身份名称
           languages: ['zh-CN', 'en-US'], // 支持的语言
           backgroundColor: '#ffffff', // 应用启动时的背景色
           showNameOnTiles: true, // 在磁贴上显示应用名称
