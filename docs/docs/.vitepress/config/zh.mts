@@ -95,8 +95,8 @@ function sidebarUserGuide() {
     {
       text: "开始",
       items: [
-        { text: "安装", link: "/user-guide/installation/" },
-        { text: "快速上手", link: "/user-guide/quick-start/" },
+        { text: "安装", link: "/getting-started/installation/" },
+        { text: "快速上手", link: "/getting-started/quick-start/" },
       ],
     },
     {
