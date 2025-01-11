@@ -34,14 +34,36 @@ export const enConfig: Config = {
     outline: { level: 3, label: "On this page" }, // level:3 代表只显示3级标题<即会忽略1、2、4、5、6级标题>, 如果想显示更多的标题级别, 可以通过数组来配置level, 如level:[2,3,4,5]这样子配置<不过需要注意的是, 请确保你的文章中真的有这些标题级别, 若是你没有4级标题却有2,3,5级标题, 请配置level:[2,3,5]>
     nav: [
       { text: "Home", link: "/" },
-      // { text: "User Guide", link: "/guide/", activeMatch: "/guide/" },
+      { text: "User Guide", link: "/guide/getting-started/installation", activeMatch: "/guide/" },
+      //#region 解释一下这些配置字段的作用：
+      /*
+        在 VitePress 的导航配置中，这行代码定义了顶部导航栏中的一个链接项：
+
+        ```typescript:docs/docs/.vitepress/config/en.mts
+        { text: "User Guide", link: "/guide/getting-started/installation", activeMatch: "/guide/" }
+        ```
+
+        这个配置包含三个重要部分：
+
+        1. `text: "User Guide"` - 显示在导航栏上的文本
+        2. `link: "/guide/getting-started/installation"` - 点击后跳转的目标路径
+        3. `activeMatch: "/guide/` - 定义何时将此导航项标记为"激活"状态
+
+        其中 `activeMatch` 特别重要：
+        - 它使用正则表达式来匹配当前 URL 路径
+        - 当用户访问的页面 URL 包含 "/guide/" 时，这个导航项会被标记为激活状态（通常会有特殊的样式，如高亮显示）
+        - 这样可以让用户知道他们当前在网站的哪个部分
+
+        如果不设置 `activeMatch`，导航项只会在完全匹配 `link` 指定的路径时才会显示为激活状态。通过设置 `activeMatch`，可以让该导航项在访问其下的所有子页面时都保持激活状态。
+      */
+      //#endregion
       {
         text: "v" + version,
         items: [{ text: "Changelog", link: "/changelog/v" + version, activeMatch: "/changelog/" }],
       },
     ],
     sidebar: {
-      // "/guide/": { base: "/guide", items: sidebarUserGuide() },
+      "/guide/": { base: "/guide", items: sidebarUserGuide() },
       "/changelog/": { base: "/changelog", items: sidebarChangelog() },
     },
     footer: {
@@ -63,6 +85,37 @@ function sidebarChangelog() {
         { text: "v0.3.0", link: "/v0.3.0" },
         { text: "v0.2.0", link: "/v0.2.0" },
         { text: "v0.1.0", link: "/v0.1.0" },
+      ],
+    },
+  ];
+}
+
+function sidebarUserGuide() {
+  return [
+    {
+      text: "Getting Started",
+      items: [
+        { text: "Installation", link: "/getting-started/installation/" },
+        { text: "Quick Start", link: "/getting-started/quick-start/" },
+      ],
+    },
+    {
+      text: "Key Sound Album",
+      items: [
+        // { text: "Introduction", link: "/key-package/introduction/index.md" }, // 如果最终文件名为index, 则需要加index.md后缀, 否则导航无法正常高亮。这是因为activeMatch而默认值是link,也可通过手动配置activeMatch来实现导航高亮。
+        { text: "Introduction", link: "/key-package/introduction/" }, // 如果最终文件名为index, 则路径可仅导航到index的所属目录, 而且需要加/后缀, 否则导航无法正常高亮。这是因为activeMatch而默认值是link,也可通过手动配置activeMatch来实现导航高亮。
+        { text: "Load Audio File", link: "/key-package/载入音频文件/" },
+        { text: "Cut Define Sound", link: "/key-package/裁剪定义声音/" },
+        { text: "Forge Perfect Keytone", link: "/key-package/铸造至臻键音/" },
+        { text: "Keytone Linkage Effect", link: "/key-package/按键联动声效/" },
+      ],
+    },
+    {
+      text: "Other",
+      items: [
+        { text: "FAQ", link: "/other/faq/" },
+        { text: "Privacy Policy", link: "/other/privacy-policy/" },
+        { text: "User Agreement", link: "/other/user-agreement/" },
       ],
     },
   ];
