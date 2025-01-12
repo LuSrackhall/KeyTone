@@ -1,0 +1,57 @@
+{
+  "params": {
+    "icon": "src/assets/img/KeyTone.png",
+    "quality": 12,
+    "themeColor": "ffffff"
+  },
+  "assets": [
+    {
+      "generator": "png",
+      "name": "StoreLogo.png",
+      "folder": "src-electron/appx",
+      "sizes": [50]
+    },
+    {
+      "generator": "png",
+      "name": "Square150x150Logo.png",
+      "folder": "src-electron/appx",
+      "sizes": [150]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.png",
+      "folder": "src-electron/appx",
+      "sizes": [44]
+    },
+    {
+      "generator": "png",
+      "name": "Wide310x150Logo.png",
+      "folder": "src-electron/appx",
+      "sizes": [310, 150]
+    },
+    {
+      "generator": "png",
+      "name": "BadgeLogo.png",
+      "folder": "src-electron/appx",
+      "sizes": [24]
+    },
+    {
+      "generator": "png",
+      "name": "LargeTile.png",
+      "folder": "src-electron/appx",
+      "sizes": [310]
+    },
+    {
+      "generator": "png",
+      "name": "SmallTile.png",
+      "folder": "src-electron/appx",
+      "sizes": [71]
+    },
+    {
+      "generator": "png",
+      "name": "SplashScreen.png",
+      "folder": "src-electron/appx",
+      "sizes": [620, 300]
+    }
+  ]
+}
