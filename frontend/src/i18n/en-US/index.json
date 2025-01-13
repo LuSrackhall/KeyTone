@@ -12,7 +12,11 @@
     }
   },
   "mainHome": {
-    "selectedKeySoundAlbum": "Selected KeySoundAlbum"
+    "selectedKeySoundAlbum": "Selected KeySoundAlbum",
+    "copyright": "Copyright © 2024-",
+    "license": "License",
+    "privacyPolicy": "PrivacyPolicy",
+    "userAgreement": "UserAgreement"
   },
   "KeyTonePackage": {
     "new": {

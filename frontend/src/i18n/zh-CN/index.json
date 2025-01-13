@@ -12,7 +12,11 @@
     }
   },
   "mainHome": {
-    "selectedKeySoundAlbum": "选用键音专辑"
+    "selectedKeySoundAlbum": "选用键音专辑",
+    "copyright": "版权所有 © 2024-",
+    "license": "许可协议",
+    "privacyPolicy": "隐私政策",
+    "userAgreement": "用户协议"
   },
   "KeyTonePackage": {
     "new": {
