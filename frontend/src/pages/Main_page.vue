@@ -53,7 +53,7 @@
         :option-label="(item: any) => {
           return main_store.keyTonePkgOptionsName.get(item)
         }"
-        :label="$t('选择要使用的键音包')"
+        :label="$t('mainHome.selectedKeySoundAlbum')"
         :virtual-scroll-slice-size="999999"
         outlined
         dense

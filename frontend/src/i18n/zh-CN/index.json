@@ -7,9 +7,12 @@
       "caption": ""
     },
     "KeyTonePackage": {
-      "index": "键音包",
+      "index": "键音专辑",
       "caption": ""
     }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "选用键音专辑"
   },
   "KeyTonePackage": {
     "new": {

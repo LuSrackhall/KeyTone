@@ -7,9 +7,12 @@
       "caption": ""
     },
     "KeyTonePackage": {
-      "index": "key sound pack",
+      "index": "Key sound album",
       "caption": ""
     }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Selected KeySoundAlbum"
   },
   "KeyTonePackage": {
     "new": {
