@@ -145,19 +145,42 @@
         'select-none',
       ]"
     >
-      <div class="flex justify-center items-center">
-        Copyright © 2024&nbsp;
+      <div class="flex justify-center items-center m-r-0.3">
+        Copyright © 2024-{{ new Date().getFullYear() }}&nbsp;
         <div class="cursor-pointer hover:bg-gray-100" @click="openExternal('https://github.com/LuSrackhall')">
           LuSrackhall
         </div>
       </div>
       <div class="flex justify-center items-center">
-        KeyTone is licensed under&nbsp;
+        KeyTone is licensed under the&nbsp;
         <div
           class="cursor-pointer hover:bg-gray-100"
           @click="openExternal('https://choosealicense.com/licenses/gpl-3.0/')"
         >
           GNU GPLv3
+        </div>
+      </div>
+    </div>
+    <div
+      :class="[
+        'text-center text-2.8 text-gray-500 absolute bottom-2.8 w-full',
+        // 使页面文本无法选择, 免得影响界面体验。
+        'select-none',
+      ]"
+    >
+      <div class="flex justify-center items-center mb-1.3 m-r-0.8">
+        <div
+          class="cursor-pointer hover:bg-gray-100"
+          @click="openExternal('https://keytone.xuanhall.com/guide/other/privacy-policy/')"
+        >
+          PrivacyPolicy
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <div
+          class="cursor-pointer hover:bg-gray-100"
+          @click="openExternal('https://keytone.xuanhall.com/guide/other/user-agreement/')"
+        >
+          UserAgreement
         </div>
       </div>
     </div>
