@@ -67,8 +67,8 @@ export const enConfig: Config = {
       "/changelog/": { base: "/changelog", items: sidebarChangelog() },
     },
     footer: {
-      message: "Released under the GPL-3.0 License.",
-      copyright: "Copyright (C) 2024 LuSrackhall",
+      message: "KeyTone is licensed under the GNU GPLv3",
+      copyright: `Copyright (C) 2024-${new Date().getFullYear()} LuSrackhall`,
     },
   },
 };

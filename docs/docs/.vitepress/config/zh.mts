@@ -67,8 +67,8 @@ export const zhConfig: Config = {
       "zh/changelog/": { base: "zh/changelog", items: sidebarChangelog() },
     },
     footer: {
-      message: "基于GPL-3.0开源许可协议",
-      copyright: "Copyright (C) 2024 LuSrackhall",
+      message: "KeyTone基于GNU GPLv3许可证发布",
+      copyright: `版权所有 (C) 2024-${new Date().getFullYear()} LuSrackhall`,
     },
   },
 };
