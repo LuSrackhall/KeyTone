@@ -162,7 +162,7 @@ if (process.env.DEBUGGING) {
 const platform = process.platform || os.platform();
 
 let mainWindow: BrowserWindow | undefined;
-let tray: Tray | undefined;
+let tray: Tray;
 
 function createWindow() {
   /**
@@ -317,7 +317,7 @@ setInterval(() => {
       // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
       const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
 
-      tray?.setContextMenu(contextMenu);
+      tray.setContextMenu(contextMenu);
       history_language_default = req;
     }
   });
@@ -343,24 +343,28 @@ setInterval(() => {
 
       const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
 
-      tray?.setContextMenu(contextMenu);
+      tray.setContextMenu(contextMenu);
       history_volume_silent = req;
     }
   });
 }, 1000);
 
 function createTray() {
-  // 创建托盘图标(即使这里创建托盘图标已经保证了后续tray的存在, 但是开发环境中此创建一定是失败的, 因此为了开发环境不报错, 后续仍需对tray进行非空判断)
-  tray = new Tray(path.join(__dirname, 'icons', 'icon.png')); // 替换为你的图标路径
+  const iconPath = process.env.DEBUGGING
+    ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
+    : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
+
+  // 创建托盘图标(开发环境也是可以创建托盘图标的, 之前失败的原因是图标路径的错误)
+  tray = new Tray(iconPath); // 替换为你的图标路径
 
   // 创建托盘图标的上下文菜单
   const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
 
   // 设置托盘图标的上下文菜单
-  tray?.setContextMenu(contextMenu);
+  tray.setContextMenu(contextMenu);
 
   // 设置托盘图标的提示文本
-  tray?.setToolTip('KeyTone');
+  tray.setToolTip('KeyTone');
 
   // 点击托盘图标时显示窗口
   // tray.on('click', () => {
@@ -368,7 +372,7 @@ function createTray() {
   // });
 
   // 双击托盘图标时显示窗口：
-  tray?.on('double-click', () => {
+  tray.on('double-click', () => {
     mainWindow?.show();
   });
 }
