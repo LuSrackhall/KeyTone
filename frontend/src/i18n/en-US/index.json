@@ -51,11 +51,11 @@
       },
       "自动启动": {
         "index": "Auto Start",
-        "caption": "Would you like this application to automatically start when the computer boots up? <Note: This will take effect after restarting the application.>"
+        "caption": "Would you like this application to automatically start when the computer boots up?"
       },
       "自动启动时隐藏窗口": {
         "index": "Hide Window on Auto Start",
-        "caption": "Minimize this application to the system tray when the computer starts up and automatically launches this application. <Note: This will take effect after restarting the application.>"
+        "caption": "Minimize this application to the system tray when the computer starts up and automatically launches this application."
       }
     },
     "原始音量增减调节": {

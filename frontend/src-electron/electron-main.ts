@@ -164,6 +164,9 @@ const platform = process.platform || os.platform();
 let mainWindow: BrowserWindow | undefined;
 let tray: Tray;
 
+// let sdkIsRun: boolean = false; // eslint有类型推断, 主动设置会报错, 但我又懒得关闭此推断。
+let sdkIsRun = false;
+
 const iconPath = process.env.DEBUGGING
   ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
   : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
@@ -214,10 +217,21 @@ function createWindow() {
     } else {
       // 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
       (function startupSetting() {
+        // 由于此部分仅开机首次运行时调用, 因此不受sdk中go依赖的viper的bug的影响。(即首次调用时可以获得真实情况, 若内部某字段被基于最终字段变更, 则会使得父字段为null的bug)
+        // 而且, 这里还利用了StoreGet的false返回值来实现了递归轮询。(若直接基于最终字段来递归轮询, 则因其值本身就是boolean, 会无法达到实际的递归效果。)
+        // TIPS: 以后再开新项目, 这类restful请求失败后的返回值, 不再使用false, 而是使用一个固定的字符串常量(具有绝对uuid特质的--似乎空对象之类的引用常量也行), 用于判断是否请求成功。
         StoreGet('startup').then((value) => {
           if (value === false) {
             startupSetting();
           } else {
+            // 有些操作需要保证在sdk运行后再执行。此处利用了这一点。
+            sdkIsRun = true;
+
+            // TODO: 此部分窗口是否展示, 实际上不必依赖sdk的启动( 目前依赖的原因是->获取配置文件的对应值的StoreGet, 必须依赖sdk的启动。
+            //       * 因此, 后续想要提升未设置窗口启动时因此情况下的窗口展示速度。需要直接获取配置文件的对应值, 并用此值设置窗口的展示状态。
+            //       * * 方法1, 在sdk中, 优先获取此对应值, 并打印到标准输入, 然后基于进程调用相关返回值来设置窗口的展示状态。
+            //       * * 方法2, 封装go的viper模块, 专门用于nodejs调用, 以通过nodejs调用go的viper模块, 来获取此对应值, 然后设置窗口的展示状态。(可以用进程调用或wasm调用等方式实现)
+            //       * * 通过nodejs的相关配置包, 来获取此对应值, 然后设置窗口的展示状态。(由于需求较为单一, 可以不使用第三方的json包, 而是可以直接读取整个json文件, 并解析后直接使用这个值)
             if (value.is_hide_windows) {
               // 如果'is_hide_windows' 为 true , 则隐藏窗口
               mainWindow?.hide();
@@ -309,48 +323,110 @@ let history_language_default: string;
 
 let history_volume_silent: boolean;
 
-setInterval(() => {
-  StoreGet('language_default').then((req) => {
-    if (req !== history_language_default) {
-      // 希望只是没有响应式, 而不是无法用 (已验证, 希望是正确的, 可以使用。<即使在nodejs环境下, 也该遵守其类型去对其赋值>)
-      // i18n.global.locale = req; // 错误用法, 未遵守其类型。 //   - completed(已完成)   FIXME: 此设置, 并未根本的更改国际化(由此可知vue-i18n 无法在nodejs中适配使用)
-      i18n.global.locale.value = req; // 正确用法。
-      // 先验证i18n是否生效
-      // console.log('req', req);
-      // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
-      // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
-      const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+import AutoLaunch from 'auto-launch';
 
-      tray.setContextMenu(contextMenu);
-      history_language_default = req;
-    }
-  });
-  StoreGet('main_home.audio_volume_processing.volume_silent').then((req) => {
-    if (req != history_volume_silent) {
-      if (req === true) {
-        const index = searchItemIndexInMenuTemplate('Electron.tray.mute');
-        menuTemplate[index] = {
-          label: 'Electron.tray.unmute',
-          click: () => {
-            StoreSet('main_home.audio_volume_processing.volume_silent', false);
-          },
-        };
-      } else if (req === false) {
-        const index = searchItemIndexInMenuTemplate('Electron.tray.unmute');
-        menuTemplate[index] = {
-          label: 'Electron.tray.mute',
-          click: () => {
-            StoreSet('main_home.audio_volume_processing.volume_silent', true);
-          },
-        };
+// 创建一个存储  AutoLaunch 实例的全局变量, 用于后续的自动启动设置
+let autoLauncher: AutoLaunch;
+
+setInterval(async () => {
+  if (sdkIsRun) {
+    // 托盘菜单的语言的设置
+    StoreGet('language_default').then((req) => {
+      if (req !== history_language_default) {
+        // 希望只是没有响应式, 而不是无法用 (已验证, 希望是正确的, 可以使用。<即使在nodejs环境下, 也该遵守其类型去对其赋值>)
+        // i18n.global.locale = req; // 错误用法, 未遵守其类型。 //   - completed(已完成)   FIXME: 此设置, 并未根本的更改国际化(由此可知vue-i18n 无法在nodejs中适配使用)
+        i18n.global.locale.value = req; // 正确用法。
+        // 先验证i18n是否生效
+        // console.log('req', req);
+        // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
+        // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
+        const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+
+        tray.setContextMenu(contextMenu);
+        history_language_default = req;
       }
+    });
 
-      const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+    // 托盘菜单的静音按钮的设置
+    StoreGet('main_home.audio_volume_processing.volume_silent').then((req) => {
+      if (req != history_volume_silent) {
+        if (req === true) {
+          const index = searchItemIndexInMenuTemplate('Electron.tray.mute');
+          menuTemplate[index] = {
+            label: 'Electron.tray.unmute',
+            click: () => {
+              StoreSet('main_home.audio_volume_processing.volume_silent', false);
+            },
+          };
+        } else if (req === false) {
+          const index = searchItemIndexInMenuTemplate('Electron.tray.unmute');
+          menuTemplate[index] = {
+            label: 'Electron.tray.mute',
+            click: () => {
+              StoreSet('main_home.audio_volume_processing.volume_silent', true);
+            },
+          };
+        }
 
-      tray.setContextMenu(contextMenu);
-      history_volume_silent = req;
-    }
-  });
+        const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+
+        tray.setContextMenu(contextMenu);
+        history_volume_silent = req;
+      }
+    });
+
+    // 开机自启动的设置
+    const is_hide_windows = await StoreGet('auto_startup.is_hide_windows');
+    const is_auto_run = await StoreGet('auto_startup.is_auto_run');
+    const is_hide_windows_old = await StoreGet('auto_startup.is_hide_windows_old');
+
+    // 创建新的 AutoLaunch 实例
+    autoLauncher = new AutoLaunch({
+      name: 'KeyTone',
+      // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
+      isHidden: is_hide_windows,
+    });
+
+    // 检查并设置自动启动
+    autoLauncher
+      .isEnabled()
+      .then((isEnabled: any) => {
+        // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
+        if ((!isEnabled && is_auto_run) || (isEnabled && is_hide_windows !== is_hide_windows_old)) {
+          // if (value.is_auto_run) { // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
+
+          autoLauncher.enable().then(() => {
+            // 如果窗口是否隐藏改变了, 则需要更新is_hide_windows_old以记录最新情况。 (由于我们为了防止重复设置, 只有在关闭自启动, 并开启自启动时, 才会触发重新设置自启动)
+            if (is_hide_windows !== is_hide_windows_old) {
+              StoreSet('auto_startup.is_hide_windows_old', is_hide_windows);
+            }
+          }); // 开启自启动
+        }
+
+        // // 如果应用已设置在开机时自启动, 则主动设置关闭自启动。 此判断仅为防止防止重复关闭。
+        if (isEnabled && !is_auto_run) {
+          // if (!value.is_auto_run) {
+          // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
+          autoLauncher.disable(); // 关闭自启动
+        }
+
+        // 此部分因重复, 故已集成至首个判断语句
+        // if (
+        //   isEnabled &&
+        //   value.is_hide_windows !== value.is_hide_windows_old
+        // ) {
+        //   StoreSet('auto_startup.is_hide_windows_old', value.is_hide_windows); // 更新is_hide_windows_old以记录最新情况。
+        //   autoLauncher.disable().then(() => {
+        //     autoLauncher.enable(); // 开启自启动  <要确确保在then的disable执行之后>
+        //   }); // 关闭自启动
+
+        //   // autoLauncher.enable(); // 开启自启动(不用先关闭再开启, 直接重新调用即可完成is_hide_windows的设置)
+        // }
+      })
+      .catch((err: any) => {
+        console.error('Error checking auto-launch status:', err);
+      });
+  }
 }, 1000);
 
 function createTray() {
@@ -426,95 +502,6 @@ if (!gotTheLock) {
     createTray();
   });
 }
-
-//#region    -----<<<<<<<<<<<<<<<<<<<< -- 开机自启动 start ^_^-_-^_^
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// // * 官方提供的开机自动启动的api(由于不支持全平台, 且在macos上, 存在与第三方库相同的问题, 因此本项目弃用此api)
-// app.setLoginItemSettings({
-//   openAtLogin: true,
-//   // openAsHidden: true, // 功能为以隐藏模式打开。(仅在windows中可用, 因为对于macos不支持MAS和从macos13起及更高的版本<基本等于不可用>故弃用此选项)
-// });
-
-// * 改用第三方库[node-auto-launch](https://github.com/Teamwork/node-auto-launch)来实现开机自启动的功能。
-// const AutoLaunch = require('auto-launch');
-import AutoLaunch from 'auto-launch';
-
-// 由于首次启动时, sdk的web服务可能还未能准备好, 因此通过递归的方式, 来保证获取到正确的配置值。
-// * 这只是临时取巧方式, 通用解决方案应该是明确架构出整个生命周期, 来保证整个项目的整体执行顺序。
-// * * 比如, 可以通过整体的轮询监听, 或是通过sse, 来保证初始化electron时, sdk是已经启动好的, 从而明确生命周期(不过这样可能会对界面的启动速度有影响<主要指客户端ui的创建速度>)。
-// * 当然, 也可以通过sse, 仅对对应需要明确顺序逻辑的依赖部分, 进行执行顺序的明确。 (避免影响electron的应用启动速度<主要指客户端ui的创建速度>)
-// * 也可以退一步, 加个延时或直接上轮询, 以避免快速的递归造成短期的cpu消耗过度。
-function autoRunInit() {
-  StoreGet('auto_startup').then((value) => {
-    if (value === false) {
-      console.log('value的值是false', value);
-      autoRunInit();
-    } else {
-      // 从此可判断, 我们获取到的value, 已经解析过JSON了, 直接是最终对象。
-      console.log('解析value前', typeof value.is_auto_run);
-
-      // 创建一个 AutoLaunch 实例
-      const autoLauncher = new AutoLaunch({
-        name: 'KeyTone',
-        // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
-        isHidden: value.is_hide_windows,
-      });
-
-      // 启动时检查并设置自动启动
-      autoLauncher
-        .isEnabled()
-        .then((isEnabled: any) => {
-          // 如果应用程序未设置在开机时自启动, 则主动设置, 若已设置, 则跳过。 此判断仅为防止重复开启。
-          if ((!isEnabled && value.is_auto_run) || (isEnabled && value.is_hide_windows !== value.is_hide_windows_old)) {
-            // if (value.is_auto_run) { // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
-
-            autoLauncher.enable().then(() => {
-              // 如果窗口是否隐藏改变了, 则需要更新is_hide_windows_old以记录最新情况。 (由于我们为了防止重复设置, 只有在关闭自启动, 并开启自启动时, 才会触发重新设置自启动)
-              if (value.is_hide_windows !== value.is_hide_windows_old) {
-                StoreSet('auto_startup.is_hide_windows_old', value.is_hide_windows);
-              }
-            }); // 开启自启动
-          }
-
-          // // 如果应用已设置在开机时自启动, 则主动设置关闭自启动。 此判断仅为防止防止重复关闭。
-          if (isEnabled && !value.is_auto_run) {
-            // if (!value.is_auto_run) {
-            // 我们必须避免重复开启, 虽然这样可以低成本实现value.is_hide_windows的实时响应, 但每次启动都去触碰敏感操作是不明智的。
-            autoLauncher.disable(); // 关闭自启动
-          }
-
-          // 此部分因重复, 故已集成至首个判断语句
-          // if (
-          //   isEnabled &&
-          //   value.is_hide_windows !== value.is_hide_windows_old
-          // ) {
-          //   StoreSet('auto_startup.is_hide_windows_old', value.is_hide_windows); // 更新is_hide_windows_old以记录最新情况。
-          //   autoLauncher.disable().then(() => {
-          //     autoLauncher.enable(); // 开启自启动  <要确确保在then的disable执行之后>
-          //   }); // 关闭自启动
-
-          //   // autoLauncher.enable(); // 开启自启动(不用先关闭再开启, 直接重新调用即可完成is_hide_windows的设置)
-          // }
-        })
-        .catch((err: any) => {
-          console.error('Error checking auto-launch status:', err);
-        });
-    }
-  });
-}
-
-// 后续可轮询此函数, 以避免重启后才能生效的问题。<似乎不起作用, 只能提示用户重启客户端后生效了, 或是直接在客户端帮助用户强制重启客户端>
-// 或者, 也可通过sse来触发其重新调用<更为复杂些, 甚至要监听配置文件的变更情况>。<似乎不起作用-<未验证>, 只能提示用户重启客户端后生效了, 或是直接在客户端帮助用户强制重启客户端>
-autoRunInit();
-// 请放弃不重启就成功的重新设置自启动的不成熟想法, 不然只会再浪费3天的时间。
-// setInterval(() => { },500)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//#endregion ----->>>>>>>>>>>>>>>>>>>> -- 开机自启动 end   -_-^_^-_- ^_^-_-^_^-_-
-// ...
-// ...
-// ...
-//!endregion ----->>>>>>>>>>>>>>>>>>>> -- 开机自启动 end   -_-^_^-_- ^_^-_-^_^-_-
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') {
