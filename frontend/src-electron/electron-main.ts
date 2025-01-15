@@ -164,12 +164,16 @@ const platform = process.platform || os.platform();
 let mainWindow: BrowserWindow | undefined;
 let tray: Tray;
 
+const iconPath = process.env.DEBUGGING
+  ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
+  : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
+
 function createWindow() {
   /**
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    icon: path.resolve(__dirname, 'icons/icon.png'), // tray icon
+    icon: path.resolve(__dirname, iconPath),
     width: 390,
     height: 500,
     useContentSize: true,
@@ -350,10 +354,6 @@ setInterval(() => {
 }, 1000);
 
 function createTray() {
-  const iconPath = process.env.DEBUGGING
-    ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
-    : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
-
   // 创建托盘图标(开发环境也是可以创建托盘图标的, 之前失败的原因是图标路径的错误)
   tray = new Tray(iconPath); // 替换为你的图标路径
 
