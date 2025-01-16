@@ -386,7 +386,7 @@ setInterval(async () => {
     autoLauncher = new AutoLaunch({
       name: 'KeyTone',
       // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
-      path: isWindowsStore ? 'LuSrackhall.KeyTone_yxzta3pw8j0pp!LuSrackhall.KeyTone' : undefined,
+      path: isWindowsStore ? 'LuSrackhall.KeyTone_yxzta3pw8j0pp!LuSrackhall' : undefined,
       isHidden: is_hide_windows,
     });
 
