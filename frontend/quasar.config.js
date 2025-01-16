@@ -295,7 +295,8 @@ module.exports = configure(function (/* ctx */) {
           publisherDisplayName: 'LuSrackhall', // Windows Store 中显示的发布者名称
           identityName: 'LuSrackhall.KeyTone', // 应用的身份名称
           languages: ['zh-CN', 'en-US'], // 支持的语言
-          backgroundColor: '#ffffff', // 应用启动时的背景色
+          backgroundColor: 'transparent', // 设置为透明
+          // backgroundColor: '#ffffff', // 应用启动时的背景色
           showNameOnTiles: true, // 在磁贴上显示应用名称
           addAutoLaunchExtension: false, // 是否添加自动启动扩展
           // identityType: 'Store', // 指定应用程序的认证类型。'Store' 表示应用程序已经通过微软的认证，可以在Windows Store中发布。
