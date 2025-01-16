@@ -15,7 +15,7 @@
       <q-bar class="q-electron-drag rounded-t-lg">
         <q-btn flat dense icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
         <!-- <q-btn flat dense round icon="keyboard_alt"></q-btn> -->
-        <div class="flex">
+        <div class="flex flex-nowrap">
           <q-btn
             flat
             dense
@@ -51,12 +51,12 @@
           v-if="router.currentRoute.value.fullPath !== '/'"
           dense
           flat
-          round
           icon="keyboard_backspace"
           @click="back"
+          class="mt-0.8 -mr-1.8"
         />
-        <div class="flex">
-          <div>{{ pageLabel }}</div>
+        <div class="flex flex-nowrap">
+          <div class="text-sm text-nowrap">{{ pageLabel }}</div>
         </div>
         <q-space />
 
