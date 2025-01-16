@@ -7,13 +7,19 @@
   "assets": [
     {
       "generator": "png",
-      "name": "StoreLogo.png",
+      "name": "Square150x150Logo.png",
       "folder": "src-electron/appx",
-      "sizes": [50]
+      "sizes": [150]
     },
     {
       "generator": "png",
-      "name": "Square150x150Logo.png",
+      "name": "Square150x150Logo.targetsize-150_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [150]
+    },
+    {
+      "generator": "png",
+      "name": "Square150x150Logo.targetsize-150_altform-unplated.png",
       "folder": "src-electron/appx",
       "sizes": [150]
     },
@@ -25,33 +31,195 @@
     },
     {
       "generator": "png",
-      "name": "Wide310x150Logo.png",
+      "name": "Square44x44Logo.targetsize-16_altform-lightunplated.png",
       "folder": "src-electron/appx",
-      "sizes": [310, 150]
+      "sizes": [16]
     },
     {
       "generator": "png",
-      "name": "BadgeLogo.png",
+      "name": "Square44x44Logo.targetsize-16_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [16]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-20_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [20]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-20_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [20]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-24_altform-lightunplated.png",
       "folder": "src-electron/appx",
       "sizes": [24]
     },
     {
       "generator": "png",
-      "name": "LargeTile.png",
+      "name": "Square44x44Logo.targetsize-24_altform-unplated.png",
       "folder": "src-electron/appx",
-      "sizes": [310]
+      "sizes": [24]
     },
     {
       "generator": "png",
-      "name": "SmallTile.png",
+      "name": "Square44x44Logo.targetsize-256_altform-lightunplated.png",
       "folder": "src-electron/appx",
-      "sizes": [71]
+      "sizes": [256]
     },
     {
       "generator": "png",
-      "name": "SplashScreen.png",
+      "name": "Square44x44Logo.targetsize-256_altform-unplated.png",
       "folder": "src-electron/appx",
-      "sizes": [620, 300]
+      "sizes": [256]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-30_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [30]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-30_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [30]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-32_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [32]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-32_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [32]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-36_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [36]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-36_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [36]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-40_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [40]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-40_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [40]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-48_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [48]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-48_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [48]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-60_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [60]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-60_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [60]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-64_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [64]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-64_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [64]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-72_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [72]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-72_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [72]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-80_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [80]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-80_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [80]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-96_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [96]
+    },
+    {
+      "generator": "png",
+      "name": "Square44x44Logo.targetsize-96_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [96]
+    },
+    {
+      "generator": "png",
+      "name": "StoreLogo.png",
+      "folder": "src-electron/appx",
+      "sizes": [50]
+    },
+    {
+      "generator": "png",
+      "name": "StoreLogo.targetsize-256_altform-lightunplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [256]
+    },
+    {
+      "generator": "png",
+      "name": "StoreLogo.targetsize-256_altform-unplated.png",
+      "folder": "src-electron/appx",
+      "sizes": [256]
+    },
+    {
+      "generator": "png",
+      "name": "Wide310x150Logo.png",
+      "folder": "src-electron/appx",
+      "sizes": [310, 150]
     }
   ]
 }
