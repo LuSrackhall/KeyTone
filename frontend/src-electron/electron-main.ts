@@ -380,10 +380,13 @@ setInterval(async () => {
     const is_auto_run = await StoreGet('auto_startup.is_auto_run');
     const is_hide_windows_old = await StoreGet('auto_startup.is_hide_windows_old');
 
+    const isWindowsStore = process.windowsStore || process.env.WINDOWS_STORE;
+
     // 创建新的 AutoLaunch 实例
     autoLauncher = new AutoLaunch({
       name: 'KeyTone',
       // path: app.getPath('exe'), // 此库的官网上说:对于 NW.js 和 Electron 应用程序，您不必指定路径。我们根据 process.execPath 进行猜测。
+      path: isWindowsStore ? 'LuSrackhall.KeyTone_yxzta3pw8j0pp!LuSrackhall.KeyTone' : undefined,
       isHidden: is_hide_windows,
     });
 
