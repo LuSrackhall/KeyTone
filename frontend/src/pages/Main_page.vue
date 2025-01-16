@@ -189,7 +189,7 @@
         'select-none',
       ]"
     >
-      <div class="flex justify-center items-center mb-1.3 m-r-1.6">
+      <div class="flex justify-center items-center mb-1.3 m-r-0.6">
         <div
           class="cursor-pointer hover:bg-gray-100"
           @click="openExternal('https://keytone.xuanhall.com/guide/other/privacy-policy/')"
