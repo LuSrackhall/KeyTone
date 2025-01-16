@@ -1,3 +1,16 @@
+#  (2025-01-16)
+
+
+### Bug Fixes
+
+* **build:** 解决构建appx包时, 图标缺失的问题。本次提交中利用quasar的icongenie图标处理工具的自定义配置, 在正确的路径下生成了所需的图标资源。 ([033eacb](https://github.com/LuSrackhall/KeyTone/commit/033eacbf9d0a4d66f62a9b8f144efebe5c478338)), closes [#57](https://github.com/LuSrackhall/KeyTone/issues/57)
+* **electron:** 修复了微软商店版本自启动相关设置无效的问题 ([ac10af0](https://github.com/LuSrackhall/KeyTone/commit/ac10af0962e970ee0789a01f566ba684bafad247))
+* **ui | electron | appx:** 尝试修复图标尺寸即背景与exe版本不一致的问题 ([6c6e5f5](https://github.com/LuSrackhall/KeyTone/commit/6c6e5f54e3f2f865339ff96554de51e3f2ea2f2c)), closes [#57](https://github.com/LuSrackhall/KeyTone/issues/57)
+* **ui | electron | refactor:** 重构了开机自启动相关设置项的逻辑。修复了必须重启应用才能声效的问题(目前设置后就会立即生效)。 ([b79430c](https://github.com/LuSrackhall/KeyTone/commit/b79430c3b86d00c7a5920f520d64103e5d04396c))
+* **ui:** 修复了顶部导航栏在路由名称过长时因换行而造成的样式异常的bug。 ([c7eae76](https://github.com/LuSrackhall/KeyTone/commit/c7eae76b208de46b9836cfddacd4e5629257dbb3))
+
+
+
 #  (2025-01-07)
 
 
