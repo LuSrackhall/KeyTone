@@ -238,7 +238,7 @@ module.exports = configure(function (/* ctx */) {
 
       builder: {
         // https://www.electron.build/configuration/configuration
-        productName: 'keyTone', // 这是您的应用程序的名称，用户在安装时看到的名称。
+        productName: 'KeyTone', // 这是您的应用程序的名称，用户在安装时看到的名称。
         appId: 'top.srackhall.keytone',
         // asar: false, // (推荐使用默认的true,以简单地保护下前端源代码<虽然实际作用不大>)这表明您的应用代码不会被打包到 ASAR 存档中。ASAR 是 Electron 用来打包应用源代码的格式，设置为 false 表示源代码将以普通文件夹的形式包含在应用中。
         compression: 'maximum', // 压缩级别, 但这个主要与构建速度有关, 如指定为maximum将会使用更多的时间来构建。<与此同时, 最终生成的包的大小, 却并没有带来实质性的体积优化; 因此一般大家喜欢指定为store, 以或获得显著的构建时间的提升>
