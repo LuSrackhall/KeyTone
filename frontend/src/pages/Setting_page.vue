@@ -27,9 +27,9 @@
             :icon="menuItem.icon"
             :label="$t(menuItem.label)"
             :caption="$t(menuItem.caption)"
-            :to="menuItem.to"
             :header-inset-level="0"
             :content-inset-level="0"
+            @dblclick="router.push(menuItem.to)"
           >
             <Language v-if="menuItem.to === '/setting-language'"></Language>
             <MainHome v-if="menuItem.to === '/setting-mainHome'"></MainHome>
@@ -82,6 +82,10 @@ const menuList = [
     to: '/setting-volumeAmplify',
   },
 ];
+
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 </script>
 
 <style lang="scss" scoped></style>
