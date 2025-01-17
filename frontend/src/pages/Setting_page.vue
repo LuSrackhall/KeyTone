@@ -29,7 +29,7 @@
             :caption="$t(menuItem.caption)"
             :header-inset-level="0"
             :content-inset-level="0"
-            @dblclick="router.push(menuItem.to)"
+            @click="dblclick(menuItem.to)"
           >
             <Language v-if="menuItem.to === '/setting-language'"></Language>
             <MainHome v-if="menuItem.to === '/setting-mainHome'"></MainHome>
@@ -84,6 +84,22 @@ const menuList = [
 ];
 
 import { useRouter } from 'vue-router';
+
+let clickCount = 0;
+let clickTimer: NodeJS.Timeout | null = null;
+function dblclick(menuItemTo: string) {
+  clearTimeout(clickTimer as NodeJS.Timeout);
+  clickCount++;
+  if (clickCount === 1) {
+    clickTimer = setTimeout(() => {
+      clickCount = 0;
+    }, 150);
+  } else if (clickCount === 2) {
+    clickCount = 0;
+    clearTimeout(clickTimer as NodeJS.Timeout);
+    router.push(menuItemTo);
+  }
+}
 
 const router = useRouter();
 </script>
