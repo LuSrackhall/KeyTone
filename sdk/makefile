@@ -34,7 +34,7 @@
 win:
 	go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1
 	goversioninfo  -skip-versioninfo -platform-specific=true -icon="../frontend/src-electron/icons/icon.ico"
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
+	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe"
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
 
 .PHONY: linux # make linux
