@@ -6,3 +6,5 @@
 /sdk/KeyToneSetting.json
 /sdk/log.jsonl
 /sdk/temporaryDebug
+
+*.syso
