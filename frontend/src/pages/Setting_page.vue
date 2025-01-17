@@ -61,7 +61,7 @@ const menuList = [
     to: '/setting-language',
   },
   {
-    icon: 'volume_up',
+    icon: 'home',
     label: 'setting.mainHome.mainHome.index',
     caption: 'setting.mainHome.mainHome.caption',
     separator: true,
