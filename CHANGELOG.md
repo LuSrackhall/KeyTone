@@ -1,3 +1,16 @@
+#  (2025-01-17)
+
+
+### Bug Fixes
+
+* **electron:** 再次修复微软商店版本自启动相关设置无效的问题。 ([d100718](https://github.com/LuSrackhall/KeyTone/commit/d100718868938bb29fdff42dfb6ff66e7f33bab2))
+* **ui | electron | appx:** 修复图标背景在win商店和桌面快捷方式时, 为白色的问题。(预期是按照图片中正常的透明色来展示) ([99477f8](https://github.com/LuSrackhall/KeyTone/commit/99477f8e44c7155c9f08b9c6705d022477f166ee)), closes [#57](https://github.com/LuSrackhall/KeyTone/issues/57)
+* **ui:** 更改设置界面原有的点标题进入整页的默认行为, 改为双击进入, 原有的单击标题后的行为改为与单击箭头一致的展开设置。 ([9f00684](https://github.com/LuSrackhall/KeyTone/commit/9f00684dff011742b4bca32a42c833de27a256d5))
+* **ui:** 修复设置界面改为双击进入整页行为后, 容易被单击误触进入的问题。(放弃了默认的双击事件, 改用单击事件加自定义双击函数处理) ([09d7428](https://github.com/LuSrackhall/KeyTone/commit/09d7428c9da8a0eb9cdf8091688722c1b4f5f3f7))
+* **ui:** 修复设置页面中, 主页相关设置的图标错用音量图标的问题。(虽然目前里面的设置确实仅与音量相关) ([87be226](https://github.com/LuSrackhall/KeyTone/commit/87be2264f955fa1bc79a688629ecd04ee472827c))
+
+
+
 #  (2025-01-16)
 
 
