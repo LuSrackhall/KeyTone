@@ -268,6 +268,41 @@ function createWindow() {
     }
     return false;
   });
+
+  // 监听 'new-window' 事件，防止在新窗口中打开链接
+  mainWindow.webContents.setWindowOpenHandler(({ url, features }) => {
+    try {
+      // 1. 检查链接是否是应用内部的 URL（以 APP_URL 开头）
+      if (url.startsWith(process.env.APP_URL)) {
+        // // 如果是普通导航（没有特殊窗口特性），在当前窗口打开
+        // if (!features.nodeIntegration && !features.contextIsolation) {
+        // TIPS: 如果后续需要支持部分多窗口的功能, 则可在此处再加一层if判断(如上面一行的注释), 以支持特定url在electron窗口的功能。
+        mainWindow?.loadURL(url); // 2. 对于内部路由链接，我们希望在当前窗口中打开(原有的单击行为依旧走的前端路由, 此处事件仅在electron窗口将被打开前才会触发, 我们此处仅是将打开新窗口的行为改为当前窗口中打开, 并阻止接下来的新窗口的创建)
+        return { action: 'deny' }; // 4.在所有情况下都阻止创建新窗口
+        // }
+        // // 如果指定了特殊窗口特性，允许创建新窗口
+        // return {
+        //   action: 'allow',
+        //   overrideBrowserWindowOptions: {
+        //     // 可以在这里设置新窗口的默认选项
+        //     frame: false,
+        //     webPreferences: {
+        //       nodeIntegration: false,
+        //       contextIsolation: true,
+        //       // 其他必要的安全设置...
+        //     },
+        //   },
+        // };
+      }
+
+      // 3. 对于外部链接，在默认浏览器中打开
+      shell.openExternal(url);
+      return { action: 'deny' }; // 4.在所有情况下都阻止创建新窗口
+    } catch (error) {
+      console.error('打开链接时发生错误:', error);
+      return { action: 'deny' };
+    }
+  });
 }
 
 //  建立一个全局可知的原始菜单模板(用于后续功能实现)<只需将此数组传入Menu.buildFromTemplate()中, 即可得到托盘菜单>
