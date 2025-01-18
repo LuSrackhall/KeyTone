@@ -93,7 +93,7 @@ function dblclick(menuItemTo: string) {
   if (clickCount === 1) {
     clickTimer = setTimeout(() => {
       clickCount = 0;
-    }, 150);
+    }, 221);
   } else if (clickCount === 2) {
     clickCount = 0;
     clearTimeout(clickTimer as NodeJS.Timeout);
