@@ -40,7 +40,7 @@ const main_store = useMainStore();
 
 onBeforeMount(async () => {
   // 首次加载时, 加载键音包列表
-  main_store.GetKeyTonePackageList();
+  main_store.GetKeyToneAlbumList();
 
   await setting_store.settingInitAndRealTimeStorage();
 

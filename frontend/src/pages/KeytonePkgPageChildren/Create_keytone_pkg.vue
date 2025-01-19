@@ -25,11 +25,11 @@
           outlined
           stack-label
           dense
-          :error-message="$t('KeyTonePackage.new.name.errorMessage')"
+          :error-message="$t('KeyToneAlbum.new.name.errorMessage')"
           :error="pkgName === '' || pkgName === undefined || pkgName === null"
           v-model="pkgName"
-          :label="$t('KeyTonePackage.new.name.name')"
-          :placeholder="$t('KeyTonePackage.new.name.defaultValue')"
+          :label="$t('KeyToneAlbum.new.name.name')"
+          :placeholder="$t('KeyToneAlbum.new.name.defaultValue')"
         />
         <!-- <div>原始声音文件编辑</div>
         <div>键音</div>
@@ -3535,7 +3535,7 @@ const app_store = useAppStore();
 const pkgPath = nanoid();
 
 // 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
-const pkgName = ref<string>($t('KeyTonePackage.new.name.defaultValue'));
+const pkgName = ref<string>($t('KeyToneAlbum.new.name.defaultValue'));
 
 const step = ref(99);
 // watch(step, () => {
@@ -4642,7 +4642,7 @@ onBeforeMount(async () => {
 
   // 使用i18n, 初始化键音包名称, 在此处手动设置, 是为了防止后续初始化将sdk中默认的名称, 被初始化到pkgName中。
   // 因此在初始化前按照提前设置好的i18n做为默认名称, 故手动发送请求以在数据初始化前更改sdk中的默认名称。
-  await ConfigSet('package_name', $t('KeyTonePackage.new.name.defaultValue'));
+  await ConfigSet('package_name', $t('KeyToneAlbum.new.name.defaultValue'));
 
   await ConfigSet('audio_pkg_uuid', pkgPath);
 
@@ -4904,7 +4904,7 @@ onBeforeMount(async () => {
 const main_store = useMainStore();
 onUnmounted(() => {
   // 卸载组件后, 更新键音包列表
-  main_store.GetKeyTonePackageList();
+  main_store.GetKeyToneAlbumList();
   // 卸载组件后, 重新载入持久化配置中用户所选的键音包
   main_store.LoadSelectedKeyTonePkg();
 });

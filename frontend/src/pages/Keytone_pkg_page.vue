@@ -51,13 +51,13 @@
       >
         <q-btn
           no-caps
-          :label="$t('KeyTonePackage.new.new')"
+          :label="$t('KeyToneAlbum.new.new')"
           icon="flight_takeoff"
           @click="() => router.push('/keytone_pkg-create')"
         />
         <q-btn
           no-caps
-          :label="$t('KeyTonePackage.edit.edit')"
+          :label="$t('KeyToneAlbum.edit.edit')"
           icon="flight_takeoff"
           @click="
             () => {
@@ -78,7 +78,7 @@
         />
         <q-btn
           no-caps
-          :label="$t('KeyTonePackage.import.import')"
+          :label="$t('KeyToneAlbum.import.import')"
           icon="flight_takeoff"
           @click="
             () => {

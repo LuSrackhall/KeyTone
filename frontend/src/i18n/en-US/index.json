@@ -6,7 +6,7 @@
       "index": "Setting",
       "caption": ""
     },
-    "KeyTonePackage": {
+    "KeyToneAlbum": {
       "index": "Key sound album",
       "caption": ""
     }
@@ -18,20 +18,20 @@
     "privacyPolicy": "PrivacyPolicy",
     "userAgreement": "UserAgreement"
   },
-  "KeyTonePackage": {
+  "KeyToneAlbum": {
     "new": {
-      "new": "Create new key sound pack",
+      "new": "Create new key sound album",
       "name": {
-        "name": "Key sound package name",
-        "defaultValue": "New key sound pack",
-        "errorMessage": "You must set a name for the key sound pack"
+        "name": "Key sound album name",
+        "defaultValue": "New key sound album",
+        "errorMessage": "You must set a name for the key sound album"
       }
     },
     "edit": {
-      "edit": "Edit existing key sound pack"
+      "edit": "Edit existing key sound album"
     },
     "import": {
-      "import": "Import more key sound pack"
+      "import": "Import more key sound album"
     }
   },
   "setting": {

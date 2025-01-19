@@ -6,7 +6,7 @@
       "index": "设置",
       "caption": ""
     },
-    "KeyTonePackage": {
+    "KeyToneAlbum": {
       "index": "键音专辑",
       "caption": ""
     }
@@ -18,20 +18,20 @@
     "privacyPolicy": "隐私政策",
     "userAgreement": "用户协议"
   },
-  "KeyTonePackage": {
+  "KeyToneAlbum": {
     "new": {
-      "new": "制作新的键音包",
+      "new": "制作新的键音专辑",
       "name": {
-        "name": "键音包名称",
-        "defaultValue": "新的键音包",
-        "errorMessage": "您必须为键音包设置一个名字"
+        "name": "键音专辑名称",
+        "defaultValue": "新的键音专辑",
+        "errorMessage": "您必须为键音专辑设置一个名字"
       }
     },
     "edit": {
-      "edit": "编辑现有键音包"
+      "edit": "编辑现有键音专辑"
     },
     "import": {
-      "import": "导入更多键音包"
+      "import": "导入更多键音专辑"
     }
   },
   "setting": {
