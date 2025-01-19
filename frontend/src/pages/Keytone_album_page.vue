@@ -53,7 +53,7 @@
           no-caps
           :label="$t('KeyToneAlbum.new.new')"
           icon="flight_takeoff"
-          @click="() => router.push('/keytone_pkg-create')"
+          @click="() => router.push('/keytone_album-create')"
         />
         <q-btn
           no-caps

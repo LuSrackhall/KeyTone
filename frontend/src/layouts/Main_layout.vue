@@ -157,7 +157,7 @@ const essentialLinks: Array<EssentialLinkProps> = [
     title: 'KeyTone.KeyToneAlbum.index',
     caption: '',
     icon: 'album',
-    to: '/keytone_pkg',
+    to: '/keytone_album',
   },
   {
     title: 'KeyTone.setting.index',
@@ -181,7 +181,7 @@ const back = () => {
 const pageLabel = computed(() => {
   if (router.currentRoute.value.fullPath.split('-')[0] === '/setting') {
     return $t('KeyTone.setting.index');
-  } else if (router.currentRoute.value.fullPath.split('-')[0] === '/keytone_pkg') {
+  } else if (router.currentRoute.value.fullPath.split('-')[0] === '/keytone_album') {
     return $t('KeyTone.KeyToneAlbum.index');
   } else {
     return '';
