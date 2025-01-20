@@ -32,7 +32,7 @@
   </q-item>
 
   <!-- 是否开启开机自动启动 -->
-  <q-item>
+  <q-item v-if="!isWindowsStore">
     <!-- 左边的竖线 -->
     <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
     <q-item-section>
@@ -45,7 +45,7 @@
   </q-item>
 
   <!-- 开机自动启动时, 是否隐藏窗口 -->
-  <q-item :disable="!setting_store.autoStartup.isAutoRun">
+  <q-item :disable="!setting_store.autoStartup.isAutoRun" v-if="!isWindowsStore">
     <!-- 左边的竖线 -->
     <div :class="['ml-13 rounded-full  border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
     <q-item-section>
@@ -62,6 +62,8 @@
 import { useSettingStore } from 'src/stores/setting-store';
 
 const setting_store = useSettingStore();
+
+const isWindowsStore = process.windowsStore || process.env.WINDOWS_STORE;
 </script>
 
 <style lang="scss" scoped></style>
