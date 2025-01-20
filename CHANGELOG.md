@@ -1,3 +1,14 @@
+#  (2025-01-20)
+
+
+### Bug Fixes
+
+* **ui | electron | appx:** 将win商店和桌面快捷方式下的图标背景, 改回白色。 ([0bfb32e](https://github.com/LuSrackhall/KeyTone/commit/0bfb32ebb727785b26bf3b5c74b0cb46632a091c)), closes [#57](https://github.com/LuSrackhall/KeyTone/issues/57)
+* **ui | electron:** 修复了应用页面内部的url路由在通过`ctrl+鼠标左键`点击后, 触发新的electron窗口展示的问题。(通过监听mainWindow下的新窗口的产生事件, 在新窗口产生前判断是否是预期的产生行为, 若不是则纠正) ([aad9f3d](https://github.com/LuSrackhall/KeyTone/commit/aad9f3d1482e490f5206545b13941df2b6e5da0e)), closes [#40](https://github.com/LuSrackhall/KeyTone/issues/40)
+* **ui | electron:** 由于appx格式的自启动功能暂时修复失败, 故在设置页面暂时移除相关设置项。(仅暂时移除appx打包格式下自启动设置) ([8bed9d4](https://github.com/LuSrackhall/KeyTone/commit/8bed9d4dc8e5a98b8c96299ce27934dadfc7f291)), closes [#58](https://github.com/LuSrackhall/KeyTone/issues/58)
+
+
+
 #  (2025-01-17)
 
 
