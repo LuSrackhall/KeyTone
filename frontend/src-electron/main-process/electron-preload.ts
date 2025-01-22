@@ -55,5 +55,11 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
     // console.log('close, 关闭当前窗口');
   },
 
+  // 用于在外部浏览器打开url链接
   openExternal: (url: string) => ipcRenderer.send('open-external', url),
+
+  // 获取windows store状态
+  getWindowsStoreStatus() {
+    return process.windowsStore || process.env.WINDOWS_STORE;
+  },
 });

@@ -60,10 +60,18 @@
 
 <script setup lang="ts">
 import { useSettingStore } from 'src/stores/setting-store';
+import { ref } from 'vue';
 
 const setting_store = useSettingStore();
 
-const isWindowsStore = process.windowsStore || process.env.WINDOWS_STORE;
+const isWindowsStore = ref(getWindowsStoreStatus());
+
+function getWindowsStoreStatus() {
+  if (process.env.MODE === 'electron') {
+    return window.myWindowAPI.getWindowsStoreStatus();
+  }
+  return false;
+}
 </script>
 
 <style lang="scss" scoped></style>

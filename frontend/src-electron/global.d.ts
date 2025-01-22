@@ -23,6 +23,7 @@ interface MyWindowAPI {
   toggleMaximize: () => void;
   close: () => void;
   openExternal: (arg0: string) => void;
+  getWindowsStoreStatus: () => any;
 }
 
 interface Window {
