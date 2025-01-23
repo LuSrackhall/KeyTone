@@ -1,7 +1,10 @@
 import { boot } from 'quasar/wrappers';
 import axios, { AxiosInstance } from 'axios';
 
-declare module '@vue/runtime-core' {
+// TIPS: declare module 只影响 TypeScript 的类型检查和开发时的代码提示，完全不会影响实际的编译输出和运行时行为。它属于 TypeScript 的类型系统的一部分，在编译成 JavaScript 后会被完全移除。
+// declare module '@vue/runtime-core' { // 是 Vue 2 时代的遗留写法
+declare module 'vue' {
+  // 是 Vue 3 推荐的方式, 直接扩展 Vue 3 的主模块, 更符合 Vue 3 的模块化设计, 覆盖范围更完整
   interface ComponentCustomProperties {
     $axios: AxiosInstance;
     $api: AxiosInstance;
