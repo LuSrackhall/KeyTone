@@ -29,6 +29,7 @@ import (
 	"crypto"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -128,9 +129,25 @@ func ServerRun() {
 
 	keytonePkgRouters(r)
 
-	// 运行gin
-	// r.Run("0.0.0.0:38888")
-	r.Run("localhost:38888")
+	// 尝试在指定端口启动服务
+	listener, err := net.Listen("tcp", "localhost:38888")
+	if err != nil {
+		// 如果38888被占用，让系统分配一个可用端口
+		listener, err = net.Listen("tcp", "localhost:0")
+		if err != nil {
+			logger.Error("无法启动服务:", err)
+			return
+		}
+	}
+
+	// 获取实际使用的端口
+	port := listener.Addr().(*net.TCPAddr).Port
+
+	// 输出端口信息，让Electron主进程可以捕获
+	fmt.Printf("KEYTONE_PORT=%d\n", port)
+
+	// 使用listener启动服务
+	go r.RunListener(listener)
 }
 
 func mainRouters(r *gin.Engine) {

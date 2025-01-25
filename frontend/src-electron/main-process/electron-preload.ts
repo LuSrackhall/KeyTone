@@ -62,4 +62,7 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
   getWindowsStoreStatus() {
     return process.windowsStore || process.env.WINDOWS_STORE;
   },
+
+  // 添加获取后端端口的方法
+  getBackendPort: () => ipcRenderer.invoke('get-backend-port'),
 });

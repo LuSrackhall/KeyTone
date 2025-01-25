@@ -26,6 +26,7 @@ import { app, BrowserWindow, Tray, Menu, ipcMain, shell } from 'electron';
 import { initialize, enable } from '@electron/remote/main';
 import path from 'path';
 import os from 'os';
+import { UpdateApi } from 'src/boot/axios';
 import { StoreGet, StoreSet } from 'boot/query/store-query';
 
 // 未解决但于本项目已无影响FIXME: 只要引入 vue-i18n , 并使用它,  就会造成调试对话框无法独立打开。(猜测可能是影响了`process.env.DEBUGGING`的正常获取<如果真的是这样, 那就太严重了。(测试结果并没有影响这个环境变量的获取, 可以确定只是影响了`mainWindow.webContents.openDevTools({ mode: 'detach' });`这个api的功能效果)>)
@@ -134,7 +135,18 @@ if (process.env.DEBUGGING) {
   sdkProcess.stdout.on('data', (data) => {
     // console.log(`[SDK] stdout: ${data}`); // 如果输出内容设计多行文本, 则这种简单的方式只能在第一行前添加前缀
     const lines = data.toString().split('\n');
-    lines.forEach((line: any) => {
+    lines.forEach((line: string) => {
+      // 检查是否包含端口信息
+      // TIPS: 注意这里使用的match()的返回值是一个数组或null, 如果匹配成功则返回一个数组
+      // * [0]: 完整的匹配文本
+      // * [1]: 第一个捕获组的内容
+      const portMatch = line.match(/KEYTONE_PORT=(\d+)/);
+      if (portMatch) {
+        backendPort = parseInt(portMatch[1], 10);
+        UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
+        process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
+      }
+
       if (line.trim()) {
         process.stdout.write(`[SDK] ${line}\n`);
       }
@@ -556,4 +568,15 @@ app.on('activate', () => {
 // 处理 IPC 事件
 ipcMain.on('open-external', (event, url) => {
   shell.openExternal(url);
+});
+
+// 存储后端实际使用的端口
+let backendPort = 38888;
+
+// 由于前端的默认端口也是38888, 因此此处无需更新
+// UpdateApi(backendPort);
+
+// 处理获取端口的IPC请求
+ipcMain.handle('get-backend-port', () => {
+  return backendPort;
 });
