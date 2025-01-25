@@ -36,6 +36,10 @@ export default boot(({ app }) => {
     setInterval(async () => {
       const currentPort = window.myWindowAPI.getBackendPort(); // 这个逻辑放入boot的回调中恰到好处, 因为electron项目中我们无需在nodejs的主进程使用它。
       UpdateApi(currentPort);
+      if (currentPort !== port) {
+        // 刷新重启整个应用
+        window.location.reload(); // 在此处可用
+      }
     }, 1000);
   }
 
