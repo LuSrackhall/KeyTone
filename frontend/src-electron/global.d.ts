@@ -24,7 +24,7 @@ interface MyWindowAPI {
   close: () => void;
   openExternal: (arg0: string) => void;
   getWindowsStoreStatus: () => any;
-  getBackendPort: () => number;
+  getBackendPort: () => Promise<number>;
 }
 
 interface Window {
