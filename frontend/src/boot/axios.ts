@@ -34,7 +34,7 @@ export default boot(({ app }) => {
   // 由于前端对于端口的变更时不确定的, 因此需要利用ipc持续监听端口变化，来更新api实例。(TIPS: 虽然本项目不涉及spa, 但后续有必要思考, spa中如何监听端口变化以做到前后端统一的应对。比如使用go启动某个spa时, 是否能做到向spa中传递一些参数这种事情。)
   if (process.env.MODE === 'electron') {
     setInterval(async () => {
-      const currentPort = await window.myWindowAPI.getBackendPort(); // 这个逻辑放入boot的回调中恰到好处, 因为electron项目中我们无需在nodejs的主进程使用它。
+      const currentPort = window.myWindowAPI.getBackendPort(); // 这个逻辑放入boot的回调中恰到好处, 因为electron项目中我们无需在nodejs的主进程使用它。
       UpdateApi(currentPort);
     }, 1000);
   }

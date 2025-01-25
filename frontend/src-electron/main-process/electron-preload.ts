@@ -64,5 +64,5 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
   },
 
   // 添加获取后端端口的方法
-  getBackendPort: () => ipcRenderer.invoke('get-backend-port'),
+  getBackendPort: () => ipcRenderer.sendSync('get-backend-port'),
 });

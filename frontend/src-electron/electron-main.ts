@@ -577,6 +577,6 @@ let backendPort = 38888;
 // UpdateApi(backendPort);
 
 // 处理获取端口的IPC请求
-ipcMain.handle('get-backend-port', () => {
-  return backendPort;
+ipcMain.on('get-backend-port', (event) => {
+  event.returnValue = backendPort;
 });
