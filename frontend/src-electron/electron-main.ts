@@ -178,7 +178,20 @@ let tray: Tray;
 
 // let sdkIsRun: boolean = false; // eslint有类型推断, 主动设置会报错, 但我又懒得关闭此推断。
 let sdkIsRun = false;
-
+// 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
+(function startupSetting() {
+  // 由于此部分仅开机首次运行时调用, 因此不受sdk中go依赖的viper的bug的影响。(即首次调用时可以获得真实情况, 若内部某字段被基于最终字段变更, 则会使得父字段为null的bug)
+  // 而且, 这里还利用了StoreGet的false返回值来实现了递归轮询。(若直接基于最终字段来递归轮询, 则因其值本身就是boolean, 会无法达到实际的递归效果。)
+  // TIPS: 以后再开新项目, 这类restful请求失败后的返回值, 不再使用false, 而是使用一个固定的字符串常量(具有绝对uuid特质的--似乎空对象之类的引用常量也行), 用于判断是否请求成功。
+  StoreGet('startup').then((value) => {
+    if (value === false) {
+      startupSetting();
+    } else {
+      // 有些操作需要保证在sdk运行后再执行。此处利用了这一点。
+      sdkIsRun = true;
+    }
+  });
+})();
 const iconPath = process.env.DEBUGGING
   ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
   : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
@@ -196,7 +209,7 @@ function createWindow() {
     resizable: false, // 是否可调整窗口大小, 默认为true
     transparent: true, // 设置透明窗口, 为进一步的毛玻璃窗口做准备 // 由于纯CSS不支持直接透到操作系统桌面的毛玻璃效果, 因此放弃
     // autoHideMenuBar: true,  // 此方式只是自动隐藏菜单栏, 但仍可通过 'alt' 键打开。
-    show: false,
+    show: false, // 初始设置为不显示
     webPreferences: {
       sandbox: false, // 能够在预加载脚本中导入@electronic/remote
       contextIsolation: true,
@@ -225,35 +238,27 @@ function createWindow() {
 
     // 这个用于配合改用第三方库node-auto-launch, 来实现自动隐藏启动的功能。
     if (process.argv[1] == '--hidden') {
-      mainWindow?.hide();
-    } else {
-      // 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
-      (function startupSetting() {
-        // 由于此部分仅开机首次运行时调用, 因此不受sdk中go依赖的viper的bug的影响。(即首次调用时可以获得真实情况, 若内部某字段被基于最终字段变更, 则会使得父字段为null的bug)
-        // 而且, 这里还利用了StoreGet的false返回值来实现了递归轮询。(若直接基于最终字段来递归轮询, 则因其值本身就是boolean, 会无法达到实际的递归效果。)
-        // TIPS: 以后再开新项目, 这类restful请求失败后的返回值, 不再使用false, 而是使用一个固定的字符串常量(具有绝对uuid特质的--似乎空对象之类的引用常量也行), 用于判断是否请求成功。
-        StoreGet('startup').then((value) => {
-          if (value === false) {
-            startupSetting();
-          } else {
-            // 有些操作需要保证在sdk运行后再执行。此处利用了这一点。
-            sdkIsRun = true;
-
-            // TODO: 此部分窗口是否展示, 实际上不必依赖sdk的启动( 目前依赖的原因是->获取配置文件的对应值的StoreGet, 必须依赖sdk的启动。
-            //       * 因此, 后续想要提升未设置窗口启动时因此情况下的窗口展示速度。需要直接获取配置文件的对应值, 并用此值设置窗口的展示状态。
-            //       * * 方法1, 在sdk中, 优先获取此对应值, 并打印到标准输入, 然后基于进程调用相关返回值来设置窗口的展示状态。
-            //       * * 方法2, 封装go的viper模块, 专门用于nodejs调用, 以通过nodejs调用go的viper模块, 来获取此对应值, 然后设置窗口的展示状态。(可以用进程调用或wasm调用等方式实现)
-            //       * * 通过nodejs的相关配置包, 来获取此对应值, 然后设置窗口的展示状态。(由于需求较为单一, 可以不使用第三方的json包, 而是可以直接读取整个json文件, 并解析后直接使用这个值)
-            if (value.is_hide_windows) {
-              // 如果'is_hide_windows' 为 true , 则隐藏窗口
-              mainWindow?.hide();
-            } else {
-              mainWindow?.show();
-            }
-          }
-        });
-      })();
+      // mainWindow?.hide();
+      return; // 由于初始设置为不显示, 故隐藏模式下直接返回, 不显示窗口即可, 无需显式调用
     }
+
+    // 2. 直接从文件系统读取配置，避免等待SDK
+    try {
+      const configPath = process.env.DEBUGGING
+        ? path.join('..', 'sdk', 'KeyToneSetting.json')
+        : path.join(configDir, 'KeyToneSetting.json');
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (config.startup?.is_hide_windows) {
+          return; // 配置为隐藏窗口时直接返回
+        }
+      }
+    } catch (error) {
+      console.error('读取配置文件失败:', error);
+    }
+
+    // 3. 如果不是隐藏模式且配置允许，则显示窗口
+    mainWindow?.show();
   });
 
   if (process.env.DEBUGGING) {
