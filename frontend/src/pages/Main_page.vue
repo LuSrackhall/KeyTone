@@ -235,6 +235,11 @@ onMounted(async () => {
 
   if (main_store.volumeNormalReduceScope === setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope) {
     setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - main_store.volumePercentage));
+  } else {
+    // 记录百分比(由于此时min变化引起了百分比变化, 因此也需要主动记录, 以更新保存的百分比)
+    // TIPS: (准确的说是min所依赖的volumeNormalReduceScope变化引起的,强调这一点是因为, 如果是volumeAmplify变化引起的min及百分比变化, 我们千万不用记录, 因为我们本质需求要保留的就是这个百分比)
+    // TIPS: 由于min是计算属性, 只要我在此处调用, 他就一定会计算后在返回给我, 因此不用担心min的值不是最新的问题, 这里是安全的。
+    main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
   }
 
   // 初始化完成后再显示
