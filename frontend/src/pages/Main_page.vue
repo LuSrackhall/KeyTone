@@ -213,7 +213,7 @@ import logoUrl from 'assets/img/KeyTone.png?url';
 import { QSelect } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, useTemplateRef, watch, onMounted, ref } from 'vue';
+import { computed, useTemplateRef, watch, onMounted, ref, onBeforeUnmount } from 'vue';
 
 const setting_store = useSettingStore();
 const main_store = useMainStore();
@@ -233,7 +233,9 @@ onMounted(async () => {
       ? currentAmplify + setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope
       : setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
 
-  setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - main_store.volumePercentage));
+  if (main_store.volumeNormalReduceScope === setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope) {
+    setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - main_store.volumePercentage));
+  }
 
   // 初始化完成后再显示
   isInitialized.value = true;
@@ -265,6 +267,12 @@ watch(
     setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - currentPercentage));
   }
 );
+
+onBeforeUnmount(() => {
+  // 在组件卸载时执行的逻辑
+  // 卸载前记录volumeNormalReduceScope的值, 方便对比
+  main_store.volumeNormalReduceScope = setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
+});
 
 const min = computed(() => {
   if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {

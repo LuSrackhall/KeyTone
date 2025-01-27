@@ -22,6 +22,9 @@ export const useMainStore = defineStore('main', () => {
     StoreSet('volume_percentage', newValue);
   });
 
+  // 记录每次组件卸载时, 音量百分比的变化, 防止调整音量降幅后, 回到主页面时, 音量百分比也恢复到调整前的状态。(此时我不希望恢复到调整前的状态)
+  const volumeNormalReduceScope = ref(5);
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////下方是键音包相关的配置////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +96,7 @@ export const useMainStore = defineStore('main', () => {
   return {
     volumePercentage,
     initVolumePercentage,
+    volumeNormalReduceScope,
     keyTonePkgOptions,
     keyTonePkgOptionsName,
     GetKeyToneAlbumList,
