@@ -315,6 +315,15 @@ watch(
   }
 );
 
+// 监听volumeNormalReduceScope的变化, 更新保存的百分比(确保实时刷新时(实际上实时刷新的场景仅存在与代码调试过程)不会出现百分比变化不符合预期的问题)
+watch(
+  () => setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope,
+  () => {
+    // 更新保存的百分比
+    main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+  }
+);
+
 watch(
   min,
   () => {
