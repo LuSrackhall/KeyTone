@@ -240,8 +240,12 @@ const labelValue = computed(() => {
 watch(
   () => setting_store.mainHome.audioVolumeProcessing.volumeNormal,
   () => {
-    // 当用户拖动音量进度条时, 自动解除静音
-    setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
+    // 当用户拖动音量进度条时, 自动解除静音(如果音量为0%, 则主动静音)
+    if (labelValue.value !== '0%') {
+      setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
+    } else {
+      setting_store.mainHome.audioVolumeProcessing.volumeSilent = true;
+    }
   }
 );
 
