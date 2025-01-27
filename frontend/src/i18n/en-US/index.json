@@ -94,7 +94,8 @@
     "获取配置文件失败": "Failed to obtain configuration file",
     "配置文件获取成功, 正在读取配置": "The configuration file was obtained successfully, and the configuration is being read...",
     "配置读取成功": "Configuration read successfully",
-    "配置文件读取失败,请重启应用": "Failed to read the configuration file, please restart the application"
+    "配置文件读取失败,请重启应用": "Failed to read the configuration file, please restart the application",
+    "功能正在开发中": "Feature is under development"
   },
   "Electron": {
     "tray": {

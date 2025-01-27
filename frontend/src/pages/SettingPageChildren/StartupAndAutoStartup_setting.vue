@@ -31,6 +31,21 @@
     </q-item-section>
   </q-item>
 
+  <!-- 是否开机自动启动功能正在开发 -->
+  <q-item v-if="isWindowsStore">
+    <!-- 左边的竖线 -->
+    <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label class="flex flew-row w-full items-center">
+        {{ $t('setting.启动与自动启动.自动启动.index') }}
+        <q-badge class="ml-2" color="lime-8" text-color="white" rounded>
+          {{ $t('Notify.功能正在开发中') }}
+        </q-badge>
+      </q-item-label>
+      <q-item-label caption>{{ $t('setting.启动与自动启动.自动启动.caption') }}</q-item-label>
+    </q-item-section>
+  </q-item>
+
   <!-- 是否开启开机自动启动 -->
   <q-item v-if="!isWindowsStore">
     <!-- 左边的竖线 -->
