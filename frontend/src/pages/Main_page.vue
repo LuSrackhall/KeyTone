@@ -248,6 +248,17 @@ watch(
     }
   }
 );
+watch(
+  min,
+  () => {
+    if (-setting_store.mainHome.audioVolumeProcessing.volumeNormal > min.value) {
+      setting_store.mainHome.audioVolumeProcessing.volumeNormal = -min.value;
+    }
+  },
+  // TIPS: 必须添加立即执行, 因为min是基于setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope的计算值,
+  //      而后者是用户设置的值, 且是在其它界面设置的(此时Main_page是未加载的), 因此需要回到Main_page界面后立即执行以确保正确性
+  { immediate: true }
+);
 
 const labelValueDebug = computed(() => {
   return setting_store.mainHome.audioVolumeProcessing.volumeNormal.toFixed(2);
