@@ -1,10 +1,30 @@
 import { defineStore } from 'pinia';
 import { ConfigGet, GetAudioPackageList, GetAudioPackageName, LoadConfig } from 'src/boot/query/keytonePkg-query';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useSettingStore } from './setting-store';
 import { useQuasar } from 'quasar';
+import { StoreGet, StoreSet } from 'src/boot/query/store-query';
 
 export const useMainStore = defineStore('main', () => {
+  // 添加音量百分比状态
+  const volumePercentage = ref(1); // 默认100%
+
+  // 添加初始化函数
+  async function initVolumePercentage() {
+    const savedPercentage = await StoreGet('volume_percentage');
+    if (savedPercentage !== undefined && savedPercentage !== null) {
+      volumePercentage.value = savedPercentage;
+    }
+  }
+
+  // 监听音量百分比变化并保存
+  watch(volumePercentage, (newValue) => {
+    StoreSet('volume_percentage', newValue);
+  });
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////下方是键音包相关的配置////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const keyTonePkgOptions = ref([]);
   const keyTonePkgOptionsName = ref(new Map());
 
@@ -70,5 +90,12 @@ export const useMainStore = defineStore('main', () => {
     });
   }
 
-  return { keyTonePkgOptions, keyTonePkgOptionsName, GetKeyToneAlbumList, LoadSelectedKeyTonePkg };
+  return {
+    volumePercentage,
+    initVolumePercentage,
+    keyTonePkgOptions,
+    keyTonePkgOptionsName,
+    GetKeyToneAlbumList,
+    LoadSelectedKeyTonePkg,
+  };
 });

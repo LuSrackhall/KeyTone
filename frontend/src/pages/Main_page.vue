@@ -100,7 +100,7 @@
         'select-none',
       ]"
     >
-      <div :class="['w-56 flex justify-between items-center']">
+      <div :class="['w-56 flex justify-between items-center']" v-show="isInitialized">
         <q-btn
           dense
           round
@@ -213,9 +213,58 @@ import logoUrl from 'assets/img/KeyTone.png?url';
 import { QSelect } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, useTemplateRef, watch } from 'vue';
+import { computed, useTemplateRef, watch, onMounted, ref } from 'vue';
 
 const setting_store = useSettingStore();
+const main_store = useMainStore();
+
+// 添加初始化状态控制(用于控制音量百分比初始化完成后再显示, 防止增减音量调整后回到主页面的一瞬间, 音量百分比为保持历史状态而调整的过程的显示)
+const isInitialized = ref(false);
+
+// 修改onMounted钩子
+onMounted(async () => {
+  // 初始化音量百分比
+  await main_store.initVolumePercentage();
+
+  // 使用保存的百分比计算初始volumeNormal
+  const currentAmplify = setting_store.audioVolumeProcessing.volumeAmplify;
+  const newMin =
+    currentAmplify > 0
+      ? currentAmplify + setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope
+      : setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
+
+  setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - main_store.volumePercentage));
+
+  // 初始化完成后再显示
+  isInitialized.value = true;
+});
+
+// 修改volumeAmplify的监听
+watch(
+  () => setting_store.audioVolumeProcessing.volumeAmplify,
+  (newAmplify, oldAmplify) => {
+    if (oldAmplify === undefined) return; // 忽略初始化时的变化，由onMounted处理
+
+    // 使用旧的amplify计算旧的min值
+    const oldMin =
+      oldAmplify > 0
+        ? oldAmplify + setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope
+        : setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
+
+    // 计算并保存当前的百分比
+    const currentPercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / oldMin;
+    main_store.volumePercentage = currentPercentage;
+
+    // 使用新的amplify计算新的min值
+    const newMin =
+      newAmplify > 0
+        ? newAmplify + setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope
+        : setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope;
+
+    // 使用新的min值和保存的百分比计算新的volumeNormal值
+    setting_store.mainHome.audioVolumeProcessing.volumeNormal = -(newMin * (1 - currentPercentage));
+  }
+);
 
 const min = computed(() => {
   if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {
@@ -237,10 +286,14 @@ const labelValue = computed(() => {
   return percentage[1] === '00' ? percentage[0] + '%' : percentage[0] + '.' + percentage[1] + '%';
 });
 
+// 监听volumeNormal的变化，更新保存的百分比
 watch(
   () => setting_store.mainHome.audioVolumeProcessing.volumeNormal,
   () => {
-    // 当用户拖动音量进度条时, 自动解除静音(如果音量为0%, 则主动静音)
+    // 更新保存的百分比
+    main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+
+    // 原有的静音逻辑保持不变
     if (labelValue.value !== '0%') {
       setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
     } else {
@@ -248,6 +301,7 @@ watch(
     }
   }
 );
+
 watch(
   min,
   () => {
@@ -283,8 +337,6 @@ const isSilent = (event: any) => {
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
-
-const main_store = useMainStore();
 
 // 每次用户的主动选择, 都会触发实际选择的键音包重新进行加载。
 watch(
