@@ -14,7 +14,10 @@ export const useAppStore = defineStore('app', () => {
   // TIPS: sse的链接一旦建立, 是无法动态更改其ip地址和端口的, 因此我们只能在建立之初就使用正确的端口, 否则只能通过刷新整个渲染进程来重新初始化sse链接了。
   //       => 毕竟手动关闭当前sse链接并重新建立新的sse链接涉及到的变更太多了, 几乎所有监听的回调都需重新调用一遍, 而回调的监听逻辑有可能分布在不同的文件中。
   //       => 当然, 如果我们能够将所有监听的回调都集中在一个文件中(或是封装逻辑后再暴露出去的方式将监听集中到某一个函数内方便重新建立), 那么我们只需在该文件中手动关闭当前sse链接并重新建立新的sse链接即可, 但这种方式的可维护性和可读性都不高。
-  const port = window.myWindowAPI.getBackendPort();
+  let port = 38888;
+  if (process.env.MODE === 'electron') {
+    port = window.myWindowAPI.getBackendPort();
+  }
 
   const eventSource = new EventSource('http://' + IPV4 + `:${port}/stream`, { withCredentials: false });
 
