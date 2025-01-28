@@ -447,7 +447,16 @@ setInterval(async () => {
     const is_hide_windows_old = await StoreGet('auto_startup.is_hide_windows_old');
 
     const isWindowsStore = process.windowsStore || process.env.WINDOWS_STORE;
-
+    if (isWindowsStore) {
+      // 对于appx版本, 直接在构建时, 通过appx的配置, 实现了默认自动启动的功能。
+      // * 默认启用, 用户可在操作系统的'设置' - '应用' - '启动'中关闭相关自启动项(结合启动时隐藏的设置, 可实现自启动时的隐藏)。
+      // todoSomething
+      // ...
+      // 后续可以尝试手动引入 addAutoLaunchExtension: true, 所依赖的库, 将这个集成到应用内的设置中, 而不是只能依赖系统管理。(不过似乎不是很必要, 毕竟如果系统中关闭了自启动, 则应用内设置的自启动开启也是无效的, 这不符合预期(目前exe版本就有这个问题)。)
+      // * 可以保持addAutoLaunchExtension: true, 不引入相关xml,来尝试是否可以实现集成。
+      // * 如果以上可以(否则此步似乎无需执行), 则可尝试addAutoLaunchExtension: false后, 是否可以实现集成。
+      return; // 由于(https://github.com/Teamwork/node-auto-launch)不支持Windows Store 自动启动, 因此如果是appx则直接返回。(其6.0.0正式发布后, 会重新考虑是否撤回此return-多半不会)
+    }
     // 创建新的 AutoLaunch 实例
     autoLauncher = new AutoLaunch({
       name: 'KeyTone',

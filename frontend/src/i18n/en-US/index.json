@@ -51,7 +51,9 @@
       },
       "自动启动": {
         "index": "Auto Start",
-        "caption": "Would you like this application to automatically start when the computer boots up?"
+        "appxIndex": "Enabled by default in Microsoft Store version",
+        "caption": "Would you like this application to automatically start when the computer boots up?",
+        "appxCaption": "Can be disabled in System 'Settings' > 'Apps' > 'Startup'"
       },
       "自动启动时隐藏窗口": {
         "index": "Hide Window on Auto Start",

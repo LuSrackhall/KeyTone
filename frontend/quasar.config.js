@@ -298,7 +298,7 @@ module.exports = configure(function (/* ctx */) {
           // backgroundColor: 'transparent', // 设置为透明
           backgroundColor: '#ffffff', // 应用启动时的背景色
           showNameOnTiles: true, // 在磁贴上显示应用名称
-          addAutoLaunchExtension: false, // 是否添加自动启动扩展
+          addAutoLaunchExtension: true, // 是否添加自动启动扩展
           // identityType: 'Store', // 指定应用程序的认证类型。'Store' 表示应用程序已经通过微软的认证，可以在Windows Store中发布。
           // identityCertificate: '../../KeyTone.pfx', // 指定应用程序的证书文件路径。这个文件通常用于对应用程序进行数字签名，以确保应用程序的完整性和安全性。
           // identityCertificatePassword: '12345678', // 指定应用程序的证书密码。这个密码用于解密和验证应用程序的数字签名。
