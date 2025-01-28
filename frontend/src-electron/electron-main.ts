@@ -375,6 +375,20 @@ let history_language_default: string;
 
 let history_volume_silent: boolean;
 
+//#region
+/**
+ * 官方提供的开机自动启动的api(由于不支持Linux, 且在appx和macos上, 存在与第三方库相同的问题, 因此本项目弃用此api)
+    app.setLoginItemSettings({ // 可通过搜索这个, 来询问GPT, 以了解上述问题是否得到解决。[appx相关问题](https://github.com/electron/electron/issues/42016)
+      openAtLogin: true,
+      // openAsHidden: true, // 功能为以隐藏模式打开。(仅在windows中可用, 因为对于macos不支持MAS和从macos13起及更高的版本<基本等于不可用>故弃用此选项)
+    });
+    const startupTask = await app.getLoginItemSettings(); // 由于没用过electron相关的自启动api, 因此我并不确定这个api是否跟electron自带的自启动相关。
+
+ * 改用第三方库[node-auto-launch](https://github.com/Teamwork/node-auto-launch)来实现开机自启动的功能。
+    const AutoLaunch = require('auto-launch');
+    import AutoLaunch from 'auto-launch';(推荐使用这种导入方式)
+*/
+//#endregion
 import AutoLaunch from 'auto-launch';
 
 // 创建一个存储  AutoLaunch 实例的全局变量, 用于后续的自动启动设置
