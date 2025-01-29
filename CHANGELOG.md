@@ -1,3 +1,14 @@
+#  (2025-01-29)
+
+
+### Bug Fixes
+
+* **electron | ui:** 关于应用商店版本 自动启动功能 的进一步修复。 改为在打包时引入并默认启用, 并在设置界面引导用户前往系统 设置>应用>启动 中, 关闭/打开自启动功能。 ([e03c9a9](https://github.com/LuSrackhall/KeyTone/commit/e03c9a91768fb516025846fcef8d79cadf444f0f))
+* **ui:** 当音量为0%时, 静音按钮应该保持关闭状态。 ([30c04fb](https://github.com/LuSrackhall/KeyTone/commit/30c04fbb43d20adcb75237dfc12559ba050d3309))
+* **ui:** 修复了主界面音量滑块通过单击来调整后, 会被自动退回更改前的位置的bug。(此bug发生的原因是: 对需要实时持久化的变量数据, 仅单变量变更的操作会因通信延迟而天然可靠, 但多个变量变更的操作破坏了这个特性)(解决方式, 在次要变量的变化源头手动制造延迟来使其重新变得可靠) ([4aa721f](https://github.com/LuSrackhall/KeyTone/commit/4aa721f9a4f2dc916c877f47c77a6af02bc122db))
+
+
+
 #  (2025-01-28)
 
 
