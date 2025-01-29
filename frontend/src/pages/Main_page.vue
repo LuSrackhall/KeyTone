@@ -210,11 +210,15 @@
 
 <script setup lang="ts">
 import logoUrl from 'assets/img/KeyTone.png?url';
-import { QSelect } from 'quasar';
+import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, useTemplateRef, watch, onMounted, ref, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const q = useQuasar();
+const { t } = useI18n();
+const $t = t;
 const setting_store = useSettingStore();
 const main_store = useMainStore();
 
@@ -364,6 +368,20 @@ const markersDebug = computed(() => {
 const isSilent = (event: any) => {
   if (event.detail === 0) {
     // 由键盘触发，不处理
+    return;
+  }
+  if (labelValue.value === '0%') {
+    // 由于音量为0时，打开声音是没意义的，所以直接返回。(了解原理的话不难理解, 此时打开声音后可能造成0%的音量调状态, 仍会发出声音的bug)
+    q.notify({
+      message: $t('Notify.音量0%时无法打开声音'),
+      color: 'warning',
+      position: 'top',
+      timeout: 1200,
+    });
+    // 这种操作的优点是, 可以让用户通过音量图标的状态, 直观感受到音量是否为0, 可以可靠的知道此时KeyTone当前一定是没有声音的。
+    // TODO: 当然, 这并不是最好的解决方式, 另一种解决方式是, 对0%的音量状态, 单独设置一个静音变量, 以确保在音量为0时, 仍然可以打开声音。但打开声音也不用担心0%状态会发出声音, 因单独的静音变量作用, 将仍不会有声音, 直到不为0%后声音才能恢复。
+    // TIPS: 这种操作的唯一缺点是(也不能算作缺点, 因为当图标关闭时, 仍能确定其当前是一定没有声音的), 某些情况下无法通过音量图标的状态, 直观感受到音量是否为0。(因为音量为0时, 图标也有可能是开启状态)
+
     return;
   }
   setting_store.mainHome.audioVolumeProcessing.volumeSilent =
