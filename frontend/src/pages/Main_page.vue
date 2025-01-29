@@ -303,15 +303,22 @@ const labelValue = computed(() => {
 watch(
   () => setting_store.mainHome.audioVolumeProcessing.volumeNormal,
   () => {
-    // 更新保存的百分比
-    main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+    // TIPS: 在引发多个相关变量的写入持久化的操作时, 具体问题具体分析, 通过在相关源头处对次要变量进行手动延后来解决新的变更被错误改回旧变更的问题。
+    setTimeout(() => {
+      // 更新保存的百分比
+      main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+    }, 30);
 
-    // 原有的静音逻辑保持不变
-    if (labelValue.value !== '0%') {
-      setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
-    } else {
-      setting_store.mainHome.audioVolumeProcessing.volumeSilent = true;
-    }
+    // TIPS: 在引发多个相关变量的写入持久化的操作时, 具体问题具体分析, 通过在相关源头处对次要变量进行手动延后来解决新的变更被错误改回旧变更的问题。
+    //       * 对每个涉及到的变量, 都单独进行手动延后, 并且延后的时间不同(保持30ms以上的差距), 以确保其不会因同时触发而造成问题->即同时触发造成的sse的返回数据不可靠的问题->造成所涉及的相关的一切数据项(包括主要变量和次要变量)最终一致性变的随机和不可靠->而这些同时沟通底端与ui端渲染的重要数据变量的不可靠是非常影响用户体验的。
+    setTimeout(() => {
+      // 原有的静音逻辑保持不变
+      if (labelValue.value !== '0%') {
+        setting_store.mainHome.audioVolumeProcessing.volumeSilent = false;
+      } else {
+        setting_store.mainHome.audioVolumeProcessing.volumeSilent = true;
+      }
+    }, 60);
   }
 );
 
@@ -319,8 +326,11 @@ watch(
 watch(
   () => setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope,
   () => {
-    // 更新保存的百分比
-    main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+    // TIPS: 在引发多个相关变量的写入持久化的操作时, 具体问题具体分析, 通过在相关源头处对次要变量进行手动延后来解决新的变更被错误改回旧变更的问题。
+    setTimeout(() => {
+      // 更新保存的百分比
+      main_store.volumePercentage = 1 - -setting_store.mainHome.audioVolumeProcessing.volumeNormal / min.value;
+    }, 30);
   }
 );
 
