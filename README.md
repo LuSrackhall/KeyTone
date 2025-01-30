@@ -58,7 +58,7 @@ Contributions of any kind are welcome!
 
 ## Copyright
 
-Copyright (C) 2024 LuSrackhall
+Copyright (C) 2024-present LuSrackhall
 
 ## License
 
