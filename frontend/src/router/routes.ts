@@ -70,7 +70,8 @@ const routes: RouteRecordRaw[] = [
     path: '/keytone_album',
     component: () => import('layouts/Main_layout.vue'),
     children: [
-      { path: '', component: () => import('pages/Keytone_album_page.vue') },
+      // { path: '', component: () => import('pages/Keytone_album_page.vue') },
+      { path: '', component: () => import('pages/Keytone_album_page_new.vue') },
       {
         path: '/keytone-album',
         component: () => import('pages/KeytonePkgPageChildren/Keytone_album.vue'),
