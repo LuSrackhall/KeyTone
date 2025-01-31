@@ -99,7 +99,11 @@ const handleAlbumScroll = (event: Event) => {
   const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
 
   // 向下滚动时收起
-  if (currentScroll > lastScrollTop && !isCollapsed.value) {
+  if (
+    (currentScroll > lastScrollTop ||
+      (currentScroll >= maxScroll && event instanceof WheelEvent && event.deltaY > 0)) &&
+    !isCollapsed.value
+  ) {
     // 如果已经滚动到底部，立即收起
     if (currentScroll >= maxScroll) {
       isCollapsed.value = true;
@@ -118,6 +122,7 @@ onMounted(() => {
   const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
   if (scrollContainer) {
     scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
+    scrollContainer.addEventListener('wheel', handleAlbumScroll, { passive: true });
   }
 });
 
@@ -125,6 +130,7 @@ onUnmounted(() => {
   const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
   if (scrollContainer) {
     scrollContainer.removeEventListener('scroll', handleAlbumScroll);
+    scrollContainer.removeEventListener('wheel', handleAlbumScroll);
   }
 });
 </script>
