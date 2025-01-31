@@ -56,11 +56,13 @@
           transition: `padding-top ${!isCollapsed ? '0.8s' : '1.2s'} ease`,
         }"
       >
-        <KeytoneAlbum
-          v-if="setting_store.mainHome.selectedKeyTonePkg"
-          :key="setting_store.mainHome.selectedKeyTonePkg"
-          ref="keytoneAlbumRef"
-        />
+        <div :class="{ 'hide-scrollbar': isAtTop }" class="keytone-album-container">
+          <KeytoneAlbum
+            v-if="setting_store.mainHome.selectedKeyTonePkg"
+            :key="setting_store.mainHome.selectedKeyTonePkg"
+            ref="keytoneAlbumRef"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -80,6 +82,7 @@ const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
 const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
 const isCollapsed = ref(false);
 let lastScrollTop = 0;
+const isAtTop = ref(true);
 
 const blur = () => {
   setTimeout(() => {
@@ -97,6 +100,9 @@ const handleAlbumScroll = (event: Event) => {
 
   const currentScroll = scrollableElement.scrollTop;
   const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+
+  // 更新是否在顶部的状态
+  isAtTop.value = currentScroll === 0;
 
   // 在顶部继续向上滚动时展开
   if (currentScroll === 0 && event instanceof WheelEvent && event.deltaY < 0 && isCollapsed.value) {
@@ -190,5 +196,16 @@ onUnmounted(() => {
 .content-wrapper {
   will-change: padding-top;
   position: relative;
+}
+
+.keytone-album-container {
+  &.hide-scrollbar :deep(.q-scrollarea__thumb) {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  :deep(.q-scrollarea__thumb) {
+    transition: opacity 0.3s ease;
+  }
 }
 </style>
