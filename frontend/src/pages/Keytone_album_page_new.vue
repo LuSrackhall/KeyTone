@@ -59,6 +59,7 @@
         <KeytoneAlbum
           v-if="setting_store.mainHome.selectedKeyTonePkg"
           :key="setting_store.mainHome.selectedKeyTonePkg"
+          ref="keytoneAlbumRef"
         />
       </div>
     </div>
@@ -71,12 +72,15 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 const main_store = useMainStore();
 const setting_store = useSettingStore();
-
 const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
+const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
+const isCollapsed = ref(false);
+let lastScrollTop = 0;
+
 const blur = () => {
   setTimeout(() => {
     selectedKeyTonePkgRef?.value?.blur();
@@ -86,8 +90,43 @@ const blur = () => {
 
 console.log('main_store.keyTonePkgOptions', main_store.keyTonePkgOptions);
 
-// 确保 isCollapsed 的初始值为 false
-const isCollapsed = ref(false);
+// 监听 KeytoneAlbum 内部的滚动
+const handleAlbumScroll = (event: Event) => {
+  const scrollableElement = (event.target as HTMLElement).closest('.q-scrollarea__container');
+  if (!scrollableElement) return;
+
+  const currentScroll = scrollableElement.scrollTop;
+  const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+
+  // 向下滚动时收起
+  if (currentScroll > lastScrollTop && !isCollapsed.value) {
+    // 如果已经滚动到底部，立即收起
+    if (currentScroll >= maxScroll) {
+      isCollapsed.value = true;
+    } else {
+      // 否则延迟500ms后收起
+      setTimeout(() => {
+        isCollapsed.value = true;
+      }, 500);
+    }
+  }
+
+  lastScrollTop = currentScroll;
+};
+
+onMounted(() => {
+  const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
+  if (scrollContainer) {
+    scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
+  }
+});
+
+onUnmounted(() => {
+  const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
+  if (scrollContainer) {
+    scrollContainer.removeEventListener('scroll', handleAlbumScroll);
+  }
+});
 </script>
 
 <style lang="scss" scoped>
