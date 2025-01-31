@@ -98,6 +98,12 @@ const handleAlbumScroll = (event: Event) => {
   const currentScroll = scrollableElement.scrollTop;
   const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
 
+  // 在顶部继续向上滚动时展开
+  if (currentScroll === 0 && event instanceof WheelEvent && event.deltaY < 0 && isCollapsed.value) {
+    isCollapsed.value = false;
+    return;
+  }
+
   // 向下滚动时收起
   if (
     (currentScroll > lastScrollTop ||
