@@ -47,11 +47,8 @@
       </div>
     </transition>
 
-    <div
-      class="transition-wrapper"
-      :style="isAnimating ? { transform: !isCollapsed ? 'translateY(0)' : 'translateY(-60px)' } : {}"
-    >
-      <!-- 引入键音包编辑组件 -->
+    <div>
+      <!-- 引入键音包编辑组件 (v-if保证了, 当键音包未被选中时, 不会引入键音包编辑组件。 :key保证了, 当键音包被切换时, 会重新引入键音包编辑组件。)-->
       <KeytoneAlbum v-if="setting_store.mainHome.selectedKeyTonePkg" :key="setting_store.mainHome.selectedKeyTonePkg" />
     </div>
   </div>
@@ -63,7 +60,7 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 const main_store = useMainStore();
 const setting_store = useSettingStore();
@@ -80,19 +77,6 @@ console.log('main_store.keyTonePkgOptions', main_store.keyTonePkgOptions);
 
 // 确保 isCollapsed 的初始值为 false
 const isCollapsed = ref(false);
-const isAnimating = ref(false);
-
-watch(isCollapsed, (newValue) => {
-  if (newValue) {
-    isAnimating.value = true;
-    // 在动画完成后立即执行
-    setTimeout(() => {
-      isAnimating.value = false;
-    }, 800);
-  } else {
-    isAnimating.value = true;
-  }
-});
 </script>
 
 <style lang="scss" scoped>
@@ -103,7 +87,7 @@ watch(isCollapsed, (newValue) => {
 // 滑动动画
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.8s ease;
+  transition: all 0.3s ease;
 }
 
 .slide-enter-from,
@@ -147,12 +131,5 @@ watch(isCollapsed, (newValue) => {
   border-bottom: 2px solid white;
   transform: rotate(45deg);
   margin-top: -4px;
-}
-
-.transition-wrapper {
-  transition: transform 1.8s ease;
-  &[style=''] {
-    transition: none;
-  }
 }
 </style>
