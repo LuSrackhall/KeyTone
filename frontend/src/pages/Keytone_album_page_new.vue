@@ -75,7 +75,7 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 const main_store = useMainStore();
 const setting_store = useSettingStore();
@@ -123,12 +123,32 @@ const handleAlbumScroll = (event: Event) => {
   lastScrollTop = currentScroll;
 };
 
-onMounted(() => {
-  const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
-  if (scrollContainer) {
-    scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
-    scrollContainer.addEventListener('wheel', handleAlbumScroll, { passive: true });
+// 添加事件监听器的函数
+const setupScrollListeners = () => {
+  // 给一点延时确保 DOM 已更新
+  setTimeout(() => {
+    const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
+    if (scrollContainer) {
+      // 先移除可能存在的旧监听器
+      scrollContainer.removeEventListener('scroll', handleAlbumScroll);
+      scrollContainer.removeEventListener('wheel', handleAlbumScroll);
+      // 添加新的监听器
+      scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
+      scrollContainer.addEventListener('wheel', handleAlbumScroll, { passive: true });
+    }
+  }, 100);
+};
+
+// 监听键音包变化
+watch(
+  () => setting_store.mainHome.selectedKeyTonePkg,
+  () => {
+    setupScrollListeners();
   }
+);
+
+onMounted(() => {
+  setupScrollListeners();
 });
 
 onUnmounted(() => {
