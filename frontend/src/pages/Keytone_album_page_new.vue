@@ -7,49 +7,60 @@
       </q-btn>
     </div>
 
-    <!-- 使用 Vue 的过渡组件 -->
-    <transition name="slide">
-      <div v-show="!isCollapsed" class="selector-container w-[88%] ml-[6.2%] mr-[5.8%] pt-[5%] relative">
-        <q-select
-          v-model="setting_store.mainHome.selectedKeyTonePkg"
-          :options="main_store.keyTonePkgOptions"
-          :option-label="(item: any) => {
-            return main_store.keyTonePkgOptionsName.get(item)
-          }"
-          :label="$t('mainHome.selectedKeySoundAlbum')"
-          :virtual-scroll-slice-size="999999"
-          outlined
-          dense
-          emit-value
-          map-options
-          ref="selectedKeyTonePkgRef"
-          @popup-hide="blur()"
+    <!-- 选择器容器使用绝对定位 -->
+    <div class="relative">
+      <transition name="slide">
+        <div
+          v-show="!isCollapsed"
+          class="selector-container absolute w-[88%] ml-[6.2%] mr-[5.8%] pt-[5%]"
+          style="top: 0; left: 0; right: 0; z-index: 1"
         >
-          <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
-            <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
-            <q-icon
-              name="cancel"
-              @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
-              class="cursor-pointer text-lg"
-            />
-          </template>
-        </q-select>
+          <q-select
+            v-model="setting_store.mainHome.selectedKeyTonePkg"
+            :options="main_store.keyTonePkgOptions"
+            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+            :label="$t('mainHome.selectedKeySoundAlbum')"
+            :virtual-scroll-slice-size="999999"
+            outlined
+            dense
+            emit-value
+            map-options
+            ref="selectedKeyTonePkgRef"
+            @popup-hide="blur()"
+          >
+            <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
+              <q-icon
+                name="cancel"
+                @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
+                class="cursor-pointer text-lg"
+              />
+            </template>
+          </q-select>
 
-        <!-- 收起按钮 -->
-        <q-btn
-          flat
-          round
-          color="grey"
-          icon="expand_less"
-          class="collapse-btn absolute -bottom-6 left-1/2 transform -translate-x-1/2"
-          @click="isCollapsed = true"
+          <q-btn
+            flat
+            round
+            color="grey"
+            icon="expand_less"
+            class="collapse-btn absolute -bottom-6 left-1/2 transform -translate-x-1/2"
+            @click="isCollapsed = true"
+          />
+        </div>
+      </transition>
+
+      <!-- 内容区域添加过渡padding -->
+      <div
+        class="content-wrapper"
+        :style="{
+          paddingTop: !isCollapsed ? '60px' : '0',
+          transition: `padding-top ${!isCollapsed ? '0.8s' : '1.2s'} ease`,
+        }"
+      >
+        <KeytoneAlbum
+          v-if="setting_store.mainHome.selectedKeyTonePkg"
+          :key="setting_store.mainHome.selectedKeyTonePkg"
         />
       </div>
-    </transition>
-
-    <div>
-      <!-- 引入键音包编辑组件 (v-if保证了, 当键音包未被选中时, 不会引入键音包编辑组件。 :key保证了, 当键音包被切换时, 会重新引入键音包编辑组件。)-->
-      <KeytoneAlbum v-if="setting_store.mainHome.selectedKeyTonePkg" :key="setting_store.mainHome.selectedKeyTonePkg" />
     </div>
   </div>
 </template>
@@ -87,7 +98,7 @@ const isCollapsed = ref(false);
 // 滑动动画
 .slide-enter-active,
 .slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.8s ease;
 }
 
 .slide-enter-from,
@@ -131,5 +142,10 @@ const isCollapsed = ref(false);
   border-bottom: 2px solid white;
   transform: rotate(45deg);
   margin-top: -4px;
+}
+
+.content-wrapper {
+  will-change: padding-top;
+  position: relative;
 }
 </style>
