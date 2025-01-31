@@ -104,21 +104,13 @@ const handleAlbumScroll = (event: Event) => {
     return;
   }
 
-  // 向下滚动时收起
+  // 向下滚动时立即收起
   if (
     (currentScroll > lastScrollTop ||
       (currentScroll >= maxScroll && event instanceof WheelEvent && event.deltaY > 0)) &&
     !isCollapsed.value
   ) {
-    // 如果已经滚动到底部，立即收起
-    if (currentScroll >= maxScroll) {
-      isCollapsed.value = true;
-    } else {
-      // 否则延迟500ms后收起
-      setTimeout(() => {
-        isCollapsed.value = true;
-      }, 500);
-    }
+    isCollapsed.value = true;
   }
 
   lastScrollTop = currentScroll;
