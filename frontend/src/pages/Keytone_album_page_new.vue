@@ -38,6 +38,7 @@
           </q-select>
 
           <q-btn
+            v-if="setting_store.mainHome.selectedKeyTonePkg"
             flat
             round
             color="grey"
