@@ -179,6 +179,15 @@
                   label="管理已载入的源文件"
                   @click="
                     () => {
+                      if (soundFileList.length === 0) {
+                        q.notify({
+                          type: 'warning',
+                          message: '当前没有可管理的源文件',
+                          position: 'top',
+                        });
+                        return;
+                      }
+
                       editSoundFile = !editSoundFile;
                     }
                   "
