@@ -3497,8 +3497,7 @@
                       </div>
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat label="确定" color="primary" v-close-popup />
-                      <q-btn flat label="取消" color="primary" v-close-popup />
+                      <q-btn flat label="Close" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
