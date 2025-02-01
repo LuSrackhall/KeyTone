@@ -4731,9 +4731,17 @@ onBeforeMount(async () => {
         });
       }
     });
-
+    const updateKeyToneAlbumListName = debounce(
+      () => {
+        main_store.GetKeyToneAlbumList();
+      },
+      800,
+      { trailing: true }
+    );
     watch(pkgName, (newVal) => {
       ConfigSet('package_name', pkgName.value);
+      updateKeyToneAlbumListName.cancel();
+      updateKeyToneAlbumListName();
     });
 
     // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
