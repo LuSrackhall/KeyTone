@@ -61,6 +61,8 @@
           <KeytoneAlbum
             v-if="setting_store.mainHome.selectedKeyTonePkg"
             :key="setting_store.mainHome.selectedKeyTonePkg"
+            :pkgPath="setting_store.mainHome.selectedKeyTonePkg"
+            :isCreate="false"
             ref="keytoneAlbumRef"
           />
         </div>

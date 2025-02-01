@@ -3531,8 +3531,14 @@ const { t } = useI18n();
 const $t = t;
 const app_store = useAppStore();
 
-// 此路径没必要进行状态管理, 当用户退出此页面时, 自动清除即符合逻辑。
-const pkgPath = nanoid();
+export interface Props {
+  pkgPath: string;
+  isCreate: boolean;
+}
+const props = withDefaults(defineProps<Props>(), {
+  pkgPath: nanoid(),
+  isCreate: true,
+});
 
 // 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
 const pkgName = ref<string>($t('KeyToneAlbum.new.name.defaultValue'));
@@ -4638,13 +4644,13 @@ watch(keyUpSingleKeySoundEffectSelect_edit, (newVal, oldVal) => {
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
   // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
-  await LoadConfig(pkgPath, true);
+  await LoadConfig(props.pkgPath, props.isCreate);
 
-  // 使用i18n, 初始化键音包名称, 在此处手动设置, 是为了防止后续初始化将sdk中默认的名称, 被初始化到pkgName中。
-  // 因此在初始化前按照提前设置好的i18n做为默认名称, 故手动发送请求以在数据初始化前更改sdk中的默认名称。
-  await ConfigSet('package_name', $t('KeyToneAlbum.new.name.defaultValue'));
+  if (props.isCreate) {
+    await ConfigSet('package_name', $t('KeyToneAlbum.new.name.defaultValue'));
 
-  await ConfigSet('audio_pkg_uuid', pkgPath);
+    await ConfigSet('audio_pkg_uuid', props.pkgPath);
+  }
 
   // 数据初始化
   await initData();
