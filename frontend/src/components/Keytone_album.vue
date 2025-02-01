@@ -4712,6 +4712,11 @@ onBeforeMount(async () => {
         }>;
       }
 
+      if (data.key_tone?.is_enable_embedded_test_sound !== undefined) {
+        isEnableEmbeddedTestSound.down = data.key_tone.is_enable_embedded_test_sound.down;
+        isEnableEmbeddedTestSound.up = data.key_tone.is_enable_embedded_test_sound.up;
+      }
+
       // 后续极大可能会删除它(单键声效的Temp的单键名称)(TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证)
       if (data.custom_single_keys_name !== undefined) {
         // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
