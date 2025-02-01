@@ -4641,6 +4641,9 @@ watch(keyUpSingleKeySoundEffectSelect_edit, (newVal, oldVal) => {
   }
 });
 
+// 存储事件监听器的引用，以便后续移除
+let messageAudioPackageListener: (e: MessageEvent) => void;
+
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
   // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
@@ -4903,20 +4906,20 @@ onBeforeMount(async () => {
     trailing: true,
   });
 
-  app_store.eventSource.addEventListener(
-    'messageAudioPackage',
-    function (e) {
-      console.debug('后端钩子函数中的值 = ', e.data);
+  // 定义事件监听器
+  messageAudioPackageListener = function (e) {
+    console.debug('后端钩子函数中的值 = ', e.data);
 
-      const data = JSON.parse(e.data);
+    const data = JSON.parse(e.data);
 
-      if (data.key === 'get_all_value') {
-        debounced_sseDataToSettingStore.cancel;
-        debounced_sseDataToSettingStore(data.value);
-      }
-    },
-    false
-  );
+    if (data.key === 'get_all_value') {
+      debounced_sseDataToSettingStore.cancel;
+      debounced_sseDataToSettingStore(data.value);
+    }
+  };
+
+  // 添加事件监听
+  app_store.eventSource.addEventListener('messageAudioPackage', messageAudioPackageListener, false);
 });
 
 // 在退出创建键音包的页面后, 载入 持久化的 用户选择的 键音包。(在 创建 键音包界面 退出时, 重新加载 用户持久化至 设置 文件中的 键音包。)
@@ -4926,6 +4929,11 @@ onUnmounted(() => {
   main_store.GetKeyToneAlbumList();
   // 卸载组件后, 重新载入持久化配置中用户所选的键音包
   main_store.LoadSelectedKeyTonePkg();
+
+  // 移除事件监听
+  if (messageAudioPackageListener) {
+    app_store.eventSource.removeEventListener('messageAudioPackage', messageAudioPackageListener);
+  }
 });
 </script>
 
