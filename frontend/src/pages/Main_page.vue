@@ -418,7 +418,7 @@ function openExternal(url: string) {
 </script>
 
 <style lang="scss" scoped>
-.select-component-label-show {
+:deep(.q-field__native) {
   // 对溢出的情况, 采取滚动策略
   @apply max-w-full overflow-auto text-ellipsis whitespace-nowrap;
   // 隐藏滚动策略的滚动条。
