@@ -46,13 +46,18 @@
       </q-avatar>
     </div>
 
-    <div :class="['w-[58%] flex flex-col ml-[21.8%] mr-[20.2%]']">
+    <div :class="['flex flex-col']">
       <q-select
+        :class="[
+          'w-[58%] ml-[21.8%] mr-[20.2%]',
+          // 对溢出的情况, 采取滚动策略
+          'max-w-full overflow-auto text-ellipsis whitespace-nowrap',
+          // 隐藏滚动策略的滚动条。
+          '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+        ]"
         v-model="setting_store.mainHome.selectedKeyTonePkg"
         :options="main_store.keyTonePkgOptions"
-        :option-label="(item: any) => {
-          return main_store.keyTonePkgOptionsName.get(item)
-        }"
+        :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
         :label="$t('mainHome.selectedKeySoundAlbum')"
         :virtual-scroll-slice-size="999999"
         outlined
