@@ -1750,9 +1750,9 @@
               step === 99 &&
               isEnableEmbeddedTestSound.down === true &&
               isEnableEmbeddedTestSound.up === true &&
-              keyDownUnifiedSoundEffectSelect === undefined &&
-              keyUpUnifiedSoundEffectSelect === undefined &&
-              selectedSingleKeys.length === 0
+              !keyDownUnifiedSoundEffectSelect &&
+              !keyUpUnifiedSoundEffectSelect &&
+              keysWithSoundEffect.size === 0
             "
             :header-nav="false"
             @click="
