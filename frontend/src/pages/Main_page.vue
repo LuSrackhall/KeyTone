@@ -420,7 +420,7 @@ function openExternal(url: string) {
 <style lang="scss" scoped>
 :deep(.q-field__native) {
   // 对溢出的情况, 采取滚动策略
-  @apply max-w-full overflow-auto text-ellipsis whitespace-nowrap;
+  @apply max-w-full overflow-auto whitespace-nowrap;
   // 隐藏滚动策略的滚动条。
   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
 }
