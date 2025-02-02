@@ -38,7 +38,20 @@
         <div>对某个特定按键单独设置键音</div> -->
 
         <q-stepper v-model="step" vertical header-nav color="primary" animated>
-          <div :class="['text-center font-semibold text-lg text-nowrap']">{{ pkgName }}</div>
+          <div
+            :class="[
+              // 字体
+              'font-semibold text-lg',
+              // 对溢出的情况, 采取滚动策略
+              'max-w-66 overflow-auto whitespace-nowrap text-nowrap',
+              // 隐藏滚动策略的滚动条。
+              '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+              // 居中对齐
+              'mx-auto',
+            ]"
+          >
+            {{ pkgName }}
+          </div>
           <q-step
             :name="1"
             title="载入音频文件"
