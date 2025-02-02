@@ -4728,6 +4728,18 @@ onBeforeMount(async () => {
         isEnableEmbeddedTestSound.up = data.key_tone.is_enable_embedded_test_sound.up;
       }
 
+      if (data.key_tone?.global !== undefined) {
+        // TIPS: 由于convertValue所依赖的soundFileList和keySoundList可能还未初始化完毕,因此暂时短暂的等待一定时间, 以保证其初始化完毕。(当然, 这种延迟仍不可靠, 因为不确定对方何时初始化完毕, 但总比不延迟好)
+        //       * 其中 soundFileList 所依赖的audioFiles 在此之前已经初始化完毕, 但后续步骤仍有可能在此步之后才完成。
+        //       * 其中 keySoundList 所依赖的更新条件, 是sse的初次触发。(而sse的初次触发是因为后端在初始化配置文件的监听时, 会自动调用一次。)
+        setTimeout(() => {
+          keyDownUnifiedSoundEffectSelect.value = convertValue(
+            data.key_tone.global.down ? data.key_tone.global.down : ''
+          );
+          keyUpUnifiedSoundEffectSelect.value = convertValue(data.key_tone.global.up ? data.key_tone.global.up : '');
+        }, 300);
+      }
+
       // 后续极大可能会删除它(单键声效的Temp的单键名称)(TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证)
       if (data.custom_single_keys_name !== undefined) {
         // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
