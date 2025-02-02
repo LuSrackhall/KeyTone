@@ -231,4 +231,12 @@ onUnmounted(() => {
     transition: opacity 0.3s ease;
   }
 }
+
+// 对选择器组件的label溢出情况, 采取滚动策略
+:deep(.q-field__native) {
+  // 对溢出的情况, 采取滚动策略
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  // 隐藏滚动策略的滚动条。
+  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+}
 </style>
