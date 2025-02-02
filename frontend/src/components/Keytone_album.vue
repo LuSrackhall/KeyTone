@@ -4705,6 +4705,17 @@ onBeforeMount(async () => {
           value: value,
         }));
         audioFiles.value = audioFilesArray;
+        const tempSoundFileList: Array<any> = [];
+
+        audioFiles.value.forEach((item) => {
+          // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
+          if (item.value.name !== undefined && item.value.name !== null) {
+            Object.entries(item.value.name).forEach(([name_id, name]) => {
+              tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
+            });
+          }
+        });
+        soundFileList.value = tempSoundFileList;
       }
 
       // 已载入的声音列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
