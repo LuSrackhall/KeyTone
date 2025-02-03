@@ -255,20 +255,12 @@
                         <q-badge
                           transparent
                           color="orange"
-                          :label="selectedSoundFile.name + selectedSoundFile.type"
-                          :class="['absolute  overflow-visible']"
-                          :style="{
-                            // left: 88% 是刚好在最右边的, 但是随着字符串的增长, 左侧不会动, 仅向右追加溢出。
-                            // 通过更改left的值, 可以通过左侧的溢出量, 来控制左侧的余量, 尽可能保持先向左增长, 右侧不动。
-                            // 当左侧占整体的比例达到一定程度后, 右侧开始追加, 左侧不动。
-                            // 计算长度前, 排除空格, 因为空格会引起长度计算错误
-                            // TODO: 这个算法只是临时的, 后续可通过计算其真实的实际宽度, 来决定偏移距离, 以真正做到完全可控的占右侧70%
-                            // TODO: 如果需要实现多选'编辑/删除'功能, 则需要将整个卡片, 抽离成独立的组件, 方便后续维护。
-                            left:
-                              selectedSoundFile.name.replace(/\s/g, '').length <= 20
-                                ? 88 - selectedSoundFile.name.replace(/\s/g, '').length * 2 + '%'
-                                : 88 - 20 * 2 + '%',
-                          }"
+                          :label="selectedSoundFile.type"
+                          :class="[
+                            'absolute  overflow-visible ',
+                            // 'left-0',
+                            'right-0',
+                          ]"
                         />
                         <q-card-section
                           v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
@@ -616,7 +608,7 @@
                       v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
                     >
                       <q-card :class="['flex flex-col px-3 pb-3']">
-                        <q-badge
+                        <!-- <q-badge
                           transparent
                           color="orange"
                           :label=" selectedSound?.soundValue.name === ''
@@ -633,7 +625,7 @@
                                     ']'
                                 : selectedSound?.soundValue.name"
                           :class="['absolute  overflow-visible']"
-                        />
+                        /> -->
                         <q-card-section :class="['p-b-1 mt-3']">
                           <q-input
                             outlined
@@ -1330,16 +1322,16 @@
                     </q-card-section>
                     <!-- 以卡片的形式, 展示选择的按键音 -->
                     <q-card-section
-                      :class="['flex flex-col m-t-3']"
+                      :class="['flex flex-col -m-t-2']"
                       v-if="selectedKeySound?.keySoundKey !== '' && selectedKeySound !== undefined"
                     >
                       <q-card :class="['flex flex-col px-3 pb-3']">
-                        <q-badge
+                        <!-- <q-badge
                           transparent
                           color="orange"
                           :label="selectedKeySound.keySoundValue.name"
                           :class="['absolute overflow-visible']"
-                        />
+                        /> -->
                         <q-card-section :class="['p-b-1 mt-3']">
                           <q-input
                             outlined
@@ -1349,7 +1341,7 @@
                             label="按键音名称"
                             :placeholder="'新的按键音'"
                           />
-                          <div class="flex flex-col mt-3">
+                          <div class="flex flex-col mt-1">
                             <q-btn
                               :class="['bg-zinc-300 my-7 w-70% self-center']"
                               label="配置按下声音"
@@ -1674,7 +1666,7 @@
                             </q-dialog>
                           </div>
                         </q-card-section>
-                        <q-card-section :class="['flex justify-center gap-4']">
+                        <q-card-section :class="['flex justify-center gap-4 -mt-3']">
                           <q-btn
                             dense
                             color="primary"
