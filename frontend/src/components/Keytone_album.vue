@@ -220,7 +220,26 @@
                         :option-label="(item) => item.name + item.type"
                         label="选择要管理的源文件"
                         dense
-                      />
+                      >
+                        <!-- 添加清除按钮 -->
+                        <template
+                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
+                          v-slot:append
+                        >
+                          <q-icon
+                            name="cancel"
+                            @click.stop.prevent="
+                              selectedSoundFile = {
+                                sha256: '',
+                                name_id: '',
+                                name: '',
+                                type: '',
+                              }
+                            "
+                            class="cursor-pointer text-lg"
+                          />
+                        </template>
+                      </q-select>
                       <!-- option-label="name"
                        如果 :options 的元素类型是对象, 则有必要指定其中某个类型为字符串的字段作为label显示。
                        注意, 列表中显示的label名称, 是根据此字段来显示的。
@@ -580,6 +599,7 @@
                       <q-select
                         outlined
                         stack-label
+                        clearable
                         v-model="selectedSound"
                         :options="soundList"
                         :option-label="(item: any) => {
@@ -607,7 +627,7 @@
                       :class="['flex flex-col m-t-3']"
                       v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
                     >
-                      <q-card :class="['flex flex-col px-3 pb-3']">
+                      <q-card :class="['flex flex-col px-3 pb-3']" v-if="selectedSound">
                         <!-- <q-badge
                           transparent
                           color="orange"
@@ -1312,6 +1332,7 @@
                       <q-select
                         outlined
                         stack-label
+                        clearable
                         v-model="selectedKeySound"
                         :options="keySoundList"
                         label="选择要编辑的按键音"
@@ -1325,7 +1346,7 @@
                       :class="['flex flex-col -m-t-2']"
                       v-if="selectedKeySound?.keySoundKey !== '' && selectedKeySound !== undefined"
                     >
-                      <q-card :class="['flex flex-col px-3 pb-3']">
+                      <q-card :class="['flex flex-col px-3 pb-3']" v-if="selectedKeySound">
                         <!-- <q-badge
                           transparent
                           color="orange"
@@ -3902,6 +3923,9 @@ const selectedKeySound = ref<any>();
 
 // 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
 watch(selectedKeySound, () => {
+  if (!selectedKeySound.value) {
+    return;
+  }
   console.debug('观察selectedKeySound=', selectedKeySound.value);
   selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
     /**
@@ -4999,5 +5023,10 @@ onUnmounted(() => {
   @apply max-w-full overflow-auto whitespace-nowrap  text-clip;
   // 隐藏滚动策略的滚动条。
   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+}
+
+// 对本组件选择框添加的可清楚图标的大小做设置
+:deep(.q-field__focusable-action) {
+  @apply text-lg;
 }
 </style>
