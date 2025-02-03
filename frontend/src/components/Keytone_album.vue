@@ -570,7 +570,7 @@
                 >
                 </q-btn>
                 <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
-                  <q-card>
+                  <q-card class="min-w-[90%]">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
                     >
@@ -677,7 +677,7 @@
                             </template>
                           </q-input>
                         </q-card-section>
-                        <q-card-section :class="['p-b-1']">
+                        <q-card-section :class="['p-b-1 w-68']">
                           <q-select
                             outlined
                             stack-label
