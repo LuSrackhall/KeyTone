@@ -206,7 +206,7 @@
                   "
                 ></q-btn>
                 <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
-                  <q-card :class="['p-x-3']">
+                  <q-card :class="['p-x-3  w-[96%]']">
                     <q-card-section class="row items-center q-pb-none text-h6"> 管理已载入的源文件 </q-card-section>
 
                     <!-- <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section> -->
@@ -220,6 +220,7 @@
                         :option-label="(item) => item.name + item.type"
                         label="选择要管理的源文件"
                         dense
+                        popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       >
                         <!-- 添加清除按钮 -->
                         <template
@@ -443,6 +444,7 @@
                         :option-label="(item) => item.name + item.type"
                         label="声音的源文件"
                         dense
+                        popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       />
                     </q-card-section>
 
@@ -601,6 +603,7 @@
                         stack-label
                         clearable
                         v-model="selectedSound"
+                        popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                         :options="soundList"
                         :option-label="(item: any) => {
                           // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
@@ -701,6 +704,7 @@
                           <q-select
                             outlined
                             stack-label
+                            popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="selectedSound.soundValue.source_file_for_sound"
                             :options="soundFileList"
                             :option-label="(item: any) => {
@@ -945,6 +949,7 @@
                               <!-- 使用选择框选择模式 -->
                               <q-select
                                 outlined
+                                popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 stack-label
                                 v-model="playModeForDown"
                                 :options="playModeOptions"
@@ -958,6 +963,7 @@
                                 outlined
                                 stack-label
                                 v-model="selectedSoundsForDown"
+                                popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="downSoundList"
                                 :option-label="(item: any) => {
                                   if (item.type === 'audio_files') {
@@ -1112,6 +1118,7 @@
                               <q-select
                                 outlined
                                 stack-label
+                                popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 v-model="playModeForUp"
                                 :options="playModeOptions"
                                 label="选择播放模式"
@@ -1124,6 +1131,7 @@
                                 outlined
                                 stack-label
                                 v-model="selectedSoundsForUp"
+                                popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="upSoundList"
                                 :option-label="(item: any) => {
                                   if (item.type === 'audio_files') {
@@ -1333,6 +1341,7 @@
                         outlined
                         stack-label
                         clearable
+                        popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                         v-model="selectedKeySound"
                         :options="keySoundList"
                         label="选择要编辑的按键音"
@@ -1377,6 +1386,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.mode"
                                     :options="playModeOptions"
                                     label="选择播放模式"
@@ -1387,6 +1397,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.value"
                                     :options="edit_downSoundList"
                                     :option-label="
@@ -1537,6 +1548,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    popup-content-class="w-[1%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.mode"
                                     :options="playModeOptions"
                                     label="选择播放模式"
@@ -1547,6 +1559,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.value"
                                     :options="edit_upSoundList"
                                     :option-label="
@@ -1856,6 +1869,7 @@
                           <q-select
                             outlined
                             stack-label
+                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyDownUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
                             :option-label="(item: any) => {
@@ -1920,6 +1934,7 @@
                           <q-select
                             outlined
                             stack-label
+                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyUpUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
                             :option-label="(item: any) => {
@@ -2306,6 +2321,7 @@
                                   <q-select
                                     label="选择单键(数量任意)"
                                     ref="singleKeysSelectRef"
+                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedSingleKeys"
                                     :options="filterOptions"
                                     :virtual-scroll-slice-size="
@@ -2422,6 +2438,7 @@
                                             v-show="isDownSoundEffectSelectEnabled"
                                             outlined
                                             stack-label
+                                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyDownSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
                                             :option-label="(item: any) => {
@@ -2487,6 +2504,7 @@
                                             v-show="isUpSoundEffectSelectEnabled"
                                             outlined
                                             stack-label
+                                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyUpSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
                                             :option-label="(item: any) => {
@@ -3003,6 +3021,7 @@
                                       <q-select
                                         outlined
                                         stack-label
+                                        popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyDownSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
                                         :option-label="(item: any) => {
@@ -3068,6 +3087,7 @@
                                       <q-select
                                         outlined
                                         stack-label
+                                        popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyUpSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
                                         :option-label="(item: any) => {
