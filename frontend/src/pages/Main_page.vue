@@ -425,4 +425,30 @@ function openExternal(url: string) {
   // 隐藏滚动策略的滚动条。
   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
 }
+
+// 实际上, 在此处通过global来更改的.q-field__native, 已经覆盖了:deep(.q-field__native)的样式, 因此上方(包括其它文件中的):deep(.q-field__native)的样式可以删除。
+// global(或者说不带scoped的style)的影响范围是全局的, 包括其它vue文件中的内容也将会受此影响。
+:global(.q-field__native) {
+  // 对溢出的情况, 采取滚动策略
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  // 隐藏滚动策略的滚动条。
+  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+}
 </style>
+
+<!-- 可以通过在 含有 scoped 的style中, 通过:global 来使用, 效果与下方相同 -->
+<!-- <style lang="scss">
+.q-field__native {
+  // 对溢出的情况, 采取滚动策略
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  // 隐藏滚动策略的滚动条。
+  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+}
+</style> -->
+
+<!--
+TIPS: :global 和 :deep 的作用范围不同：
+      * :global 作用于全局，会跳过 Vue 的 scoped CSS 限制
+      * :deep 只能作用于当前组件及其子组件的 DOM 树内(即需要受到当前组件的 scoped CSS 限制)
+      所以在 :global 中使用 :deep 是没有意义的，因为 :global 已经跳过了作用域限制。
+-->
