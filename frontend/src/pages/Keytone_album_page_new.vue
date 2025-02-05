@@ -233,7 +233,7 @@ onUnmounted(() => {
   }
 }
 
-// 对选择器组件的label溢出情况, 采取滚动策略
+// 对选择器组件的label溢出情况, 采取滚动策略 (为防止刷新后样式丢失问题, 而加的。)
 :deep(.q-field__native) {
   // 对溢出的情况, 采取滚动策略
   @apply max-w-full overflow-auto whitespace-nowrap;
@@ -249,5 +249,17 @@ onUnmounted(() => {
 :deep(.q-placeholder) {
   // 在这里重置q-input组件的输入样式的高度以修复这个问题
   @apply h-auto;
+}
+
+// 为防止刷新后样式丢失问题, 而加的。
+:global(.q-item__section) {
+  /* 对溢出的情况, 采取滚动策略 */
+  @apply max-w-full overflow-auto whitespace-nowrap;
+
+  /* 隐藏滚动策略的滚动条 */
+  // @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+
+  // 添加细微滚动条
+  @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
 }
 </style>
