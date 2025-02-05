@@ -5029,13 +5029,17 @@ onUnmounted(() => {
   @apply cursor-pointer hover:bg-gray-100;
 }
 
-// // 对选择器组件的label溢出情况, 采取滚动策略
-// :deep(.q-field__native) {
-//   // 对溢出的情况, 采取滚动策略
-//   @apply max-w-full overflow-auto whitespace-nowrap;
-//   // 隐藏滚动策略的滚动条。
-//   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
-// }
+// 对选择器组件的label溢出情况, 采取滚动策略
+:deep(.q-field__native) {
+  // 对溢出的情况, 采取滚动策略
+  @apply max-w-full overflow-auto whitespace-nowrap;
+
+  // 隐藏滚动策略的滚动条。
+  // @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+
+  // 添加细微滚动条
+  @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
+}
 
 // 对于多选的, 带芯片的选择框, 某芯片内的名称内容过长的情况, 采取溢出滚动的策略。
 :deep(.ellipsis) {
