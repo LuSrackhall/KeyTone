@@ -419,20 +419,32 @@ function openExternal(url: string) {
 </script>
 
 <style lang="scss" scoped>
-:deep(.q-field__native) {
-  // 对溢出的情况, 采取滚动策略
-  @apply max-w-full overflow-auto whitespace-nowrap;
-  // 隐藏滚动策略的滚动条。
-  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
-}
+// :deep(.q-field__native) {
+//   // 对溢出的情况, 采取滚动策略
+//   @apply max-w-full overflow-auto whitespace-nowrap;
+//   // 隐藏滚动策略的滚动条。
+//   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+// }
 
-// 实际上, 在此处通过global来更改的.q-field__native, 已经覆盖了:deep(.q-field__native)的样式, 因此上方(包括其它文件中的):deep(.q-field__native)的样式可以删除。
-// global(或者说不带scoped的style)的影响范围是全局的, 包括其它vue文件中的内容也将会受此影响。
+// 实际上, 在此处通过global来更改的.q-field__native, 已经覆盖了:deep(.q-field__native)的样式, 因此上方(包括其它文件中的):deep(.q-field__native)的样式可以删除(如果与这里相同的话)。
+// * global(或者说不带scoped的style)的影响范围是全局的, 包括其它vue文件中的内容也将会受此影响。
+//   > 不过这种影响是有前提的, 机这个带有global的组件必须至少加载过一次。 比如a.vue和b.vue为main.vue下的同级别组件, a中拥有global样式, b中没有。
+//   > * 若 main.vue -> b.vue 的话, b.vue将不会受到a.vue的global样式的影响。
+//   > * 若 main.vue -> a.vue -> b.vue 的话, b.vue将会受到a.vue的global样式的影响。
+//   > * 若 main.vue -> a.vue -> b.vue 的话, b.vue将会受到a.vue的global样式的影响, 但此时若在b.vue中进行刷新操作, 则由于刷新后重载的过程中没有加载过a.vue, 因此b.vue将不会受到a.vue的global样式的影响。
+// * 前面提到若是'当前(包括其它)'组件的scoped中, 拥有与 global(或者说不带scoped的style)相同的样式, 则可以省略 '当前(包括其它)'组件的scoped的这些样式。
+//   > 但重要的是, 这种省略是有条件的, 即这些样式必须与global(或者说不带scoped的style)中的样式相同, 否则 scoped 中的样式将会覆盖 global 的样式。
+// 此处使用:global(.q-field__native)的原因是:deep(.q-field__native)无法覆盖当前页面中quasar的选择器的菜单, 以对话框展开时对话框上方的已选择框中的对应样式。
+// * 但这样做的弊端, 是有可能影响到其它文件。 因此, 如果发现其它文件受影响, 则需要最组件对应的scoped中, 使用相同的类型, 来恢复global造成的影响。
 :global(.q-field__native) {
   // 对溢出的情况, 采取滚动策略
   @apply max-w-full overflow-auto whitespace-nowrap;
+
   // 隐藏滚动策略的滚动条。
-  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+  // @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+
+  // 添加细微滚动条
+  @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
 }
 
 :global(.q-item__section) {

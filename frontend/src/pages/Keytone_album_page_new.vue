@@ -233,11 +233,17 @@ onUnmounted(() => {
   }
 }
 
-// 对选择器组件的label溢出情况, 采取滚动策略
-:deep(.q-field__native) {
-  // 对溢出的情况, 采取滚动策略
-  @apply max-w-full overflow-auto whitespace-nowrap;
-  // 隐藏滚动策略的滚动条。
-  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+// // 对选择器组件的label溢出情况, 采取滚动策略
+// :deep(.q-field__native) {
+//   // 对溢出的情况, 采取滚动策略
+//   @apply max-w-full overflow-auto whitespace-nowrap;
+//   // 隐藏滚动策略的滚动条。
+//   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+// }
+
+// 用于修复主页面全局的:global(.q-field__native)中的h-5.8这个样式影响了当前页面中的q-input的问题
+:deep(.q-placeholder) {
+  // 在这里重置q-input组件的输入样式的高度以修复这个问题
+  @apply h-auto;
 }
 </style>
