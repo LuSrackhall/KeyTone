@@ -12,9 +12,90 @@
       <transition name="slide">
         <div
           v-show="!isCollapsed"
-          class="selector-container absolute w-[88%] ml-[6.2%] mr-[5.8%] pt-[5%]"
+          class="selector-container absolute w-[88%] ml-[6.2%] mr-[5.8%]"
           style="top: 0; left: 0; right: 0; z-index: 1"
         >
+          <!-- 优化按钮组布局 -->
+          <div class="flex items-center gap-1.5 mt-0.5 px-1">
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="add"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                新建专辑
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="save_alt"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                导入专辑
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="drive_file_move"
+              color="primary"
+              :disable="!setting_store.mainHome.selectedKeyTonePkg"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                导出专辑
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="delete"
+              color="negative"
+              :disable="!setting_store.mainHome.selectedKeyTonePkg"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                删除专辑
+              </q-tooltip>
+            </q-btn>
+          </div>
+
           <q-select
             v-model="setting_store.mainHome.selectedKeyTonePkg"
             :options="main_store.keyTonePkgOptions"
