@@ -94,9 +94,21 @@ export const useMainStore = defineStore('main', () => {
         // * setting_store.mainHome.selectedKeyTonePkg 由SSE保证,始终与配置文件的相关配置一致。
         // * ConfigGet('audio_pkg_uuid')读取到的uuid, 可能受 新建/编辑 键音包操作的影响, 导致与配置文件中的uuid不一致。
         // * 因此, 此处需要以配置文件中用户选择的键音包uuid为准, 重新加载对应键音包。否则无需重新加载。(比如从设置页面返回主页面时。)
-        LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
-          console.log('重新加载用户所选的键音包成功');
-        });
+        //
+        // 如果用户所选键音包为空, 则没必要进行加载逻辑
+        if (setting_store.mainHome.selectedKeyTonePkg) {
+          LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
+            if (!res) {
+              // 如果LoadConfig加载失败, 说明用户所选的键音包在当前环境下(可能已被外力删除), 因此我们将其置空。
+              setting_store.mainHome.selectedKeyTonePkg = '';
+              console.log(
+                '重新加载持久化中用户所选的键音包失败, 此键音包可能已被破坏, 已清空所选键音包以供用户重新选择。'
+              );
+              return;
+            }
+            console.log('重新加载用户所选的键音包成功');
+          });
+        }
       }
     });
   }

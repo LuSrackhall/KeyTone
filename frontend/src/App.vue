@@ -49,9 +49,21 @@ onBeforeMount(async () => {
   // * > 毕竟此函数内部所依赖的setting_store.mainHome.selectedKeyTonePkg 是由setting_store.settingInitAndRealTimeStorage()调用完成后才给予赋值的。
   // main_store.LoadSelectedKeyTonePkg();// TIPS: 由于函数内部, 还会依赖ConfigGet('audio_pkg_uuid')的返回值, 而首次加载时, sdk中没有任何键音包的加载, 因此会返回错误。
   // 为了防止出现以上TIPS中的报错, 我们首次加载无需判断 ConfigGet('audio_pkg_uuid')的返回值, 也也就是此处直接调用LoadConfig()函数即可。
-  LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
-    console.log('已在首次启动时, 成功加载持久化中用户所选的键音包');
-  });
+  //
+  // 如果用户所选键音包为空, 则没必要进行加载逻辑
+  if (setting_store.mainHome.selectedKeyTonePkg) {
+    LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false).then((res) => {
+      if (!res) {
+        // 如果LoadConfig加载失败, 说明用户所选的键音包在当前环境下(可能已被外力删除), 因此我们将其置空。
+        setting_store.mainHome.selectedKeyTonePkg = '';
+        console.log(
+          '在首次启动时, 加载持久化中用户所选的键音包失败, 此键音包可能已被破坏, 已清空所选键音包以供用户重新选择。'
+        );
+        return;
+      }
+      console.log('已在首次启动时, 成功加载持久化中用户所选的键音包');
+    });
+  }
 
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- save setting start ^_^-_-^_^
 
