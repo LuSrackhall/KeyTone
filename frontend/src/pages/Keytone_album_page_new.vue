@@ -141,21 +141,38 @@
         }"
       >
         <div :class="{ 'hide-scrollbar': isAtTop }" class="keytone-album-container">
-          <KeytoneAlbum
-            v-if="keytoneAlbum_PathOrUUID"
-            :key="
-              (() => {
-                // 为了避免键音包专辑的重复渲染, 这里使用键音包专辑UUID作为key。 (主要造成重复渲染的场景->新建键音专辑时的两个阶段都会更改 keytoneAlbum_PathOrUUID)
-                // 这个表达式就是为了将路径转换为UUID。 此表达式不会对本身就是UUID的情况造成影响。
-                const key_UUID = keytoneAlbum_PathOrUUID.split(q.platform.is.win ? '\\' : '/').pop();
-                console.log('key_UUID', key_UUID);
-                return key_UUID;
-              })()
-            "
-            :pkgPath="keytoneAlbum_PathOrUUID"
-            :isCreate="keytoneAlbum_store.isCreateNewKeytoneAlbum"
-            ref="keytoneAlbumRef"
-          />
+          <div class="relative min-h-[360px]">
+            <KeytoneAlbum
+              v-if="keytoneAlbum_PathOrUUID"
+              v-show="
+                (() => {
+                  // 如果执行创建, 则创建完毕前, 不展示组件。(此时展示一个可以表示加载中的组件)
+                  return !keytoneAlbum_store.isCreateNewKeytoneAlbum;
+                })()
+              "
+              :key="
+                (() => {
+                  // 为了避免键音包专辑的重复渲染, 这里使用键音包专辑UUID作为key。 (主要造成重复渲染的场景->新建键音专辑时的两个阶段都会更改 keytoneAlbum_PathOrUUID)
+                  // 这个表达式就是为了将路径转换为UUID。 此表达式不会对本身就是UUID的情况造成影响。
+                  const key_UUID = keytoneAlbum_PathOrUUID.split(q.platform.is.win ? '\\' : '/').pop();
+                  console.log('key_UUID', key_UUID);
+                  return key_UUID;
+                })()
+              "
+              :pkgPath="keytoneAlbum_PathOrUUID"
+              :isCreate="keytoneAlbum_store.isCreateNewKeytoneAlbum"
+              ref="keytoneAlbumRef"
+            />
+            <div
+              v-if="keytoneAlbum_store.isCreateNewKeytoneAlbum"
+              class="absolute inset-0 flex items-center justify-center bg-transparent"
+            >
+              <!-- <q-spinner-tail color="primary" size="32px" /> -->
+              <!-- <q-spinner-pie color="primary" size="56px" /> -->
+              <!-- <q-spinner-gears color="primary" size="56px" /> -->
+              <q-spinner-cube color="primary" size="56px" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -192,6 +209,7 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 
 // 实现新建专辑的逻辑
 const createNewAlbum = () => {
+  if (keytoneAlbum_store.isCreateNewKeytoneAlbum) return; // 若上个专辑创建未完成, 则不允许再次创建(无需提示用户, )
   keytoneAlbum_store.isCreateNewKeytoneAlbum = true;
   keytoneAlbum_PathOrUUID.value = nanoid();
 };

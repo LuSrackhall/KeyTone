@@ -4712,6 +4712,8 @@ onBeforeMount(async () => {
 
     await ConfigSet('audio_pkg_uuid', props.pkgPath);
 
+    await ConfigSet('key_tone.is_enable_embedded_test_sound', isEnableEmbeddedTestSound);
+
     main_store.GetKeyToneAlbumList(); // 更新键音包选择列表的名称。
 
     setting_store.mainHome.selectedKeyTonePkg = audioPkgPath;
