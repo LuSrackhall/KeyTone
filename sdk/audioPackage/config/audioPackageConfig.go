@@ -53,6 +53,7 @@ var viperRWMutex sync.RWMutex
 func LoadConfig(configPath string, isCreate bool) {
 	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
 	viperRWMutex.RLock()
+	defer viperRWMutex.RUnlock()
 	Viper = nil
 	Viper = viper.New()
 
@@ -107,13 +108,12 @@ func LoadConfig(configPath string, isCreate bool) {
 		logger.Info("音频包diff和增量载入完成")
 	}
 
-	viperRWMutex.RUnlock()
 
 	Viper.OnConfigChange(func(e fsnotify.Event) {
 		go func(Clients_sse_stores *sync.Map) {
 			stores := &Store{
 				Key:   "get_all_value",
-				Value: GetValue("get_all_value"),
+				Value: Viper.AllSettings(),
 			}
 			if(stores.Value == nil){
 				return
