@@ -3577,6 +3577,7 @@ import {
 import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import { useMainStore } from 'src/stores/main-store';
+import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -3584,14 +3585,17 @@ const q = useQuasar();
 const { t } = useI18n();
 const $t = t;
 const app_store = useAppStore();
+const setting_store = useSettingStore();
 
 export interface Props {
   pkgPath: string;
-  isCreate: boolean;
 }
-const props = withDefaults(defineProps<Props>(), {
-  pkgPath: nanoid(),
-  isCreate: true,
+const props = withDefaults(defineProps<Props>(), {});
+
+// isCreate必须是双向传递的, 因为我们要第一时间告诉父组件, 以避免递归重复的创建。
+const isCreate = defineModel('isCreate', { type: Boolean, default: false });
+watch(isCreate, () => {
+  console.log('isCreate++++', isCreate.value);
 });
 
 // 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
@@ -4704,14 +4708,19 @@ let messageAudioPackageListener: (e: MessageEvent) => void;
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
   // 这也是我们加载页面前必须确定的事情, 否则无法进行后续操作, 一切以配置文件为前提。
-  await LoadConfig(props.pkgPath, props.isCreate);
+  const audioPkgPath = (await LoadConfig(props.pkgPath, isCreate.value)).audioPkgPath;
 
-  if (props.isCreate) {
+  // 如果是创建键音包, 则需要执行一定的初始化工作。
+  if (isCreate.value) {
     await ConfigSet('package_name', $t('KeyToneAlbum.new.name.defaultValue'));
 
     await ConfigSet('audio_pkg_uuid', props.pkgPath);
-  }
 
+    main_store.GetKeyToneAlbumList(); // 更新键音包选择列表的名称。
+    // isCreate的重置一定要放在 'package_name' 和 'audio_pkg_uuid'的初始化之后, 以保证创建键音包过程中必要内容的初始化。
+    isCreate.value = false;
+    setting_store.mainHome.selectedKeyTonePkg = audioPkgPath;
+  }
   // 数据初始化
   await initData();
   // 将初始化数据的操作封装成一个函数, 并设置为异步函数, 以便使用await调用

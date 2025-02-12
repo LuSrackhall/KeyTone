@@ -223,16 +223,22 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+
+		var audioPkgPath string
 		if arg.IsCreate {
 			// 如果创建新的键音包, 我们只知道最终的uuid(不知道存放uuid文件夹的路径)
-			audioPackageConfig.LoadConfig(filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID), arg.IsCreate)
+			audioPkgPath = filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID)
 		} else {
-			// 如果加载已有的键音包, 我们只知道键音包的完整路径(包括uuid与即uuid文件夹所在的路径)
-			audioPackageConfig.LoadConfig(arg.AudioPkgUUID, arg.IsCreate)
+			// 如果加载已有的键音包, 我们知道键音包的完整路径(包括uuid与即uuid文件夹所在的路径)
+			audioPkgPath= arg.AudioPkgUUID
 		}
+
+		// 加载键音包配置文件
+  audioPackageConfig.LoadConfig(audioPkgPath, arg.IsCreate)
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
+			"audioPkgPath": audioPkgPath,
 		})
 	})
 

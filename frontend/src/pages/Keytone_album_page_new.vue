@@ -25,6 +25,7 @@
               icon="add"
               color="primary"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="createNewAlbum"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -108,6 +109,7 @@
             map-options
             ref="selectedKeyTonePkgRef"
             @popup-hide="blur()"
+            @update:model-value="editAlbum"
             popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
           >
             <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
@@ -141,10 +143,10 @@
       >
         <div :class="{ 'hide-scrollbar': isAtTop }" class="keytone-album-container">
           <KeytoneAlbum
-            v-if="setting_store.mainHome.selectedKeyTonePkg"
-            :key="setting_store.mainHome.selectedKeyTonePkg"
-            :pkgPath="setting_store.mainHome.selectedKeyTonePkg"
-            :isCreate="false"
+            v-if="keytoneAlbum_PathOrUUID"
+            :key="keytoneAlbum_PathOrUUID + nanoid()"
+            :pkgPath="keytoneAlbum_PathOrUUID"
+            v-model:isCreate="isCreateNewKeytoneAlbum"
             ref="keytoneAlbumRef"
           />
         </div>
@@ -157,6 +159,7 @@
 import { QSelect } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
+import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
@@ -168,6 +171,27 @@ const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
 const isCollapsed = ref(false);
 let lastScrollTop = 0;
 const isAtTop = ref(true);
+
+// 键音包的创建与编辑
+// // 键音包的创建分为两个阶段
+// // * 第一个阶段只有目录UUID名称, 而没有完整路径的阶段, 此时将UUID传入后端创建api, 并获取完整路径的返回值。
+// // * 当创建完毕后, 进入第二阶段, 将完整的路径传递给用户已选择键音包的变量(即setting_store.mainHome.selectedKeyTonePkg)。
+// // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
+// // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
+const keytoneAlbum_PathOrUUID = ref<string>(''); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+const isCreateNewKeytoneAlbum = ref<boolean>(false);
+watch(isCreateNewKeytoneAlbum, (val) => {
+  console.log('isCreateNewKeytoneAlbum+++++', isCreateNewKeytoneAlbum.value);
+});
+// 实现新建专辑的逻辑
+const createNewAlbum = () => {
+  isCreateNewKeytoneAlbum.value = true;
+  keytoneAlbum_PathOrUUID.value = nanoid();
+};
+const editAlbum = (path: string) => {
+  // isCreateNewKeytoneAlbum.value = false; // 这里不需要设置为false, 此变量的控制由KeytoneAlbum组件内部的逻辑来处理
+  keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
+};
 
 const blur = () => {
   setTimeout(() => {

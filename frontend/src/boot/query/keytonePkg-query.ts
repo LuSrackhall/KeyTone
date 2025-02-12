@@ -58,7 +58,7 @@ export async function LoadConfig(audioPkgUUID: string, isCreate: boolean) {
     .then((req) => {
       console.debug('status=', req.status, '->LoadConfig 请求已成功执行并返回->', req.data);
       if (req.data.message === 'ok') {
-        return true;
+        return req.data;
       } else {
         return false;
       }
