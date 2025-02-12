@@ -108,6 +108,9 @@ func LoadConfig(configPath string, isCreate bool) {
 				Key:   "get_all_value",
 				Value: GetValue("get_all_value"),
 			}
+			if(stores.Value == nil){
+				return
+			}
 			Clients_sse_stores.Range(func(key, value interface{}) bool {
 				clientChan := key.(chan *Store)
 				serverChan := value.(chan bool)
@@ -132,6 +135,9 @@ func LoadConfig(configPath string, isCreate bool) {
 var viperRWMutex sync.RWMutex
 
 func GetValue(key string) any {
+	if Viper == nil {
+		return nil
+	}
 	viperRWMutex.RLock()
 	defer viperRWMutex.RUnlock()
 	if key == "get_all_value" {
@@ -143,6 +149,9 @@ func GetValue(key string) any {
 
 // 设置新配置值, 并将设置的值保存到配置文件
 func SetValue(key string, value any) {
+	if Viper == nil {
+		return
+	}
 	viperRWMutex.Lock()
 	defer viperRWMutex.Unlock()
 	Viper.Set(key, value)
@@ -186,6 +195,9 @@ func SetValue(key string, value any) {
 
 // 删除某个配置项
 func DeleteValue(key string) {
+ 	if Viper == nil {
+		return
+	} 
 	Viper.Set(key, deleteKeyValue)
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
@@ -227,6 +239,9 @@ func DeleteValue(key string) {
 const Package_name = "新的键音包" // 其实这个在此处无关紧要, 因为此默认名称的设置, 主要还是在前端进行, 以前端国际化为主。
 
 func settingDefaultConfig() {
+	if Viper == nil {
+		return
+	}
 	// 手动打开应用时的默认设置
 	Viper.SetDefault("package_name", Package_name)
 
