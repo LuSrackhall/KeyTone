@@ -5013,8 +5013,8 @@ const main_store = useMainStore();
 onUnmounted(() => {
   // 卸载组件后, 更新键音包列表
   main_store.GetKeyToneAlbumList();
-  // 卸载组件后, 重新载入持久化配置中用户所选的键音包
-  main_store.LoadSelectedKeyTonePkg();
+  // // 卸载组件后, 重新载入持久化配置中用户所选的键音包(在新设计的键音专辑页面逻辑中, 不需要此步骤)
+  // main_store.LoadSelectedKeyTonePkg();
 
   // 移除事件监听
   if (messageAudioPackageListener) {
