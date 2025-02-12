@@ -109,7 +109,6 @@
             map-options
             ref="selectedKeyTonePkgRef"
             @popup-hide="blur()"
-            @update:model-value="editAlbum"
             popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
           >
             <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
@@ -144,7 +143,15 @@
         <div :class="{ 'hide-scrollbar': isAtTop }" class="keytone-album-container">
           <KeytoneAlbum
             v-if="keytoneAlbum_PathOrUUID"
-            :key="keytoneAlbum_PathOrUUID"
+            :key="
+              (() => {
+                // 为了避免键音包专辑的重复渲染, 这里使用键音包专辑UUID作为key。 (主要造成重复渲染的场景->新建键音专辑时的两个阶段都会更改 keytoneAlbum_PathOrUUID)
+                // 这个表达式就是为了将路径转换为UUID。 此表达式不会对本身就是UUID的情况造成影响。
+                const key_UUID = keytoneAlbum_PathOrUUID.split(q.platform.is.win ? '\\' : '/').pop();
+                console.log('key_UUID', key_UUID);
+                return key_UUID;
+              })()
+            "
             :pkgPath="keytoneAlbum_PathOrUUID"
             :isCreate="keytoneAlbum_store.isCreateNewKeytoneAlbum"
             ref="keytoneAlbumRef"
@@ -156,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { QSelect } from 'quasar';
+import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
@@ -165,6 +172,7 @@ import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
+const q = useQuasar();
 const main_store = useMainStore();
 const setting_store = useSettingStore();
 const keytoneAlbum_store = useKeytoneAlbumStore();
@@ -180,22 +188,20 @@ const isAtTop = ref(true);
 // // * 当创建完毕后, 进入第二阶段, 将完整的路径传递给用户已选择键音包的变量(即setting_store.mainHome.selectedKeyTonePkg)。
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
-const keytoneAlbum_PathOrUUID = ref<string>(''); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
-watch(
-  () => keytoneAlbum_store.isCreateNewKeytoneAlbum,
-  (val) => {
-    console.log('keytoneAlbum_store.isCreateNewKeytoneAlbum', keytoneAlbum_store.isCreateNewKeytoneAlbum);
-  }
-);
+const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
 // 实现新建专辑的逻辑
 const createNewAlbum = () => {
   keytoneAlbum_store.isCreateNewKeytoneAlbum = true;
   keytoneAlbum_PathOrUUID.value = nanoid();
 };
-const editAlbum = (path: string) => {
-  keytoneAlbum_store.isCreateNewKeytoneAlbum = false;
-  keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
-};
+watch(
+  () => setting_store.mainHome.selectedKeyTonePkg,
+  () => {
+    keytoneAlbum_store.isCreateNewKeytoneAlbum = false; // 避免递归创建
+    keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
+  }
+);
 
 const blur = () => {
   setTimeout(() => {

@@ -3581,6 +3581,7 @@ import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+// console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
 const { t } = useI18n();
 const $t = t;
