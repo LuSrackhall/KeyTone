@@ -46,8 +46,13 @@ type Store struct {
 var Clients_sse_stores sync.Map
 var once_stores sync.Once
 
+var viperRWMutex sync.RWMutex
+
+
 // 加载音频包时使用(也可用于创建新的音频包时)
 func LoadConfig(configPath string, isCreate bool) {
+	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
+	viperRWMutex.RLock()
 	Viper = nil
 	Viper = viper.New()
 
@@ -102,6 +107,8 @@ func LoadConfig(configPath string, isCreate bool) {
 		logger.Info("音频包diff和增量载入完成")
 	}
 
+	viperRWMutex.RUnlock()
+
 	Viper.OnConfigChange(func(e fsnotify.Event) {
 		go func(Clients_sse_stores *sync.Map) {
 			stores := &Store{
@@ -132,14 +139,12 @@ func LoadConfig(configPath string, isCreate bool) {
 
 }
 
-var viperRWMutex sync.RWMutex
-
 func GetValue(key string) any {
+	viperRWMutex.RLock()
+	defer viperRWMutex.RUnlock()
 	if Viper == nil {
 		return nil
 	}
-	viperRWMutex.RLock()
-	defer viperRWMutex.RUnlock()
 	if key == "get_all_value" {
 		return Viper.AllSettings()
 	} else {
@@ -149,11 +154,11 @@ func GetValue(key string) any {
 
 // 设置新配置值, 并将设置的值保存到配置文件
 func SetValue(key string, value any) {
+	viperRWMutex.Lock()
+	defer viperRWMutex.Unlock()
 	if Viper == nil {
 		return
 	}
-	viperRWMutex.Lock()
-	defer viperRWMutex.Unlock()
 	Viper.Set(key, value)
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("向音频包保存配置时发生致命错误", "err", err.Error())
@@ -195,9 +200,11 @@ func SetValue(key string, value any) {
 
 // 删除某个配置项
 func DeleteValue(key string) {
- 	if Viper == nil {
+	viperRWMutex.Lock()
+	defer viperRWMutex.Unlock()
+	if Viper == nil {
 		return
-	} 
+	}
 	Viper.Set(key, deleteKeyValue)
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
@@ -238,10 +245,9 @@ func DeleteValue(key string) {
 // 键音包名称
 const Package_name = "新的键音包" // 其实这个在此处无关紧要, 因为此默认名称的设置, 主要还是在前端进行, 以前端国际化为主。
 
+// 这里没必要判断 Viper == nil, 因为这个函数是在创建新音频包时调用的, 一定是Viper != nil的情况。(同理, 这里也没必要加锁。)
 func settingDefaultConfig() {
-	if Viper == nil {
-		return
-	}
+
 	// 手动打开应用时的默认设置
 	Viper.SetDefault("package_name", Package_name)
 
