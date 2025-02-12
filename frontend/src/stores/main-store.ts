@@ -4,8 +4,10 @@ import { ref, watch } from 'vue';
 import { useSettingStore } from './setting-store';
 import { useQuasar } from 'quasar';
 import { StoreGet, StoreSet } from 'src/boot/query/store-query';
+import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 export const useMainStore = defineStore('main', () => {
+  const keytoneAlbum_store = useKeytoneAlbumStore();
   // 添加音量百分比状态
   const volumePercentage = ref(1); // 默认100%
 
@@ -70,6 +72,10 @@ export const useMainStore = defineStore('main', () => {
    */
   function LoadSelectedKeyTonePkg() {
     ConfigGet('audio_pkg_uuid').then((res) => {
+      // 若当前正在新建键音包, 则不需要进行反复确认的加载逻辑
+      if (keytoneAlbum_store.isCreateNewKeytoneAlbum) {
+        return;
+      }
       console.log('res= ', res);
       console.log('setting_store.mainHome.selectedKeyTonePkg= ', setting_store.mainHome.selectedKeyTonePkg);
       // 这里的路径处理, 是为了兼容不同操作系统。(我们简单使用了quasar的platform.is.win来判断)

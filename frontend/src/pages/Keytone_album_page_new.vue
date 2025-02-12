@@ -144,9 +144,9 @@
         <div :class="{ 'hide-scrollbar': isAtTop }" class="keytone-album-container">
           <KeytoneAlbum
             v-if="keytoneAlbum_PathOrUUID"
-            :key="keytoneAlbum_PathOrUUID + nanoid()"
+            :key="keytoneAlbum_PathOrUUID"
             :pkgPath="keytoneAlbum_PathOrUUID"
-            v-model:isCreate="isCreateNewKeytoneAlbum"
+            :isCreate="keytoneAlbum_store.isCreateNewKeytoneAlbum"
             ref="keytoneAlbumRef"
           />
         </div>
@@ -163,9 +163,11 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const main_store = useMainStore();
 const setting_store = useSettingStore();
+const keytoneAlbum_store = useKeytoneAlbumStore();
 const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
 const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
 const isCollapsed = ref(false);
@@ -179,17 +181,19 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(''); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
-const isCreateNewKeytoneAlbum = ref<boolean>(false);
-watch(isCreateNewKeytoneAlbum, (val) => {
-  console.log('isCreateNewKeytoneAlbum+++++', isCreateNewKeytoneAlbum.value);
-});
+watch(
+  () => keytoneAlbum_store.isCreateNewKeytoneAlbum,
+  (val) => {
+    console.log('keytoneAlbum_store.isCreateNewKeytoneAlbum', keytoneAlbum_store.isCreateNewKeytoneAlbum);
+  }
+);
 // 实现新建专辑的逻辑
 const createNewAlbum = () => {
-  isCreateNewKeytoneAlbum.value = true;
+  keytoneAlbum_store.isCreateNewKeytoneAlbum = true;
   keytoneAlbum_PathOrUUID.value = nanoid();
 };
 const editAlbum = (path: string) => {
-  // isCreateNewKeytoneAlbum.value = false; // 这里不需要设置为false, 此变量的控制由KeytoneAlbum组件内部的逻辑来处理
+  keytoneAlbum_store.isCreateNewKeytoneAlbum = false;
   keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
 };
 
