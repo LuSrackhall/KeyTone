@@ -84,6 +84,8 @@ func LoadConfig(configPath string, isCreate bool) {
 			} else {
 				// 否则为正常的加载, 默认不会创建配置文件, 以识别出有问题的键音包
 				logger.Error("未找到正确的音频包配置", "path", configPath)
+				// 如果未找到正确的音频包配置, 则应该清空Viper, 防止内存中残留的Viper被错误的使用(比如前端读取配置, 但实际上配置文件并不存在, 却读取到了内存中的残留配置)
+				Viper=nil
 				// TODO: 可以返回给前端, 供其提示用户
 				// SSE
 			}
