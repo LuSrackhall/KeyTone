@@ -109,6 +109,12 @@
             map-options
             ref="selectedKeyTonePkgRef"
             @popup-hide="blur()"
+            :disable="
+              (() => {
+                // 在创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+                return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+              })()
+            "
             popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
           >
             <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
