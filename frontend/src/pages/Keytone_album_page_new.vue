@@ -142,7 +142,7 @@
       <div
         class="content-wrapper"
         :style="{
-          paddingTop: !isCollapsed ? '60px' : '0',
+          paddingTop: !isCollapsed ? '68px' : '0',
           transition: `padding-top ${!isCollapsed ? '0.8s' : '1.2s'} ease`,
         }"
       >
