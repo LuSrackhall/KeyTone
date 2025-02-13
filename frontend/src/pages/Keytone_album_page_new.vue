@@ -111,7 +111,7 @@
             @popup-hide="blur()"
             :disable="
               (() => {
-                // 在创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+                // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
                 return keytoneAlbum_store.isCreateNewKeytoneAlbum;
               })()
             "

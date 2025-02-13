@@ -13,10 +13,28 @@
                                       * 实现步骤也很容易, 只需要将 pageLabel 转换为对象, 其中包含相关对应的 to 属性即可。 ((TIPS: 简单应用涉及的路径太浅, 没必要))
       -->
       <q-bar class="q-electron-drag rounded-t-lg">
-        <q-btn flat dense icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn
+          :disable="
+            (() => {
+              // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+              return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+            })()
+          "
+          flat
+          dense
+          icon="menu"
+          aria-label="Menu"
+          @click="toggleLeftDrawer"
+        />
         <!-- <q-btn flat dense round icon="keyboard_alt"></q-btn> -->
         <div class="flex flex-nowrap">
           <q-btn
+            :disable="
+              (() => {
+                // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+                return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+              })()
+            "
             flat
             dense
             no-caps
@@ -48,6 +66,12 @@
 
         <q-space />
         <q-btn
+          :disable="
+            (() => {
+              // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+              return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+            })()
+          "
           v-if="router.currentRoute.value.fullPath !== '/'"
           dense
           flat
@@ -60,9 +84,31 @@
         </div>
         <q-space />
 
-        <q-btn dense flat icon="horizontal_rule" @click="minimize" />
+        <q-btn
+          :disable="
+            (() => {
+              // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+              return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+            })()
+          "
+          dense
+          flat
+          icon="horizontal_rule"
+          @click="minimize"
+        />
         <!-- <q-btn dense flat icon="crop_square" @click="toggleMaximize" /> -->
-        <q-btn dense flat icon="close" @click="closeApp" />
+        <q-btn
+          :disable="
+            (() => {
+              // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+              return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+            })()
+          "
+          dense
+          flat
+          icon="close"
+          @click="closeApp"
+        />
       </q-bar>
     </q-header>
 
@@ -117,6 +163,8 @@ import { computed, ref } from 'vue';
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 import { useI18n } from 'vue-i18n';
 
+const keytoneAlbum_store = useKeytoneAlbumStore();
+
 const { t } = useI18n();
 const $t = t;
 
@@ -168,6 +216,7 @@ const essentialLinks: Array<EssentialLinkProps> = [
 ];
 
 import { useRouter } from 'vue-router';
+import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const router = useRouter();
 
