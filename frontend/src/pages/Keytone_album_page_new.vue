@@ -65,6 +65,7 @@
               color="primary"
               :disable="!setting_store.mainHome.selectedKeyTonePkg"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="exportAlbum"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -194,7 +195,14 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { DeleteAlbum } from 'src/boot/query/keytonePkg-query';
+import { DeleteAlbum, ExportAlbum } from 'src/boot/query/keytonePkg-query';
+
+// 扩展HTMLInputElement类型以支持webkitdirectory属性
+declare global {
+  interface HTMLInputElement {
+    webkitdirectory: boolean;
+  }
+}
 import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const q = useQuasar();
@@ -249,6 +257,58 @@ watch(
     keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
   }
 );
+
+// 导出键音专辑
+const exportAlbum = async () => {
+  try {
+    // 创建一个隐藏的 input file 元素
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true;
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    // 监听文件选择事件
+    input.onchange = async (e: Event) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (!files || files.length === 0) {
+        document.body.removeChild(input);
+        return;
+      }
+
+      // 获取选择的目录路径
+      const targetPath = files[0].path.split('\\').slice(0, -1).join('\\');
+      const albumName = setting_store.mainHome.selectedKeyTonePkg.split('\\').pop();
+      const zipPath = `${targetPath}\\${albumName}.zip`;
+
+      // 调用导出API
+      const result = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg, zipPath);
+
+      if (result) {
+        q.notify({
+          type: 'positive',
+          message: '专辑导出成功',
+        });
+      } else {
+        q.notify({
+          type: 'negative',
+          message: '专辑导出失败',
+        });
+      }
+
+      document.body.removeChild(input);
+    };
+
+    // 触发文件选择对话框
+    input.click();
+  } catch (error) {
+    console.error('导出专辑失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '导出专辑失败:' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
 
 const blur = () => {
   setTimeout(() => {

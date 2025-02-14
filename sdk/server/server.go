@@ -26,6 +26,7 @@ import (
 	"KeyTone/keyEvent"
 	"KeyTone/keySound"
 	"KeyTone/logger"
+	"archive/zip"
 	"crypto"
 	"fmt"
 	"io"
@@ -574,6 +575,153 @@ func keytonePkgRouters(r *gin.Engine) {
 		ctx.JSON(200, gin.H{
 			"message": "ok",
 			"name":    name,
+		})
+	})
+
+	keytonePkgRouters.POST("/export_album", func(ctx *gin.Context) {
+		type Arg struct {
+			AlbumPath  string `json:"albumPath"`
+			TargetPath string `json:"targetPath"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.AlbumPath == "" || arg.TargetPath == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		// 检查源文件夹是否存在且可访问
+		srcInfo, err := os.Stat(arg.AlbumPath)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 源专辑文件夹不存在或无法访问:" + err.Error(),
+			})
+			return
+		}
+		if !srcInfo.IsDir() {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 源路径不是一个文件夹",
+			})
+			return
+		}
+
+		// 创建临时zip文件
+		tmpZipPath := arg.TargetPath + ".tmp"
+		zipFile, err := os.Create(tmpZipPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建临时zip文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 确保在函数返回时清理临时文件
+		defer func() {
+			zipFile.Close()
+			// 如果函数因错误返回,删除临时文件
+			if err != nil {
+				os.Remove(tmpZipPath)
+			}
+		}()
+
+		// 使用zip包来创建Writer
+		zipWriter := zip.NewWriter(zipFile)
+		defer zipWriter.Close()
+
+		// 遍历键音专辑文件夹并添加到zip,使用只读模式
+		err = filepath.Walk(arg.AlbumPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return fmt.Errorf("遍历文件夹失败: %v", err)
+			}
+
+			// 获取相对路径
+			relPath, err := filepath.Rel(arg.AlbumPath, path)
+			if err != nil {
+				return fmt.Errorf("计算相对路径失败: %v", err)
+			}
+
+			// 如果是文件夹根目录,跳过
+			if relPath == "." {
+				return nil
+			}
+
+			// 创建zip文件头信息
+			header, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return fmt.Errorf("创建文件头信息失败: %v", err)
+			}
+			header.Name = relPath
+
+			if info.IsDir() {
+				header.Name += "/" // 确保目录以/结尾
+			} else {
+				header.Method = zip.Deflate // 使用压缩
+			}
+
+			writer, err := zipWriter.CreateHeader(header)
+			if err != nil {
+				return fmt.Errorf("创建zip条目失败: %v", err)
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			// 以只读方式打开源文件
+			file, err := os.OpenFile(path, os.O_RDONLY, 0)
+			if err != nil {
+				return fmt.Errorf("打开源文件失败: %v", err)
+			}
+			defer file.Close()
+
+			// 复制文件内容到zip
+			_, err = io.Copy(writer, file)
+			if err != nil {
+				return fmt.Errorf("写入zip文件失败: %v", err)
+			}
+
+			return nil
+		})
+
+		// 检查是否有压缩错误
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 压缩文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 关闭zip writer
+		if err = zipWriter.Close(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 关闭zip文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 关闭zip文件
+		if err = zipFile.Close(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 关闭zip文件失败:" + err.Error(),
+			})
+			os.Remove(tmpZipPath)
+			return
+		}
+
+		// 重命名临时文件为最终文件
+		if err = os.Rename(tmpZipPath, arg.TargetPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 移动zip文件失败:" + err.Error(),
+			})
+			os.Remove(tmpZipPath)
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
 		})
 	})
 
