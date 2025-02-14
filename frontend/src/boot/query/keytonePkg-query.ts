@@ -429,3 +429,40 @@ export async function GetAudioPackageName(path: string) {
       return false;
     });
 }
+
+export async function DeleteAlbum(albumPath: string): Promise<boolean> {
+  return await api
+    .post('/keytone_pkg/delete_album', {
+      albumPath: albumPath,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->DeleteAlbum 请求已成功执行并返回->', req.data);
+      if (req.data.message === 'ok') {
+        return true;
+      } else {
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('DeleteAlbum 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+        if (error.response.status >= 400 && error.response.status < 500) {
+          console.error('This is a client error.', '(此为服务端的独断, 若有不服可详细分析)');
+        } else if (error.response.status >= 500) {
+          console.error('This is a server error.', '(此为服务端的独断, 若有不服可详细分析)');
+        }
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确,或其它种类的错误可能');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}

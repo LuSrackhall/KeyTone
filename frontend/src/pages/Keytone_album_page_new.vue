@@ -85,6 +85,7 @@
               color="negative"
               :disable="!setting_store.mainHome.selectedKeyTonePkg"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="deleteAlbum"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -193,6 +194,7 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { DeleteAlbum } from 'src/boot/query/keytonePkg-query';
 import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const q = useQuasar();
@@ -212,6 +214,27 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+// 实现删除专辑的逻辑
+const deleteAlbum = async () => {
+  if (!setting_store.mainHome.selectedKeyTonePkg) return;
+
+  const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+  const result = await DeleteAlbum(albumPath);
+
+  if (result) {
+    setting_store.mainHome.selectedKeyTonePkg = '';
+    q.notify({
+      type: 'positive',
+      message: '专辑删除成功',
+    });
+  } else {
+    q.notify({
+      type: 'negative',
+      message: '专辑删除失败',
+    });
+  }
+};
 
 // 实现新建专辑的逻辑
 const createNewAlbum = () => {

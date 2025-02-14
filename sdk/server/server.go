@@ -223,21 +223,20 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-
 		var audioPkgPath string
 		if arg.IsCreate {
 			// 如果创建新的键音包, 我们只知道最终的uuid(不知道存放uuid文件夹的路径)
 			audioPkgPath = filepath.Join(audioPackageConfig.AudioPackagePath, arg.AudioPkgUUID)
 		} else {
 			// 如果加载已有的键音包, 我们知道键音包的完整路径(包括uuid与即uuid文件夹所在的路径)
-			audioPkgPath= arg.AudioPkgUUID
+			audioPkgPath = arg.AudioPkgUUID
 		}
 
 		// 加载键音包配置文件
-  audioPackageConfig.LoadConfig(audioPkgPath, arg.IsCreate)
+		audioPackageConfig.LoadConfig(audioPkgPath, arg.IsCreate)
 
 		ctx.JSON(200, gin.H{
-			"message": "ok",
+			"message":      "ok",
 			"audioPkgPath": audioPkgPath,
 		})
 	})
@@ -577,4 +576,36 @@ func keytonePkgRouters(r *gin.Engine) {
 			"name":    name,
 		})
 	})
+
+	keytonePkgRouters.POST("/delete_album", func(ctx *gin.Context) {
+		type Arg struct {
+			AlbumPath string `json:"albumPath"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.AlbumPath == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		err = os.RemoveAll(arg.AlbumPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 删除键音专辑失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 清除sdk中的已选择键音包
+		// TIPS: 若后续需要实现删除任意键音包, 则需要进行判断, 若删除的键音包中存在当前已选择的键音包, 才需要清除。
+		audioPackageConfig.Viper = nil
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
 }
