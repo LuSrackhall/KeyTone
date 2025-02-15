@@ -45,6 +45,7 @@
               icon="save_alt"
               color="primary"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="importAlbum"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -195,7 +196,7 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { DeleteAlbum, GetAudioPackageName, ExportAlbum } from 'src/boot/query/keytonePkg-query';
+import { DeleteAlbum, GetAudioPackageName, ExportAlbum, ImportAlbum } from 'src/boot/query/keytonePkg-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -450,6 +451,50 @@ onUnmounted(() => {
     scrollContainer.removeEventListener('wheel', handleAlbumScroll);
   }
 });
+
+const importAlbum = async () => {
+  // 创建文件输入元素
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.zip';
+
+  // 处理文件选择
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      q.notify({
+        type: 'negative',
+        message: '请选择 .zip 格式的专辑文件',
+      });
+      return;
+    }
+
+    try {
+      const result = await ImportAlbum(file);
+      if (result) {
+        q.notify({
+          type: 'positive',
+          message: '专辑导入成功',
+        });
+        // 刷新专辑列表
+        await main_store.GetKeyToneAlbumList();
+      } else {
+        throw new Error('导入失败');
+      }
+    } catch (error) {
+      q.notify({
+        type: 'negative',
+        message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
+      });
+    }
+  };
+
+  // 触发文件选择
+  input.click();
+};
 </script>
 
 <style lang="scss" scoped>

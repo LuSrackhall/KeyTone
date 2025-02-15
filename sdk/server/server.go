@@ -48,6 +48,103 @@ type KeyStateMessage struct {
 	State   string `json:"state"`
 }
 
+// 验证 nanoid 格式的辅助函数
+func isValidNanoID(id string) bool {
+	// nanoid 默认使用 21 个字符，字符集为 A-Za-z0-9_-
+	if len(id) != 21 {
+		return false
+	}
+	for _, char := range id {
+		if !((char >= 'a' && char <= 'z') ||
+			(char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '_' || char == '-') {
+			return false
+		}
+	}
+	return true
+}
+
+// 验证专辑结构的辅助函数
+func isValidAlbumStructure(albumPath string) error {
+	// 检查目录名是否符合 nanoid 格式
+	dirName := filepath.Base(albumPath)
+	if !isValidNanoID(dirName) {
+		return fmt.Errorf("专辑目录名不符合规范")
+	}
+
+	// 检查 config.json 是否存在
+	configPath := filepath.Join(albumPath, "config.json")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return fmt.Errorf("缺少必要的配置文件 config.json")
+	}
+
+	return nil
+}
+
+// 将 copyDir 函数移到 package server 级别
+func copyDir(src string, dst string) error {
+	// 获取源目录信息
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	// 创建目标目录
+	err = os.MkdirAll(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	// 读取源目录内容
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			// 递归复制子目录
+			err = copyDir(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 复制文件
+			srcFile, err := os.Open(srcPath)
+			if err != nil {
+				return err
+			}
+			defer srcFile.Close()
+
+			dstFile, err := os.Create(dstPath)
+			if err != nil {
+				return err
+			}
+			defer dstFile.Close()
+
+			_, err = io.Copy(dstFile, srcFile)
+			if err != nil {
+				return err
+			}
+
+			// 保持文件权限
+			srcInfo, err := os.Stat(srcPath)
+			if err != nil {
+				return err
+			}
+			err = os.Chmod(dstPath, srcInfo.Mode())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func ServerRun() {
 	// 启动gin
 	r := gin.Default()
@@ -710,6 +807,153 @@ func keytonePkgRouters(r *gin.Engine) {
 		audioPackageConfig.Viper = nil
 
 		ctx.JSON(200, gin.H{
+			"message": "ok",
+		})
+	})
+
+	// 修改导入专辑处理函数中的验证逻辑
+	keytonePkgRouters.POST("/import_album", func(ctx *gin.Context) {
+		// 获取上传的文件
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件上传失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 创建临时目录用于解压文件
+		tempDir, err := os.MkdirTemp("", "keytone_import_*")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建临时目录失败:" + err.Error(),
+			})
+			return
+		}
+		defer os.RemoveAll(tempDir) // 确保清理临时目录
+
+		// 保存上传的zip文件到临时目录
+		tempZipPath := filepath.Join(tempDir, "temp.zip")
+		if err := ctx.SaveUploadedFile(file, tempZipPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 保存上传文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 打开zip文件
+		zipReader, err := zip.OpenReader(tempZipPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开zip文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer zipReader.Close()
+
+		// 解压到临时目录
+		for _, file := range zipReader.File {
+			// 构建完整的目标路径
+			targetPath := filepath.Join(tempDir, file.Name)
+
+			// 确保目标目录存在
+			if file.FileInfo().IsDir() {
+				os.MkdirAll(targetPath, 0755)
+				continue
+			}
+
+			// 创建目标文件的父目录
+			os.MkdirAll(filepath.Dir(targetPath), 0755)
+
+			// 创建目标文件
+			outFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 创建目标文件失败:" + err.Error(),
+				})
+				return
+			}
+
+			// 打开源文件
+			inFile, err := file.Open()
+			if err != nil {
+				outFile.Close()
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 打开源文件失败:" + err.Error(),
+				})
+				return
+			}
+
+			// 复制文件内容
+			_, err = io.Copy(outFile, inFile)
+			outFile.Close()
+			inFile.Close()
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 复制文件内容失败:" + err.Error(),
+				})
+				return
+			}
+		}
+
+		// 获取解压后的专辑目录名
+		files, err := os.ReadDir(tempDir)
+		if err != nil || len(files) == 0 {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 读取解压目录失败或目录为空:" + err.Error(),
+			})
+			return
+		}
+
+		// 检查是否只有一个目录
+		var albumDir os.DirEntry
+		for _, f := range files {
+			if f.IsDir() {
+				if albumDir != nil {
+					ctx.JSON(http.StatusBadRequest, gin.H{
+						"message": "error: zip 文件中包含多个目录",
+					})
+					return
+				}
+				albumDir = f
+			}
+		}
+
+		if albumDir == nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: zip 文件中未找到专辑目录",
+			})
+			return
+		}
+
+		albumPath := filepath.Join(tempDir, albumDir.Name())
+		targetPath := filepath.Join(audioPackageConfig.AudioPackagePath, albumDir.Name())
+
+		// 验证专辑结构
+		if err := isValidAlbumStructure(albumPath); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的专辑格式: " + err.Error(),
+			})
+			return
+		}
+
+		// 如果目标路径已存在，返回错误
+		if _, err := os.Stat(targetPath); err == nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 目标专辑已存在",
+			})
+			return
+		}
+
+		// 使用复制替代移动
+		if err := copyDir(albumPath, targetPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 复制专辑文件夹失败:" + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
 			"message": "ok",
 		})
 	})
