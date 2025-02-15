@@ -58,6 +58,8 @@ export const useMainStore = defineStore('main', () => {
             keyTonePkgOptionsName.value.set(item, res.name);
           });
         });
+      } else {
+        keyTonePkgOptions.value = [];
       }
     });
   }
