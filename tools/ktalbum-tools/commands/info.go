@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	"ktalbum-tools/utils"
@@ -37,12 +39,18 @@ func GetFileInfo(filePath string) (*FileInfo, error) {
 
 	// 读取加密数据
 	encryptedData := make([]byte, header.DataSize)
-	if _, err := file.Read(encryptedData); err != nil {
+	if _, err := io.ReadFull(file, encryptedData); err != nil {
 		return nil, fmt.Errorf("读取加密数据失败: %v", err)
 	}
 
 	// 解密数据
 	zipData := utils.XorCrypt(encryptedData, utils.KeytoneEncryptKey)
+
+	// 验证校验和
+	checksum := utils.CalculateChecksum(zipData)
+	if !bytes.Equal(checksum[:], header.Checksum[:]) {
+		return nil, fmt.Errorf("文件校验失败，文件可能已损坏")
+	}
 
 	// 从 zip 数据中读取 .keytone-album 文件
 	zipReader, err := utils.ReadZipData(zipData)
@@ -64,6 +72,10 @@ func GetFileInfo(filePath string) (*FileInfo, error) {
 			}
 			break
 		}
+	}
+
+	if meta.AlbumName == "" {
+		return nil, fmt.Errorf("未找到专辑元数据")
 	}
 
 	return &FileInfo{

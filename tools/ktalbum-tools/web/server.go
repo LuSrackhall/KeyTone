@@ -101,13 +101,16 @@ func StartServer(port int) error {
 			// 读取文件信息
 			info, err := commands.GetFileInfo(inputPath)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
+				c.JSON(http.StatusBadRequest, gin.H{
 					"error": fmt.Sprintf("读取文件信息失败: %v", err),
 				})
 				return
 			}
 
-			c.JSON(http.StatusOK, info)
+			c.JSON(http.StatusOK, gin.H{
+				"message": "ok",
+				"data": info,
+			})
 		})
 	}
 

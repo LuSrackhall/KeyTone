@@ -1,0 +1,13 @@
+# 忽略前端代码统计
+web/frontend/** linguist-vendored
+web/frontend/src/** linguist-vendored
+web/frontend/dist/** linguist-vendored
+web/frontend/node_modules/** linguist-vendored
+
+# 标记主要语言
+*.go linguist-language=Go
+*.sh linguist-language=Shell
+
+# 标记文档
+*.md linguist-documentation
+LICENSE linguist-documentation 

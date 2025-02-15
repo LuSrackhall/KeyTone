@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"crypto/sha256"
+)
+
 func XorCrypt(data []byte, key string) []byte {
 	keyBytes := []byte(key)
 	result := make([]byte, len(data))
@@ -7,4 +11,8 @@ func XorCrypt(data []byte, key string) []byte {
 		result[i] = data[i] ^ keyBytes[i%len(keyBytes)]
 	}
 	return result
+}
+
+func CalculateChecksum(data []byte) [32]byte {
+	return sha256.Sum256(data)
 }
