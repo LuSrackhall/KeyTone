@@ -502,10 +502,57 @@ export async function ImportAlbum(file: File): Promise<boolean> {
       if (response.data.message === 'ok') {
         return true;
       }
+      // 如果是专辑已存在的错误，抛出特殊错误以便UI处理
+      if (response.data.message === 'album_exists') {
+        throw new Error('album_exists');
+      }
       return false;
     })
     .catch((error) => {
       console.group('ImportAlbum 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+        if (error.response.status >= 400 && error.response.status < 500) {
+          console.error('This is a client error.', '(此为服务端的独断, 若有不服可详细分析)');
+        } else if (error.response.status >= 500) {
+          console.error('This is a server error.', '(此为服务端的独断, 若有不服可详细分析)');
+        }
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确,或其它种类的错误可能');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      throw error; // 继续抛出错误以便UI层处理
+    });
+}
+
+// 添加新的覆盖导入函数
+export async function ImportAlbumOverwrite(file: File): Promise<boolean> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('overwrite', 'true');
+
+  return await api
+    .post('/keytone_pkg/import_album', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    .then((response) => {
+      console.debug('status=', response.status, '->ImportAlbumOverwrite 请求已成功执行并返回->', response.data);
+      if (response.data.message === 'ok') {
+        return true;
+      }
+      return false;
+    })
+    .catch((error) => {
+      console.group('ImportAlbumOverwrite 请求执行失败');
       if (error.response) {
         console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
         console.error('Error status:', error.response.status);

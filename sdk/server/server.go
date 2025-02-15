@@ -973,6 +973,9 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// 检查是否是覆盖模式
+		overwrite := ctx.PostForm("overwrite") == "true"
+
 		// 检查文件扩展名
 		if !strings.HasSuffix(strings.ToLower(file.Filename), ".ktalbum") {
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -1151,12 +1154,23 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 如果目标路径已存在，返回错误
+		// 在复制到目标路径前检查是否存在
 		if _, err := os.Stat(targetPath); err == nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "error: 目标专辑已存在",
-			})
-			return
+			// 目标已存在
+			if !overwrite {
+				// 如果不是覆盖模式，返回特殊状态
+				ctx.JSON(http.StatusOK, gin.H{
+					"message": "album_exists",
+				})
+				return
+			}
+			// 覆盖模式：删除现有目录
+			if err := os.RemoveAll(targetPath); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 删除现有专辑失败:" + err.Error(),
+				})
+				return
+			}
 		}
 
 		// 使用复制替代移动

@@ -196,7 +196,14 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { DeleteAlbum, GetAudioPackageName, ExportAlbum, ImportAlbum } from 'src/boot/query/keytonePkg-query';
+import {
+  DeleteAlbum,
+  GetAudioPackageName,
+  ExportAlbum,
+  ImportAlbum,
+  ImportAlbumOverwrite,
+  LoadConfig,
+} from 'src/boot/query/keytonePkg-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -456,7 +463,7 @@ const importAlbum = async () => {
   // 创建文件输入元素
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.ktalbum'; // 只接受 .ktalbum 文件
+  input.accept = '.ktalbum';
 
   // 处理文件选择
   input.onchange = async (e) => {
@@ -481,14 +488,55 @@ const importAlbum = async () => {
         });
         // 刷新专辑列表
         await main_store.GetKeyToneAlbumList();
-      } else {
-        throw new Error('导入失败');
       }
     } catch (error) {
-      q.notify({
-        type: 'negative',
-        message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
-      });
+      // 处理专辑已存在的情况
+      if (error instanceof Error && error.message === 'album_exists') {
+        // 使用 q.dialog 显示确认对话框
+        q.dialog({
+          title: '导入专辑',
+          message: '已存在相同的专辑，请选择操作方式：',
+          persistent: true,
+          ok: {
+            label: '覆盖现有专辑',
+            push: true,
+            color: 'negative',
+          },
+          cancel: {
+            label: '取消导入',
+            push: true,
+            color: 'primary',
+          },
+        }).onOk(async () => {
+          // 用户选择覆盖
+          try {
+            const result = await ImportAlbumOverwrite(file);
+            if (result) {
+              q.notify({
+                type: 'positive',
+                message: '专辑导入成功',
+              });
+              // 刷新专辑列表
+              await main_store.GetKeyToneAlbumList();
+              // 重新加载选中的键音包
+              await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+            } else {
+              throw new Error('导入失败');
+            }
+          } catch (error) {
+            q.notify({
+              type: 'negative',
+              message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
+            });
+          }
+        });
+      } else {
+        // 处理其他错误
+        q.notify({
+          type: 'negative',
+          message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
+        });
+      }
     }
   };
 
