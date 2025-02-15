@@ -196,7 +196,6 @@ import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { DeleteAlbum, GetAudioPackageName, ExportAlbum } from 'src/boot/query/keytonePkg-query';
-import { api } from 'src/boot/axios';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -259,8 +258,34 @@ watch(
   }
 );
 
-// 导出键音专辑
-const exportAlbum = async () => {
+// 声明 File System Access API 相关类型
+declare global {
+  interface Window {
+    showSaveFilePicker: (options?: {
+      suggestedName?: string;
+      types?: Array<{
+        description: string;
+        accept: Record<string, string[]>;
+      }>;
+    }) => Promise<FileSystemFileHandle>;
+  }
+}
+
+interface FileSystemCreateWritableOptions {
+  keepExistingData?: boolean;
+}
+
+interface FileSystemFileHandle {
+  createWritable: (options?: FileSystemCreateWritableOptions) => Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream extends WritableStream {
+  write: (data: BufferSource | Blob | string) => Promise<void>;
+  close: () => Promise<void>;
+}
+
+// 降级方案 - 使用传统的下载方式
+const exportAlbumLegacy = async () => {
   try {
     // 获取专辑名称
     const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
@@ -286,6 +311,63 @@ const exportAlbum = async () => {
       type: 'positive',
       message: '专辑导出成功',
     });
+  } catch (error) {
+    console.error('导出专辑失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '导出专辑失败:' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 导出键音专辑 - 使用 File System Access API
+const exportAlbum = async () => {
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, falling back to legacy export');
+    return exportAlbumLegacy();
+  }
+
+  try {
+    // 获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    if (!albumNameResponse || albumNameResponse.message !== 'ok') {
+      throw new Error('获取专辑名称失败');
+    }
+    const albumName = albumNameResponse.name;
+
+    // 获取导出数据
+    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+
+    try {
+      // 打开系统的保存文件对话框
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${albumName}.zip`,
+        types: [
+          {
+            description: '压缩文件',
+            accept: { 'application/zip': ['.zip'] },
+          },
+        ],
+      });
+
+      // 写入文件
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+
+      // 文件成功保存后再通知
+      q.notify({
+        type: 'positive',
+        message: '专辑导出成功',
+      });
+    } catch (err) {
+      // 用户取消选择文件时不显示错误
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    }
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({
