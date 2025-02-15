@@ -1,0 +1,75 @@
+package commands
+
+import (
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"ktalbum-tools/utils"
+)
+
+type FileInfo struct {
+	Name       string    `json:"name"`
+	Version    uint8     `json:"version"`
+	ExportTime string    `json:"exportTime"`
+	AlbumUUID  string    `json:"albumUUID"`
+}
+
+func GetFileInfo(filePath string) (*FileInfo, error) {
+	// 打开文件
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("打开文件失败: %v", err)
+	}
+	defer file.Close()
+
+	// 读取文件头
+	var header utils.KeytoneFileHeader
+	if err := binary.Read(file, binary.LittleEndian, &header); err != nil {
+		return nil, fmt.Errorf("读取文件头失败: %v", err)
+	}
+
+	// 验证文件签名
+	if string(header.Signature[:]) != utils.KeytoneFileSignature {
+		return nil, fmt.Errorf("无效的文件格式：不是 KeyTone 专辑文件")
+	}
+
+	// 读取加密数据
+	encryptedData := make([]byte, header.DataSize)
+	if _, err := file.Read(encryptedData); err != nil {
+		return nil, fmt.Errorf("读取加密数据失败: %v", err)
+	}
+
+	// 解密数据
+	zipData := utils.XorCrypt(encryptedData, utils.KeytoneEncryptKey)
+
+	// 从 zip 数据中读取 .keytone-album 文件
+	zipReader, err := utils.ReadZipData(zipData)
+	if err != nil {
+		return nil, fmt.Errorf("读取 zip 数据失败: %v", err)
+	}
+
+	var meta utils.KeytoneAlbumMeta
+	for _, f := range zipReader.File {
+		if f.Name == ".keytone-album" {
+			rc, err := f.Open()
+			if err != nil {
+				return nil, fmt.Errorf("打开元数据文件失败: %v", err)
+			}
+			defer rc.Close()
+
+			if err := json.NewDecoder(rc).Decode(&meta); err != nil {
+				return nil, fmt.Errorf("解析元数据失败: %v", err)
+			}
+			break
+		}
+	}
+
+	return &FileInfo{
+		Name:       meta.AlbumName,
+		Version:    header.Version,
+		ExportTime: meta.ExportTime.Format("2006-01-02 15:04:05"),
+		AlbumUUID:  meta.AlbumUUID,
+	}, nil
+} 

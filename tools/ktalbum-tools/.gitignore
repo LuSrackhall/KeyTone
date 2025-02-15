@@ -1,0 +1,31 @@
+# 依赖目录
+/node_modules/
+/web/frontend/node_modules/
+
+# IDE 和编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 前端构建缓存
+/web/frontend/.cache/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+*.bak
+*.log
+
+# 操作系统文件
+.DS_Store
+Thumbs.db 
