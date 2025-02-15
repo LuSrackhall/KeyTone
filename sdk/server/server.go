@@ -29,6 +29,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -37,10 +38,25 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+const (
+	KeytoneMagicNumber = "KTAF" // KeyTone Album Format
+	KeytoneVersion     = "1.0.0" // 当前版本号
+)
+
+// KeytoneAlbumMeta 用于存储专辑元数据
+type KeytoneAlbumMeta struct {
+	MagicNumber string    `json:"magicNumber"`
+	Version     string    `json:"version"`
+	ExportTime  time.Time `json:"exportTime"`
+	AlbumUUID   string    `json:"albumUUID"`
+	AlbumName   string    `json:"albumName"`
+}
 
 type KeyStateMessage struct {
 	Type    string `json:"type"`
@@ -142,6 +158,44 @@ func copyDir(src string, dst string) error {
 			}
 		}
 	}
+	return nil
+}
+
+// 将 validateAlbumMeta 函数移到包级别，和其他辅助函数放在一起
+func validateAlbumMeta(zipReader *zip.ReadCloser) error {
+	// 查找元数据文件
+	var metaFile *zip.File
+	for _, f := range zipReader.File {
+		if f.Name == ".keytone-album" {
+			metaFile = f
+			break
+		}
+	}
+
+	if metaFile == nil {
+		return fmt.Errorf("不是有效的 KeyTone 专辑文件：缺少元数据")
+	}
+
+	// 读取元数据文件
+	rc, err := metaFile.Open()
+	if err != nil {
+		return fmt.Errorf("读取元数据失败: %v", err)
+	}
+	defer rc.Close()
+
+	var meta KeytoneAlbumMeta
+	if err := json.NewDecoder(rc).Decode(&meta); err != nil {
+		return fmt.Errorf("解析元数据失败: %v", err)
+	}
+
+	// 验证魔数
+	if meta.MagicNumber != KeytoneMagicNumber {
+		return fmt.Errorf("不是有效的 KeyTone 专辑文件：无效的魔数")
+	}
+
+	// 验证版本兼容性
+	// 这里可以添加版本兼容性检查的逻辑
+	
 	return nil
 }
 
@@ -669,10 +723,16 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 			return
 		}
-		name := audioPackageList.GetAudioPackageName(path)
+		albumName, ok := audioPackageList.GetAudioPackageName(path).(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取专辑名称失败: 类型转换错误",
+			})
+			return
+		}
 		ctx.JSON(200, gin.H{
 			"message": "ok",
-			"name":    name,
+			"name":    albumName,
 		})
 	})
 
@@ -705,9 +765,50 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 使用内存buffer来创建zip
+		// 创建 zip buffer
 		buffer := new(bytes.Buffer)
 		zipWriter := zip.NewWriter(buffer)
+
+		// 创建并写入元数据文件
+		metaWriter, err := zipWriter.Create(".keytone-album")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建元数据文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		albumName, ok := audioPackageList.GetAudioPackageName(arg.AlbumPath).(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取专辑名称失败: 类型转换错误",
+			})
+			return
+		}
+
+		meta := KeytoneAlbumMeta{
+			MagicNumber: KeytoneMagicNumber,
+			Version:     KeytoneVersion,
+			ExportTime:  time.Now(),
+			AlbumUUID:   filepath.Base(arg.AlbumPath),
+			AlbumName:   albumName,
+		}
+
+		metaJson, err := json.Marshal(meta)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 生成元数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		_, err = metaWriter.Write(metaJson)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入元数据失败:" + err.Error(),
+			})
+			return
+		}
 
 		// 遍历键音专辑文件夹并添加到zip
 		err = filepath.Walk(arg.AlbumPath, func(path string, info os.FileInfo, err error) error {
@@ -811,7 +912,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
-	// 修改导入专辑处理函数中的验证逻辑
+	// 修改导入处理函数
 	keytonePkgRouters.POST("/import_album", func(ctx *gin.Context) {
 		// 获取上传的文件
 		file, err := ctx.FormFile("file")
@@ -850,6 +951,14 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 		defer zipReader.Close()
+
+		// 在解压之前先验证元数据
+		if err := validateAlbumMeta(zipReader); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
 
 		// 解压到临时目录
 		for _, file := range zipReader.File {
