@@ -195,7 +195,8 @@ import { nanoid } from 'nanoid';
 import { useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { DeleteAlbum, ExportAlbum } from 'src/boot/query/keytonePkg-query';
+import { DeleteAlbum, GetAudioPackageName, ExportAlbum } from 'src/boot/query/keytonePkg-query';
+import { api } from 'src/boot/axios';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -261,46 +262,30 @@ watch(
 // 导出键音专辑
 const exportAlbum = async () => {
   try {
-    // 创建一个隐藏的 input file 元素
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.webkitdirectory = true;
-    input.style.display = 'none';
-    document.body.appendChild(input);
+    // 获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    if (!albumNameResponse || albumNameResponse.message !== 'ok') {
+      throw new Error('获取专辑名称失败');
+    }
+    const albumName = albumNameResponse.name;
 
-    // 监听文件选择事件
-    input.onchange = async (e: Event) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (!files || files.length === 0) {
-        document.body.removeChild(input);
-        return;
-      }
+    // 调用导出函数获取zip文件blob
+    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${albumName}.zip`; // 设置下载文件名
+    document.body.appendChild(link);
+    link.click();
 
-      // 获取选择的目录路径
-      const targetPath = files[0].path.split('\\').slice(0, -1).join('\\');
-      const albumName = setting_store.mainHome.selectedKeyTonePkg.split('\\').pop();
-      const zipPath = `${targetPath}\\${albumName}.zip`;
+    // 清理
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
 
-      // 调用导出API
-      const result = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg, zipPath);
-
-      if (result) {
-        q.notify({
-          type: 'positive',
-          message: '专辑导出成功',
-        });
-      } else {
-        q.notify({
-          type: 'negative',
-          message: '专辑导出失败',
-        });
-      }
-
-      document.body.removeChild(input);
-    };
-
-    // 触发文件选择对话框
-    input.click();
+    q.notify({
+      type: 'positive',
+      message: '专辑导出成功',
+    });
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({

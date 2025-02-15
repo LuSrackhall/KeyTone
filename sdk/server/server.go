@@ -27,6 +27,7 @@ import (
 	"KeyTone/keySound"
 	"KeyTone/logger"
 	"archive/zip"
+	"bytes"
 	"crypto"
 	"fmt"
 	"io"
@@ -580,15 +581,14 @@ func keytonePkgRouters(r *gin.Engine) {
 
 	keytonePkgRouters.POST("/export_album", func(ctx *gin.Context) {
 		type Arg struct {
-			AlbumPath  string `json:"albumPath"`
-			TargetPath string `json:"targetPath"`
+			AlbumPath string `json:"albumPath"`
 		}
 
 		var arg Arg
 		err := ctx.ShouldBind(&arg)
-		if err != nil || arg.AlbumPath == "" || arg.TargetPath == "" {
+		if err != nil || arg.AlbumPath == "" {
 			ctx.JSON(http.StatusNotAcceptable, gin.H{
-				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+				"message": "error: 参数接收--收到的前端数据内容值不符合接口规定格式:" + err.Error(),
 			})
 			return
 		}
@@ -608,30 +608,11 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 创建临时zip文件
-		tmpZipPath := arg.TargetPath + ".tmp"
-		zipFile, err := os.Create(tmpZipPath)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "error: 创建临时zip文件失败:" + err.Error(),
-			})
-			return
-		}
+		// 使用内存buffer来创建zip
+		buffer := new(bytes.Buffer)
+		zipWriter := zip.NewWriter(buffer)
 
-		// 确保在函数返回时清理临时文件
-		defer func() {
-			zipFile.Close()
-			// 如果函数因错误返回,删除临时文件
-			if err != nil {
-				os.Remove(tmpZipPath)
-			}
-		}()
-
-		// 使用zip包来创建Writer
-		zipWriter := zip.NewWriter(zipFile)
-		defer zipWriter.Close()
-
-		// 遍历键音专辑文件夹并添加到zip,使用只读模式
+		// 遍历键音专辑文件夹并添加到zip
 		err = filepath.Walk(arg.AlbumPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return fmt.Errorf("遍历文件夹失败: %v", err)
@@ -697,32 +678,14 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 关闭zip writer
 		if err = zipWriter.Close(); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "error: 关闭zip文件失败:" + err.Error(),
+				"message": "error: 关闭zip writer失败:" + err.Error(),
 			})
 			return
 		}
 
-		// 关闭zip文件
-		if err = zipFile.Close(); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "error: 关闭zip文件失败:" + err.Error(),
-			})
-			os.Remove(tmpZipPath)
-			return
-		}
-
-		// 重命名临时文件为最终文件
-		if err = os.Rename(tmpZipPath, arg.TargetPath); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "error: 移动zip文件失败:" + err.Error(),
-			})
-			os.Remove(tmpZipPath)
-			return
-		}
-
-		ctx.JSON(200, gin.H{
-			"message": "ok",
-		})
+		// 设置响应头并发送数据
+		ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", filepath.Base(arg.AlbumPath)))
+		ctx.Data(http.StatusOK, "application/zip", buffer.Bytes())
 	})
 
 	keytonePkgRouters.POST("/delete_album", func(ctx *gin.Context) {
