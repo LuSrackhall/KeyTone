@@ -619,14 +619,9 @@ func keytonePkgRouters(r *gin.Engine) {
 			}
 
 			// 获取相对路径
-			relPath, err := filepath.Rel(arg.AlbumPath, path)
+			relPath, err := filepath.Rel(filepath.Dir(arg.AlbumPath), path)
 			if err != nil {
 				return fmt.Errorf("计算相对路径失败: %v", err)
-			}
-
-			// 如果是文件夹根目录,跳过
-			if relPath == "." {
-				return nil
 			}
 
 			// 创建zip文件头信息
