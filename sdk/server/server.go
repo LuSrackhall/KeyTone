@@ -29,6 +29,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -47,6 +49,9 @@ import (
 const (
 	KeytoneMagicNumber = "KTAF" // KeyTone Album Format
 	KeytoneVersion     = "1.0.0" // 当前版本号
+	KeytoneFileSignature = "KTALBUM"  // 文件签名
+	KeytoneFileVersion   = 1          // 文件版本
+	KeytoneEncryptKey    = "KeyTone2024SecretKey" // 简单的对称加密密钥
 )
 
 // KeytoneAlbumMeta 用于存储专辑元数据
@@ -62,6 +67,14 @@ type KeyStateMessage struct {
 	Type    string `json:"type"`
 	Keycode uint16 `json:"keycode"`
 	State   string `json:"state"`
+}
+
+// KeytoneFileHeader 文件头结构
+type KeytoneFileHeader struct {
+	Signature   [7]byte // "KTALBUM"
+	Version     uint8   // 文件版本
+	DataSize    uint64  // 加密后的zip数据大小
+	Checksum    [32]byte // zip数据的SHA-256校验和
 }
 
 // 验证 nanoid 格式的辅助函数
@@ -197,6 +210,16 @@ func validateAlbumMeta(zipReader *zip.ReadCloser) error {
 	// 这里可以添加版本兼容性检查的逻辑
 	
 	return nil
+}
+
+// 简单的异或加密/解密函数（对称加密）
+func xorCrypt(data []byte, key string) []byte {
+	keyBytes := []byte(key)
+	result := make([]byte, len(data))
+	for i := 0; i < len(data); i++ {
+		result[i] = data[i] ^ keyBytes[i%len(keyBytes)]
+	}
+	return result
 }
 
 func ServerRun() {
@@ -876,9 +899,36 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// 获取 zip 数据
+		zipData := buffer.Bytes()
+
+		// 计算校验和
+		checksum := sha256.Sum256(zipData)
+
+		// 加密 zip 数据
+		encryptedData := xorCrypt(zipData, KeytoneEncryptKey)
+
+		// 创建文件头
+		header := KeytoneFileHeader{
+			Version:  KeytoneFileVersion,
+			DataSize: uint64(len(encryptedData)),
+			Checksum: checksum,
+		}
+		copy(header.Signature[:], KeytoneFileSignature)
+
+		// 写入最终文件
+		finalBuffer := new(bytes.Buffer)
+		if err := binary.Write(finalBuffer, binary.LittleEndian, header); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入文件头失败:" + err.Error(),
+			})
+			return
+		}
+		finalBuffer.Write(encryptedData)
+
 		// 设置响应头并发送数据
-		ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.zip", filepath.Base(arg.AlbumPath)))
-		ctx.Data(http.StatusOK, "application/zip", buffer.Bytes())
+		ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.ktalbum", filepath.Base(arg.AlbumPath)))
+		ctx.Data(http.StatusOK, "application/octet-stream", finalBuffer.Bytes())
 	})
 
 	keytonePkgRouters.POST("/delete_album", func(ctx *gin.Context) {
@@ -923,7 +973,63 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 创建临时目录用于解压文件
+		// 检查文件扩展名
+		if !strings.HasSuffix(strings.ToLower(file.Filename), ".ktalbum") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式，请选择 .ktalbum 文件",
+			})
+			return
+		}
+
+		// 读取文件数据
+		src, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer src.Close()
+
+		// 读取文件头
+		var header KeytoneFileHeader
+		if err := binary.Read(src, binary.LittleEndian, &header); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 读取文件头失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 验证文件签名
+		if string(header.Signature[:]) != KeytoneFileSignature {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式：不是 KeyTone 专辑文件",
+			})
+			return
+		}
+
+		// 读取加密的数据
+		encryptedData := make([]byte, header.DataSize)
+		if _, err := io.ReadFull(src, encryptedData); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 读取文件数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 解密数据
+		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
+
+		// 验证校验和
+		checksum := sha256.Sum256(zipData)
+		if checksum != header.Checksum {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件校验失败，文件可能已损坏",
+			})
+			return
+		}
+
+		// 创建临时文件保存 zip 数据
 		tempDir, err := os.MkdirTemp("", "keytone_import_*")
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -931,18 +1037,17 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 			return
 		}
-		defer os.RemoveAll(tempDir) // 确保清理临时目录
+		defer os.RemoveAll(tempDir)
 
-		// 保存上传的zip文件到临时目录
 		tempZipPath := filepath.Join(tempDir, "temp.zip")
-		if err := ctx.SaveUploadedFile(file, tempZipPath); err != nil {
+		if err := os.WriteFile(tempZipPath, zipData, 0644); err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"message": "error: 保存上传文件失败:" + err.Error(),
+				"message": "error: 保存临时文件失败:" + err.Error(),
 			})
 			return
 		}
 
-		// 打开zip文件
+		// 打开zip文件进行验证
 		zipReader, err := zip.OpenReader(tempZipPath)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -952,7 +1057,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 		defer zipReader.Close()
 
-		// 在解压之前先验证元数据
+		// 验证zip内的元数据
 		if err := validateAlbumMeta(zipReader); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"message": "error: " + err.Error(),

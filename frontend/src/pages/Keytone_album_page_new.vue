@@ -300,7 +300,7 @@ const exportAlbumLegacy = async () => {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${albumName}.zip`; // 设置下载文件名
+    link.download = `${albumName}.ktalbum`; // 改为 .ktalbum
     document.body.appendChild(link);
     link.click();
 
@@ -343,11 +343,11 @@ const exportAlbum = async () => {
     try {
       // 打开系统的保存文件对话框
       const handle = await window.showSaveFilePicker({
-        suggestedName: `${albumName}.zip`,
+        suggestedName: `${albumName}.ktalbum`,
         types: [
           {
-            description: '压缩文件',
-            accept: { 'application/zip': ['.zip'] },
+            description: 'KeyTone 专辑文件',
+            accept: { 'application/octet-stream': ['.ktalbum'] },
           },
         ],
       });
@@ -456,7 +456,7 @@ const importAlbum = async () => {
   // 创建文件输入元素
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.zip';
+  input.accept = '.ktalbum'; // 只接受 .ktalbum 文件
 
   // 处理文件选择
   input.onchange = async (e) => {
@@ -464,10 +464,10 @@ const importAlbum = async () => {
     if (!file) return;
 
     // 检查文件类型
-    if (!file.name.toLowerCase().endsWith('.zip')) {
+    if (!file.name.toLowerCase().endsWith('.ktalbum')) {
       q.notify({
         type: 'negative',
-        message: '请选择 .zip 格式的专辑文件',
+        message: '请选择 .ktalbum 格式的专辑文件',
       });
       return;
     }
