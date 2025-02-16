@@ -100,34 +100,65 @@
             </q-btn>
           </div>
 
-          <q-select
-            v-model="setting_store.mainHome.selectedKeyTonePkg"
-            :options="main_store.keyTonePkgOptions"
-            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-            :label="$t('mainHome.selectedKeySoundAlbum')"
-            :virtual-scroll-slice-size="999999"
-            outlined
-            dense
-            emit-value
-            map-options
-            ref="selectedKeyTonePkgRef"
-            @popup-hide="blur()"
-            :disable="
-              (() => {
-                // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
-                return keytoneAlbum_store.isCreateNewKeytoneAlbum;
-              })()
-            "
-            popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-          >
-            <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
-              <q-icon
-                name="cancel"
-                @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
-                class="cursor-pointer text-lg"
-              />
-            </template>
-          </q-select>
+          <!-- 键音专辑选择器 -->
+          <div class="relative">
+            <q-select
+              v-model="setting_store.mainHome.selectedKeyTonePkg"
+              :options="main_store.keyTonePkgOptions"
+              :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+              :label="$t('mainHome.selectedKeySoundAlbum')"
+              :virtual-scroll-slice-size="999999"
+              outlined
+              dense
+              emit-value
+              map-options
+              ref="selectedKeyTonePkgRef"
+              @popup-hide="blur()"
+              :disable="
+                (() => {
+                  // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
+                  return keytoneAlbum_store.isCreateNewKeytoneAlbum;
+                })()
+              "
+              popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+            >
+              <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
+                  class="cursor-pointer text-lg"
+                />
+              </template>
+
+              <!-- 空状态提示 -->
+              <template v-slot:no-option>
+                <div class="flex flex-col items-center py-6 text-gray-500">
+                  <q-icon name="library_music" size="56px" class="empty-state-icon mb-3" />
+                  <div class="text-sm mb-5 opacity-75">暂无键音专辑</div>
+                  <div class="flex gap-4">
+                    <q-btn
+                      flat
+                      dense
+                      class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                      @click="createNewAlbum"
+                    >
+                      <q-icon name="add" size="20px" class="mr-1.5" />
+                      <span class="text-sm font-medium">新建专辑</span>
+                    </q-btn>
+                    <q-btn
+                      flat
+                      dense
+                      class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                      @click="importAlbum"
+                    >
+                      <q-icon name="upload_file" size="20px" class="mr-1.5" />
+                      <span class="text-sm font-medium">导入专辑</span>
+                    </q-btn>
+                  </div>
+                </div>
+              </template>
+            </q-select>
+          </div>
 
           <q-btn
             v-if="setting_store.mainHome.selectedKeyTonePkg"
@@ -680,6 +711,73 @@ const importAlbum = async () => {
 
   :deep(.q-scrollarea__thumb) {
     transition: opacity 0.3s ease;
+  }
+}
+
+// 空状态相关样式
+:deep(.q-select) {
+  .q-field__control {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+// 空状态动画
+:deep(.empty-state-icon) {
+  animation: float 3s ease-in-out infinite;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+// 空状态按钮样式
+:deep(.empty-state-btn) {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+
+    &::before {
+      transform: translate(-50%, -50%) scale(2);
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
