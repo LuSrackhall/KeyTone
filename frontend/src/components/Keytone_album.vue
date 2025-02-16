@@ -108,7 +108,7 @@
 
                     <q-card-section>
                       <q-file
-                        :class="['w-56']"
+                        :class="['w-56', 'zl-ll']"
                         dense
                         v-model="files"
                         label="点此选择文件"
@@ -1008,6 +1008,7 @@
                                 label="选择声音 (多选)"
                                 multiple
                                 use-chips
+                                :class="['zl-ll']"
                                 dense
                                 :max-values="maxSelectionForDown"
                                 counter
@@ -1176,6 +1177,7 @@
                                 label="选择声音 (多选)"
                                 multiple
                                 use-chips
+                                :class="['zl-ll']"
                                 dense
                                 :max-values="maxSelectionForUp"
                                 counter
@@ -1456,6 +1458,7 @@
                                     label="选择声音 (多选)"
                                     multiple
                                     use-chips
+                                    :class="['zl-ll']"
                                     dense
                                     :max-values="
                                       selectedKeySound.keySoundValue.down.mode.mode === 'single' ? 1 : Infinity
@@ -1620,6 +1623,7 @@
                                     label="选择声音 (多选)"
                                     multiple
                                     use-chips
+                                    :class="['zl-ll']"
                                     dense
                                     :max-values="
                                       selectedKeySound.keySoundValue.up.mode.mode === 'single' ? 1 : Infinity
@@ -1914,6 +1918,7 @@
                                 }"
                             label="设置全键按下声效"
                             use-chips
+                            :class="['zl-ll']"
                             dense
                             @popup-hide="
                               () => {
@@ -1979,6 +1984,7 @@
                                 }"
                             label="设置全键抬起声效"
                             use-chips
+                            :class="['zl-ll']"
                             dense
                             @popup-hide="
                               () => {
@@ -2343,6 +2349,7 @@
                                     :placeholder="isRecordingSingleKeys ? '在此键入录制单键' : '在此键入搜寻单键'"
                                     use-input
                                     use-chips
+                                    :class="['zl-ll']"
                                     class="flex-1"
                                     @focus="
                                       () => {
@@ -2483,6 +2490,7 @@
                                             }"
                                             label="设置按下声效"
                                             use-chips
+                                            :class="['zl-ll']"
                                             dense
                                             @popup-hide="
                                               () => {
@@ -2549,6 +2557,7 @@
                                             }"
                                             label="设置抬起声效"
                                             use-chips
+                                            :class="['zl-ll']"
                                             dense
                                             @popup-hide="
                                               () => {
@@ -3066,6 +3075,7 @@
                                             }"
                                         :label="`编辑单键 -[ ${currentEditingKeyOfName} ]- 的按下声效`"
                                         use-chips
+                                        :class="['zl-ll']"
                                         dense
                                         @popup-hide="
                                           () => {
@@ -3132,6 +3142,7 @@
                                             }"
                                         :label="`编辑单键 -[ ${currentEditingKeyOfName} ]- 的抬起声效`"
                                         use-chips
+                                        :class="['zl-ll']"
                                         dense
                                         @popup-hide="
                                           () => {
@@ -5076,5 +5087,11 @@ onUnmounted(() => {
 
   // 添加细微滚动条
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+
+.zl-ll {
+  :deep(.q-field__native) {
+    @apply h-auto;
+  }
 }
 </style>
