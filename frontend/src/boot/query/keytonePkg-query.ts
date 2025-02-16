@@ -467,6 +467,55 @@ export async function DeleteAlbum(albumPath: string): Promise<boolean> {
     });
 }
 
+// 获取上传的专辑文件的元数据信息
+export interface AlbumMeta {
+  magicNumber: string;
+  version: string;
+  exportTime: string;
+  albumUUID: string;
+  albumName: string;
+}
+
+export async function GetAlbumMeta(file: File): Promise<AlbumMeta> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await api.post('/keytone_pkg/get_album_meta', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response.data.message === 'ok') {
+      return response.data.meta;
+    }
+    throw new Error(response.data.message);
+  } catch (err: any) {
+    console.group('GetAlbumMeta 请求执行失败');
+    const error = err as {
+      response?: { status: number; data: any };
+      request?: any;
+      message?: string;
+      config?: any;
+    };
+    if (error.response) {
+      console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+      console.error('Error status:', error.response.status);
+      console.error('Error data:', error.response.data);
+    } else if (error.request) {
+      console.error('Error:', '请求已经发出，但是没有收到响应');
+      console.error('Error request:', error.request);
+    } else {
+      console.error('Error:', '请求未正常发出,请检查请求地址是否正确,或其它种类的错误可能');
+      console.error('Error message:', error.message);
+    }
+    console.error('Error config:', error.config);
+    console.groupEnd();
+    throw err;
+  }
+}
+
 // 导出专辑，直接返回zip文件内容
 export async function ExportAlbum(albumPath: string): Promise<Blob> {
   return await api

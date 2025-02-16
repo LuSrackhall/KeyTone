@@ -1433,4 +1433,141 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 获取专辑文件的元数据信息
+	keytonePkgRouters.POST("/get_album_meta", func(ctx *gin.Context) {
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件上传失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 检查文件扩展名
+		if !strings.HasSuffix(strings.ToLower(file.Filename), ".ktalbum") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式，请选择 .ktalbum 文件",
+			})
+			return
+		}
+
+		src, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer src.Close()
+
+		// 读取文件头
+		var header KeytoneFileHeader
+		if err := binary.Read(src, binary.LittleEndian, &header); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 读取文件头失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 验证文件签名
+		if string(header.Signature[:]) != KeytoneFileSignature {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式：不是 KeyTone 专辑文件",
+			})
+			return
+		}
+
+		// 读取加密的数据
+		encryptedData := make([]byte, header.DataSize)
+		if _, err := io.ReadFull(src, encryptedData); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 读取文件数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 解密数据
+		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
+
+		// 验证校验和
+		checksum := sha256.Sum256(zipData)
+		if checksum != header.Checksum {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件校验失败，文件可能已损坏",
+			})
+			return
+		}
+
+		// 创建临时zip文件
+		tempFile, err := os.CreateTemp("", "keytone_meta_*.zip")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建临时文件失败:" + err.Error(),
+			})
+			return
+		}
+		tempPath := tempFile.Name()
+		defer os.Remove(tempPath)
+		defer tempFile.Close()
+
+		// 写入zip数据
+		if _, err := tempFile.Write(zipData); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入临时文件失败:" + err.Error(),
+			})
+			return
+		}
+		tempFile.Close()
+
+		// 打开zip文件
+		zipReader, err := zip.OpenReader(tempPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开zip文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer zipReader.Close()
+
+		// 查找并读取元数据文件
+		var metaFile *zip.File
+		for _, f := range zipReader.File {
+			if f.Name == ".keytone-album" {
+				metaFile = f
+				break
+			}
+		}
+
+		if metaFile == nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 不是有效的 KeyTone 专辑文件：缺少元数据",
+			})
+			return
+		}
+
+		// 读取元数据文件
+		rc, err := metaFile.Open()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 读取元数据失败:" + err.Error(),
+			})
+			return
+		}
+		defer rc.Close()
+
+		var meta KeytoneAlbumMeta
+		if err := json.NewDecoder(rc).Decode(&meta); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 解析元数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 返回专辑元数据
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+			"meta":    meta,
+		})
+	})
+
 }

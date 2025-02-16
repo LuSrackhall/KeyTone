@@ -193,7 +193,7 @@ import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
-import { useTemplateRef } from 'vue';
+import { nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import {
@@ -204,6 +204,8 @@ import {
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
   LoadConfig,
+  GetAlbumMeta,
+  type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
@@ -539,10 +541,38 @@ const importAlbum = async () => {
                   type: 'positive',
                   message: '专辑覆盖导入成功',
                 });
-                // 刷新专辑列表
-                await main_store.GetKeyToneAlbumList();
-                // 重新加载选中的键音包
-                await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+                try {
+                  // 刷新专辑列表
+                  await main_store.GetKeyToneAlbumList();
+
+                  // 只有当覆盖的是当前选中的专辑时,才需要重新加载
+                  const currentAlbumUUID = setting_store.mainHome.selectedKeyTonePkg
+                    ?.split(q.platform.is.win ? '\\' : '/')
+                    .pop();
+                  const meta = await GetAlbumMeta(file);
+
+                  if (currentAlbumUUID === meta.albumUUID) {
+                    console.log('检测到覆盖当前选中专辑,正在重新加载...');
+                    // 重新加载选中的键音包(触发sdk重新加载键音包)
+                    const loadResult = await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+                    if (loadResult) {
+                      // 重新设置选中的键音包(触发ui重新渲染)
+                      keytoneAlbum_PathOrUUID.value = '';
+                      await nextTick();
+                      keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
+                    } else {
+                      throw new Error('重新加载键音包失败');
+                    }
+                  } else {
+                    console.log('覆盖的不是当前选中专辑,无需重新加载');
+                  }
+                } catch (error) {
+                  console.error('刷新专辑数据失败:', error);
+                  q.notify({
+                    type: 'warning',
+                    message: '专辑已覆盖，但刷新失败，请手动刷新',
+                  });
+                }
               }
             } else if (data === 'new') {
               // 用户选择保存为新专辑
