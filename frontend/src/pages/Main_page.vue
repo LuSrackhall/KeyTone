@@ -47,31 +47,57 @@
     </div>
 
     <div :class="['flex flex-col']">
-      <q-select
-        :class="['w-[58%] ml-[21.8%] mr-[20.2%]', 'select-component-label-show']"
-        v-model="setting_store.mainHome.selectedKeyTonePkg"
-        :options="main_store.keyTonePkgOptions"
-        :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-        :label="$t('mainHome.selectedKeySoundAlbum')"
-        :virtual-scroll-slice-size="999999"
-        outlined
-        dense
-        emit-value
-        map-options
-        behavior="dialog"
-        popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-        ref="selectedKeyTonePkgRef"
-        @popup-hide="blur()"
-      >
-        <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
-          <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
-          <q-icon
-            name="cancel"
-            @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
-            class="cursor-pointer text-lg"
-          />
-        </template>
-      </q-select>
+      <div class="flex flex-col items-center">
+        <q-select
+          :class="['w-[58%]', 'select-component-label-show']"
+          v-model="setting_store.mainHome.selectedKeyTonePkg"
+          :options="main_store.keyTonePkgOptions"
+          :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+          :label="$t('mainHome.selectedKeySoundAlbum')"
+          :virtual-scroll-slice-size="999999"
+          outlined
+          dense
+          emit-value
+          map-options
+          behavior="dialog"
+          popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+          ref="selectedKeyTonePkgRef"
+          @popup-hide="blur()"
+        >
+          <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
+            <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
+            <q-icon
+              name="cancel"
+              @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
+              class="cursor-pointer text-lg"
+            />
+          </template>
+
+          <!-- 空状态提示 -->
+          <template v-slot:no-option>
+            <div class="flex flex-col items-center py-4 text-gray-500">
+              <q-icon name="library_music" size="40px" class="mb-2 opacity-50" />
+              <div class="text-sm mb-3">暂无键音专辑</div>
+              <q-btn
+                flat
+                dense
+                class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                @click="goToAlbumPage"
+              >
+                <q-icon name="keyboard_arrow_right" size="20px" class="mr-1" />
+                <span class="text-sm">前往键音专辑页面</span>
+              </q-btn>
+            </div>
+          </template>
+        </q-select>
+
+        <!-- 空状态额外提示 -->
+        <transition name="fade">
+          <div v-if="!main_store.keyTonePkgOptions.length" class="text-center mt-2">
+            <div class="text-xs text-gray-400">在开始使用前，请先创建或导入键音专辑</div>
+          </div>
+        </transition>
+      </div>
     </div>
     <!--
       * TIPS: 对于主页的音量调整, 理念是最终原始音频, 即最大音量等于原始音频的正常音量(或是最大音量), 也就是说保持为0。
@@ -215,12 +241,19 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, useTemplateRef, watch, onMounted, ref, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 const q = useQuasar();
+const router = useRouter();
 const { t } = useI18n();
 const $t = t;
 const setting_store = useSettingStore();
 const main_store = useMainStore();
+
+// 导航到键音专辑页面
+const goToAlbumPage = () => {
+  router.push('/keytone_album');
+};
 
 // 添加初始化状态控制(用于控制音量百分比初始化完成后再显示, 防止增减音量调整后回到主页面的一瞬间, 音量百分比为保持历史状态而调整的过程的显示)
 const isInitialized = ref(false);
@@ -419,12 +452,59 @@ function openExternal(url: string) {
 </script>
 
 <style lang="scss" scoped>
-// :deep(.q-field__native) {
-//   // 对溢出的情况, 采取滚动策略
-//   @apply max-w-full overflow-auto whitespace-nowrap;
-//   // 隐藏滚动策略的滚动条。
-//   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
-// }
+// 淡入淡出动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 空状态相关样式
+.empty-state-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 1;
+  }
+}
+
+// 优化下拉选择器的空状态样式
+:deep(.q-select) {
+  .q-field__control {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+  }
+}
 
 // 实际上, 在此处通过global来更改的.q-field__native, 已经覆盖了:deep(.q-field__native)的样式, 因此上方(包括其它文件中的):deep(.q-field__native)的样式可以删除(如果与这里相同的话)。
 // * global(或者说不带scoped的style)的影响范围是全局的, 包括其它vue文件中的内容也将会受此影响。
