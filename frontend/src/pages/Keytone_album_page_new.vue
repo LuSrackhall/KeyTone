@@ -202,6 +202,7 @@ import {
   ExportAlbum,
   ImportAlbum,
   ImportAlbumOverwrite,
+  ImportAlbumAsNew,
   LoadConfig,
 } from 'src/boot/query/keytonePkg-query';
 
@@ -492,41 +493,78 @@ const importAlbum = async () => {
     } catch (error) {
       // 处理专辑已存在的情况
       if (error instanceof Error && error.message === 'album_exists') {
-        // 使用 q.dialog 显示确认对话框
+        // 使用 q.dialog 显示选项对话框
         q.dialog({
           title: '导入专辑',
           message: '已存在相同的专辑，请选择操作方式：',
           persistent: true,
-          ok: {
-            label: '覆盖现有专辑',
-            push: true,
-            color: 'negative',
+          options: {
+            type: 'radio',
+            model: 'overwrite',
+            items: [
+              {
+                label: '覆盖现有专辑',
+                value: 'overwrite',
+                color: 'negative',
+              },
+              {
+                label: '保存为新专辑',
+                value: 'new',
+                color: 'primary',
+              },
+              {
+                label: '取消导入',
+                value: 'cancel',
+                color: 'primary',
+              },
+            ],
           },
-          cancel: {
-            label: '取消导入',
+          ok: {
+            label: '确认',
             push: true,
             color: 'primary',
           },
-        }).onOk(async () => {
-          // 用户选择覆盖
+        }).onOk(async (data) => {
+          if (data === 'cancel') {
+            return;
+          }
           try {
-            const result = await ImportAlbumOverwrite(file);
-            if (result) {
-              q.notify({
-                type: 'positive',
-                message: '专辑导入成功',
-              });
-              // 刷新专辑列表
-              await main_store.GetKeyToneAlbumList();
-              // 重新加载选中的键音包
-              await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
-            } else {
+            let result = false;
+
+            if (data === 'overwrite') {
+              // 用户选择覆盖
+              result = await ImportAlbumOverwrite(file);
+              if (result) {
+                q.notify({
+                  type: 'positive',
+                  message: '专辑覆盖导入成功',
+                });
+                // 刷新专辑列表
+                await main_store.GetKeyToneAlbumList();
+                // 重新加载选中的键音包
+                await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+              }
+            } else if (data === 'new') {
+              // 用户选择保存为新专辑
+              const newAlbumId = nanoid();
+              result = await ImportAlbumAsNew(file, newAlbumId);
+              if (result) {
+                q.notify({
+                  type: 'positive',
+                  message: '专辑已保存为新专辑',
+                });
+                // 刷新专辑列表
+                await main_store.GetKeyToneAlbumList();
+              }
+            }
+
+            if (!result) {
               throw new Error('导入失败');
             }
-          } catch (error) {
+          } catch (err) {
             q.notify({
               type: 'negative',
-              message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
+              message: '专辑导入失败: ' + (err instanceof Error ? err.message : String(err)),
             });
           }
         });

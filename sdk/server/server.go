@@ -47,10 +47,10 @@ import (
 )
 
 const (
-	KeytoneMagicNumber = "KTAF" // KeyTone Album Format
-	KeytoneVersion     = "1.0.0" // 当前版本号
-	KeytoneFileSignature = "KTALBUM"  // 文件签名
-	KeytoneFileVersion   = 1          // 文件版本
+	KeytoneMagicNumber   = "KTAF"                 // KeyTone Album Format
+	KeytoneVersion       = "1.0.0"                // 当前版本号
+	KeytoneFileSignature = "KTALBUM"              // 文件签名
+	KeytoneFileVersion   = 1                      // 文件版本
 	KeytoneEncryptKey    = "KeyTone2024SecretKey" // 简单的对称加密密钥
 )
 
@@ -71,10 +71,10 @@ type KeyStateMessage struct {
 
 // KeytoneFileHeader 文件头结构
 type KeytoneFileHeader struct {
-	Signature   [7]byte // "KTALBUM"
-	Version     uint8   // 文件版本
-	DataSize    uint64  // 加密后的zip数据大小
-	Checksum    [32]byte // zip数据的SHA-256校验和
+	Signature [7]byte  // "KTALBUM"
+	Version   uint8    // 文件版本
+	DataSize  uint64   // 加密后的zip数据大小
+	Checksum  [32]byte // zip数据的SHA-256校验和
 }
 
 // 验证 nanoid 格式的辅助函数
@@ -208,8 +208,108 @@ func validateAlbumMeta(zipReader *zip.ReadCloser) error {
 
 	// 验证版本兼容性
 	// 这里可以添加版本兼容性检查的逻辑
-	
+
 	return nil
+}
+
+// 处理导入文件的通用函数
+func processImportedFile(src io.Reader, header KeytoneFileHeader, tempZipPath string) error {
+	// 读取加密的数据
+	encryptedData := make([]byte, header.DataSize)
+	if _, err := io.ReadFull(src, encryptedData); err != nil {
+		return &ImportError{Message: "读取文件数据失败:" + err.Error()}
+	}
+
+	// 解密数据
+	zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
+
+	// 验证校验和
+	checksum := sha256.Sum256(zipData)
+	if checksum != header.Checksum {
+		return &ImportError{Message: "文件校验失败，文件可能已损坏"}
+	}
+
+	// 保存解密后的数据到临时zip文件
+	if err := os.WriteFile(tempZipPath, zipData, 0644); err != nil {
+		return &ImportError{Message: "保存临时文件失败:" + err.Error()}
+	}
+
+	return nil
+}
+
+// 解压并验证专辑结构的通用函数
+func extractAndValidateAlbum(zipReader *zip.ReadCloser, tempDir string) (string, error) {
+	// 解压到临时目录
+	for _, file := range zipReader.File {
+		// 构建完整的目标路径
+		targetPath := filepath.Join(tempDir, file.Name)
+
+		// 确保目标目录存在
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(targetPath, 0755)
+			continue
+		}
+
+		// 创建目标文件的父目录
+		os.MkdirAll(filepath.Dir(targetPath), 0755)
+
+		// 创建目标文件
+		outFile, err := os.OpenFile(targetPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return "", fmt.Errorf("创建目标文件失败: %v", err)
+		}
+
+		// 打开源文件
+		inFile, err := file.Open()
+		if err != nil {
+			outFile.Close()
+			return "", fmt.Errorf("打开源文件失败: %v", err)
+		}
+
+		// 复制文件内容
+		_, err = io.Copy(outFile, inFile)
+		outFile.Close()
+		inFile.Close()
+		if err != nil {
+			return "", fmt.Errorf("复制文件内容失败: %v", err)
+		}
+	}
+
+	// 获取解压后的专辑目录
+	files, err := os.ReadDir(tempDir)
+	if err != nil || len(files) == 0 {
+		return "", fmt.Errorf("读取解压目录失败或目录为空: %v", err)
+	}
+
+	var albumDir os.DirEntry
+	for _, f := range files {
+		if f.IsDir() {
+			if albumDir != nil {
+				return "", fmt.Errorf("zip 文件中包含多个目录")
+			}
+			albumDir = f
+		}
+	}
+
+	if albumDir == nil {
+		return "", fmt.Errorf("zip 文件中未找到专辑目录")
+	}
+
+	albumPath := filepath.Join(tempDir, albumDir.Name())
+	if err := isValidAlbumStructure(albumPath); err != nil {
+		return "", fmt.Errorf("无效的专辑格式: %v", err)
+	}
+
+	return albumPath, nil
+}
+
+// 导入错误类型
+type ImportError struct {
+	Message string
+}
+
+func (e *ImportError) Error() string {
+	return e.Message
 }
 
 // 简单的异或加密/解密函数（对称加密）
@@ -963,6 +1063,139 @@ func keytonePkgRouters(r *gin.Engine) {
 	})
 
 	// 修改导入处理函数
+	// 导入为新专辑
+	keytonePkgRouters.POST("/import_album_as_new", func(ctx *gin.Context) {
+		// 获取上传的文件
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 文件上传失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 获取新的专辑ID
+		newAlbumId := ctx.PostForm("newAlbumId")
+		if !isValidNanoID(newAlbumId) {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的专辑ID格式",
+			})
+			return
+		}
+
+		// 检查文件扩展名
+		if !strings.HasSuffix(strings.ToLower(file.Filename), ".ktalbum") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式，请选择 .ktalbum 文件",
+			})
+			return
+		}
+
+		// 读取文件数据
+		src, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer src.Close()
+
+		// 读取文件头并验证
+		var header KeytoneFileHeader
+		if err := binary.Read(src, binary.LittleEndian, &header); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 读取文件头失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 验证文件签名
+		if string(header.Signature[:]) != KeytoneFileSignature {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的文件格式：不是 KeyTone 专辑文件",
+			})
+			return
+		}
+
+		// 解压和处理文件
+		tempDir, err := os.MkdirTemp("", "keytone_import_*")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建临时目录失败:" + err.Error(),
+			})
+			return
+		}
+		defer os.RemoveAll(tempDir)
+
+		tempZipPath := filepath.Join(tempDir, "temp.zip")
+		if err := processImportedFile(src, header, tempZipPath); err != nil {
+			if importErr, ok := err.(*ImportError); ok {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"message": "error: " + importErr.Message,
+				})
+				return
+			}
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		// 打开zip文件进行验证
+		zipReader, err := zip.OpenReader(tempZipPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 打开zip文件失败:" + err.Error(),
+			})
+			return
+		}
+		defer zipReader.Close()
+
+		// 验证zip内的元数据
+		if err := validateAlbumMeta(zipReader); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		// 解压到临时目录并验证结构
+		albumPath, err := extractAndValidateAlbum(zipReader, tempDir)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// 使用新的专辑ID创建目标路径
+		targetPath := filepath.Join(audioPackageConfig.AudioPackagePath, newAlbumId)
+
+		// 复制到目标路径
+		if err := copyDir(albumPath, targetPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 复制专辑文件夹失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 更新配置文件中的UUID
+		if err := audioPackageList.UpdateAlbumUUID(targetPath, newAlbumId); err != nil {
+			// 如果更新失败，清理已复制的文件夹
+			os.RemoveAll(targetPath)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 更新专辑配置失败:" + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+		})
+	})
+
+	// 原有的导入专辑路由
 	keytonePkgRouters.POST("/import_album", func(ctx *gin.Context) {
 		// 获取上传的文件
 		file, err := ctx.FormFile("file")
@@ -1152,6 +1385,20 @@ func keytonePkgRouters(r *gin.Engine) {
 				"message": "error: 无效的专辑格式: " + err.Error(),
 			})
 			return
+		}
+
+		// 获取新的专辑ID（如果提供）
+		newAlbumId := ctx.PostForm("newAlbumId")
+		if newAlbumId != "" {
+			// 验证新的专辑ID是否符合nanoid格式
+			if !isValidNanoID(newAlbumId) {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"message": "error: 无效的专辑ID格式",
+				})
+				return
+			}
+			// 使用新的专辑ID更新目标路径
+			targetPath = filepath.Join(audioPackageConfig.AudioPackagePath, newAlbumId)
 		}
 
 		// 在复制到目标路径前检查是否存在

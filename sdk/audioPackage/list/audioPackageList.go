@@ -76,3 +76,27 @@ func GetAudioPackageName(configPath string) any {
 	defer viperRWMutex.RUnlock()
 	return Viper.Get("package_name")
 }
+
+// 更新专辑配置文件中的 UUID
+func UpdateAlbumUUID(albumPath string, newUUID string) error {
+	// 加载配置文件
+	v := viper.New()
+	v.SetConfigName("config")
+	v.SetConfigType("json")
+	v.AddConfigPath(albumPath)
+
+	// 读取配置文件
+	if err := v.ReadInConfig(); err != nil {
+		return err
+	}
+
+	// 更新 UUID
+	v.Set("audio_pkg_uuid", newUUID)
+
+	// 保存更改
+	if err := v.WriteConfig(); err != nil {
+		return err
+	}
+
+	return nil
+}
