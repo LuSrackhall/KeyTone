@@ -104,14 +104,15 @@
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6"> 载入新的音频源文件 </q-card-section>
 
-                    <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section>
+                    <!-- <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section> -->
 
                     <q-card-section>
+                      <div class="text-gray-600 text-xs">点击选择或直接往此处拖放文件</div>
                       <q-file
                         :class="['w-56', 'zl-ll']"
                         dense
                         v-model="files"
-                        label="点此选择文件"
+                        label="音频源文件"
                         outlined
                         use-chips
                         multiple
@@ -119,6 +120,7 @@
                         accept=".wav,.mp3,.ogg"
                         excludeAcceptAllOption
                         style="max-width: 300px"
+                        hint="支持 WAV、MP3、OGG 格式"
                       />
                     </q-card-section>
 
@@ -160,6 +162,7 @@
 
                                     timeout: 5,
                                   });
+                                  return;
                                 }
                               } catch (error) {
                                 console.error(`Error uploading file ${file.name}:`, error);
@@ -172,8 +175,17 @@
 
                                   timeout: 5,
                                 });
+                                return;
                               }
                             }
+                            nextTick(() => {
+                              q.notify({
+                                type: 'positive',
+                                position: 'top',
+                                message: `添加成功`,
+                                timeout: 5,
+                              });
+                            });
                           }
                         "
                         color="primary"
