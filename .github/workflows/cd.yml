@@ -299,7 +299,9 @@ jobs:
       - name: Download Build Artifact (ALL)
         uses: actions/download-artifact@v4
         with:
+          path: artifacts
           pattern: "INSTALLER_NAME_*"
+          merge-multiple: true
 
       - name: Create GitHub Release
         id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
@@ -381,7 +383,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}
           asset_content_type: application/octet-stream # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/octet-stream，这是一种通用的二进制文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
@@ -391,7 +393,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 这里就通过之前步骤的唯一id, 进行了进一步的操作(以将构建后的结果, 上传到此步骤的可供用户下载的地方)
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
           asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
 
@@ -406,7 +408,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}
           asset_content_type: application/gzip
 
@@ -416,7 +418,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_APPIMAGE }}
           asset_content_type: application/x-appimage
 
@@ -426,7 +428,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_DEB }}
           asset_content_type: application/x-debian-package
 
@@ -440,7 +442,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_DMG }}
           asset_content_type: application/x-apple-diskimage
 
@@ -450,7 +452,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_ARM64_DMG }}
           asset_content_type: application/x-apple-diskimage
       # endregion
