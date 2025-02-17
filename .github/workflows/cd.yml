@@ -284,7 +284,7 @@ jobs:
         #       * 在release中没有进行解压缩步骤的情况下, 下载结果直接是  .exe 的可执行安装程序,  对此安装包进行hash, 其结果符合hash校验值。
         uses: actions/upload-artifact@v4
         with:
-          name: INSTALLER_NAME_${{ matrix.os }}_${{ github.sha }}
+          name: INSTALLER_NAME_${{ matrix.os }}
           path: |
             frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
             frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_ZIP }}
@@ -299,8 +299,7 @@ jobs:
       - name: Download Build Artifact (ALL)
         uses: actions/download-artifact@v4
         with:
-          name: INSTALLER_NAME_${{ matrix.os }}_${{ github.sha }}
-          pattern: INSTALLER_NAME_*_${{ github.sha }}
+          pattern: "INSTALLER_NAME_*"
 
       - name: Create GitHub Release
         id: create_release # id 项的作用是为这个步骤分配一个唯一的标识符。 使得你可以在后续的步骤中引用这个步骤的输出或状态(以step开头)。这样可以使工作流更加清晰和易于维护。
