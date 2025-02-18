@@ -28,6 +28,10 @@
     "import": "导入专辑",
     "export": "导出专辑",
     "delete": "删除专辑",
+    "label": "键音专辑",
+    "emptyState": {
+      "noAlbum": "暂无键音专辑"
+    },
     "notify": {
       "deleteSuccess": "专辑删除成功",
       "deleteFailed": "专辑删除失败",
@@ -36,7 +40,10 @@
       "exportSuccess": "专辑导出成功",
       "exportFailed": "专辑导出失败",
       "invalidFormat": "请选择 .ktalbum 格式的专辑文件",
-      "refreshFailed": "专辑已覆盖，但刷新失败，请手动刷新"
+      "refreshFailed": "专辑已覆盖，但刷新失败，请手动刷新",
+      "importOverwriteSuccess": "专辑覆盖导入成功",
+      "importSaveAsNewSuccess": "专辑已保存为新专辑",
+      "fileDescription": "KeyTone 专辑文件"
     },
     "importDialog": {
       "title": "导入专辑",

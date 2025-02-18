@@ -28,6 +28,10 @@
     "import": "Import Album",
     "export": "Export Album",
     "delete": "Delete Album",
+    "label": "Key Sound Album",
+    "emptyState": {
+      "noAlbum": "No Albums"
+    },
     "notify": {
       "deleteSuccess": "Delete success",
       "deleteFailed": "Delete failed",
@@ -36,7 +40,10 @@
       "exportSuccess": "Export success",
       "exportFailed": "Export failed",
       "invalidFormat": "Select .ktalbum file",
-      "refreshFailed": "Refresh failed, try manually"
+      "refreshFailed": "Refresh failed, try manually",
+      "importOverwriteSuccess": "Overwrite success",
+      "importSaveAsNewSuccess": "Saved as new",
+      "fileDescription": "KeyTone Album File"
     },
     "importDialog": {
       "title": "Import Album",

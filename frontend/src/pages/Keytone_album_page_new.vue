@@ -106,7 +106,7 @@
               v-model="setting_store.mainHome.selectedKeyTonePkg"
               :options="main_store.keyTonePkgOptions"
               :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-              :label="$t('mainHome.selectedKeySoundAlbum')"
+              :label="$t('keyToneAlbumPage.label')"
               :virtual-scroll-slice-size="999999"
               outlined
               dense
@@ -134,7 +134,7 @@
               <template v-slot:no-option>
                 <div class="flex flex-col items-center py-6 text-gray-500">
                   <q-icon name="library_music" size="56px" class="empty-state-icon mb-3" />
-                  <div class="text-sm mb-5 opacity-75">{{ $t('mainHome.emptyState.noAlbum') }}</div>
+                  <div class="text-sm mb-5 opacity-75">{{ $t('keyToneAlbumPage.emptyState.noAlbum') }}</div>
                   <div class="flex gap-4">
                     <q-btn
                       flat
@@ -354,13 +354,14 @@ const exportAlbumLegacy = async () => {
 
     q.notify({
       type: 'positive',
-      message: '专辑导出成功',
+      message: $t('keyToneAlbumPage.notify.exportSuccess'),
     });
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({
       type: 'negative',
-      message: '导出专辑失败:' + (error instanceof Error ? error.message : String(error)),
+      message:
+        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
     });
   }
 };
@@ -390,7 +391,7 @@ const exportAlbum = async () => {
         suggestedName: `${albumName}.ktalbum`,
         types: [
           {
-            description: 'KeyTone 专辑文件',
+            description: $t('keyToneAlbumPage.notify.fileDescription'),
             accept: { 'application/octet-stream': ['.ktalbum'] },
           },
         ],
@@ -574,7 +575,7 @@ const importAlbum = async () => {
               if (result) {
                 q.notify({
                   type: 'positive',
-                  message: '专辑覆盖导入成功',
+                  message: $t('keyToneAlbumPage.notify.importOverwriteSuccess'),
                 });
                 try {
                   // 刷新专辑列表
@@ -616,7 +617,7 @@ const importAlbum = async () => {
               if (result) {
                 q.notify({
                   type: 'positive',
-                  message: '专辑已保存为新专辑',
+                  message: $t('keyToneAlbumPage.notify.importSaveAsNewSuccess'),
                 });
                 // 刷新专辑列表
                 await main_store.GetKeyToneAlbumList();
@@ -638,7 +639,10 @@ const importAlbum = async () => {
         // 处理其他错误
         q.notify({
           type: 'negative',
-          message: '专辑导入失败: ' + (error instanceof Error ? error.message : String(error)),
+          message:
+            $t('keyToneAlbumPage.notify.importFailed') +
+            ': ' +
+            (error instanceof Error ? error.message : String(error)),
         });
       }
     }
