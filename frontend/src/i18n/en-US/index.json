@@ -29,22 +29,22 @@
     "export": "Export Album",
     "delete": "Delete Album",
     "notify": {
-      "deleteSuccess": "Album deleted successfully",
-      "deleteFailed": "Failed to delete album",
-      "importSuccess": "Album imported successfully",
-      "importFailed": "Failed to import album",
-      "exportSuccess": "Album exported successfully",
-      "exportFailed": "Failed to export album",
-      "invalidFormat": "Please select a .ktalbum format file",
-      "refreshFailed": "Album overwritten but refresh failed, please refresh manually"
+      "deleteSuccess": "Delete success",
+      "deleteFailed": "Delete failed",
+      "importSuccess": "Import success",
+      "importFailed": "Import failed",
+      "exportSuccess": "Export success",
+      "exportFailed": "Export failed",
+      "invalidFormat": "Select .ktalbum file",
+      "refreshFailed": "Refresh failed, try manually"
     },
     "importDialog": {
       "title": "Import Album",
-      "message": "An album with the same name already exists, please choose an action:",
-      "overwrite": "Overwrite existing album",
-      "saveAsNew": "Save as new album",
-      "cancel": "Cancel import",
-      "confirm": "Confirm"
+      "message": "Album exists, choose action:",
+      "overwrite": "Overwrite",
+      "saveAsNew": "Save as new",
+      "cancel": "Cancel",
+      "confirm": "OK"
     }
   },
   "KeyToneAlbum": {
