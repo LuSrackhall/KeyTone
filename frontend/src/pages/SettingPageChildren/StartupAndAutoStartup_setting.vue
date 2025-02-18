@@ -94,4 +94,14 @@ function getWindowsStoreStatus() {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+// 用于修复主页面全局的:global(.q-field__native)中的h-5.8这个样式影响了当前页面中的q-input的问题
+:deep(.q-placeholder) {
+  // 在这里重置q-input组件的输入样式的高度以修复这个问题
+  @apply h-auto;
+}
+
+:deep(.q-item__section) {
+  @apply text-wrap;
+}
+</style>
