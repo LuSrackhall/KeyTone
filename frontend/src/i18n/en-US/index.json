@@ -15,8 +15,13 @@
     "selectedKeySoundAlbum": "Key sound album",
     "copyright": "Copyright © 2024-",
     "license": "License",
-    "privacyPolicy": "PrivacyPolicy",
-    "userAgreement": "UserAgreement"
+    "privacyPolicy": "Privacy Policy",
+    "userAgreement": "User Agreement",
+    "emptyState": {
+      "noAlbum": "No key sound albums",
+      "goToAlbumPage": "Go to album page",
+      "createOrImportTip": "No albums - create or import one"
+    }
   },
   "KeyToneAlbum": {
     "new": {

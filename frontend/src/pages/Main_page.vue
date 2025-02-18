@@ -77,7 +77,7 @@
           <template v-slot:no-option>
             <div class="flex flex-col items-center py-4 text-gray-500">
               <q-icon name="library_music" size="40px" class="mb-2 opacity-50" />
-              <div class="text-sm mb-3">暂无键音专辑</div>
+              <div class="text-sm mb-3">{{ $t('mainHome.emptyState.noAlbum') }}</div>
               <q-btn
                 flat
                 dense
@@ -85,7 +85,7 @@
                 @click="goToAlbumPage"
               >
                 <q-icon name="keyboard_arrow_right" size="20px" class="mr-1" />
-                <span class="text-sm">前往键音专辑页面</span>
+                <span class="text-sm">{{ $t('mainHome.emptyState.goToAlbumPage') }}</span>
               </q-btn>
             </div>
           </template>
@@ -94,7 +94,7 @@
         <!-- 空状态额外提示 -->
         <transition name="fade">
           <div v-if="!main_store.keyTonePkgOptions.length" class="text-center mt-2">
-            <div class="text-xs text-gray-400">在开始使用前，请先创建或导入键音专辑</div>
+            <div class="text-xs text-gray-400 -ml-0.6">{{ $t('mainHome.emptyState.createOrImportTip') }}</div>
           </div>
         </transition>
       </div>
