@@ -23,6 +23,30 @@
       "createOrImportTip": "在开始使用前，请先创建或导入键音专辑"
     }
   },
+  "keyToneAlbumPage": {
+    "new": "新建专辑",
+    "import": "导入专辑",
+    "export": "导出专辑",
+    "delete": "删除专辑",
+    "notify": {
+      "deleteSuccess": "专辑删除成功",
+      "deleteFailed": "专辑删除失败",
+      "importSuccess": "专辑导入成功",
+      "importFailed": "专辑导入失败",
+      "exportSuccess": "专辑导出成功",
+      "exportFailed": "专辑导出失败",
+      "invalidFormat": "请选择 .ktalbum 格式的专辑文件",
+      "refreshFailed": "专辑已覆盖，但刷新失败，请手动刷新"
+    },
+    "importDialog": {
+      "title": "导入专辑",
+      "message": "已存在相同的专辑，请选择操作方式：",
+      "overwrite": "覆盖现有专辑",
+      "saveAsNew": "保存为新专辑",
+      "cancel": "取消导入",
+      "confirm": "确认"
+    }
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "制作新的键音专辑",

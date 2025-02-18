@@ -33,7 +33,7 @@
                 :offset="[0, 8]"
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
-                新建专辑
+                {{ $t('keyToneAlbumPage.new') }}
               </q-tooltip>
             </q-btn>
 
@@ -53,7 +53,7 @@
                 :offset="[0, 8]"
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
-                导入专辑
+                {{ $t('keyToneAlbumPage.import') }}
               </q-tooltip>
             </q-btn>
 
@@ -74,7 +74,7 @@
                 :offset="[0, 8]"
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
-                导出专辑
+                {{ $t('keyToneAlbumPage.export') }}
               </q-tooltip>
             </q-btn>
 
@@ -95,7 +95,7 @@
                 :offset="[0, 8]"
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
-                删除专辑
+                {{ $t('keyToneAlbumPage.delete') }}
               </q-tooltip>
             </q-btn>
           </div>
@@ -134,7 +134,7 @@
               <template v-slot:no-option>
                 <div class="flex flex-col items-center py-6 text-gray-500">
                   <q-icon name="library_music" size="56px" class="empty-state-icon mb-3" />
-                  <div class="text-sm mb-5 opacity-75">暂无键音专辑</div>
+                  <div class="text-sm mb-5 opacity-75">{{ $t('mainHome.emptyState.noAlbum') }}</div>
                   <div class="flex gap-4">
                     <q-btn
                       flat
@@ -143,7 +143,7 @@
                       @click="createNewAlbum"
                     >
                       <q-icon name="add" size="20px" class="mr-1.5" />
-                      <span class="text-sm font-medium">新建专辑</span>
+                      <span class="text-sm font-medium">{{ $t('keyToneAlbumPage.new') }}</span>
                     </q-btn>
                     <q-btn
                       flat
@@ -152,7 +152,7 @@
                       @click="importAlbum"
                     >
                       <q-icon name="upload_file" size="20px" class="mr-1.5" />
-                      <span class="text-sm font-medium">导入专辑</span>
+                      <span class="text-sm font-medium">{{ $t('keyToneAlbumPage.import') }}</span>
                     </q-btn>
                   </div>
                 </div>
@@ -227,6 +227,7 @@ import { nanoid } from 'nanoid';
 import { nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   DeleteAlbum,
   GetAudioPackageName,
@@ -248,6 +249,8 @@ declare global {
 import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const q = useQuasar();
+const { t } = useI18n();
+const $t = t;
 const main_store = useMainStore();
 const setting_store = useSettingStore();
 const keytoneAlbum_store = useKeytoneAlbumStore();
@@ -276,12 +279,12 @@ const deleteAlbum = async () => {
     setting_store.mainHome.selectedKeyTonePkg = '';
     q.notify({
       type: 'positive',
-      message: '专辑删除成功',
+      message: $t('keyToneAlbumPage.notify.deleteSuccess'),
     });
   } else {
     q.notify({
       type: 'negative',
-      message: '专辑删除失败',
+      message: $t('keyToneAlbumPage.notify.deleteFailed'),
     });
   }
 };
@@ -401,7 +404,7 @@ const exportAlbum = async () => {
       // 文件成功保存后再通知
       q.notify({
         type: 'positive',
-        message: '专辑导出成功',
+        message: $t('keyToneAlbumPage.notify.exportSuccess'),
       });
     } catch (err) {
       // 用户取消选择文件时不显示错误
@@ -414,7 +417,8 @@ const exportAlbum = async () => {
     console.error('导出专辑失败:', error);
     q.notify({
       type: 'negative',
-      message: '导出专辑失败:' + (error instanceof Error ? error.message : String(error)),
+      message:
+        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
     });
   }
 };
@@ -508,7 +512,7 @@ const importAlbum = async () => {
     if (!file.name.toLowerCase().endsWith('.ktalbum')) {
       q.notify({
         type: 'negative',
-        message: '请选择 .ktalbum 格式的专辑文件',
+        message: $t('keyToneAlbumPage.notify.invalidFormat'),
       });
       return;
     }
@@ -518,7 +522,7 @@ const importAlbum = async () => {
       if (result) {
         q.notify({
           type: 'positive',
-          message: '专辑导入成功',
+          message: $t('keyToneAlbumPage.notify.importSuccess'),
         });
         // 刷新专辑列表
         await main_store.GetKeyToneAlbumList();
@@ -528,32 +532,32 @@ const importAlbum = async () => {
       if (error instanceof Error && error.message === 'album_exists') {
         // 使用 q.dialog 显示选项对话框
         q.dialog({
-          title: '导入专辑',
-          message: '已存在相同的专辑，请选择操作方式：',
+          title: $t('keyToneAlbumPage.importDialog.title'),
+          message: $t('keyToneAlbumPage.importDialog.message'),
           persistent: true,
           options: {
             type: 'radio',
             model: 'overwrite',
             items: [
               {
-                label: '覆盖现有专辑',
+                label: $t('keyToneAlbumPage.importDialog.overwrite'),
                 value: 'overwrite',
                 color: 'negative',
               },
               {
-                label: '保存为新专辑',
+                label: $t('keyToneAlbumPage.importDialog.saveAsNew'),
                 value: 'new',
                 color: 'primary',
               },
               {
-                label: '取消导入',
+                label: $t('keyToneAlbumPage.importDialog.cancel'),
                 value: 'cancel',
                 color: 'primary',
               },
             ],
           },
           ok: {
-            label: '确认',
+            label: $t('keyToneAlbumPage.importDialog.confirm'),
             push: true,
             color: 'primary',
           },
@@ -601,7 +605,7 @@ const importAlbum = async () => {
                   console.error('刷新专辑数据失败:', error);
                   q.notify({
                     type: 'warning',
-                    message: '专辑已覆盖，但刷新失败，请手动刷新',
+                    message: $t('keyToneAlbumPage.notify.refreshFailed'),
                   });
                 }
               }
@@ -625,7 +629,8 @@ const importAlbum = async () => {
           } catch (err) {
             q.notify({
               type: 'negative',
-              message: '专辑导入失败: ' + (err instanceof Error ? err.message : String(err)),
+              message:
+                $t('keyToneAlbumPage.notify.importFailed') + ': ' + (err instanceof Error ? err.message : String(err)),
             });
           }
         });
