@@ -63,8 +63,34 @@
         "errorMessage": "You must set a name for the key sound album"
       }
     },
+    "or": "OR",
+    "close": "Close",
+    "continue": "Continue",
+    "deleteKeySound": "Delete",
+    "notify": {
+      "deleteSuccess": "Deleted successfully",
+      "deleteFailed": "Deleted failed",
+      "addSuccess": "Added successfully",
+      "addFailed": "Add failed",
+      "noFilesToManage": "No files to manage",
+    },
+    "loadAudioFile": {
+      "title": "Load Audio Files",
+      "description": "Load original audio files for subsequent steps",
+      "addNewFile": "Add New Audio Source File",
+      "addNewFile_1": "Add New Audio Source File",
+      "dragAndDrop": "Click to select or drag-and-drop files here",
+      "audioFile": "Audio Source File",
+      "supportedFormats": "Supported formats: WAV, MP3, OGG",
+      "addAsNeeded": "Add files as needed per your production preferences",
+      "confirmAdd": "Confirm Add",
+      "manageExistingFiles": "Manage Loaded Files",
+      "selectFileToManage": "Select File to Manage",
+      "emptyFileName": "Empty filename may increase management complexity",
+      "renameFile": "File Name (Editable)"
+    },
     "edit": {
-      "edit": "Edit existing key sound album"
+
     },
     "import": {
       "import": "Import more key sound album"

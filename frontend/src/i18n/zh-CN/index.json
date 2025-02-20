@@ -63,8 +63,34 @@
         "errorMessage": "您必须为键音专辑设置一个名字"
       }
     },
+    "or": "或",
+    "close": "关闭",
+    "continue": "继续",
+    "deleteKeySound": "删除",
+    "notify": {
+      "deleteSuccess": "删除成功",
+      "deleteFailed": "删除失败",
+      "addSuccess": "添加成功",
+      "addFailed": "添加失败",
+      "noFilesToManage": "当前没有可管理的源文件",
+    },
+    "loadAudioFile": {
+      "title": "载入音频文件",
+      "description": "为当前专辑载入原始的音频文件以供后续步骤使用",
+      "addNewFile": "添加新的音频源文件",
+      "addNewFile_1": "载入新的音频源文件",
+      "dragAndDrop": "点击选择或直接往此处拖放文件",
+      "audioFile": "音频源文件",
+      "supportedFormats": "支持 WAV、MP3、OGG 格式",
+      "addAsNeeded": "数量不定，跟随制作喜好添加即可",
+      "confirmAdd": "确认添加",
+      "manageExistingFiles": "管理已载入的源文件",
+      "selectFileToManage": "选择要管理的源文件",
+      "emptyFileName": "空文件名可能增加后续管理成本",
+      "renameFile": "文件名(可更改)"
+    },
     "edit": {
-      "edit": "编辑现有键音专辑"
+
     },
     "import": {
       "import": "导入更多键音专辑"

@@ -54,7 +54,7 @@
           </div>
           <q-step
             :name="1"
-            title="载入音频文件"
+            :title="$t('KeyToneAlbum.loadAudioFile.title')"
             icon="create_new_folder"
             :done="step > 1"
             :disable="step === 99 && soundFileList.length === 0"
@@ -78,7 +78,7 @@
               }
             "
           >
-            <div>为此键音包载入原始的音频文件供后续步骤使用。</div>
+            <div :class="['mb-3']">{{ $t('KeyToneAlbum.loadAudioFile.description') }}</div>
             <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
             <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
             <!-- <q-card class="bg-slate-500" :class="['p-2']"> -->
@@ -92,7 +92,7 @@
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="载入新的音频源文件"
+                  :label="$t('KeyToneAlbum.loadAudioFile.addNewFile')"
                   @click="
                     () => {
                       addNewSoundFile = !addNewSoundFile;
@@ -102,17 +102,19 @@
                 </q-btn>
                 <q-dialog v-model="addNewSoundFile" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 载入新的音频源文件 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6">
+                      {{ $t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
+                    </q-card-section>
 
                     <!-- <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section> -->
 
                     <q-card-section>
-                      <div class="text-gray-600 text-xs">点击选择或直接往此处拖放文件</div>
+                      <div class="text-gray-600 text-xs">{{ $t('KeyToneAlbum.loadAudioFile.dragAndDrop') }}</div>
                       <q-file
                         :class="['w-56', 'zl-ll']"
                         dense
                         v-model="files"
-                        label="音频源文件"
+                        :label="$t('KeyToneAlbum.loadAudioFile.audioFile')"
                         outlined
                         use-chips
                         multiple
@@ -120,12 +122,12 @@
                         accept=".wav,.mp3,.ogg"
                         excludeAcceptAllOption
                         style="max-width: 300px"
-                        hint="支持 WAV、MP3、OGG 格式"
+                        :hint="$t('KeyToneAlbum.loadAudioFile.supportedFormats')"
                       />
                     </q-card-section>
 
                     <q-card-section>
-                      <div>数量不定, 跟随制作喜好添加即可</div>
+                      <div>{{ $t('KeyToneAlbum.loadAudioFile.addAsNeeded') }}</div>
                     </q-card-section>
                     <q-card-actions align="right">
                       <q-btn
@@ -158,7 +160,7 @@
 
                                     position: 'top',
 
-                                    message: `File '${file.name}' addition failed`,
+                                    message: `${$t('KeyToneAlbum.notify.addFailed')} '${file.name}'`,
 
                                     timeout: 5,
                                   });
@@ -171,7 +173,7 @@
 
                                   position: 'top',
 
-                                  message: `File '${file.name}' addition failed`,
+                                  message: `${$t('KeyToneAlbum.notify.addFailed')} '${file.name}'`,
 
                                   timeout: 5,
                                 });
@@ -182,32 +184,32 @@
                               q.notify({
                                 type: 'positive',
                                 position: 'top',
-                                message: `添加成功`,
+                                message: $t('KeyToneAlbum.notify.addSuccess'),
                                 timeout: 5,
                               });
                             });
                           }
                         "
                         color="primary"
-                        label="确认添加"
+                        :label="$t('KeyToneAlbum.loadAudioFile.confirmAdd')"
                       />
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
               </div>
-              <div :class="['p-2 text-zinc-600']">或</div>
+              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
               <!-- -------------------------------------------------------------------------------编辑已有音频源文件 -->
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="管理已载入的源文件"
+                  :label="$t('KeyToneAlbum.loadAudioFile.manageExistingFiles')"
                   @click="
                     () => {
                       if (soundFileList.length === 0) {
                         q.notify({
                           type: 'warning',
-                          message: '当前没有可管理的源文件',
+                          message: $t('KeyToneAlbum.notify.noFilesToManage'),
                           position: 'top',
                         });
                         return;
@@ -219,7 +221,9 @@
                 ></q-btn>
                 <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
                   <q-card :class="['p-x-3  w-[96%]']">
-                    <q-card-section class="row items-center q-pb-none text-h6"> 管理已载入的源文件 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6">
+                      {{ $t('KeyToneAlbum.loadAudioFile.manageExistingFiles') }}
+                    </q-card-section>
 
                     <!-- <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section> -->
 
@@ -230,7 +234,7 @@
                         v-model="selectedSoundFile"
                         :options="soundFileList"
                         :option-label="(item) => item.name + item.type"
-                        label="选择要管理的源文件"
+                        :label="$t('KeyToneAlbum.loadAudioFile.selectFileToManage')"
                         dense
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       >
@@ -303,21 +307,21 @@
                             outlined
                             stack-label
                             dense
-                            error-message="空文件名可能增加后续管理成本"
+                            :error-message="$t('KeyToneAlbum.notify.emptyFileName')"
                             :error="
                               selectedSoundFile.name === '' ||
                               selectedSoundFile.name === undefined ||
                               selectedSoundFile.name === null
                             "
                             v-model="selectedSoundFile.name"
-                            label="文件名(可更改)"
+                            :label="$t('KeyToneAlbum.loadAudioFile.renameFile')"
                           />
 
                           <q-btn
                             :class="['w-20 self-center bg-pink-700 text-zinc-50']"
                             dense
                             no-caps
-                            label="删除"
+                            :label="$t('KeyToneAlbum.deleteKeySound')"
                             icon="flight_takeoff"
                             @click="
                               async () => {
@@ -330,7 +334,7 @@
                                   q.notify({
                                     type: 'positive',
                                     position: 'top',
-                                    message: '删除成功',
+                                    message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                     timeout: 5,
                                   });
                                   // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
@@ -344,7 +348,7 @@
                                   q.notify({
                                     type: 'negative',
                                     position: 'top',
-                                    message: '删除失败',
+                                    message: $t('KeyToneAlbum.notify.deleteFailed'),
                                     timeout: 5,
                                   });
                                 }
@@ -356,7 +360,7 @@
                       </q-card>
                     </q-card-section>
                     <q-card-actions align="right">
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
@@ -364,7 +368,7 @@
             </div>
             <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑   end -->
             <q-stepper-navigation>
-              <q-btn @click="step = 2" color="primary" label="Continue" />
+              <q-btn @click="step = 2" color="primary" :label="$t('KeyToneAlbum.continue')" />
             </q-stepper-navigation>
           </q-step>
 
