@@ -73,6 +73,7 @@
       "addSuccess": "Added successfully",
       "addFailed": "Add failed",
       "noFilesToManage": "No files to manage",
+      "noSoundsToEdit": "Currently no editable sounds available",
     },
     "loadAudioFile": {
       "title": "Load Audio Files",
@@ -88,6 +89,33 @@
       "selectFileToManage": "Select File to Manage",
       "emptyFileName": "Empty filename may increase management complexity",
       "renameFile": "File Name (Editable)"
+    },
+    "defineSounds": {
+      "title": "Crop Define Sounds",
+      "description": "Crop and define required sounds from loaded audio files",
+      "createNewSound": "Create New Sound",
+      "soundName": "Sound Name (Optional)",
+      "sourceFile": "Audio source file",
+      "cropSound": "Crop sound from source file",
+      "startTime": "Start Time (ms)",
+      "endTime": "End Time (ms)",
+      "volume": "Volume",
+      "error": {
+        "negativeTime": "Time cannot be negative"
+      },
+      "previewSound": "Preview Sound",
+      "confirmAdd": "Confirm Add",
+      "editExistingSound": "Edit Existing Sound",
+      "selectSoundToManage": "Select Sound to Manage",
+      "tooltip": {
+        "noImpactOnSource": "Sounds created here won't affect source files.",
+        "multipleSoundsFromSameSource": "Multiple independent sounds can be created from the same source file.",
+        "soundName": "Sound name",
+        "soundDuration": "The start time and end time of the sound, in milliseconds. Since it is used for key presses, the duration should not be too long.",
+        "volume": "0=original, >0=amplify, <0=attenuate. Use 0.1 increments",
+        "volume_1": "Of course, you can also manually input to make a more detailed adjustment, such as 0.0001, etc. Please preview again after each volume adjustment to check the effect, to prevent the volume from being too small or too large.",
+        "previewSound": "The sounds used for key presses are usually very short, so the sounds from consecutive previews will play concurrently and will not provide a progress bar or stop button (if necessary, you can restart this application to stop them). Therefore, please follow the principles of sound definition."
+      }
     },
     "edit": {
 

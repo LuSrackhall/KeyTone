@@ -375,7 +375,7 @@
           <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
           <q-step
             :name="2"
-            title="裁剪定义声音"
+            :title="$t('KeyToneAlbum.defineSounds.title')"
             icon="add_comment"
             :done="step > 2"
             :disable="step === 99 && soundList.length === 0"
@@ -390,22 +390,15 @@
               }
             "
           >
-            <div>
-              根据载入的原始音频文件裁剪定义出需要的声音。
+            <div class="mb-3">
+              {{ $t('KeyToneAlbum.defineSounds.description') }}
               <q-icon name="info" color="primary">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                  <div>通过此步骤制作的声音不会影响声音源文件。</div>
-                  <div>用户可针对同一声音源文件裁剪定义出多个独立的声音。</div>
+                  <div>{{ $t('KeyToneAlbum.defineSounds.tooltip.noImpactOnSource') }}</div>
+                  <div>{{ $t('KeyToneAlbum.defineSounds.tooltip.multipleSoundsFromSameSource') }}</div>
                 </q-tooltip>
               </q-icon>
             </div>
-            <!-- <div>
-              若您载入的原始音频文件本身就是一个独立完善的键音, 则性能更好。换言之, 原始键音文件越接近最终键音性能越好。
-            </div> -->
-            <!-- <div>
-              若您载入的原始音频文件本身就是一个独立完善的键音, 则此步骤可跳过(因为其会在第一步时,
-              被自动添加到键音列表中)。
-            </div> -->
 
             <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑 start -->
             <div>
@@ -413,7 +406,7 @@
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="制作新的声音"
+                  :label="$t('KeyToneAlbum.defineSounds.createNewSound')"
                   @click="
                     () => {
                       createNewSound = !createNewSound;
@@ -423,14 +416,16 @@
                 </q-btn>
                 <q-dialog v-model="createNewSound" backdrop-filter="invert(70%)">
                   <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6"> 制作新的声音 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6">
+                      {{ $t('KeyToneAlbum.defineSounds.createNewSound') }}
+                    </q-card-section>
                     <q-card-section :class="['p-b-1']">
                       <q-input
                         outlined
                         stack-label
                         dense
                         v-model="soundName"
-                        label="为声音命名(非必填)"
+                        :label="$t('KeyToneAlbum.defineSounds.soundName')"
                         :placeholder="
                           sourceFileForSound.name + '     - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
                         "
@@ -441,7 +436,8 @@
                           <q-icon name="info" color="primary">
                             <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
                               {{
-                                '声音的名称 : \n' +
+                                $t('KeyToneAlbum.defineSounds.tooltip.soundName') +
+                                ' : \n' +
                                 (soundName === ''
                                   ? sourceFileForSound.name + ' - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
                                   : soundName)
@@ -458,7 +454,7 @@
                         v-model="sourceFileForSound"
                         :options="soundFileList"
                         :option-label="(item) => item.name + item.type"
-                        label="声音的源文件"
+                        :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
                         dense
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       />
@@ -466,10 +462,10 @@
 
                     <q-card-section :class="['p-b-1']">
                       <div class="text-[15px] text-gray-600">
-                        从声音源文件中裁剪定义出我们需要的声音
+                        {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
                         <q-icon name="info" color="primary">
                           <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                            声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
+                            {{ $t('KeyToneAlbum.defineSounds.tooltip.soundDuration') }}
                           </q-tooltip>
                         </q-icon>
                       </div>
@@ -481,9 +477,9 @@
                           stack-label
                           dense
                           v-model.number="soundStartTime"
-                          label="声音开始时间(毫秒)"
+                          :label="$t('KeyToneAlbum.defineSounds.startTime')"
                           type="number"
-                          error-message="时间不能为负数"
+                          :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
                           :error="soundStartTime < 0"
                         />
                         <q-input
@@ -492,9 +488,9 @@
                           stack-label
                           dense
                           v-model.number="soundEndTime"
-                          label="声音结束时间(毫秒)"
+                          :label="$t('KeyToneAlbum.defineSounds.endTime')"
                           type="number"
-                          error-message="时间不能为负数"
+                          :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
                           :error="soundEndTime < 0"
                         />
                       </div>
@@ -505,16 +501,15 @@
                         stack-label
                         dense
                         v-model.number="soundVolume"
-                        label="声音音量"
+                        :label="$t('KeyToneAlbum.defineSounds.volume')"
                         type="number"
                         :step="0.1"
                       >
                         <template v-slot:append>
                           <q-icon name="info" color="primary">
                             <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                              0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
-                              当然您也可以手动输入以做更细腻的调整, 如0.0001等。请在每次音量调整后重新预览以查看效果,
-                              防止音量过小或过大。
+                              {{ $t('KeyToneAlbum.defineSounds.tooltip.volume') }}
+                              {{ $t('KeyToneAlbum.defineSounds.tooltip.volume_1') }}
                             </q-tooltip>
                           </q-icon>
                         </template>
@@ -533,14 +528,14 @@
                             },
                           })
                         "
-                        label="预览声音"
+                        :label="$t('KeyToneAlbum.defineSounds.previewSound')"
                         color="secondary"
                       >
                         <q-tooltip
                           :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
                           :delay="600"
                         >
-                          按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
+                          {{ $t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
                         </q-tooltip>
                       </q-btn>
                       <q-btn
@@ -575,28 +570,28 @@
                             },
                           })
                         "
-                        label="确定添加"
+                        :label="$t('KeyToneAlbum.defineSounds.confirmAdd')"
                         color="primary"
                       />
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
               </div>
 
-              <div :class="['p-2 text-zinc-600']">或</div>
+              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
 
               <!-- -------------------------------------------------------------------------------编辑已有声音 -->
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="编辑已有声音"
+                  :label="$t('KeyToneAlbum.defineSounds.editExistingSound')"
                   @click="
                     () => {
                       if (soundList.length === 0) {
                         q.notify({
                           type: 'warning',
-                          message: '当前没有可编辑的声音',
+                          message: $t('KeyToneAlbum.notify.noSoundsToEdit'),
                           position: 'top',
                         });
                         return;
@@ -611,7 +606,7 @@
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
                     >
-                      编辑已有声音
+                      {{ $t('KeyToneAlbum.defineSounds.editExistingSound') }}
                     </q-card-section>
                     <q-card-section>
                       <q-select
@@ -622,7 +617,6 @@
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                         :options="soundList"
                         :option-label="(item: any) => {
-                          // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
                           if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
                             return item.soundValue.name
                           } else {
@@ -637,7 +631,7 @@
                           // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                           return item.soundKey
                         }"
-                        label="选择要管理的声音"
+                        :label="$t('KeyToneAlbum.defineSounds.selectSoundToManage')"
                         dense
                       />
                     </q-card-section>
@@ -646,32 +640,14 @@
                       :class="['flex flex-col m-t-3']"
                       v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
                     >
-                      <q-card :class="['flex flex-col px-3 pb-3']" v-if="selectedSound">
-                        <!-- <q-badge
-                          transparent
-                          color="orange"
-                          :label=" selectedSound?.soundValue.name === ''
-                                ? soundFileList.find(
-                                    (soundFile:any) =>
-                                      soundFile.sha256 === selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                      soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
-                                  )?.name +
-                                    ' - ' +
-                                    ' [' +
-                                    selectedSound?.soundValue.cut.start_time +
-                                    ' ~ ' +
-                                    selectedSound?.soundValue.cut.end_time +
-                                    ']'
-                                : selectedSound?.soundValue.name"
-                          :class="['absolute  overflow-visible']"
-                        /> -->
+                      <q-card :class="['flex flex-col pb-3']" v-if="selectedSound">
                         <q-card-section :class="['p-b-1 mt-3']">
                           <q-input
                             outlined
                             stack-label
                             dense
                             v-model="selectedSound.soundValue.name"
-                            label="为声音命名(非必填)"
+                            :label="$t('KeyToneAlbum.defineSounds.soundName')"
                             :placeholder="
                               soundFileList.find(
                                 (soundFile) =>
@@ -694,7 +670,8 @@
                                   :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
                                 >
                                   {{
-                                    '声音的名称 : \n' +
+                                    $t('KeyToneAlbum.defineSounds.tooltip.soundName') +
+                                    ' : \n' +
                                     (selectedSound.soundValue.name === ''
                                       ? soundFileList.find(
                                           (soundFile) =>
@@ -737,17 +714,17 @@
                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                               return item.sha256 + item.name_id
                             }"
-                            label="声音的源文件"
+                            :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
                             dense
                           />
                         </q-card-section>
 
                         <q-card-section :class="['p-b-1']">
                           <div class="text-[15px] text-gray-600">
-                            从声音源文件中裁剪定义出我们需要的声音
+                            {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
                             <q-icon name="info" color="primary">
                               <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                                声音的开始时间和结束时间, 以毫秒为单位。由于是按键使用, 所以时间不宜过长。
+                                {{ $t('KeyToneAlbum.defineSounds.tooltip.soundDuration') }}
                               </q-tooltip>
                             </q-icon>
                           </div>
@@ -759,9 +736,9 @@
                               stack-label
                               dense
                               v-model.number="selectedSound.soundValue.cut.start_time"
-                              label="声音开始时间(毫秒)"
+                              :label="$t('KeyToneAlbum.defineSounds.startTime')"
                               type="number"
-                              error-message="时间不能为负数"
+                              :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
                               :error="selectedSound.soundValue.cut.start_time < 0"
                             />
                             <q-input
@@ -770,9 +747,9 @@
                               stack-label
                               dense
                               v-model.number="selectedSound.soundValue.cut.end_time"
-                              label="声音结束时间(毫秒)"
+                              :label="$t('KeyToneAlbum.defineSounds.endTime')"
                               type="number"
-                              error-message="时间不能为负数"
+                              :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
                               :error="selectedSound.soundValue.cut.end_time < 0"
                             />
                           </div>
@@ -783,7 +760,7 @@
                             stack-label
                             dense
                             v-model.number="selectedSound.soundValue.cut.volume"
-                            label="声音音量"
+                            :label="$t('KeyToneAlbum.defineSounds.volume')"
                             type="number"
                             :step="0.1"
                           >
@@ -792,9 +769,8 @@
                                 <q-tooltip
                                   :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
                                 >
-                                  0为原始音量, 大于0为提升音量, 小于0为降低音量。常用的步进为0.1,
-                                  当然您也可以手动输入以做更细腻的调整,
-                                  如0.0001等。请在每次音量调整后重新预览以查看效果, 防止音量过小或过大。
+                                  {{ $t('KeyToneAlbum.defineSounds.tooltip.volume') }}
+                                  {{ $t('KeyToneAlbum.defineSounds.tooltip.volume_1') }}
                                 </q-tooltip>
                               </q-icon>
                             </template>
@@ -804,10 +780,11 @@
                         <!-- 添加按钮组 -->
                         <q-card-section :class="['flex justify-center gap-4']">
                           <q-btn
+                            class="pr-2.3"
                             dense
                             color="secondary"
                             icon="play_arrow"
-                            label="预览声音"
+                            :label="$t('KeyToneAlbum.defineSounds.previewSound')"
                             @click="
                               previewSound({
                                 source_file_for_sound: selectedSound.soundValue.source_file_for_sound,
@@ -819,15 +796,16 @@
                               :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
                               :delay="600"
                             >
-                              按键用的声音通常很短, 因此预览的声音会并发播放, 且不提供进度条和停止按钮。
+                              {{ $t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
                             </q-tooltip>
                           </q-btn>
 
                           <q-btn
+                            class="pr-2.3"
                             dense
                             color="primary"
                             icon="save"
-                            label="确认修改"
+                            :label="$t('KeyToneAlbum.edit.confirmEdit')"
                             @click="
                               saveSoundConfig({
                                 soundKey: selectedSound.soundKey,
@@ -851,10 +829,11 @@
                           />
 
                           <q-btn
+                            class="pr-2.3"
                             dense
                             color="negative"
                             icon="delete"
-                            label="删除声音"
+                            :label="$t('KeyToneAlbum.deleteKeySound')"
                             @click="
                               deleteSound({
                                 soundKey: selectedSound.soundKey,
@@ -863,7 +842,7 @@
                                   q.notify({
                                     type: 'positive',
                                     position: 'top',
-                                    message: '删除成功',
+                                    message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                     timeout: 5,
                                   });
                                 },
@@ -875,7 +854,7 @@
                     </q-card-section>
 
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
@@ -883,8 +862,8 @@
             </div>
             <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑   end -->
             <q-stepper-navigation>
-              <q-btn @click="step = 3" color="primary" label="Continue" />
-              <q-btn flat @click="step = 1" color="primary" label="Back" class="q-ml-sm" />
+              <q-btn @click="step = 3" color="primary" :label="$t('KeyToneAlbum.continue')" />
+              <q-btn flat @click="step = 1" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
 
