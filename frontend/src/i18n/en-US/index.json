@@ -67,6 +67,16 @@
     "close": "Close",
     "continue": "Continue",
     "deleteKeySound": "Delete",
+    "playMode": {
+      "single": "Single",
+      "random": "Random",
+      "loop": "Sequential"
+    },
+    "options": {
+      "audioFile": "Audio source file",
+      "sound": "Pre-defined sound clips",
+      "keySound": "Key sounds"
+    },
     "notify": {
       "deleteSuccess": "Deleted successfully",
       "deleteFailed": "Deleted failed",
@@ -115,6 +125,32 @@
         "volume": "0=original, >0=amplify, <0=attenuate. Use 0.1 increments",
         "volume_1": "Of course, you can also manually input to make a more detailed adjustment, such as 0.0001, etc. Please preview again after each volume adjustment to check the effect, to prevent the volume from being too small or too large.",
         "previewSound": "The sounds used for key presses are usually very short, so the sounds from consecutive previews will play concurrently and will not provide a progress bar or stop button (if necessary, you can restart this application to stop them). Therefore, please follow the principles of sound definition."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Create Key Sounds",
+      "description": "This step defaults to creating key sounds based on the defined sounds.",
+      "newKeySound": "New Key Sound",
+      "keySoundName": "Key Sound Name",
+      "keySoundName-placeholder": "New Key Sound",
+      "configureDownSound": "Config Key Down Sound",
+      "configureUpSound": "Configure Key Up Sound",
+      "selectPlayMode": "Select Play Mode",
+      "selectSounds": "Select Sound(Multi-select)",
+      "error": {
+        "singleMode": "Single mode allows only one sound"
+      },
+      "confirmAdd": "Confirm Add",
+      "tooltip": {
+        "description_0": "Each key can have both press and release sounds.",
+        "description_1": "They are configured separately.",
+        "description_2": "You can define them according to your needs.",
+        "description_3": "You can define both, just one of them, or neither.",
+        "audioFile": "Enable/Disable audio source files",
+        "soundList": "Enable/Disable pre-defined sound clips",
+        "keySounds": "Enable/Disable Key Sounds",
+        "inheritKeySound": "Inherit configurations from other key sounds",
+        "inheritRule": "Down sound inherits down config, up sound inherits up config"
       }
     },
     "edit": {

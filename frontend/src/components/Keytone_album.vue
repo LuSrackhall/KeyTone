@@ -869,7 +869,7 @@
 
           <q-step
             :name="3"
-            title="铸造至臻键音"
+            :title="$t('KeyToneAlbum.craftKeySounds.title')"
             icon="add_comment"
             :done="step > 3"
             :disable="step === 99 && keySoundList.length === 0"
@@ -894,14 +894,16 @@
             "
           >
             <div>
-              <span>键音, 实际就是按键声音或称按键音。</span>
-              <span>本步骤默认根据裁剪定义好的声音, 制作按键音。</span>
+              {{ $t('KeyToneAlbum.craftKeySounds.description') }}
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>理论上每个按键音, 都应包括按下和抬起声音。<br /></span>
-                  <span>制作时需分别定义它们, 但这并不是强制的。<br /></span>
-                  <span>按下声音和抬起声音都可根据需要选择性定义。<br /></span>
-                  <span>可以都定义, 也可以只定义其中一个, 或者都不定义。<br /></span>
+                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_0') }}</span>
+                  <br />
+                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_1') }}</span>
+                  <br />
+                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_2') }}</span>
+                  <br />
+                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_3') }}</span>
                 </q-tooltip>
               </q-icon>
             </div>
@@ -911,7 +913,7 @@
               <div>
                 <q-btn
                   :class="['bg-zinc-300']"
-                  label="制作新的按键音"
+                  :label="$t('KeyToneAlbum.craftKeySounds.newKeySound')"
                   @click="
                     () => {
                       createNewKeySound = !createNewKeySound;
@@ -921,25 +923,29 @@
                 </q-btn>
                 <q-dialog v-model="createNewKeySound" backdrop-filter="invert(70%)">
                   <q-card :class="['min-w-[90%]']">
-                    <q-card-section class="row items-center q-pb-none text-h6"> 制作新的按键音 </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6">
+                      {{ $t('KeyToneAlbum.craftKeySounds.newKeySound') }}
+                    </q-card-section>
                     <q-card-section :class="['p-b-1']">
                       <q-input
                         outlined
                         stack-label
                         dense
                         v-model="keySoundName"
-                        label="按键音名称"
-                        :placeholder="'新的按键音'"
+                        :label="$t('KeyToneAlbum.craftKeySounds.keySoundName')"
+                        :placeholder="$t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder')"
                       />
                       <div class="flex flex-col mt-3">
                         <q-btn
-                          :class="['bg-zinc-300 my-7 w-70% self-center']"
-                          label="配置按下声音"
+                          :class="['bg-zinc-300 my-7 w-88% self-center']"
+                          :label="$t('KeyToneAlbum.craftKeySounds.configureDownSound')"
                           @click="configureDownSound = true"
                         />
                         <q-dialog v-model="configureDownSound" backdrop-filter="invert(70%)">
                           <q-card :class="['min-w-[80%]']">
-                            <q-card-section class="row items-center q-pb-none text-h6"> 配置按下声音 </q-card-section>
+                            <q-card-section class="row items-center q-pb-none text-h6">
+                              {{ $t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
+                            </q-card-section>
                             <q-card-section>
                               <!-- 使用选择框选择模式 -->
                               <q-select
@@ -948,7 +954,10 @@
                                 stack-label
                                 v-model="playModeForDown"
                                 :options="playModeOptions"
-                                label="选择播放模式"
+                                :option-label="(item: any) => {
+                                  return $t(item.label)
+                                }"
+                                :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                 dense
                               />
                             </q-card-section>
@@ -1000,14 +1009,14 @@
                                     return item.value.keySoundKey
                                   }
                                 }"
-                                label="选择声音 (多选)"
+                                :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                                 multiple
                                 use-chips
                                 :class="['zl-ll']"
                                 dense
                                 :max-values="maxSelectionForDown"
                                 counter
-                                error-message="独立模式下, 至多选择一个声音"
+                                :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                                 :注释="
                                   () => {
                                     // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
@@ -1036,7 +1045,7 @@
                                 ref="downSoundSelectDom"
                                 @update:model-value="downSoundSelectDom?.hidePopup()"
                               />
-                              <div class="h-3">
+                              <div class="h-10">
                                 <q-option-group
                                   dense
                                   v-model="downTypeGroup"
@@ -1046,49 +1055,46 @@
                                 >
                                   <template #label-0="props">
                                     <q-item-label>
-                                      {{ props.label }}
+                                      {{ $t(props.label) }}
                                       <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                         <q-tooltip
                                           :class="[
                                             'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                           ]"
                                         >
-                                          <div>本软件支持将源文件直接作为声音。</div>
-                                          <div>前提是</div>
-                                          <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
                                         </q-tooltip>
                                       </q-icon>
                                     </q-item-label>
                                   </template>
                                   <template v-slot:label-1="props">
                                     <q-item-label>
-                                      {{ props.label }}
-                                      <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>默认仅从声音列表中选择。</div>
-                                          <div>如有需求也可勾选其它受支持列表。</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-2="props">
-                                    <q-item-label>
-                                      {{ props.label }}
+                                      {{ $t(props.label) }}
                                       <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                         <q-tooltip
                                           :class="[
                                             'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                           ]"
                                         >
-                                          <div>本软件支持将其它按键音作为声音。</div>
-                                          <div>或者说</div>
-                                          <div>本软件支持继承其它按键音的配置。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-2="props">
+                                    <q-item-label>
+                                      {{ $t(props.label) }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
                                           <div>⬇</div>
-                                          <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
+                                          <div>⬇</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
                                         </q-tooltip>
                                       </q-icon>
                                     </q-item-label>
@@ -1097,18 +1103,20 @@
                               </div>
                             </q-card-section>
                             <q-card-actions align="right">
-                              <q-btn flat label="Close" color="primary" v-close-popup />
+                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                             </q-card-actions>
                           </q-card>
                         </q-dialog>
                         <q-btn
-                          :class="['bg-zinc-300  m-b-7 w-70% self-center']"
-                          label="配置抬起声音"
+                          :class="['bg-zinc-300  m-b-7 w-88% self-center']"
+                          :label="$t('KeyToneAlbum.craftKeySounds.configureUpSound')"
                           @click="configureUpSound = true"
                         />
                         <q-dialog v-model="configureUpSound" backdrop-filter="invert(70%)">
                           <q-card :class="['min-w-[80%]']">
-                            <q-card-section class="row items-center q-pb-none text-h6"> 配置抬起声音 </q-card-section>
+                            <q-card-section class="row items-center q-pb-none text-h6">
+                              {{ $t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
+                            </q-card-section>
                             <q-card-section>
                               <!-- 使用选择框选择模式 -->
                               <q-select
@@ -1117,7 +1125,10 @@
                                 popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 v-model="playModeForUp"
                                 :options="playModeOptions"
-                                label="选择播放模式"
+                                :option-label="(item: any) => {
+                                  return $t(item.label)
+                                }"
+                                :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                 dense
                               />
                             </q-card-section>
@@ -1169,14 +1180,14 @@
                                     return item.value.keySoundKey
                                   }
                                 }"
-                                label="选择声音 (多选)"
+                                :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                                 multiple
                                 use-chips
                                 :class="['zl-ll']"
                                 dense
                                 :max-values="maxSelectionForUp"
                                 counter
-                                error-message="独立模式下, 至多选择一个声音"
+                                :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                                 :注释="
                                   () => {
                                     // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
@@ -1205,7 +1216,7 @@
                                 ref="upSoundSelectDom"
                                 @update:model-value="upSoundSelectDom?.hidePopup()"
                               />
-                              <div class="h-3">
+                              <div class="h-10">
                                 <q-option-group
                                   dense
                                   v-model="upTypeGroup"
@@ -1215,49 +1226,46 @@
                                 >
                                   <template #label-0="props">
                                     <q-item-label>
-                                      {{ props.label }}
+                                      {{ $t(props.label) }}
                                       <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                         <q-tooltip
                                           :class="[
                                             'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                           ]"
                                         >
-                                          <div>本软件支持将源文件直接作为声音。</div>
-                                          <div>前提是</div>
-                                          <div>这个源文件本身就就可作为独立的无需裁剪的声音。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
                                         </q-tooltip>
                                       </q-icon>
                                     </q-item-label>
                                   </template>
                                   <template v-slot:label-1="props">
                                     <q-item-label>
-                                      {{ props.label }}
-                                      <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>默认仅从声音列表中选择。</div>
-                                          <div>如有需求也可勾选其它受支持列表。</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-2="props">
-                                    <q-item-label>
-                                      {{ props.label }}
+                                      {{ $t(props.label) }}
                                       <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                         <q-tooltip
                                           :class="[
                                             'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                           ]"
                                         >
-                                          <div>本软件支持将其它按键音作为声音。</div>
-                                          <div>或者说</div>
-                                          <div>本软件支持继承其它按键音的配置。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
+                                        </q-tooltip>
+                                      </q-icon>
+                                    </q-item-label>
+                                  </template>
+                                  <template v-slot:label-2="props">
+                                    <q-item-label>
+                                      {{ $t(props.label) }}
+                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                                        <q-tooltip
+                                          :class="[
+                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                          ]"
+                                        >
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
                                           <div>⬇</div>
-                                          <div>原则: 按下继承按下, 抬起继承抬起。</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
+                                          <div>⬇</div>
+                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
                                         </q-tooltip>
                                       </q-icon>
                                     </q-item-label>
@@ -1266,7 +1274,7 @@
                               </div>
                             </q-card-section>
                             <q-card-actions align="right">
-                              <q-btn flat label="Close" color="primary" v-close-popup />
+                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                             </q-card-actions>
                           </q-card>
                         </q-dialog>
@@ -1275,7 +1283,7 @@
                     <q-card-actions align="right">
                       <q-btn
                         color="primary"
-                        label="确认添加"
+                        :label="$t('KeyToneAlbum.craftKeySounds.confirmAdd')"
                         @click="
                           saveKeySoundConfig(
                             {
@@ -1289,22 +1297,22 @@
                               createNewKeySound = !createNewKeySound;
 
                               // 重置表单变量
-                              keySoundName = '新的按键音';
+                              keySoundName = $t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder');
                               selectedSoundsForDown = [];
-                              playModeForDown = { label: '随机', mode: 'random' };
+                              playModeForDown = { label: 'KeyToneAlbum.playMode.random', mode: 'random' };
                               selectedSoundsForUp = [];
-                              playModeForUp = { label: '随机', mode: 'random' };
+                              playModeForUp = { label: 'KeyToneAlbum.playMode.random', mode: 'random' };
                             }
                           )
                         "
                       />
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
               </div>
 
-              <div :class="['p-2 text-zinc-600']">或</div>
+              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
 
               <!-- -------------------------------------------------------------------------------编辑已有按键音 -->
               <div>
@@ -3808,31 +3816,31 @@ watch(selectedSound, () => {
 });
 
 // 选项列表(其中包含: 源文件、声音、按键音 三种选项可供选择)
-const options = [
-  { label: '源文件', value: 'audio_files' },
-  { label: '声音', value: 'sounds' },
-  { label: '至臻键音', value: 'key_sounds' },
-];
+const options = reactive([
+  { label: 'KeyToneAlbum.options.audioFile', value: 'audio_files' },
+  { label: 'KeyToneAlbum.options.sound', value: 'sounds' },
+  { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds' },
+]);
 
 // 按键音
 type PlayMode = { label: string; mode: string };
 const playModeOptions: Array<PlayMode> = [
-  { label: '独立', mode: 'single' },
-  { label: '随机', mode: 'random' },
-  { label: '循环', mode: 'loop' },
+  { label: 'KeyToneAlbum.playMode.single', mode: 'single' },
+  { label: 'KeyToneAlbum.playMode.random', mode: 'random' },
+  { label: 'KeyToneAlbum.playMode.loop', mode: 'loop' },
 ];
 
 // 按键音制作
 const createNewKeySound = ref(false);
 
 // -- createNewKeySound
-const keySoundName = ref<string>('新的按键音');
+const keySoundName = ref<string>($t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder'));
 const configureDownSound = ref(false);
 const configureUpSound = ref(false);
 
 // -- configureDownSound
 const selectedSoundsForDown = ref<Array<any>>([]);
-const playModeForDown = ref<PlayMode>({ label: '随机', mode: 'random' });
+const playModeForDown = ref<PlayMode>({ label: 'KeyToneAlbum.playMode.random', mode: 'random' });
 const maxSelectionForDown = computed(() => {
   return playModeForDown.value.mode === 'single' ? 1 : Infinity;
 });
@@ -3863,7 +3871,7 @@ const downSoundList = computed(() => {
 
 // -- configureUpSound
 const selectedSoundsForUp = ref<Array<any>>([]);
-const playModeForUp = ref<PlayMode>({ label: '随机', mode: 'random' });
+const playModeForUp = ref<PlayMode>({ label: 'KeyToneAlbum.playMode.random', mode: 'random' });
 const maxSelectionForUp = computed(() => {
   return playModeForUp.value.mode === 'single' ? 1 : Infinity;
 });
