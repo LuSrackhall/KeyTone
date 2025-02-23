@@ -5089,4 +5089,8 @@ onUnmounted(() => {
     @apply h-auto;
   }
 }
+
+:global(.q-card) {
+  @apply mr-2.33;
+}
 </style>
