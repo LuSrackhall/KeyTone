@@ -602,7 +602,7 @@
                 >
                 </q-btn>
                 <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
-                  <q-card class="min-w-[90%]">
+                  <q-card class="min-w-[100%]">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
                     >
@@ -805,7 +805,7 @@
                             dense
                             color="primary"
                             icon="save"
-                            :label="$t('KeyToneAlbum.edit.confirmEdit')"
+                            :label="$t('KeyToneAlbum.confirmEdit')"
                             @click="
                               saveSoundConfig({
                                 soundKey: selectedSound.soundKey,
@@ -1703,7 +1703,7 @@
                             class="pr-2.3"
                             color="primary"
                             icon="save"
-                            :label="$t('KeyToneAlbum.craftKeySounds.confirmEdit')"
+                            :label="$t('KeyToneAlbum.confirmEdit')"
                             @click="
                               saveKeySoundConfig({
                                 key: selectedKeySound.keySoundKey,

@@ -67,6 +67,7 @@
     "close": "Close",
     "continue": "Continue",
     "back": "Back",
+    "confirmEdit": "Save",
     "delete": "Delete",
     "playMode": {
       "single": "Single",
@@ -85,7 +86,7 @@
       "addFailed": "Add failed",
       "noFilesToManage": "No files to manage",
       "noSoundsToEdit": "Currently no editable sounds available",
-      "noKeySoundsToEdit": "No key sounds available to edit",
+      "noKeySoundsToEdit": "No key sounds available to edit"
     },
     "loadAudioFile": {
       "title": "Load Audio Files",
@@ -155,10 +156,8 @@
         "inheritRule": "Down sound inherits down config, up sound inherits up config"
       },
       "editExistingKeySound": "Edit Key Sound",
-      "selectKeySoundToEdit": "Select Key Sound to Edit",
-      "confirmEdit": "Confirm Edit"
-    },
-
+      "selectKeySoundToEdit": "Select Key Sound to Edit"
+    }
   },
   "setting": {
     "setting": "Setting",

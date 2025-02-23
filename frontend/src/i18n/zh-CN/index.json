@@ -67,6 +67,7 @@
     "close": "关闭",
     "continue": "继续",
     "back": "返回",
+    "confirmEdit": "确认修改",
     "delete": "删除",
     "playMode": {
       "single": "独立",
@@ -85,7 +86,7 @@
       "addFailed": "添加失败",
       "noFilesToManage": "当前没有可管理的源文件",
       "noSoundsToEdit": "当前没有可编辑的声音",
-      "noKeySoundsToEdit": "当前没有可编辑的至臻键音",
+      "noKeySoundsToEdit": "当前没有可编辑的至臻键音"
     },
     "loadAudioFile": {
       "title": "载入音频文件",
@@ -155,10 +156,8 @@
         "inheritRule": "原则: 按下继承按下，抬起继承抬起"
       },
       "editExistingKeySound": "编辑已有至臻键音",
-      "selectKeySoundToEdit": "选择要编辑的至臻键音",
-      "confirmEdit": "确认修改"
-    },
-
+      "selectKeySoundToEdit": "选择要编辑的至臻键音"
+    }
   },
   "setting": {
     "setting": "设置",
