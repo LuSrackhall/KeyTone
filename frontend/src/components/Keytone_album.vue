@@ -955,7 +955,7 @@
                                 v-model="playModeForDown"
                                 :options="playModeOptions"
                                 :option-label="(item: any) => {
-                                  return $t(item.label)
+                                  return $t(playModeLabels.get(item) || '')
                                 }"
                                 :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                 dense
@@ -1036,7 +1036,7 @@
                                   }
                                 "
                                 :error="
-                                  playModeForDown.mode === 'single'
+                                  playModeForDown === 'single'
                                     ? selectedSoundsForDown.length > 1
                                       ? true
                                       : false
@@ -1126,7 +1126,7 @@
                                 v-model="playModeForUp"
                                 :options="playModeOptions"
                                 :option-label="(item: any) => {
-                                  return $t(item.label)
+                                  return $t(playModeLabels.get(item) || '')
                                 }"
                                 :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                 dense
@@ -1207,11 +1207,7 @@
                                   }
                                 "
                                 :error="
-                                  playModeForUp.mode === 'single'
-                                    ? selectedSoundsForUp.length > 1
-                                      ? true
-                                      : false
-                                    : false
+                                  playModeForUp === 'single' ? (selectedSoundsForUp.length > 1 ? true : false) : false
                                 "
                                 ref="upSoundSelectDom"
                                 @update:model-value="upSoundSelectDom?.hidePopup()"
@@ -1289,8 +1285,8 @@
                             {
                               key: '',
                               name: keySoundName,
-                              down: { mode: playModeForDown.mode, value: selectedSoundsForDown },
-                              up: { mode: playModeForUp.mode, value: selectedSoundsForUp },
+                              down: { mode: playModeForDown, value: selectedSoundsForDown },
+                              up: { mode: playModeForUp, value: selectedSoundsForUp },
                             },
                             () => {
                               // 关闭对话框
@@ -1299,9 +1295,9 @@
                               // 重置表单变量
                               keySoundName = $t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder');
                               selectedSoundsForDown = [];
-                              playModeForDown = { label: 'KeyToneAlbum.playMode.random', mode: 'random' };
+                              playModeForDown = 'random';
                               selectedSoundsForUp = [];
-                              playModeForUp = { label: 'KeyToneAlbum.playMode.random', mode: 'random' };
+                              playModeForUp = 'random';
                             }
                           )
                         "
@@ -1389,7 +1385,7 @@
                                     v-model="selectedKeySound.keySoundValue.down.mode"
                                     :options="playModeOptions"
                                     :option-label="(item: any) => {
-                                      return $t(item.label || '')
+                                      return $t(playModeLabels.get(item) || '')
                                     }"
                                     :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                     dense
@@ -1552,7 +1548,7 @@
                                     v-model="selectedKeySound.keySoundValue.up.mode"
                                     :options="playModeOptions"
                                     :option-label="(item: any) => {
-                                      return $t(item.label || '')
+                                      return $t(playModeLabels.get(item) || '')
                                     }"
                                     :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                     dense
@@ -3819,12 +3815,12 @@ const options = reactive([
 ]);
 
 // 按键音
-type PlayMode = { label: string; mode: string };
-const playModeOptions: Array<PlayMode> = [
-  { label: 'KeyToneAlbum.playMode.single', mode: 'single' },
-  { label: 'KeyToneAlbum.playMode.random', mode: 'random' },
-  { label: 'KeyToneAlbum.playMode.loop', mode: 'loop' },
-];
+const playModeOptions = ['single', 'random', 'loop'];
+const playModeLabels = new Map<string, string>([
+  ['single', 'KeyToneAlbum.playMode.single'],
+  ['random', 'KeyToneAlbum.playMode.random'],
+  ['loop', 'KeyToneAlbum.playMode.loop'],
+]);
 
 // 按键音制作
 const createNewKeySound = ref(false);
@@ -3836,9 +3832,9 @@ const configureUpSound = ref(false);
 
 // -- configureDownSound
 const selectedSoundsForDown = ref<Array<any>>([]);
-const playModeForDown = ref<PlayMode>({ label: 'KeyToneAlbum.playMode.random', mode: 'random' });
+const playModeForDown = ref('random');
 const maxSelectionForDown = computed(() => {
-  return playModeForDown.value.mode === 'single' ? 1 : Infinity;
+  return playModeForDown.value === 'single' ? 1 : Infinity;
 });
 /* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
 const downSoundSelectDom = ref<QSelect>(); // 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性*/
@@ -3867,9 +3863,9 @@ const downSoundList = computed(() => {
 
 // -- configureUpSound
 const selectedSoundsForUp = ref<Array<any>>([]);
-const playModeForUp = ref<PlayMode>({ label: 'KeyToneAlbum.playMode.random', mode: 'random' });
+const playModeForUp = ref('random');
 const maxSelectionForUp = computed(() => {
-  return playModeForUp.value.mode === 'single' ? 1 : Infinity;
+  return playModeForUp.value === 'single' ? 1 : Infinity;
 });
 /* --- 在vue3.5中, 用useTemplateRef方式获取dom元素, 有助于增强可读性
 const upSoundSelectDom = ref<QSelect>();*/
