@@ -66,7 +66,7 @@
     "or": "或",
     "close": "关闭",
     "continue": "继续",
-    "deleteKeySound": "删除",
+    "delete": "删除",
     "playMode": {
       "single": "独立",
       "random": "随机",
@@ -84,6 +84,7 @@
       "addFailed": "添加失败",
       "noFilesToManage": "当前没有可管理的源文件",
       "noSoundsToEdit": "当前没有可编辑的声音",
+      "noKeySoundsToEdit": "当前没有可编辑的至臻键音",
     },
     "loadAudioFile": {
       "title": "载入音频文件",
@@ -151,14 +152,12 @@
         "keySounds": "使能/失能 至臻键音",
         "inheritKeySound": "此项可做到对其他至臻键音的继承",
         "inheritRule": "原则: 按下继承按下，抬起继承抬起"
-      }
+      },
+      "editExistingKeySound": "编辑已有至臻键音",
+      "selectKeySoundToEdit": "选择要编辑的至臻键音",
+      "confirmEdit": "确认修改"
     },
-    "edit": {
 
-    },
-    "import": {
-      "import": "导入更多键音专辑"
-    }
   },
   "setting": {
     "setting": "设置",

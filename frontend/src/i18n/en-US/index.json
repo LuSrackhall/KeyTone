@@ -66,7 +66,7 @@
     "or": "OR",
     "close": "Close",
     "continue": "Continue",
-    "deleteKeySound": "Delete",
+    "delete": "Delete",
     "playMode": {
       "single": "Single",
       "random": "Random",
@@ -84,6 +84,7 @@
       "addFailed": "Add failed",
       "noFilesToManage": "No files to manage",
       "noSoundsToEdit": "Currently no editable sounds available",
+      "noKeySoundsToEdit": "No key sounds available to edit",
     },
     "loadAudioFile": {
       "title": "Load Audio Files",
@@ -151,14 +152,12 @@
         "keySounds": "Enable/Disable Key Sounds",
         "inheritKeySound": "Inherit configurations from other key sounds",
         "inheritRule": "Down sound inherits down config, up sound inherits up config"
-      }
+      },
+      "editExistingKeySound": "Edit Key Sound",
+      "selectKeySoundToEdit": "Select Key Sound to Edit",
+      "confirmEdit": "Confirm Edit"
     },
-    "edit": {
 
-    },
-    "import": {
-      "import": "Import more key sound album"
-    }
   },
   "setting": {
     "setting": "Setting",
