@@ -1388,6 +1388,9 @@
                                     popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.mode"
                                     :options="playModeOptions"
+                                    :option-label="(item: any) => {
+                                      return $t(item.label || '')
+                                    }"
                                     :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                     dense
                                   />
@@ -1548,6 +1551,9 @@
                                     popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.mode"
                                     :options="playModeOptions"
+                                    :option-label="(item: any) => {
+                                      return $t(item.label || '')
+                                    }"
                                     :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
                                     dense
                                   />
