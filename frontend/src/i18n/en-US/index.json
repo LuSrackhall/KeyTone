@@ -86,7 +86,8 @@
       "addFailed": "Add failed",
       "noFilesToManage": "No files to manage",
       "noSoundsToEdit": "Currently no editable sounds available",
-      "noKeySoundsToEdit": "No key sounds available to edit"
+      "noKeySoundsToEdit": "No key sounds available to edit",
+      "globalSettingsSuccess": "Global SFX configured successfully"
     },
     "loadAudioFile": {
       "title": "Load Audio Files",
@@ -157,6 +158,39 @@
       },
       "editExistingKeySound": "Edit Key Sound",
       "selectKeySoundToEdit": "Select Key Sound to Edit"
+    },
+    "linkageEffects": {
+      "title": "Album Core Effects(SFX)",
+      "description": "Configure key linkage effects to automatically trigger preset sounds on press and release keys",
+      "enableTestSound": "Use Built-in Test Sounds",
+      "downTestSound": "Key Down Test Sound",
+      "upTestSound": "Key Up Test Sound",
+      "globalSettings": "Global SFX Settings",
+      "singleKeySettings": "Per-Key SFX Settings",
+      "global": {
+        "description": "Set a unified global sound effect directly without specifying any keys.",
+        "setKeyDownSound": "Set global key down SFX",
+        "setKeyUpSound": "Set global key up SFX"
+      },
+      "single": {
+        "description": "Specify one or more keys for independent SFX settings."
+      },
+      "confirm": "Confirm",
+      "tooltips": {
+        "description": "\"Audio files\", \"Preset sounds\", \"Ultimate key sounds\" can be used as effects to link with keys.",
+        "testSound": "KeyTone has embedded a global sound effect for testing purposes, allowing users to check if the software is running normally.\nIt is enabled by default and can be manually turned off if needed. The playback priority is lower than the global/per-key sound effect settings.",
+        "globalPriority": "Higher priority than test sounds, lower than per-key settings",
+        "singleKeyPriority": "Highest playback priority",
+        "ultimateKeySound": {
+          "title": "Ultimate Key Sound",
+          "anchored": " (Anchored)",
+          "unanchored": " (Unanchored)",
+          "tooltip": "This anchoring only applies when using Ultimate Key Sounds"
+        },
+        "audioFile": "Support setting the audio source files as SFX",
+        "soundList": "Support setting pre-defined sound clips as SFX",
+        "keySounds": "Support setting the ultimate key sounds as SFX.\nIf this option is selected, an anchoring function for the ultimate key sound will be automatically provided.\nThis feature is designed to facilitate your operation, but you can also unanchor it to define the SFX more freely."
+      }
     }
   },
   "setting": {

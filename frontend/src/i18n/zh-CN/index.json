@@ -86,7 +86,8 @@
       "addFailed": "添加失败",
       "noFilesToManage": "当前没有可管理的源文件",
       "noSoundsToEdit": "当前没有可编辑的声音",
-      "noKeySoundsToEdit": "当前没有可编辑的至臻键音"
+      "noKeySoundsToEdit": "当前没有可编辑的至臻键音",
+      "globalSettingsSuccess": "全键声效配置成功"
     },
     "loadAudioFile": {
       "title": "载入音频文件",
@@ -157,6 +158,39 @@
       },
       "editExistingKeySound": "编辑已有至臻键音",
       "selectKeySoundToEdit": "选择要编辑的至臻键音"
+    },
+    "linkageEffects": {
+      "title": "按键联动声效",
+      "description": "为按键设置联动声效，按下或抬起按键时，自动播放预设声效。",
+      "enableTestSound": "是否启用内嵌测试音",
+      "downTestSound": "按下测试音",
+      "upTestSound": "抬起测试音",
+      "globalSettings": "全键声效设置",
+      "singleKeySettings": "单键声效设置",
+      "global": {
+        "description": "无需指定任何按键, 直接进行全局统一的声效设置。",
+        "setKeyDownSound": "设置全键按下声效",
+        "setKeyUpSound": "设置全键抬起声效"
+      },
+      "single": {
+        "description": "指定单个或多个按键, 以进行局部独立的声效设置。"
+      },
+      "confirm": "确定",
+      "tooltips": {
+        "description": "\"音频文件\"、\"预设声音\"、\"至臻键音\" 均可作为声效与按键联动。",
+        "testSound": "KeyTone内嵌了测试用的全键声效，\n供用户检测软件是否正常运行。\n默认开启，如有需要可手动关闭。\n播放优先级低于全/单键声效设置。",
+        "globalPriority": "播放优先级高于内嵌测试音，但低于单键声效",
+        "singleKeyPriority": "播放优先级高于全键声效和内嵌测试音",
+        "ultimateKeySound": {
+          "title": "至臻键音",
+          "anchored": "（已锚定）",
+          "unanchored": "（已解除锚定）",
+          "tooltip": "此锚定仅作用于在设置声效为至臻键音时"
+        },
+        "audioFile": "支持将音频源文件设置为声效",
+        "soundList": "支持将预定义声音片段设置为声效",
+        "keySounds": "支持将至臻键音设置为声效\n若本选项勾选, 则自动提供用于至臻键音的锚定功能\n此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效"
+      }
     }
   },
   "setting": {
