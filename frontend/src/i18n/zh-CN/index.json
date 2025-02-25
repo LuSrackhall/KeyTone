@@ -183,7 +183,14 @@
           "downSoundEffect": "按下声效",
           "upSoundEffect": "抬起声效",
           "setDownSoundEffect": "设置按下声效",
-          "setUpSoundEffect": "设置抬起声效"
+          "setUpSoundEffect": "设置抬起声效",
+          "noSingleKeyEffects": "目前没有已设置单键声效的按键",
+          "singleKeyEffects": "已设置单键声效的按键",
+          "clickToView": " 点击查看声效",
+          "editSingleKey": "编辑单键",
+          "soundEffect": "的声效",
+          "soundEffect-down": "的按下声效",
+          "soundEffect-up": "的抬起声效"
         }
       },
       "confirm": "确定",
@@ -203,7 +210,9 @@
         "keySounds": "支持将至臻键音设置为声效\n若本选项勾选, 则自动提供用于至臻键音的锚定功能\n此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效",
         "fastDelete": "也可利用空的按下/抬起声效设置来快速批量的删除按键。",
         "stopRecording": "停止录制单键",
-        "startRecording": "开始录制单键"
+        "startRecording": "开始录制单键",
+        "save": "保存当前编辑的内容",
+        "delete": "删除当前单键的按下和抬起声效"
       }
     }
   },

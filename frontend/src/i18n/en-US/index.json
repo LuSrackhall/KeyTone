@@ -183,7 +183,14 @@
           "downSoundEffect": "Press SFX",
           "upSoundEffect": "Release SFX",
           "setDownSoundEffect": "Set Press SFX",
-          "setUpSoundEffect": "Set Release SFX"
+          "setUpSoundEffect": "Set Release SFX",
+          "noSingleKeyEffects": "No per-key SFX keys set yet",
+          "singleKeyEffects": "Per-key SFX keys",
+          "clickToView": "Click to view SFX",
+          "editSingleKey": "Edit",
+          "soundEffect": "per-key SFX",
+          "soundEffect-down": "per-key press SFX",
+          "soundEffect-up": "per-key release SFX"
         }
       },
       "confirm": "Confirm",
@@ -203,7 +210,9 @@
         "keySounds": "Support setting the ultimate key sounds as SFX.\nIf this option is selected, an anchoring function for the ultimate key sound will be automatically provided.\nThis feature is designed to facilitate your operation, but you can also unanchor it to define the SFX more freely.",
         "fastDelete": "You can also use the empty press/release SFX settings to quickly batch delete keys.",
         "stopRecording": "Stop Recording Per-Key",
-        "startRecording": "Start Recording Per-Key"
+        "startRecording": "Start Recording Per-Key",
+        "save": "Save current edits",
+        "delete": "Delete press and release SFX for current per-key"
       }
     }
   },

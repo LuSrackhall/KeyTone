@@ -3002,11 +3002,11 @@
                     </q-card-section>
                     <q-card-section>
                       <div v-if="keysWithSoundEffect.size === 0" class="text-[1.06rem]">
-                        目前没有已设置单键声效的按键
+                        {{ $t('KeyToneAlbum.linkageEffects.single.dialog.noSingleKeyEffects') }}
                       </div>
                       <div v-else class="text-[1.06rem] pb-2 font-600 text-gray-700 flex flex-row items-center">
-                        已设置单键声效的按键
-                        <div class="text-[0.88rem] ml-1">(点击查看声效)</div>
+                        {{ $t('KeyToneAlbum.linkageEffects.single.dialog.singleKeyEffects') }}
+                        <div class="text-[0.88rem] ml-1">({{ $t('KeyToneAlbum.linkageEffects.single.dialog.clickToView') }})</div>
                       </div>
                       <div class="flex flex-wrap gap-0.8">
                         <q-chip
@@ -3048,23 +3048,23 @@
                           <q-card style="min-width: 350px">
                             <q-card-section>
                               <div class="text-base flex flex-row items-center">
-                                编辑单键 -
+                                {{$t("KeyToneAlbum.linkageEffects.single.dialog.editSingleKey")}} -
                                 <div class="text-sm font-bold">
                                   [
                                   {{ currentEditingKeyOfName }}
                                   ]
                                 </div>
-                                - 的声效
+                                - {{$t("KeyToneAlbum.linkageEffects.single.dialog.soundEffect")}}
                               </div>
                             </q-card-section>
 
-                            <q-card-section class="q-pt-none">
+                            <q-card-section class="q-pt-none pb-1">
                               <!-- 这里之后添加编辑内容 -->
                               <!-- 声效编辑  start -->
                               <div class="w-full">
                                 <q-card-section>
-                                  <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
-                                    <div class="flex flex-col space-y-4 w-6.5/8">
+                                  <div class="flex flex-row flex-nowrap items-center mb-3">
+                                    <div class="flex flex-col space-y-4 w-full">
                                       <!-- 选择单键按下声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
                                         outlined
@@ -3112,7 +3112,7 @@
                                                 return item.value.keySoundKey
                                               }
                                             }"
-                                        :label="`编辑单键 -[ ${currentEditingKeyOfName} ]- 的按下声效`"
+                                        :label="`${$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${currentEditingKeyOfName} ]- ${$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-down')} `"
                                         use-chips
                                         :class="['zl-ll']"
                                         dense
@@ -3179,7 +3179,7 @@
                                                 return item.value.keySoundKey
                                               }
                                             }"
-                                        :label="`编辑单键 -[ ${currentEditingKeyOfName} ]- 的抬起声效`"
+                                        :label="`${$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${currentEditingKeyOfName} ]- ${$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-up')} `"
                                         use-chips
                                         :class="['zl-ll']"
                                         dense
@@ -3354,15 +3354,19 @@
                                             'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                           ]"
                                         >
-                                          <span class="text-sm">至臻键音</span>
+                                          <span class="text-sm">{{
+                                            $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.title')
+                                          }}</span>
                                           <span
                                             class="text-sm"
                                             v-if="isAnchoringUltimatePerfectionKeySound_singleKey_edit"
                                           >
-                                            (已锚定)<br
+                                            {{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored') }}<br
                                           /></span>
-                                          <span class="text-sm" v-else> (已解除锚定)<br /></span>
-                                          <span>此锚定仅作用于在设置声效为至臻键音时。</span>
+                                          <span class="text-sm" v-else
+                                            >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored') }}<br
+                                          /></span>
+                                          <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip') }}</span>
                                         </q-tooltip>
                                       </q-icon>
                                     </div>
@@ -3376,44 +3380,44 @@
                                     >
                                       <template #label-0="props">
                                         <q-item-label>
-                                          {{ props.label }}
+                                          {{ $t(props.label) }}
                                           <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                             <q-tooltip
                                               :class="[
                                                 'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                               ]"
                                             >
-                                              <div>本软件支持将音频源文件直接设置为声效。</div>
+                                              <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.audioFile') }}</div>
                                             </q-tooltip>
                                           </q-icon>
                                         </q-item-label>
                                       </template>
                                       <template v-slot:label-1="props">
                                         <q-item-label>
-                                          {{ props.label }}
+                                          {{ $t(props.label) }}
                                           <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
                                             <q-tooltip
                                               :class="[
                                                 'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                               ]"
                                             >
-                                              <div>本软件支持将裁剪定义好的声音设置为声效。</div>
+                                              <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.soundList') }}</div>
                                             </q-tooltip>
                                           </q-icon>
                                         </q-item-label>
                                       </template>
                                       <template v-slot:label-2="props">
                                         <q-item-label>
-                                          {{ props.label }}
+                                          {{ $t(props.label) }}
                                           <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                             <q-tooltip
                                               :class="[
                                                 'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
                                               ]"
                                             >
-                                              <div>本软件推荐用户使用至臻键音, 以设置更为丰富的声效。</div>
-                                              <div>若本选项勾选, 则自动提供可用于至臻键音的锚定功能。</div>
-                                              <div>此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效。</div>
+                                              <div>
+                                                {{ $t('KeyToneAlbum.linkageEffects.tooltips.keySounds') }}
+                                              </div>
                                             </q-tooltip>
                                           </q-icon>
                                         </q-item-label>
@@ -3424,7 +3428,7 @@
                                     <q-btn
                                       class="p-r-2"
                                       dense
-                                      label="保存编辑"
+                                      :label="$t('KeyToneAlbum.confirmEdit')"
                                       color="primary"
                                       icon="save"
                                       @click="
@@ -3551,12 +3555,12 @@
                                         }
                                       "
                                     >
-                                      <q-tooltip>保存当前编辑的内容</q-tooltip>
+                                      <q-tooltip>{{ $t('KeyToneAlbum.linkageEffects.tooltips.save') }}</q-tooltip>
                                     </q-btn>
                                     <q-btn
                                       class="p-r-2"
                                       dense
-                                      label="快速删除"
+                                      :label="$t('KeyToneAlbum.delete')"
                                       color="negative"
                                       icon="delete"
                                       v-close-popup
@@ -3578,14 +3582,19 @@
                                         )
                                       "
                                     >
-                                      <q-tooltip>删除当前单键的按下和抬起声效</q-tooltip>
+                                      <q-tooltip>{{ $t('KeyToneAlbum.linkageEffects.tooltips.delete') }}</q-tooltip>
                                     </q-btn>
                                   </div>
                                 </q-card-section>
                               </div>
                             </q-card-section>
-                            <q-card-actions align="right">
-                              <q-btn flat label="CLOSE" color="primary" v-close-popup />
+                            <q-card-actions class="pt-0" align="right">
+                              <q-btn
+                                flat
+                                :label="$t('KeyToneAlbum.close')"
+                                color="primary"
+                                v-close-popup
+                              />
                             </q-card-actions>
                           </q-card>
                           <!-- 声效编辑  end -->
@@ -3593,15 +3602,21 @@
                       </div>
                     </q-card-section>
                     <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat label="Close" color="primary" v-close-popup />
+                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
               </div>
             </q-stepper-navigation>
             <q-stepper-navigation>
-              <q-btn @click="step = 5" color="primary" label="Continue" />
-              <q-btn flat @click="step = 3" color="primary" label="Back" class="q-ml-sm" />
+              <q-btn @click="step = 5" color="primary" :label="$t('KeyToneAlbum.continue')" />
+              <q-btn
+                flat
+                @click="step = 3"
+                color="primary"
+                :label="$t('KeyToneAlbum.back')"
+                class="q-ml-sm"
+              />
             </q-stepper-navigation>
           </q-step>
         </q-stepper>
