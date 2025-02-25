@@ -173,7 +173,18 @@
         "setKeyUpSound": "设置全键抬起声效"
       },
       "single": {
-        "description": "指定单个或多个按键, 以进行局部独立的声效设置。"
+        "description": "指定单个或多个按键, 以进行局部独立的声效设置。",
+        "addSingleKeyEffect": "快速增设单键声效",
+        "dialog": {
+          "selectKeyAndEffect": "请选择按键和对应的声效设置。",
+          "selectSingleKey": "选择单键(数量任意)",
+          "selectSingleKey-placeholder_record": "在此键入录制单键",
+          "selectSingleKey-placeholder_search": "在此键入搜寻单键",
+          "downSoundEffect": "按下声效",
+          "upSoundEffect": "抬起声效",
+          "setDownSoundEffect": "设置按下声效",
+          "setUpSoundEffect": "设置抬起声效"
+        }
       },
       "confirm": "确定",
       "tooltips": {
@@ -189,7 +200,10 @@
         },
         "audioFile": "支持将音频源文件设置为声效",
         "soundList": "支持将预定义声音片段设置为声效",
-        "keySounds": "支持将至臻键音设置为声效\n若本选项勾选, 则自动提供用于至臻键音的锚定功能\n此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效"
+        "keySounds": "支持将至臻键音设置为声效\n若本选项勾选, 则自动提供用于至臻键音的锚定功能\n此功能旨在方便您操作, 您也可解除锚定, 更自由的定义声效",
+        "fastDelete": "也可利用空的按下/抬起声效设置来快速批量的删除按键。",
+        "stopRecording": "停止录制单键",
+        "startRecording": "开始录制单键"
       }
     }
   },

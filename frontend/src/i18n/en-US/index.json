@@ -173,7 +173,18 @@
         "setKeyUpSound": "Set global key up SFX"
       },
       "single": {
-        "description": "Specify one or more keys for independent SFX settings."
+        "description": "Specify one or more keys for independent SFX settings.",
+        "addSingleKeyEffect": "Quickly Set Per-Key SFX",
+        "dialog": {
+          "selectKeyAndEffect": "Select keys and their SFX settings.",
+          "selectSingleKey": "Per-Key Selection (Any Quantity)",
+          "selectSingleKey-placeholder_record": "Record Per-Key here",
+          "selectSingleKey-placeholder_search": "Search Per-Key here",
+          "downSoundEffect": "Press SFX",
+          "upSoundEffect": "Release SFX",
+          "setDownSoundEffect": "Set Press SFX",
+          "setUpSoundEffect": "Set Release SFX"
+        }
       },
       "confirm": "Confirm",
       "tooltips": {
@@ -189,7 +200,10 @@
         },
         "audioFile": "Support setting the audio source files as SFX",
         "soundList": "Support setting pre-defined sound clips as SFX",
-        "keySounds": "Support setting the ultimate key sounds as SFX.\nIf this option is selected, an anchoring function for the ultimate key sound will be automatically provided.\nThis feature is designed to facilitate your operation, but you can also unanchor it to define the SFX more freely."
+        "keySounds": "Support setting the ultimate key sounds as SFX.\nIf this option is selected, an anchoring function for the ultimate key sound will be automatically provided.\nThis feature is designed to facilitate your operation, but you can also unanchor it to define the SFX more freely.",
+        "fastDelete": "You can also use the empty press/release SFX settings to quickly batch delete keys.",
+        "stopRecording": "Stop Recording Per-Key",
+        "startRecording": "Start Recording Per-Key"
       }
     }
   },
