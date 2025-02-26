@@ -2885,7 +2885,7 @@
                                               q.notify({
                                                 type: 'warning',
                                                 position: 'top',
-                                                message: '请选择声效',
+                                                message: $t('KeyToneAlbum.notify.selectSoundEffect'),
                                                 timeout: 2000,
                                               });
                                               return;
@@ -2916,13 +2916,17 @@
                                               q.notify({
                                                 type: 'warning',
                                                 position: 'top',
-                                                message: '请为所选的单键 ' + notSoundEffectSelectString + '- 选择声效',
+                                                message: $t('KeyToneAlbum.notify.selectSoundEffectForKeys', {
+                                                  keys: notSoundEffectSelectString,
+                                                }),
                                                 timeout: 8000,
                                               });
                                               q.notify({
                                                 type: 'positive',
                                                 position: 'top',
-                                                message: '单键 ' + deleteString + '- 的声效删除成功',
+                                                message: $t('KeyToneAlbum.notify.deleteSuccessForKeys', {
+                                                  keys: deleteString,
+                                                }),
                                                 timeout: 3000,
                                               });
                                               selectedSingleKeys = isNotSoundEffectSelect;
@@ -2933,7 +2937,7 @@
                                             q.notify({
                                               type: 'positive',
                                               position: 'top',
-                                              message: '单键声效删除成功',
+                                              message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                               timeout: 2000,
                                             });
                                             selectedSingleKeys = [];
@@ -2947,7 +2951,7 @@
                                         q.notify({
                                           type: 'positive',
                                           position: 'top',
-                                          message: '单键声效配置成功',
+                                          message: $t('KeyToneAlbum.notify.configSuccess'),
                                           timeout: 2000,
                                         });
                                         selectedSingleKeys = [];
@@ -2960,7 +2964,7 @@
                                     q.notify({
                                       type: 'warning',
                                       position: 'top',
-                                      message: '请选择按键',
+                                      message: $t('KeyToneAlbum.notify.selectKey'),
                                       timeout: 2000,
                                     });
                                   }
@@ -3006,7 +3010,9 @@
                       </div>
                       <div v-else class="text-[1.06rem] pb-2 font-600 text-gray-700 flex flex-row items-center">
                         {{ $t('KeyToneAlbum.linkageEffects.single.dialog.singleKeyEffects') }}
-                        <div class="text-[0.88rem] ml-1">({{ $t('KeyToneAlbum.linkageEffects.single.dialog.clickToView') }})</div>
+                        <div class="text-[0.88rem] ml-1">
+                          ({{ $t('KeyToneAlbum.linkageEffects.single.dialog.clickToView') }})
+                        </div>
                       </div>
                       <div class="flex flex-wrap gap-0.8">
                         <q-chip
@@ -3048,13 +3054,13 @@
                           <q-card style="min-width: 350px">
                             <q-card-section>
                               <div class="text-base flex flex-row items-center">
-                                {{$t("KeyToneAlbum.linkageEffects.single.dialog.editSingleKey")}} -
+                                {{ $t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey') }} -
                                 <div class="text-sm font-bold">
                                   [
                                   {{ currentEditingKeyOfName }}
                                   ]
                                 </div>
-                                - {{$t("KeyToneAlbum.linkageEffects.single.dialog.soundEffect")}}
+                                - {{ $t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect') }}
                               </div>
                             </q-card-section>
 
@@ -3112,7 +3118,11 @@
                                                 return item.value.keySoundKey
                                               }
                                             }"
-                                        :label="`${$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${currentEditingKeyOfName} ]- ${$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-down')} `"
+                                        :label="`${$t(
+                                          'KeyToneAlbum.linkageEffects.single.dialog.editSingleKey'
+                                        )} -[ ${currentEditingKeyOfName} ]- ${$t(
+                                          'KeyToneAlbum.linkageEffects.single.dialog.soundEffect-down'
+                                        )} `"
                                         use-chips
                                         :class="['zl-ll']"
                                         dense
@@ -3179,7 +3189,11 @@
                                                 return item.value.keySoundKey
                                               }
                                             }"
-                                        :label="`${$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${currentEditingKeyOfName} ]- ${$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-up')} `"
+                                        :label="`${$t(
+                                          'KeyToneAlbum.linkageEffects.single.dialog.editSingleKey'
+                                        )} -[ ${currentEditingKeyOfName} ]- ${$t(
+                                          'KeyToneAlbum.linkageEffects.single.dialog.soundEffect-up'
+                                        )} `"
                                         use-chips
                                         :class="['zl-ll']"
                                         dense
@@ -3361,12 +3375,16 @@
                                             class="text-sm"
                                             v-if="isAnchoringUltimatePerfectionKeySound_singleKey_edit"
                                           >
-                                            {{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored') }}<br
+                                            {{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored')
+                                            }}<br
                                           /></span>
                                           <span class="text-sm" v-else
-                                            >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored') }}<br
+                                            >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored')
+                                            }}<br
                                           /></span>
-                                          <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip') }}</span>
+                                          <span>{{
+                                            $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip')
+                                          }}</span>
                                         </q-tooltip>
                                       </q-icon>
                                     </div>
@@ -3457,16 +3475,15 @@
                                               !keyUpSingleKeySoundEffectSelect_edit
                                             ) {
                                               q.dialog({
-                                                title: '您确定要删除此单键声效配置吗？',
-                                                message:
-                                                  '您的当前配置中, 按下和抬起音效均为空, 故本次保存操作相当于快速删除。',
+                                                title: $t('KeyToneAlbum.notify.confirmDeleteSingleKeyEffect'),
+                                                message: $t('KeyToneAlbum.notify.confirmDeleteSingleKeyEffectMessage'),
                                                 ok: {
-                                                  label: '取消',
+                                                  label: $t('KeyToneAlbum.cancel'),
                                                   color: 'primary',
                                                   flat: true,
                                                 },
                                                 cancel: {
-                                                  label: '确定',
+                                                  label: $t('KeyToneAlbum.confirm'),
                                                   color: 'primary',
                                                   flat: true,
                                                 },
@@ -3487,14 +3504,14 @@
                                                       q.notify({
                                                         type: 'positive',
                                                         position: 'top',
-                                                        message: '删除成功',
+                                                        message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                                         timeout: 2000,
                                                       });
                                                     } else {
                                                       q.notify({
                                                         type: 'positive',
                                                         position: 'top',
-                                                        message: '保存成功',
+                                                        message: $t('KeyToneAlbum.notify.saveSuccess'),
                                                         timeout: 2000,
                                                       });
                                                     }
@@ -3523,14 +3540,14 @@
                                                     q.notify({
                                                       type: 'positive',
                                                       position: 'top',
-                                                      message: '删除成功',
+                                                      message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                                       timeout: 2000,
                                                     });
                                                   } else {
                                                     q.notify({
                                                       type: 'positive',
                                                       position: 'top',
-                                                      message: '保存成功',
+                                                      message: $t('KeyToneAlbum.notify.saveSuccess'),
                                                       timeout: 2000,
                                                     });
                                                   }
@@ -3548,7 +3565,7 @@
                                             q.notify({
                                               type: 'warning',
                                               position: 'top',
-                                              message: '未检测到更改',
+                                              message: $t('KeyToneAlbum.notify.noChangesDetected'),
                                               timeout: 2000,
                                             });
                                           }
@@ -3575,7 +3592,7 @@
                                             q.notify({
                                               type: 'positive',
                                               position: 'top',
-                                              message: '删除成功',
+                                              message: $t('KeyToneAlbum.notify.deleteSuccess'),
                                               timeout: 2000,
                                             });
                                           }
@@ -3589,12 +3606,7 @@
                               </div>
                             </q-card-section>
                             <q-card-actions class="pt-0" align="right">
-                              <q-btn
-                                flat
-                                :label="$t('KeyToneAlbum.close')"
-                                color="primary"
-                                v-close-popup
-                              />
+                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                             </q-card-actions>
                           </q-card>
                           <!-- 声效编辑  end -->
@@ -3610,13 +3622,7 @@
             </q-stepper-navigation>
             <q-stepper-navigation>
               <q-btn @click="step = 5" color="primary" :label="$t('KeyToneAlbum.continue')" />
-              <q-btn
-                flat
-                @click="step = 3"
-                color="primary"
-                :label="$t('KeyToneAlbum.back')"
-                class="q-ml-sm"
-              />
+              <q-btn flat @click="step = 3" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
         </q-stepper>
@@ -3719,7 +3725,7 @@ function saveSoundConfig(params: {
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '请选择一个源文件',
+      message: $t('KeyToneAlbum.notify.selectSourceFile'),
       timeout: 5,
     });
     return;
@@ -3729,7 +3735,7 @@ function saveSoundConfig(params: {
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '结束时间必须大于开始时间',
+      message: $t('KeyToneAlbum.notify.endTimeGreaterThanStartTime'),
       timeout: 5,
     });
     return;
@@ -3750,7 +3756,7 @@ function saveSoundConfig(params: {
       q.notify({
         type: 'positive',
         position: 'top',
-        message: params.soundKey ? '修改成功' : '添加成功',
+        message: params.soundKey ? $t('KeyToneAlbum.notify.modifySuccess') : $t('KeyToneAlbum.notify.addSuccess'),
         timeout: 5,
       });
       params.onSuccess?.();
@@ -3758,7 +3764,7 @@ function saveSoundConfig(params: {
       q.notify({
         type: 'negative',
         position: 'top',
-        message: params.soundKey ? '修改失败' : '添加失败',
+        message: params.soundKey ? $t('KeyToneAlbum.notify.modifyFailed') : $t('KeyToneAlbum.notify.addFailed'),
         timeout: 5,
       });
     }
@@ -3773,7 +3779,7 @@ function deleteSound(params: { soundKey: string; onSuccess?: () => void }) {
       q.notify({
         type: 'negative',
         position: 'top',
-        message: '删除失败',
+        message: $t('KeyToneAlbum.notify.deleteFailed'),
         timeout: 5,
       });
     }
@@ -3798,7 +3804,7 @@ function previewSound(params: {
     q.notify({
       type: 'warning',
       position: 'top',
-      message: '请先选择音频文件',
+      message: $t('KeyToneAlbum.notify.selectAudioFile'),
       timeout: 5000,
     });
     return;
@@ -3808,7 +3814,7 @@ function previewSound(params: {
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '结束时间必须大于开始时间',
+      message: $t('KeyToneAlbum.notify.endTimeGreaterThanStartTime'),
       timeout: 5,
     });
     return;
@@ -3818,7 +3824,7 @@ function previewSound(params: {
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '时间值不能为负数',
+      message: $t('KeyToneAlbum.notify.timeValueCannotBeNegative'),
       timeout: 5,
     });
   }
@@ -3834,7 +3840,7 @@ function previewSound(params: {
       q.notify({
         type: 'negative',
         position: 'top',
-        message: '播放失败',
+        message: $t('KeyToneAlbum.notify.playFailed'),
         timeout: 5000,
       });
     }
@@ -4092,7 +4098,7 @@ function saveKeySoundConfig(
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '失败: "按下声音"不符合要求, 请检查修改后重试',
+      message: $t('KeyToneAlbum.notify.downSoundInvalid'),
       timeout: 3000,
     });
     isReturn = true;
@@ -4101,7 +4107,7 @@ function saveKeySoundConfig(
     q.notify({
       type: 'negative',
       position: 'top',
-      message: '失败: "抬起声音"不符合要求, 请检查修改后重试',
+      message: $t('KeyToneAlbum.notify.upSoundInvalid'),
       timeout: 3000,
     });
     isReturn = true;
@@ -4154,7 +4160,7 @@ function saveKeySoundConfig(
       q.notify({
         type: 'positive',
         position: 'top',
-        message: params.key ? '修改成功' : '添加成功',
+        message: params.key ? $t('KeyToneAlbum.notify.modifySuccess') : $t('KeyToneAlbum.notify.addSuccess'),
         timeout: 5,
       });
       if (onSuccess) {
@@ -4164,7 +4170,7 @@ function saveKeySoundConfig(
       q.notify({
         type: 'negative',
         position: 'top',
-        message: params.key ? '修改失败' : '添加失败',
+        message: params.key ? $t('KeyToneAlbum.notify.modifyFailed') : $t('KeyToneAlbum.notify.addFailed'),
         timeout: 5,
       });
     }
@@ -4180,7 +4186,7 @@ function deleteKeySound(params: { keySoundKey: string; onSuccess?: () => void })
       q.notify({
         type: 'negative',
         position: 'top',
-        message: '删除失败',
+        message: $t('KeyToneAlbum.notify.deleteFailed'),
         timeout: 5,
       });
     }
@@ -4294,7 +4300,7 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
         q.notify({
           type: 'negative',
           position: 'top',
-          message: '全键声效配置失败',
+          message: $t('KeyToneAlbum.notify.unifiedSoundEffectConfigFailed'),
           timeout: 5000,
         });
       }
@@ -4304,7 +4310,7 @@ function saveUnifiedSoundEffectConfig(params: { down: any; up: any }, onSuccess?
       q.notify({
         type: 'negative',
         position: 'top',
-        message: '全键声效配置失败',
+        message: $t('KeyToneAlbum.notify.unifiedSoundEffectConfigFailed'),
         timeout: 5000,
       });
     });
@@ -4357,7 +4363,7 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
     q.notify({
       type: 'info',
       position: 'top',
-      message: '所录制按键已在选择框中',
+      message: $t('KeyToneAlbum.notify.keyAlreadySelected'),
       timeout: 1000,
     });
   }
@@ -4577,7 +4583,7 @@ function saveSingleKeySoundEffectConfig(
     q.notify({
       type: 'info',
       position: 'top',
-      message: '未进行任何单键声效配置',
+      message: $t('KeyToneAlbum.notify.noSoundEffectSelected'),
       timeout: 5000,
     });
     return;
@@ -4597,11 +4603,12 @@ function saveSingleKeySoundEffectConfig(
           q.notify({
             type: 'negative',
             position: 'top',
-            message: `单键 ${
-              keyEvent_store.dikCodeToName.get(item) ||
-              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
-              'Dik-{' + item + '}'
-            } 声效配置失败`,
+            message: $t('KeyToneAlbum.notify.singleKeySoundEffectConfigFailed', {
+              key:
+                keyEvent_store.dikCodeToName.get(item) ||
+                (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
+                'Dik-{' + item + '}',
+            }),
             timeout: 5000,
           });
         }
@@ -4609,15 +4616,24 @@ function saveSingleKeySoundEffectConfig(
       })
       .catch((err) => {
         allSuccess = false;
-        console.error(`单键 ${item} 声效配置时发生错误:`, err);
+        console.error(
+          $t('KeyToneAlbum.notify.singleKeySoundEffectConfigError', {
+            key:
+              keyEvent_store.dikCodeToName.get(item) ||
+              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
+              'Dik-{' + item + '}',
+          }),
+          err
+        );
         q.notify({
           type: 'negative',
           position: 'top',
-          message: `单键 ${
-            keyEvent_store.dikCodeToName.get(item) ||
-            (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
-            'Dik-{' + item + '}'
-          } 声效配置失败`,
+          message: $t('KeyToneAlbum.notify.singleKeySoundEffectConfigFailed', {
+            key:
+              keyEvent_store.dikCodeToName.get(item) ||
+              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
+              'Dik-{' + item + '}',
+          }),
           timeout: 5000,
         });
       });
@@ -4630,7 +4646,7 @@ function saveSingleKeySoundEffectConfig(
       q.notify({
         type: 'warning',
         position: 'top',
-        message: '仅部分单键声效配置成功',
+        message: $t('KeyToneAlbum.notify.partialSingleKeySoundEffectConfigSuccess'),
         timeout: 5000,
       });
     }
@@ -4794,7 +4810,7 @@ onBeforeMount(async () => {
         q.notify({
           type: 'negative',
           position: 'top',
-          message: '键音包配置文件读取失败',
+          message: $t('KeyToneAlbum.notify.configFileReadFailed'),
           timeout: 100000,
         });
         return;
