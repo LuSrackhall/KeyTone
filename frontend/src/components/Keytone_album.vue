@@ -2058,7 +2058,7 @@
                               q.notify({
                                 type: 'positive',
                                 position: 'top',
-                                message: $t('KeyToneAlbum.notify.globalSettingsSuccess'),
+                                message: $t('KeyToneAlbum.notify.configSuccess'),
                                 timeout: 2000,
                               });
                             }
@@ -3638,9 +3638,7 @@ const album_options_select_label = (item: any) => {
   }
   if (item.type === 'key_sounds') {
     return (
-      $t(options.find((option) => item.type === option.value)?.label_0 || '') +
-      ' § ' +
-      item.value.keySoundValue?.name
+      $t(options.find((option) => item.type === option.value)?.label_0 || '') + ' § ' + item.value.keySoundValue?.name
     );
   }
 };
