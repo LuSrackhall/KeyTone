@@ -229,3 +229,10 @@ onBeforeMount(async () => {
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
 });
 </script>
+
+<style lang="scss" scoped>
+:global(.q-dialog__backdrop) {
+  // background-color: rgba(0, 0, 0, 0) !important;
+  @apply bg-transparent;
+}
+</style>
