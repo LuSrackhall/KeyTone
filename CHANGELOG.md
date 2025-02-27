@@ -1,3 +1,31 @@
+#  (2025-02-27)
+
+
+### Bug Fixes
+
+* 1.让所有弹出的对话框, 都向左偏移。2.补上最近几次提交中的i18n遗漏。 ([5f51e3f](https://github.com/LuSrackhall/KeyTone/commit/5f51e3ff66646b58d8b30644b7a802712520dc03))
+* 修复了键音专辑页面中, 至臻键音菜单中对播放模式选项相关的国际化的不兼容问题。 ([35b4149](https://github.com/LuSrackhall/KeyTone/commit/35b414924ab8d433828d704d8a2b53438ff172ef))
+* **i18n:** 补充国际化配置未覆盖的地方。 ([dff2413](https://github.com/LuSrackhall/KeyTone/commit/dff2413813acdca907aea923f760bcafd84a96cb))
+* **i18n:** 补充最近提交中关于i18n翻译的遗漏。 ([9e69272](https://github.com/LuSrackhall/KeyTone/commit/9e69272dc4defd51edf6f5a4198ea8892eaa82dc))
+* **i18n:** 更新国际化文本中, 隐私政策和用户协议文本，并添加空状态提示信息文本 ([d8095f7](https://github.com/LuSrackhall/KeyTone/commit/d8095f78edfc43b9cccf9fd1fd4eb5699783f078))
+* **i18n:** 更新键音专辑页面的英文国际化文本，简化提示信息, 防止与中文的样式差得太多。 ([51b2795](https://github.com/LuSrackhall/KeyTone/commit/51b27955c97b971d4bed4c4c9152eab521601833))
+* **i18n:** 国际化文本中, 添加键音专辑页面的国际化文本，包括新建、导入、导出和删除专辑的提示信息 ([bbaeae5](https://github.com/LuSrackhall/KeyTone/commit/bbaeae5ba41736b453a0af9fd9ee1a1f073f3846))
+* **i18n:** 为键音专辑组件配置国际化, 本次提交配置了 按键联动声效 这一步骤中的 单键局部配置中单键增设对话框的国际化文本。(其中涉及的notify除外)(修改某个单键的国际化文本未配置) ([1ad9afd](https://github.com/LuSrackhall/KeyTone/commit/1ad9afd10db850d53db99652ab11cd5719746380))
+* **i18n:** 为键音专辑组件配置国际化, 本次提交配置了 按键联动声效 这一步骤中的 单键局部配置中修改某个单键的国际化文本。(其中涉及的notify除外) ([ff852ef](https://github.com/LuSrackhall/KeyTone/commit/ff852ef4c2a2d5ef335041f8b3a59133521be982))
+* **i18n:** 为键音专辑组件配置国际化, 本次提交配置了 按键联动声效 这一步骤中的 全局配置的 国际化文本。(单键局部配置的国际化后续整) ([48a59fc](https://github.com/LuSrackhall/KeyTone/commit/48a59fcab3f31daeda7ba11b253be502e31ef036))
+* **i18n:** 为键音专辑组件配置国际化, 本次提交主要是为了补全相关通知内容的国际化配置。 ([06b0532](https://github.com/LuSrackhall/KeyTone/commit/06b05328972ae273defe661886da7d4bc768ac9d))
+* **i18n:** 为键音专辑组件配置国际化。本次提交配置了 至臻键音 这一步骤中, 编辑已有至臻键音按钮及相关对话框内部国际化。(内部二重对话框内播放模式选项的相关国际化,因报错问题暂未适配) ([3728586](https://github.com/LuSrackhall/KeyTone/commit/3728586c8d4dffe3f775d9632a7346e971faa34a))
+* **i18n:** 为键音专辑组件配置国际化。本次提交配置了 至臻键音 这一步骤中, 制作新的至臻键音按钮及相关对话框内部的国际化。(tips: 编辑已有至臻键音按钮及相关对话框内部国际化未适配。) ([874ad52](https://github.com/LuSrackhall/KeyTone/commit/874ad5243de4adbeeebd44c909845915b091850d))
+* **i18n:** 为键音专辑组件配置国际化。本次提交配置了 至臻键音 这一步骤中,辑已有至臻键音按钮及相关对话框内部二重对话框内播放模式选项的相关国际化。(但仍有问题, 此设计似乎需要重构) ([b6a709a](https://github.com/LuSrackhall/KeyTone/commit/b6a709a7b269c6a40bf707efbe3cf51e23e5c410))
+* **i18n:** 为键音专辑组件配置国际化。本次提交配置了裁剪定义声音这一步骤的相关国际化文本。 ([a6e217c](https://github.com/LuSrackhall/KeyTone/commit/a6e217cdfe639d7f310286169adb3ad1e8e6d89c))
+* **i18n:** 为键音专辑组件配置国际化。本次提交配置了载入音频源文件这一步骤的相关国际化文本。 ([f01c7fe](https://github.com/LuSrackhall/KeyTone/commit/f01c7fecf1dde1f0da39a0dbb10abcb5bfaef549))
+* **i18n:** 再次复查键音专辑页面的国际化文本, 做到一个页面一个结构体，新增了标签、空状态和通知信息。 ([4b4cda6](https://github.com/LuSrackhall/KeyTone/commit/4b4cda68118c88de4923ad3db8bc81186d75eb95))
+* **ui:** 将打开对话框后背景蒙版的透明度调整为完全透明, 这样既能够保证蒙版的功能, 又不会因蒙版的存在带来视觉体验的下降(特别是仅存在于本软件中的蒙版溢出问题) ([6eb732f](https://github.com/LuSrackhall/KeyTone/commit/6eb732f1135740932db43956d1e43071a1ee857d))
+* **ui:** 修复国际化没覆盖到的地方, 并顺便重构此部分代码的沉余情况。 ([35258a3](https://github.com/LuSrackhall/KeyTone/commit/35258a3fc5fd497d445434bb2c813b83780cf568))
+* **ui:** 修复设置页面样式异常的问题。 ([ceda084](https://github.com/LuSrackhall/KeyTone/commit/ceda084d403a3f07e6887a07ca126c22bc1779fa))
+
+
+
 #  (2025-02-17)
 
 
