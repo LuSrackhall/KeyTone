@@ -969,34 +969,7 @@
                                 v-model="selectedSoundsForDown"
                                 popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="downSoundList"
-                                :option-label="(item: any) => {
-                                  if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type
-                                  }
-                                  if (item.type === 'sounds') {
-                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                    } else {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                        soundFileList.find(
-                                          (soundFile:any) =>
-                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                        )?.name +
-                                        '     - ' +
-                                        ' [' +
-                                        item.value.soundValue?.cut?.start_time +
-                                        ' ~ ' +
-                                        item.value.soundValue?.cut?.end_time +
-                                        ']'
-                                      );
-                                    }
-                                  }
-                                  if (item.type === 'key_sounds') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                  }
-                                }"
+                                :option-label="album_options_select_label"
                                 :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
@@ -1140,34 +1113,7 @@
                                 v-model="selectedSoundsForUp"
                                 popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="upSoundList"
-                                :option-label="(item: any) => {
-                                  if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                  }
-                                  if (item.type === 'sounds') {
-                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                    } else {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                        soundFileList.find(
-                                          (soundFile:any) =>
-                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                        )?.name +
-                                        '     - ' +
-                                        ' [' +
-                                        item.value.soundValue?.cut?.start_time +
-                                        ' ~ ' +
-                                        item.value.soundValue?.cut?.end_time +
-                                        ']'
-                                      );
-                                    }
-                                  }
-                                  if (item.type === 'key_sounds') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                  }
-                                }"
+                                :option-label="album_options_select_label"
                                 :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
@@ -1398,40 +1344,7 @@
                                     popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.value"
                                     :options="edit_downSoundList"
-                                    :option-label="
-                                      (item: any) => {
-                                        if (item.type === 'audio_files') {
-                                          const soundFile = soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id);
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFile?.name + soundFile?.type;
-                                        }
-                                        if (item.type === 'sounds') {
-
-                                          const sound = soundList.find((sound) => sound.soundKey === item.value.soundKey);
-
-                                          if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
-                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
-                                          } else {
-                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                              soundFileList.find(
-                                                (soundFile:any) =>
-                                                  soundFile.sha256 === sound?.soundValue?.source_file_for_sound?.sha256 &&
-                                                  soundFile.name_id === sound?.soundValue?.source_file_for_sound?.name_id
-                                              )?.name +
-                                              '     - ' +
-                                              ' [' +
-                                              sound?.soundValue?.cut?.start_time +
-                                              ' ~ ' +
-                                              sound?.soundValue?.cut?.end_time +
-                                              ']'
-                                            );
-                                          }
-                                        }
-                                        if (item.type === 'key_sounds') {
-                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value.keySoundKey);
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
-                                        }
-                                      }
-                                    "
+                                    :option-label="album_options_select_label"
                                     :option-value="
                                       (item) => {
                                         /**
@@ -1561,40 +1474,7 @@
                                     popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.value"
                                     :options="edit_upSoundList"
-                                    :option-label="
-                                      (item: any) => {
-                                        if (item.type === 'audio_files') {
-                                          const soundFile = soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id);
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFile?.name + soundFile?.type;
-                                        }
-                                        if (item.type === 'sounds') {
-
-                                          const sound = soundList.find((sound) => sound.soundKey === item.value.soundKey);
-
-                                          if (sound?.soundValue?.name !== '' && sound?.soundValue?.name !== undefined) {
-                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ sound?.soundValue.name
-                                          } else {
-                                            return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                              soundFileList.find(
-                                                (soundFile:any) =>
-                                                  soundFile.sha256 === sound?.soundValue?.source_file_for_sound?.sha256 &&
-                                                  soundFile.name_id === sound?.soundValue?.source_file_for_sound?.name_id
-                                              )?.name +
-                                              '     - ' +
-                                              ' [' +
-                                              sound?.soundValue?.cut?.start_time +
-                                              ' ~ ' +
-                                              sound?.soundValue?.cut?.end_time +
-                                              ']'
-                                            );
-                                          }
-                                        }
-                                        if (item.type === 'key_sounds') {
-                                          const keySound = keySoundList.find((keySound) => keySound.keySoundKey === item.value.keySoundKey);
-                                          return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + keySound?.keySoundValue?.name;
-                                        }
-                                      }
-                                    "
+                                    :option-label="album_options_select_label"
                                     :option-value="
                                       /**
                                        * 虽然json中的存储格式分别是
@@ -1880,34 +1760,7 @@
                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyDownUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
-                            :option-label="(item: any) => {
-                                  if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                  }
-                                  if (item.type === 'sounds') {
-                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                    } else {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                        soundFileList.find(
-                                          (soundFile:any) =>
-                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                        )?.name +
-                                        '     - ' +
-                                        ' [' +
-                                        item.value.soundValue?.cut?.start_time +
-                                        ' ~ ' +
-                                        item.value.soundValue?.cut?.end_time +
-                                        ']'
-                                      );
-                                    }
-                                  }
-                                  if (item.type === 'key_sounds') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                  }
-                                }"
+                            :option-label="album_options_select_label"
                             :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
@@ -1946,34 +1799,7 @@
                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyUpUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
-                            :option-label="(item: any) => {
-                                  if (item.type === 'audio_files') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                  }
-                                  if (item.type === 'sounds') {
-                                    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                    } else {
-                                      return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                        soundFileList.find(
-                                          (soundFile:any) =>
-                                            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                        )?.name +
-                                        '     - ' +
-                                        ' [' +
-                                        item.value.soundValue?.cut?.start_time +
-                                        ' ~ ' +
-                                        item.value.soundValue?.cut?.end_time +
-                                        ']'
-                                      );
-                                    }
-                                  }
-                                  if (item.type === 'key_sounds') {
-                                    return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                  }
-                                }"
+                            :option-label="album_options_select_label"
                             :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
@@ -2476,34 +2302,7 @@
                                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyDownSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
-                                            :option-label="(item: any) => {
-                                              if (item.type === 'audio_files') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                              }
-                                              if (item.type === 'sounds') {
-                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                                } else {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                                    soundFileList.find(
-                                                      (soundFile:any) =>
-                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                                    )?.name +
-                                                    '     - ' +
-                                                    ' [' +
-                                                    item.value.soundValue?.cut?.start_time +
-                                                    ' ~ ' +
-                                                    item.value.soundValue?.cut?.end_time +
-                                                    ']'
-                                                  );
-                                                }
-                                              }
-                                              if (item.type === 'key_sounds') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                              }
-                                            }"
+                                            :option-label="album_options_select_label"
                                             :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
@@ -2543,34 +2342,7 @@
                                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyUpSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
-                                            :option-label="(item: any) => {
-                                              if (item.type === 'audio_files') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                              }
-                                              if (item.type === 'sounds') {
-                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                                } else {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                                    soundFileList.find(
-                                                      (soundFile:any) =>
-                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                                    )?.name +
-                                                    '     - ' +
-                                                    ' [' +
-                                                    item.value.soundValue?.cut?.start_time +
-                                                    ' ~ ' +
-                                                    item.value.soundValue?.cut?.end_time +
-                                                    ']'
-                                                  );
-                                                }
-                                              }
-                                              if (item.type === 'key_sounds') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                              }
-                                            }"
+                                            :option-label="album_options_select_label"
                                             :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
@@ -3078,34 +2850,7 @@
                                         popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyDownSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
-                                        :option-label="(item: any) => {
-                                              if (item.type === 'audio_files') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                              }
-                                              if (item.type === 'sounds') {
-                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                                } else {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                                    soundFileList.find(
-                                                      (soundFile:any) =>
-                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                                    )?.name +
-                                                    '     - ' +
-                                                    ' [' +
-                                                    item.value.soundValue?.cut?.start_time +
-                                                    ' ~ ' +
-                                                    item.value.soundValue?.cut?.end_time +
-                                                    ']'
-                                                  );
-                                                }
-                                              }
-                                              if (item.type === 'key_sounds') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                              }
-                                            }"
+                                        :option-label="album_options_select_label"
                                         :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
@@ -3149,34 +2894,7 @@
                                         popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyUpSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
-                                        :option-label="(item: any) => {
-                                              if (item.type === 'audio_files') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + soundFileList.find((soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.name + soundFileList.find( (soundFile:any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id)?.type;
-                                              }
-                                              if (item.type === 'sounds') {
-                                                // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-                                                if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;'+ (soundList.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name)
-                                                } else {
-                                                  return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (
-                                                    soundFileList.find(
-                                                      (soundFile:any) =>
-                                                        soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-                                                        soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
-                                                    )?.name +
-                                                    '     - ' +
-                                                    ' [' +
-                                                    item.value.soundValue?.cut?.start_time +
-                                                    ' ~ ' +
-                                                    item.value.soundValue?.cut?.end_time +
-                                                    ']'
-                                                  );
-                                                }
-                                              }
-                                              if (item.type === 'key_sounds') {
-                                                return (options.find((option) =>  item.type === option.value)?.label ) + '&nbsp;&nbsp;&sect;&nbsp;&nbsp;&nbsp;' + (item.value.keySoundValue?.name);
-                                              }
-                                            }"
+                                        :option-label="album_options_select_label"
                                         :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
@@ -3874,10 +3592,58 @@ watch(selectedSound, () => {
 
 // 选项列表(其中包含: 源文件、声音、按键音 三种选项可供选择)
 const options = reactive([
-  { label: 'KeyToneAlbum.options.audioFile', value: 'audio_files' },
-  { label: 'KeyToneAlbum.options.sound', value: 'sounds' },
-  { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds' },
+  { label: 'KeyToneAlbum.options.audioFile', value: 'audio_files', label_0: 'KeyToneAlbum.options.audioFile_0' },
+  { label: 'KeyToneAlbum.options.sound', value: 'sounds', label_0: 'KeyToneAlbum.options.sound_0' },
+  { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds', label_0: 'KeyToneAlbum.options.keySound_0' },
 ]);
+
+const album_options_select_label = (item: any) => {
+  if (item.type === 'audio_files') {
+    return (
+      $t(options.find((option) => item.type === option.value)?.label_0 || '') +
+      ' § ' +
+      soundFileList.value.find(
+        (soundFile: any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+      )?.name +
+      soundFileList.value.find(
+        (soundFile: any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+      )?.type
+    );
+  }
+  if (item.type === 'sounds') {
+    // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
+    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+      return (
+        $t(options.find((option) => item.type === option.value)?.label_0 || '') +
+        ' § ' +
+        soundList.value.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name
+      );
+    } else {
+      return (
+        $t(options.find((option) => item.type === option.value)?.label_0 || '') +
+        ' § ' +
+        (soundFileList.value.find(
+          (soundFile: any) =>
+            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
+            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
+        )?.name +
+          '     - ' +
+          ' [' +
+          item.value.soundValue?.cut?.start_time +
+          ' ~ ' +
+          item.value.soundValue?.cut?.end_time +
+          ']')
+      );
+    }
+  }
+  if (item.type === 'key_sounds') {
+    return (
+      $t(options.find((option) => item.type === option.value)?.label_0 || '') +
+      ' § ' +
+      item.value.keySoundValue?.name
+    );
+  }
+};
 
 // 按键音
 const playModeOptions = ['single', 'random', 'loop'];

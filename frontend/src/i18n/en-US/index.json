@@ -79,7 +79,11 @@
     "options": {
       "audioFile": "Audio source file",
       "sound": "Pre-defined sound clips",
-      "keySound": "Key sounds"
+      "keySound": "Key sounds",
+
+      "audioFile_0": "SoundFile",
+      "sound_0": "SoundClip",
+      "keySound_0": "KeySound"
     },
     "notify": {
       "deleteSuccess": "Deleted successfully",

@@ -79,7 +79,11 @@
     "options": {
       "audioFile": "音频源文件",
       "sound": "预定义声音片段",
-      "keySound": "至臻键音"
+      "keySound": "至臻键音",
+
+      "audioFile_0": "音频文件",
+      "sound_0": "声音片段",
+      "keySound_0": "至臻键音"
     },
     "notify": {
       "deleteSuccess": "删除成功",
