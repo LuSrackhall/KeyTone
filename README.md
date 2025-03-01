@@ -37,12 +37,15 @@ In addition, KeyTone is an open-source software that follows the GPL license.
 
 * Ready to use out of the box.
 * The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
+* Users can quickly customize the sound of each keypress according to their own needs.The software is designed around key sound albums, offering a rich and convenient set of features.
 
 ## Installation
 
-* Download from the [Releases](https://github.com/LuSrackhall/KeyTone/releases) page.
-* Install and open it.
-* Enjoy it.
+* You can download the latest version from our [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) page.
+* You can also visit our [official website](https://keytone.xuanhall.com) to get the latest version and installation instructions.
+* Finally, the best way to support the developers is to download KeyTone through the official channel stores on various platforms. This not only ensures you get the latest stable version but also provides a small amount of funding to help us stay motivated to continuously improve this project.
+  * Windows
+    * Get it from the [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS).
 
 ## Roadmap
 

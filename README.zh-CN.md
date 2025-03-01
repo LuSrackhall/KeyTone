@@ -37,13 +37,15 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 
 * 简单到开箱即用。
 * 按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。
+* 用户可以根据自身需求来快速定制按键的声音, 本软件围绕键音专辑设计开发了丰富且便捷的一系列功能。
 
 ## 安装
 
-* 从[Releases](https://github.com/LuSrackhall/KeyTone/releases)页面下载。
-* 安装并打开
-* 好好享受
-
+* 您可以从我们的 [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) 页面下载最新版本。
+* 你也可以通过访问我们的[官方网站](https://keytone.xuanhall.com)获取最新版本和安装说明。
+* 最后, 支持开发者的最佳方式是通过各平台的官方渠道商店下载 KeyTone。这不仅能确保您获得最新的稳定版本，还能提供少量资金来帮助我们更有动力的持续改进这个项目。
+  * Windows
+    * 从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取。
 <!-- ## 使用方法 
 
 开箱即用 -->
