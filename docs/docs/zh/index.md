@@ -30,13 +30,15 @@ hero:
     #   link: /api-examples
 
 
-
+# 本软件围绕键音专辑设计开发了丰富且便捷的一系列功能。
 
 features:
   - title: 开箱即用
     details: 可以实时模拟键盘敲击的声音。
   - title: 注重细节
     details: 按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。
+  - title: 功能强大
+    details: 用户可以根据自身需求来快速定制按键的声音。
   - title: 代码开源
     details: 我们致力于制作安全可靠的软件，本软件完全开源，用户可放心使用和传播。
     linkText: 源码地址

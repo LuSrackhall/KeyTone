@@ -31,12 +31,15 @@ hero:
 
 
 
+# The software is designed around key sound albums, offering a rich and convenient set of features.
 
 features:
   - title: Ready to use out of the box
     details: Can simulate the sound of keyboard strokes in real-time.
   - title:  Attention to detail
     details: The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
+  - title: Powerful Functionality 
+    details: Users can quickly customize the sound of each keypress according to their own needs. 
   - title: Open Source
     details: This software is completely open source, feel safe to use and share it.
     linkText: Source Code
