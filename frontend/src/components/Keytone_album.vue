@@ -3552,7 +3552,8 @@ function previewSound(params: {
     params.source_file_for_sound.type,
     params.cut.start_time,
     params.cut.end_time,
-    params.cut.volume
+    params.cut.volume,
+    true // 预览时跳过全局音量处理
   ).then((result) => {
     if (!result) {
       q.notify({

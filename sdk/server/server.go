@@ -788,11 +788,12 @@ func keytonePkgRouters(r *gin.Engine) {
 	keytonePkgRouters.POST("/play_sound", func(ctx *gin.Context) {
 
 		type Arg struct {
-			Sha256    string  `json:"sha256"`
-			Type      string  `json:"type"`
-			StartTime float64 `json:"startTime"`
-			EndTime   float64 `json:"endTime"`
-			Volume    float64 `json:"volume"`
+			Sha256           string  `json:"sha256"`
+			Type             string  `json:"type"`
+			StartTime        float64 `json:"startTime"`
+			EndTime          float64 `json:"endTime"`
+			Volume           float64 `json:"volume"`
+			SkipGlobalVolume bool    `json:"skipGlobalVolume"`
 		}
 
 		var arg Arg
@@ -813,9 +814,10 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		go keySound.PlayKeySound(&keySound.AudioFilePath{Part: filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type)}, &keySound.Cut{
-			StartMS: int64(arg.StartTime),
-			EndMS:   int64(arg.EndTime),
-			Volume:  arg.Volume,
+			StartMS:          int64(arg.StartTime),
+			EndMS:            int64(arg.EndTime),
+			Volume:           arg.Volume,
+			SkipGlobalVolume: arg.SkipGlobalVolume,
 		})
 
 		ctx.JSON(200, gin.H{

@@ -303,7 +303,14 @@ export async function SoundFileDelete(sha256: string, nameID: string, type: stri
     });
 }
 
-export async function PlaySound(sha256: string, type: string, startTime: number, endTime: number, volume: number) {
+export async function PlaySound(
+  sha256: string,
+  type: string,
+  startTime: number,
+  endTime: number,
+  volume: number,
+  skipGlobalVolume = false
+) {
   return await api
     .post('/keytone_pkg/play_sound', {
       sha256: sha256,
@@ -311,6 +318,7 @@ export async function PlaySound(sha256: string, type: string, startTime: number,
       startTime: startTime,
       endTime: endTime,
       volume: volume,
+      skipGlobalVolume: skipGlobalVolume,
     })
     .then((req) => {
       console.debug('status=', req.status, '->PlaySound 请求已成功执行并返回->', req.data);

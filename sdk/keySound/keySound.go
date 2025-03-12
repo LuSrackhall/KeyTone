@@ -83,9 +83,10 @@ type AudioFilePath struct {
 }
 
 type Cut struct {
-	StartMS int64
-	EndMS   int64 // 当 EndMS 小于或等于 StartMS  时, 不会播放任何声音
-	Volume  float64
+	StartMS          int64   `json:"start_ms"`
+	EndMS            int64   `json:"end_ms"`
+	Volume           float64 `json:"volume"`
+	SkipGlobalVolume bool    `json:"skip_global_volume"` // 新增字段：是否跳过全局音量处理
 }
 
 // 键音播放器
@@ -161,9 +162,11 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 		Silent:   false,
 	}
 
-	volume = globalAudioVolumeAmplifyProcessing(volume)
-
-	volume = globalAudioVolumeNormalProcessing(volume)
+	// 根据 SkipGlobalVolume 标志决定是否应用全局音量设置
+	if cut != nil && !cut.SkipGlobalVolume || cut == nil {
+		volume = globalAudioVolumeAmplifyProcessing(volume)
+		volume = globalAudioVolumeNormalProcessing(volume)
+	}
 
 	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
 
