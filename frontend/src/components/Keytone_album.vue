@@ -3552,7 +3552,8 @@ function previewSound(params: {
     params.source_file_for_sound.type,
     params.cut.start_time,
     params.cut.end_time,
-    params.cut.volume
+    params.cut.volume,
+    true // 设置 skipGlobalVolume 为 true，使预览不受全局音量影响
   ).then((result) => {
     if (!result) {
       q.notify({

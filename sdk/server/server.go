@@ -788,11 +788,12 @@ func keytonePkgRouters(r *gin.Engine) {
 	keytonePkgRouters.POST("/play_sound", func(ctx *gin.Context) {
 
 		type Arg struct {
-			Sha256    string  `json:"sha256"`
-			Type      string  `json:"type"`
-			StartTime float64 `json:"startTime"`
-			EndTime   float64 `json:"endTime"`
-			Volume    float64 `json:"volume"`
+			Sha256        string  `json:"sha256"`
+			Type          string  `json:"type"`
+			StartTime     float64 `json:"startTime"`
+			EndTime       float64 `json:"endTime"`
+			Volume        float64 `json:"volume"`
+			IsPreviewMode bool    `json:"isPreviewMode"`
 		}
 
 		var arg Arg
@@ -816,7 +817,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			StartMS: int64(arg.StartTime),
 			EndMS:   int64(arg.EndTime),
 			Volume:  arg.Volume,
-		})
+		}, arg.IsPreviewMode)
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",

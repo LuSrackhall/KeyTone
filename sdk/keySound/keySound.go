@@ -93,10 +93,11 @@ type Cut struct {
 // Parameters:
 //   - audioFilePath - 指定音频文件路径的结构体, 为nil代表不播放任何音频。
 //   - cut - 裁剪键音的必要结构体, 为nil代表不裁剪。
+//   - isPreviewMode - 可选参数, 用于指示是否为预览模式（使用原始音量）
 //
 // Returns:
 //   - void
-func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
+func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, isPreviewMode ...bool) {
 
 	if audioFilePath == nil {
 		return
@@ -161,9 +162,17 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut) {
 		Silent:   false,
 	}
 
-	volume = globalAudioVolumeAmplifyProcessing(volume)
+	// 检查是否为预览模式（使用原始音量）
+	shouldUseRawVolume := false
+	if len(isPreviewMode) > 0 && isPreviewMode[0] {
+		shouldUseRawVolume = true
+	}
 
-	volume = globalAudioVolumeNormalProcessing(volume)
+	// 仅在非预览模式时应用全局音量处理
+	if !shouldUseRawVolume {
+		volume = globalAudioVolumeAmplifyProcessing(volume)
+		volume = globalAudioVolumeNormalProcessing(volume)
+	}
 
 	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
 
