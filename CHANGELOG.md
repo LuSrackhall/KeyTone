@@ -1,3 +1,13 @@
+#  (2025-03-14)
+
+
+### Bug Fixes
+
+* **keytonepkg:** 修复了主页面中主动清空所选键音包后, 整个应用的键音包使用状况没有恢复默认内嵌音的bug。 ([afb7371](https://github.com/LuSrackhall/KeyTone/commit/afb73713649423516b13b3bfb2ada8852bbcb6a0)), closes [#65](https://github.com/LuSrackhall/KeyTone/issues/65)
+* **volume:** 对于预览音量的操作, 应该基于音频文件原本的声音去预览, 不应该受到全局音量设置的影响。本次提交修复了这个问题。 ([1d0dfef](https://github.com/LuSrackhall/KeyTone/commit/1d0dfeffb8291fb6cd0931815bd7a9272b4c9b0c)), closes [#64](https://github.com/LuSrackhall/KeyTone/issues/64)
+
+
+
 #  (2025-02-27)
 
 
