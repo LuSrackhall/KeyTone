@@ -230,6 +230,7 @@
                     <q-card-section>
                       <q-select
                         outlined
+                        :virtual-scroll-slice-size="999999"
                         stack-label
                         v-model="selectedSoundFile"
                         :options="soundFileList"
@@ -451,6 +452,7 @@
                       <q-select
                         outlined
                         stack-label
+                        :virtual-scroll-slice-size="999999"
                         v-model="sourceFileForSound"
                         :options="soundFileList"
                         :option-label="(item) => item.name + item.type"
@@ -612,6 +614,7 @@
                       <q-select
                         outlined
                         stack-label
+                        :virtual-scroll-slice-size="999999"
                         clearable
                         v-model="selectedSound"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
@@ -697,6 +700,7 @@
                           <q-select
                             outlined
                             stack-label
+                            :virtual-scroll-slice-size="999999"
                             popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="selectedSound.soundValue.source_file_for_sound"
                             :options="soundFileList"
@@ -951,6 +955,7 @@
                               <q-select
                                 outlined
                                 popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                                :virtual-scroll-slice-size="999999"
                                 stack-label
                                 v-model="playModeForDown"
                                 :options="playModeOptions"
@@ -966,6 +971,7 @@
                               <q-select
                                 outlined
                                 stack-label
+                                :virtual-scroll-slice-size="999999"
                                 v-model="selectedSoundsForDown"
                                 popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="downSoundList"
@@ -1095,6 +1101,7 @@
                               <q-select
                                 outlined
                                 stack-label
+                                :virtual-scroll-slice-size="999999"
                                 popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 v-model="playModeForUp"
                                 :options="playModeOptions"
@@ -1110,6 +1117,7 @@
                               <q-select
                                 outlined
                                 stack-label
+                                :virtual-scroll-slice-size="999999"
                                 v-model="selectedSoundsForUp"
                                 popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                 :options="upSoundList"
@@ -1288,6 +1296,7 @@
                         outlined
                         stack-label
                         clearable
+                        :virtual-scroll-slice-size="999999"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                         v-model="selectedKeySound"
                         :options="keySoundList"
@@ -1327,6 +1336,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    :virtual-scroll-slice-size="999999"
                                     popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.mode"
                                     :options="playModeOptions"
@@ -1341,6 +1351,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    :virtual-scroll-slice-size="999999"
                                     popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.down.value"
                                     :options="edit_downSoundList"
@@ -1457,6 +1468,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    :virtual-scroll-slice-size="999999"
                                     popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.mode"
                                     :options="playModeOptions"
@@ -1471,6 +1483,7 @@
                                   <q-select
                                     outlined
                                     stack-label
+                                    :virtual-scroll-slice-size="999999"
                                     popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                     v-model="selectedKeySound.keySoundValue.up.value"
                                     :options="edit_upSoundList"
@@ -1757,6 +1770,7 @@
                           <q-select
                             outlined
                             stack-label
+                            :virtual-scroll-slice-size="999999"
                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyDownUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
@@ -1796,6 +1810,7 @@
                           <q-select
                             outlined
                             stack-label
+                            :virtual-scroll-slice-size="999999"
                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                             v-model="keyUpUnifiedSoundEffectSelect"
                             :options="keyUnifiedSoundEffectOptions"
@@ -2299,6 +2314,7 @@
                                             v-show="isDownSoundEffectSelectEnabled"
                                             outlined
                                             stack-label
+                                            :virtual-scroll-slice-size="999999"
                                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyDownSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
@@ -2339,6 +2355,7 @@
                                             v-show="isUpSoundEffectSelectEnabled"
                                             outlined
                                             stack-label
+                                            :virtual-scroll-slice-size="999999"
                                             popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                             v-model="keyUpSingleKeySoundEffectSelect"
                                             :options="keySingleKeySoundEffectOptions"
@@ -2847,6 +2864,7 @@
                                       <q-select
                                         outlined
                                         stack-label
+                                        :virtual-scroll-slice-size="999999"
                                         popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyDownSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
@@ -2891,6 +2909,7 @@
                                       <q-select
                                         outlined
                                         stack-label
+                                        :virtual-scroll-slice-size="999999"
                                         popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                                         v-model="keyUpSingleKeySoundEffectSelect_edit"
                                         :options="keySingleKeySoundEffectOptions_edit"
