@@ -946,11 +946,16 @@ func keytonePkgRouters(r *gin.Engine) {
 				return fmt.Errorf("计算相对路径失败: %v", err)
 			}
 
+			// 统一使用正斜杠，确保跨平台兼容性
+			relPath = filepath.ToSlash(relPath)
+
 			// 创建zip文件头信息
 			header, err := zip.FileInfoHeader(info)
 			if err != nil {
 				return fmt.Errorf("创建文件头信息失败: %v", err)
 			}
+
+			// 使用标准化的路径
 			header.Name = relPath
 
 			if info.IsDir() {
@@ -1360,6 +1365,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		var albumDir os.DirEntry
 		for _, f := range files {
 			if f.IsDir() {
+				fmt.Println("跨平台一致性校验", f)
 				if albumDir != nil {
 					ctx.JSON(http.StatusBadRequest, gin.H{
 						"message": "error: zip 文件中包含多个目录",
