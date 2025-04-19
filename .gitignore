@@ -8,3 +8,5 @@
 /sdk/temporaryDebug
 
 *.syso
+
+.DS_Store
