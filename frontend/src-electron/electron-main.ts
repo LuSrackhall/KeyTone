@@ -434,6 +434,38 @@ setInterval(async () => {
       }
     });
 
+    // 托盘菜单的静音按钮的设置 (此处主要用来应对用户从ui界面的图标(而非托盘菜单)中切换 静音/取消静音 状态的场景, 保证此场景下, 托盘图标的label名称可以顺利更新)
+    StoreGet('main_home.audio_volume_processing.volume_silent').then((req) => {
+      if (req != history_volume_silent) {
+        if (req === true) {
+          const index = searchItemIndexInMenuTemplate('Electron.tray.mute');
+          menuTemplate[index] = {
+            label: 'Electron.tray.unmute',
+            click: menuTemplate[index].click, // 这里直接使用当前click即可。保证下次点击 静音/取消静音 时 永远保持menuTemplate初始化时定义的逻辑。(或者说, click的功能始终为切换当前的状态, 不以label为主)
+            // click: () => {
+            //   StoreSet('main_home.audio_volume_processing.volume_silent', false);
+            // },
+          };
+        } else if (req === false) {
+          const index = searchItemIndexInMenuTemplate('Electron.tray.unmute');
+          menuTemplate[index] = {
+            label: 'Electron.tray.mute',
+            click: menuTemplate[index].click, // 这里直接使用当前click即可。保证下次点击 静音/取消静音 时 永远保持menuTemplate初始化时定义的逻辑。(或者说, click的功能始终为切换当前的状态, 不以label为主)
+            // click: () => {
+            //   StoreSet('main_home.audio_volume_processing.volume_silent', true);
+            // },
+          };
+        }
+
+        const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+
+        if (tray && !tray.isDestroyed()) {
+          tray.setContextMenu(contextMenu);
+        }
+        history_volume_silent = req;
+      }
+    });
+
     // 开机自启动的设置
     const is_hide_windows = await StoreGet('auto_startup.is_hide_windows');
     const is_auto_run = await StoreGet('auto_startup.is_auto_run');
