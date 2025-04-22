@@ -157,6 +157,8 @@ export const useSettingStore = defineStore('setting', () => {
       // TIPS: 这里只是为了判断是否从配置文件中读到了这个内容。为防止内容本身就为bool类型, 最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>。
       if (settingStorage.language_default !== undefined) {
         languageDefault.value = settingStorage.language_default;
+      } else {
+        StoreSet('language_default', languageDefault.value);
       }
 
       // 手动打开应用时的默认设置
