@@ -337,8 +337,28 @@ const menuTemplate = [
   },
   {
     label: 'Electron.tray.mute',
-    click: () => {
-      StoreSet('main_home.audio_volume_processing.volume_silent', true);
+    click: async () => {
+      const currentState = await StoreGet('main_home.audio_volume_processing.volume_silent');
+      const newState = !currentState;
+
+      // 立即更新菜单状态
+      const index = searchItemIndexInMenuTemplate(currentState ? 'Electron.tray.unmute' : 'Electron.tray.mute');
+      if (index !== -1) {
+        menuTemplate[index] = {
+          label: newState ? 'Electron.tray.unmute' : 'Electron.tray.mute',
+          click: menuTemplate[index].click, // 这里直接使用当前click即可。保证下次点击 静音/取消静音 时 永远保持此处定义的逻辑。
+        };
+
+        // 强制重建整个托盘菜单
+        const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
+        if (tray && !tray.isDestroyed()) {
+          tray.setContextMenu(contextMenu);
+        }
+      }
+
+      // 更新存储的状态
+      await StoreSet('main_home.audio_volume_processing.volume_silent', newState);
+      history_volume_silent = newState;
     },
   },
   {
@@ -407,37 +427,10 @@ setInterval(async () => {
         // console.log('i18n.global.t(Electron.tray.show)', i18n.global.t('Electron.tray.show'));
         // console.log('i18n.global.t(Electron.tray.quit)', i18n.global.t('Electron.tray.quit'));
         const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
-
-        tray.setContextMenu(contextMenu);
-        history_language_default = req;
-      }
-    });
-
-    // 托盘菜单的静音按钮的设置
-    StoreGet('main_home.audio_volume_processing.volume_silent').then((req) => {
-      if (req != history_volume_silent) {
-        if (req === true) {
-          const index = searchItemIndexInMenuTemplate('Electron.tray.mute');
-          menuTemplate[index] = {
-            label: 'Electron.tray.unmute',
-            click: () => {
-              StoreSet('main_home.audio_volume_processing.volume_silent', false);
-            },
-          };
-        } else if (req === false) {
-          const index = searchItemIndexInMenuTemplate('Electron.tray.unmute');
-          menuTemplate[index] = {
-            label: 'Electron.tray.mute',
-            click: () => {
-              StoreSet('main_home.audio_volume_processing.volume_silent', true);
-            },
-          };
+        if (tray && !tray.isDestroyed()) {
+          tray.setContextMenu(contextMenu);
         }
-
-        const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
-
-        tray.setContextMenu(contextMenu);
-        history_volume_silent = req;
+        history_language_default = req;
       }
     });
 
