@@ -241,7 +241,17 @@ function createWindow() {
   // 作用：启用指定窗口的远程访问，使得渲染进程可以通过 @electron/remote 模块访问主进程的功能。
   enable(mainWindow.webContents);
 
-  mainWindow.loadURL(process.env.APP_URL);
+  // 这里使用sdkIsRun, 而不使用sdkServerIsRun的原因是,sdkServerIsRun是依赖子进程的返回值进行管理的, 此方式仅运行于生产环境, 开发调试环境下相关内容不会被调用从而引发开发调试时窗口彻底打不开的问题, 因此弃用。
+  if (sdkIsRun) {
+    mainWindow.loadURL(process.env.APP_URL);
+  } else {
+    setTimeout(() => {
+      createWindow();
+    }, 300);
+    return;
+  }
+
+  console.log('debug: 确保createWindow仅有效执行一次');
 
   // 这三行配合上面的`show:false`, 可以使得前端页面加载完毕后再显示窗口。
   // 作用是: 牺牲的窗口启动速度, 来避免窗口启动后白屏加载前端的糟糕体验。
