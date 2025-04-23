@@ -55,8 +55,6 @@ import { i18n } from 'src/boot/i18n'; //node.js对ts的支持有点恶心, 所�
 // 初始化 @electron/remote 模块，使其可以在主进程和渲染进程之间进行通信。
 initialize();
 
-// 定义一个全局的检测go进程的服务是否启动成功的变量
-let sdkServerIsRun = false; // 利用解析子进程的终端打印来实现(推荐)。 还有个sdkIsRun变量与之作用相等, 他是利用递归请求某个http请求, 直到请求成功为止的方式(不推荐)。
 let sseClient;
 
 const appDir = path.dirname(app.getAppPath());
@@ -150,7 +148,6 @@ if (process.env.DEBUGGING) {
         backendPort = parseInt(portMatch[1], 10);
         UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
         process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
-        sdkServerIsRun = true;
         sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
         sseClient.addEventListener(
           'message',
@@ -241,7 +238,6 @@ function createWindow() {
   // 作用：启用指定窗口的远程访问，使得渲染进程可以通过 @electron/remote 模块访问主进程的功能。
   enable(mainWindow.webContents);
 
-  // 这里使用sdkIsRun, 而不使用sdkServerIsRun的原因是,sdkServerIsRun是依赖子进程的返回值进行管理的, 此方式仅运行于生产环境, 开发调试环境下相关内容不会被调用从而引发开发调试时窗口彻底打不开的问题, 因此弃用。
   if (sdkIsRun) {
     mainWindow.loadURL(process.env.APP_URL);
   } else {
