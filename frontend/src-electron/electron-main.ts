@@ -28,6 +28,7 @@ import path from 'path';
 import os from 'os';
 import { UpdateApi } from 'src/boot/axios';
 import { StoreGet, StoreSet } from 'boot/query/store-query';
+import { EventSource } from 'eventsource';
 
 // 未解决但于本项目已无影响FIXME: 只要引入 vue-i18n , 并使用它,  就会造成调试对话框无法独立打开。(猜测可能是影响了`process.env.DEBUGGING`的正常获取<如果真的是这样, 那就太严重了。(测试结果并没有影响这个环境变量的获取, 可以确定只是影响了`mainWindow.webContents.openDevTools({ mode: 'detach' });`这个api的功能效果)>)
 // import { createI18n } from 'vue-i18n';  // 直接复用前端boot中的i18n文件的导出即可, 没必要重复写代码
@@ -53,6 +54,10 @@ import { i18n } from 'src/boot/i18n'; //node.js对ts的支持有点恶心, 所�
 
 // 初始化 @electron/remote 模块，使其可以在主进程和渲染进程之间进行通信。
 initialize();
+
+// 定义一个全局的检测go进程的服务是否启动成功的变量
+let sdkServerIsRun = false; // 利用解析子进程的终端打印来实现(推荐)。 还有个sdkIsRun变量与之作用相等, 他是利用递归请求某个http请求, 直到请求成功为止的方式(不推荐)。
+let sseClient;
 
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
@@ -145,6 +150,21 @@ if (process.env.DEBUGGING) {
         backendPort = parseInt(portMatch[1], 10);
         UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
         process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
+        sdkServerIsRun = true;
+        sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
+        sseClient.addEventListener(
+          'message',
+          function (e) {
+            console.debug('后端钩子函数中AfterDelete中的值 = ', e.data);
+
+            const data = JSON.parse(e.data);
+
+            if (data.key === 'get_all_value') {
+              updateStatus();
+            }
+          },
+          false
+        );
       }
 
       if (line.trim()) {
@@ -394,7 +414,7 @@ import AutoLaunch from 'auto-launch';
 // 创建一个存储  AutoLaunch 实例的全局变量, 用于后续的自动启动设置
 let autoLauncher: AutoLaunch;
 
-setInterval(async () => {
+async function updateStatus() {
   if (sdkIsRun) {
     // 托盘菜单的语言的设置
     StoreGet('language_default').then((req) => {
@@ -505,7 +525,7 @@ setInterval(async () => {
         console.error('Error checking auto-launch status:', err);
       });
   }
-}, 1000);
+}
 
 function createTray() {
   // 创建托盘图标(开发环境也是可以创建托盘图标的, 之前失败的原因是图标路径的错误)
