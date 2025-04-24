@@ -73,6 +73,19 @@ function sseClientInit() {
   );
 }
 
+if (process.env.DEBUGGING) {
+  function sseClientInitDebug() {
+    if (sdkIsRun) {
+      sseClientInit();
+    } else {
+      setTimeout(() => {
+        sseClientInitDebug();
+      }, 300);
+    }
+  }
+  sseClientInitDebug();
+}
+
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
 // > TODO: 下方代码可能需要使用quasar专用的环境变量来替代。(正式支持Linux或MacOS之前; 或之后<因为是否有.exe的后缀名,不影响其在Linux或MacOS平台上运行, 即可有可无; .exe后缀名, 仅在win下是必须有的。>)
