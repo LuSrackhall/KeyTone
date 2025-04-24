@@ -221,7 +221,7 @@ let sdkIsRun = false;
       startupSetting();
     } else {
       // 有些操作需要保证在sdk运行后再执行。此处利用了这一点。
-      sdkIsRun = true;
+      sdkIsRun = true; //ERROR 如果38888端口被其它应用占用, 在开发环境下将无法将sdkIsRun置为true。也会因此引发大问题。(生产环境下似乎不存在这个问题, 因为axios中会轮询式的监听端口号的变更->但我也不完全确定。)
     }
   });
 })();
