@@ -56,6 +56,22 @@ import { i18n } from 'src/boot/i18n'; //node.js对ts的支持有点恶心, 所�
 initialize();
 
 let sseClient;
+function sseClientInit() {
+  sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
+  sseClient.addEventListener(
+    'message',
+    function (e) {
+      console.debug('后端钩子函数中AfterDelete中的值 = ', e.data);
+
+      const data = JSON.parse(e.data);
+
+      if (data.key === 'get_all_value') {
+        updateStatus();
+      }
+    },
+    false
+  );
+}
 
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
@@ -148,20 +164,7 @@ if (process.env.DEBUGGING) {
         backendPort = parseInt(portMatch[1], 10);
         UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
         process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
-        sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
-        sseClient.addEventListener(
-          'message',
-          function (e) {
-            console.debug('后端钩子函数中AfterDelete中的值 = ', e.data);
-
-            const data = JSON.parse(e.data);
-
-            if (data.key === 'get_all_value') {
-              updateStatus();
-            }
-          },
-          false
-        );
+        sseClientInit(); // 内部依赖backendPort, 需要在生产环境下, 绝对的保证backendPort的准确性。
       }
 
       if (line.trim()) {
