@@ -57,34 +57,29 @@ initialize();
 
 let sseClient;
 function sseClientInit() {
-  sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
-  sseClient.addEventListener(
-    'message',
-    function (e) {
-      console.debug('后端钩子函数中AfterDelete中的值 = ', e.data);
+  if (sdkIsRun) {
+    sseClient = new EventSource(`http://127.0.0.1:${backendPort}/stream`, { withCredentials: false });
+    sseClient.addEventListener(
+      'message',
+      function (e) {
+        console.debug('后端钩子函数中AfterDelete中的值 = ', e.data);
 
-      const data = JSON.parse(e.data);
+        const data = JSON.parse(e.data);
 
-      if (data.key === 'get_all_value') {
-        updateStatus();
-      }
-    },
-    false
-  );
-}
-
-if (process.env.DEBUGGING) {
-  function sseClientInitDebug() {
-    if (sdkIsRun) {
+        if (data.key === 'get_all_value') {
+          updateStatus();
+        }
+      },
+      false
+    );
+  } else {
+    setTimeout(() => {
       sseClientInit();
-    } else {
-      setTimeout(() => {
-        sseClientInitDebug();
-      }, 300);
-    }
+    }, 300);
   }
-  sseClientInitDebug();
 }
+
+sseClientInit();
 
 const appDir = path.dirname(app.getAppPath());
 // 这里以后支持多平台时, 需要使用, 并在后方path.join的最后一个参数处, 替换为此name变量。
@@ -147,7 +142,7 @@ function runChildProcess(command: string, parameter: Array<string>) {
         backendPort = parseInt(portMatch[1], 10);
         UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
         process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
-        sseClientInit(); // 内部依赖backendPort, 需要在生产环境下, 绝对的保证backendPort的准确性。
+        sdkIsRun = true;
       }
 
       if (line.trim()) {
@@ -252,20 +247,7 @@ let tray: Tray;
 
 // let sdkIsRun: boolean = false; // eslint有类型推断, 主动设置会报错, 但我又懒得关闭此推断。
 let sdkIsRun = false;
-// 虽然一定会因此降低启动速度, 但是我只想降低开发成本。<懒得直接使用nodejs来加载文件了>
-(function startupSetting() {
-  // 由于此部分仅开机首次运行时调用, 因此不受sdk中go依赖的viper的bug的影响。(即首次调用时可以获得真实情况, 若内部某字段被基于最终字段变更, 则会使得父字段为null的bug)
-  // 而且, 这里还利用了StoreGet的false返回值来实现了递归轮询。(若直接基于最终字段来递归轮询, 则因其值本身就是boolean, 会无法达到实际的递归效果。)
-  // TIPS: 以后再开新项目, 这类restful请求失败后的返回值, 不再使用false, 而是使用一个固定的字符串常量(具有绝对uuid特质的--似乎空对象之类的引用常量也行), 用于判断是否请求成功。
-  StoreGet('startup').then((value) => {
-    if (value === false) {
-      startupSetting();
-    } else {
-      // 有些操作需要保证在sdk运行后再执行。此处利用了这一点。
-      sdkIsRun = true; //ERROR 如果38888端口被其它应用占用, 在开发环境下将无法将sdkIsRun置为true。也会因此引发大问题。(生产环境下似乎不存在这个问题, 因为axios中会轮询式的监听端口号的变更->但我也不完全确定。)
-    }
-  });
-})();
+
 const iconPath = process.env.DEBUGGING
   ? path.join(process.cwd(), 'src-electron', 'icons', 'icon.png') // 开发环境路径
   : path.join(__dirname, 'icons', 'icon.png'); // 生产环境路径
