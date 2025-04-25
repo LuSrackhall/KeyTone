@@ -124,42 +124,12 @@ if (!fs.existsSync(logsDir)) {
 }
 
 import cp from 'child_process';
-// TIPS: 在最前面进行, 是因为防止启动后因子进程未能及时的成功启动, 而触发强制用户选择ip的模态窗口。
-if (process.env.DEBUGGING) {
-  // TIPS: win平台下, 想要执行二进制文件, 请注意其只认.exe为扩展名的二进制文件(或其它如.bat .cmd等之类的非二进制文件)。
-  // TIPS: 还需要注意的是: 我们的路径因按照src下的来。
-  //       > 必须确保子进程的文件路径, 是相对于项目的主要JavaScript文件所在目录的。
-  //       > 换句话说，这应该是相对于你运行 electron.的地方的路径。(即我们package按照electron的地方, 也就是最原始的src目录。)
-  // WARN: 开发模式(dev)下的路径,与发布构建模式(build)下的路径, 是不通用的。
-  //       > 我们需要通过electron提供的api来获取最终打包后的路径。 以保证在发布的软件版本中, 可以正常执行相关路径下的文件与资源。
-  // WARN: 在 Electron 的打包过程中，会将应用的所有资源文件，包括 JavaScript、HTML、CSS，还有其他的脚本文件和二进制文件，
-  //       一起打包到最终的应用程序中。
-  //       > 但是, 使用 cp.spawn 启动的子进程不会被包含在打包的 Electron 应用内。如果你的应用需要在运行时启动其他的可执行
-  //         文件或脚本，你需要确保这些文件在每台用户的机器上都能被正确地访问。对于这样的需求，一种常见的做法是在 Electron
-  //         应用的安装程序中包含这些额外的可执行文件，并且在安装过程中将它们放置在合适的位置(或通过makefile让其在编译后直
-  //         接到这个目录中去)。然后在 Electron 应用中用正确的路径来引用这些文件。(也因此, 注释了dev模式下的这个)
-  // const cp = require('child_process');
-  // const sdkProcess = cp.spawn(
-  //   './src-electron/key_tone_sdk/key_tone_sdk.exe',
-  //   ['-configPath=../sdk'],
-  //   {
-  //     detached: false,
-  //     stdio: 'ignore',
-  //   }
-  // );
-} else {
-  // const cp = require('child_process');
-  // const sdkProcessParameter = [dbPath, '', logsDirPath];
-  // mvp阶段暂时不需要数据库和日志记录
-  const sdkProcessParameter = [
-    '-configPath=' + configDir,
-    '-audioPackagePath=' + audioPackageDir,
-    '-logPathAndName=' + logsDirPath,
-  ];
+
+function runChildProcess(command: string, parameter: Array<string>) {
   // inherit: 子进程将继承父进程的标准输入、输出和错误流。这意味着子进程的输出会直接显示在父进程的终端中。这种方式不会对子进程的执行产生其他影响，只是改变了输出的显示方式。
   // pipe: 子进程的标准输入、输出和错误流会被重定向到父进程中。你可以通过监听这些流来捕获子进程的输出。这种方式也不会对子进程的执行产生其他影响，但需要你在父进程中处理这些流
   // ignore: 忽略子进程的标准输入。
-  const sdkProcess = cp.spawn(key_tone_sdk_path, sdkProcessParameter, {
+  const sdkProcess = cp.spawn(command, parameter, {
     detached: false,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
@@ -201,6 +171,77 @@ if (process.env.DEBUGGING) {
   sdkProcess.on('close', (code) => {
     console.log(`[SDK] exited with code ${code}`);
   });
+}
+
+// TIPS: 在最前面进行, 是因为防止启动后因子进程未能及时的成功启动, 而触发强制用户选择ip的模态窗口。
+if (process.env.DEBUGGING) {
+  // TIPS: win平台下, 想要执行二进制文件, 请注意其只认.exe为扩展名的二进制文件(或其它如.bat .cmd等之类的非二进制文件)。
+  // TIPS: 还需要注意的是: 我们的路径因按照src下的来。
+  //       > 必须确保子进程的文件路径, 是相对于项目的主要JavaScript文件所在目录的。
+  //       > 换句话说，这应该是相对于你运行 electron.的地方的路径。(即我们package按照electron的地方, 也就是最原始的src目录。)
+  // WARN: 开发模式(dev)下的路径,与发布构建模式(build)下的路径, 是不通用的。
+  //       > 我们需要通过electron提供的api来获取最终打包后的路径。 以保证在发布的软件版本中, 可以正常执行相关路径下的文件与资源。
+  // WARN: 在 Electron 的打包过程中，会将应用的所有资源文件，包括 JavaScript、HTML、CSS，还有其他的脚本文件和二进制文件，
+  //       一起打包到最终的应用程序中。
+  //       > 但是, 使用 cp.spawn 启动的子进程不会被包含在打包的 Electron 应用内。如果你的应用需要在运行时启动其他的可执行
+  //         文件或脚本，你需要确保这些文件在每台用户的机器上都能被正确地访问。对于这样的需求，一种常见的做法是在 Electron
+  //         应用的安装程序中包含这些额外的可执行文件，并且在安装过程中将它们放置在合适的位置(或通过makefile让其在编译后直
+  //         接到这个目录中去)。然后在 Electron 应用中用正确的路径来引用这些文件。(也因此, 注释了dev模式下的这个)
+  // const cp = require('child_process');
+  // const sdkProcess = cp.spawn(
+  //   './src-electron/key_tone_sdk/key_tone_sdk.exe',
+  //   ['-configPath=../sdk'],
+  //   {
+  //     detached: false,
+  //     stdio: 'ignore',
+  //   }
+  // );
+
+  // 实时构建 sdk 的二进制程序, 方便调试
+  const debugProcess = cp.spawn('./src-electron/debug.sh', [], {
+    detached: false,
+  });
+
+  // 构建成功后, 再调用正常的逻辑
+  debugProcess.on('close', (code) => {
+    if (code === 0) {
+      console.log('Debug script executed successfully.');
+      // Continue with the next steps here
+
+      // 这里可以让debug环境下使用于 生产环境相同的存储目录
+      // const sdkProcessParameter: Array<string> = [
+      //   '-configPath=' + configDir,
+      //   '-audioPackagePath=' + audioPackageDir,
+      //   '-logPathAndName=' + logsDirPath,
+      // ];
+
+      // 也可使用当前路径(参数传递空数组即可)
+      // const sdkProcessParameter: Array<string> = [];
+
+      // 不过个人推荐使用sdk-debug路径, 因为这样更容易观察
+      const sdkProcessParameter: Array<string> = [
+        '-configPath=' + './src-electron/sdk-debug/', //给到路径即可
+        '-audioPackagePath=' + './src-electron/sdk-debug/', //给到路径即可
+        '-logPathAndName=' + './src-electron/sdk-debug/KeyToneSdkLog.jsonl', //必须给到日志的文件名称
+      ];
+
+      runChildProcess('./src-electron/sdk-debug/KeyTone.exe', sdkProcessParameter);
+    } else {
+      console.error(`Debug script exited with code ${code}`);
+      // Handle the error case here
+    }
+  });
+} else {
+  // const cp = require('child_process');
+  // const sdkProcessParameter = [dbPath, '', logsDirPath];
+  // mvp阶段暂时不需要数据库和日志记录
+  const sdkProcessParameter = [
+    '-configPath=' + configDir,
+    '-audioPackagePath=' + audioPackageDir,
+    '-logPathAndName=' + logsDirPath,
+  ];
+
+  runChildProcess(key_tone_sdk_path, sdkProcessParameter);
 }
 
 // needed in case process is undefined under Linux
