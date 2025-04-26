@@ -1,0 +1,15 @@
+<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <!-- 主按键 - 使用黄金分割比例，深色边框 -->
+    <rect x="6.91" y="6.91" width="6.18" height="6.18" rx="1.8" 
+          fill="white" 
+          stroke="#d0d0d0" 
+          stroke-width="1"/>
+          
+    <!-- 字母 K - 系统无衬线字体 -->
+    <text x="10" y="11.2" 
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif" 
+          font-size="3.8" 
+          font-weight="600"
+          text-anchor="middle" 
+          fill="#000000">K</text>
+</svg>
