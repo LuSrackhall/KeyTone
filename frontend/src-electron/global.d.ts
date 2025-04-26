@@ -25,6 +25,7 @@ interface MyWindowAPI {
   openExternal: (arg0: string) => void;
   getWindowsStoreStatus: () => any;
   getBackendPort: () => number;
+  getMacOSStatus: () => any;
 }
 
 interface Window {

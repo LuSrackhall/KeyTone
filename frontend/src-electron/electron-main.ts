@@ -522,6 +522,20 @@ async function updateStatus() {
       // * 如果以上可以(否则此步似乎无需执行), 则可尝试addAutoLaunchExtension: false后, 是否可以实现集成。
       return; // 由于(https://github.com/Teamwork/node-auto-launch)不支持Windows Store 自动启动, 因此如果是appx则直接返回。(其6.0.0正式发布后, 会重新考虑是否撤回此return-多半不会)
     }
+    const isMacOS = process.platform === 'darwin';
+    if (isMacOS) {
+      app.setLoginItemSettings({
+        openAtLogin: is_auto_run,
+        // openAsHidden: is_hide_windows, // macOS only // 由于在mas构建中不可用(也就是应用商店沙盒版本下), 以及在macos13及以上版本中不可用, 因此弃用
+      });
+
+      // // 更新 is_hide_windows_old 以记录最新情况
+      // if (is_hide_windows !== is_hide_windows_old) {
+      //   StoreSet('auto_startup.is_hide_windows_old', is_hide_windows);
+      // }
+      return;
+    }
+
     // 创建新的 AutoLaunch 实例
     autoLauncher = new AutoLaunch({
       name: 'KeyTone',

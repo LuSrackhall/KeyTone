@@ -65,7 +65,7 @@
   </q-item>
 
   <!-- 开机自动启动时, 是否隐藏窗口 -->
-  <q-item :disable="!setting_store.autoStartup.isAutoRun" v-if="!isWindowsStore">
+  <q-item :disable="!setting_store.autoStartup.isAutoRun" v-if="!(isWindowsStore || isMacOS)">
     <!-- 左边的竖线 -->
     <div :class="['ml-13 rounded-full  border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
     <q-item-section>
@@ -89,6 +89,14 @@ const isWindowsStore = ref(getWindowsStoreStatus());
 function getWindowsStoreStatus() {
   if (process.env.MODE === 'electron') {
     return window.myWindowAPI.getWindowsStoreStatus();
+  }
+  return false;
+}
+
+const isMacOS = ref(getMacOSStatus);
+function getMacOSStatus() {
+  if (process.env.MODE === 'electron') {
+    return window.myWindowAPI.getMacOSStatus();
   }
   return false;
 }

@@ -65,4 +65,9 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
 
   // 添加获取后端端口的方法
   getBackendPort: () => ipcRenderer.sendSync('get-backend-port'),
+
+  // 获取MacOS状态
+  getMacOSStatus() {
+    return process.platform === 'darwin';
+  },
 });
