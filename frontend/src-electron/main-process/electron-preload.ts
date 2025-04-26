@@ -23,6 +23,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 // 从 @electron/remote 模块中导入 BrowserWindow，用于在渲染进程中控制窗口。
 import { BrowserWindow } from '@electron/remote';
 
+import os from 'os';
 /*
  * 使用 contextBridge.exposeInMainWorld 方法在渲染进程的全局上下文中暴露一个名为 myWindowAPI 的对象。这个对象包含三个方法：
  * minimize：最小化当前窗口。
@@ -68,6 +69,6 @@ contextBridge.exposeInMainWorld('myWindowAPI', {
 
   // 获取MacOS状态
   getMacOSStatus() {
-    return process.platform === 'darwin';
+    return process.platform === 'darwin' || os.platform() === 'darwin';
   },
 });

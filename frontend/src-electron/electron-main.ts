@@ -522,7 +522,7 @@ async function updateStatus() {
       // * 如果以上可以(否则此步似乎无需执行), 则可尝试addAutoLaunchExtension: false后, 是否可以实现集成。
       return; // 由于(https://github.com/Teamwork/node-auto-launch)不支持Windows Store 自动启动, 因此如果是appx则直接返回。(其6.0.0正式发布后, 会重新考虑是否撤回此return-多半不会)
     }
-    const isMacOS = process.platform === 'darwin';
+    const isMacOS = platform === 'darwin';
     if (isMacOS) {
       app.setLoginItemSettings({
         openAtLogin: is_auto_run,
@@ -664,7 +664,20 @@ if (!gotTheLock) {
 }
 
 app.on('window-all-closed', () => {
+  // 不知道之前为什么通过这一行代码, 目前仍不了解它的作用, 不管似乎不会阻止mac平台下的系统关机和重新启动
   if (platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// 监听 before-quit 事件，确保在mac平台下清理托盘并退出, 防止此应用的运行阻止正常的系统关机和重新启动
+app.on('before-quit', (event) => {
+  if (platform === 'darwin') {
+    // 清理托盘图标
+    if (tray) {
+      tray.destroy();
+    }
+    // 确保应用可以退出
     app.quit();
   }
 });
