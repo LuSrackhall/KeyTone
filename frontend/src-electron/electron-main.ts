@@ -17,7 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { app, BrowserWindow, Tray, Menu, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, Tray, Menu, ipcMain, shell, nativeImage } from 'electron';
 /*
  * 无边框功能实现时, 需借此做到窗口关闭等的控制。
  * 从 @electron/remote/main 模块中导入 initialize 和 enable 函数。
@@ -435,6 +435,22 @@ function searchItemIndexInMenuTemplate(label: string): number {
   return -1;
 }
 
+// 优化图标创建的函数
+function createTrayIcon(iconPath: string) {
+  const icon = nativeImage.createFromPath(iconPath);
+  if (platform === 'darwin') {
+    // macOS上设置合适的图标大小
+    const resizedIcon = icon.resize({
+      width: 22,
+      height: 22,
+      quality: 'better',
+    });
+    resizedIcon.setTemplateImage(true); // 使图标支持 macOS 的深色模式
+    return resizedIcon;
+  }
+  return icon;
+}
+
 // 先通过轮询验证下可行性, 之后再引入sse或websocket。 (等引入sse或websocket时, 再来改动此部分代码, 目前能用就行。)
 let history_language_default: string;
 
@@ -587,8 +603,9 @@ async function updateStatus() {
 }
 
 function createTray() {
-  // 创建托盘图标(开发环境也是可以创建托盘图标的, 之前失败的原因是图标路径的错误)
-  tray = new Tray(iconPath); // 替换为你的图标路径
+  // 使用优化后的图标创建托盘
+  const trayIcon = createTrayIcon(iconPath);
+  tray = new Tray(trayIcon);
 
   // 创建托盘图标的上下文菜单
   const contextMenu = Menu.buildFromTemplate(menuTemplateI18n());
