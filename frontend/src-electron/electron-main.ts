@@ -195,6 +195,7 @@ if (process.env.DEBUGGING) {
   // 实时构建 sdk 的二进制程序, 方便调试
   const debugProcess = cp.spawn('./src-electron/debug.sh', [], {
     detached: false,
+    shell: 'bash',
   });
 
   // 构建成功后, 再调用正常的逻辑
