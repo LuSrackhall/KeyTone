@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <div id="app-container">
+  <div :class="['app-container', isMacOS ? '' : 'app-container_shadow']">
     <div class="content">
       <router-view />
     </div>
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useAppStore } from './stores/app-store';
 import { debounce } from 'lodash';
@@ -232,6 +232,14 @@ onBeforeMount(async () => {
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
 });
+
+const isMacOS = ref(getMacOSStatus());
+function getMacOSStatus() {
+  if (process.env.MODE === 'electron') {
+    return window.myWindowAPI.getMacOSStatus();
+  }
+  return false;
+}
 </script>
 
 <style lang="scss" scoped>
@@ -250,14 +258,9 @@ onBeforeMount(async () => {
   /* font-family: 'Inter', sans-serif; */
 }
 
-:global(#app-container) {
+.app-container {
   width: 100%;
   height: 100%;
-
-  /* 更好且更方便的做法是, 直接在electron-main.ts中的原生级别解决此问题*/
-  /* 留出边距以展示阴影 */
-  width: calc(100% - 10px);
-  height: calc(100% - 10px);
 
   /* 将背景的设置从body 转移到此处, 以避免对实现圆角的功能产生影响*/
   /* background: #edc0bf; */
@@ -270,13 +273,21 @@ onBeforeMount(async () => {
   /* 底部圆角设置 */
   border-bottom-right-radius: 0.25rem /* 4px */;
   border-bottom-left-radius: 0.25rem /* 4px */;
+}
+
+.app-container_shadow {
+  /* 更好且更方便的做法是, 直接在electron-main.ts中的原生级别解决此问题*/
+  /* 留出边距以展示阴影 */
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+
   /* 阴影设置 */
   /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
   box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
   /* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1),0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color) ; */
 }
 
-:global(.content) {
+.content {
   position: relative;
   z-index: 1;
   padding: 0px;
