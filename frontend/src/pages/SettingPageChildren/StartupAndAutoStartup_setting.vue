@@ -93,7 +93,7 @@ function getWindowsStoreStatus() {
   return false;
 }
 
-const isMacOS = ref(getMacOSStatus);
+const isMacOS = ref(getMacOSStatus());
 function getMacOSStatus() {
   if (process.env.MODE === 'electron') {
     return window.myWindowAPI.getMacOSStatus();
