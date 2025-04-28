@@ -113,5 +113,6 @@ const router = useRouter();
 
 :deep(.q-item__section) {
   @apply text-wrap;
+  @apply overflow-hidden;
 }
 </style>
