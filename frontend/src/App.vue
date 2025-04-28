@@ -18,7 +18,11 @@
 -->
 
 <template>
-  <router-view />
+  <div id="app-container">
+    <div class="content">
+      <router-view />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -234,5 +238,48 @@ onBeforeMount(async () => {
 :global(.q-dialog__backdrop) {
   // background-color: rgba(0, 0, 0, 0) !important;
   @apply bg-transparent;
+}
+
+:global(.body) {
+  margin: 0;
+  height: 500px;
+  /* overflow: hidden; */
+  /* background: #edc0bf; */
+  /* background: rgba(255, 255, 255, 0.2); 半透明背景 */
+  /* background: linear-gradient(90deg, #edc0bf 0,#c4caef 58%); */
+  /* font-family: 'Inter', sans-serif; */
+}
+
+:global(#app-container) {
+  width: 100%;
+  height: 100%;
+
+  /* 更好且更方便的做法是, 直接在electron-main.ts中的原生级别解决此问题*/
+  /* 留出边距以展示阴影 */
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+
+  /* 将背景的设置从body 转移到此处, 以避免对实现圆角的功能产生影响*/
+  /* background: #edc0bf; */
+  background: linear-gradient(90deg, #edc0bf 0%, #c4caef 58%);
+  /* border-radius: 30px; 圆角<这里设置的远大于实际的即可> */
+  /* border-radius: 1.0rem; */
+  /* 顶部圆角设置 */
+  border-top-left-radius: 0.5rem /* 8px */;
+  border-top-right-radius: 0.5rem /* 8px */;
+  /* 底部圆角设置 */
+  border-bottom-right-radius: 0.25rem /* 4px */;
+  border-bottom-left-radius: 0.25rem /* 4px */;
+  /* 阴影设置 */
+  /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); */
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1),0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color) ; */
+}
+
+:global(.content) {
+  position: relative;
+  z-index: 1;
+  padding: 0px;
+  color: black;
 }
 </style>
