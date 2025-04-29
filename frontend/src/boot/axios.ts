@@ -33,6 +33,14 @@ export const UpdateApi = (newPort: number) => {
 export default boot(({ app }) => {
   // 由于前端对于端口的变更时不确定的, 因此需要利用ipc持续监听端口变化，来更新api实例。(TIPS: 虽然本项目不涉及spa, 但后续有必要思考, spa中如何监听端口变化以做到前后端统一的应对。比如使用go启动某个spa时, 是否能做到向spa中传递一些参数这种事情。)
   if (process.env.MODE === 'electron') {
+    // 这个逻辑我们在启动时先即时的调用一次, 以避免端口不一致时造成启动瞬间仍使用旧的38888端口。(后续的setInterval()存在1s后才执行第一次的问题(尤其在macos中), 不会即时调用, 这会影响获取实际端口的及时性。)(而且, 由于新架构下是一定可以第一时间及时获取到真实端口的, 因此后续setInterval中的6s监听也没有必要, 但保留它做个保障也行, 多几行无用代码也无可厚非。)
+    const currentPort = window.myWindowAPI.getBackendPort(); // 这个逻辑放入boot的回调中恰到好处, 因为electron项目中我们无需在nodejs的主进程使用它。
+    UpdateApi(currentPort);
+    if (currentPort !== port) {
+      // 刷新重启整个应用(以刷新sse的端口)
+      window.location.reload(); // 在此处可用
+    }
+
     // TIPS: 由于即使端口变化, 也只会变化一次, 或是无需变化(99%的概率无需变化, 即使端口占用, sdk返回的端口也极大概率在渲染进程启动前返回)。
     //       * 因此通过intervalId, 让其至多触发一次。(或是通过count, 让无需变化的情况下6s后自动停止, 避免持续监听造成的资源浪费)
     let count = 0;
