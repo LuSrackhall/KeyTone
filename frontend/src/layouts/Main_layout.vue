@@ -13,6 +13,7 @@
                                       * 实现步骤也很容易, 只需要将 pageLabel 转换为对象, 其中包含相关对应的 to 属性即可。 ((TIPS: 简单应用涉及的路径太浅, 没必要))
       -->
       <q-bar class="q-electron-drag rounded-t-lg">
+        <q-div v-if="isMacOS" class="w-13.2"></q-div>
         <q-btn
           :disable="
             (() => {
@@ -20,6 +21,7 @@
               return keytoneAlbum_store.isCreateNewKeytoneAlbum;
             })()
           "
+          :class="[isMacOS ? 'mb-1' : '']"
           flat
           dense
           icon="menu"
@@ -45,6 +47,7 @@
 
               // 使页面文本无法选择, 免得影响界面体验。
               'select-none',
+              isMacOS ? 'mb-0.5' : '',
             ]"
             @click="home"
           >
@@ -58,7 +61,7 @@
             </div>
           </div> -->
           <div class="text-xs pt-2.6">
-            <div class="ml-2 flex text-[12px]">
+            <div class="ml-2 flex text-[12px]" :class="[isMacOS ? 'mb-0.5' : '']">
               {{ version }}
             </div>
           </div>
@@ -78,13 +81,15 @@
           icon="keyboard_backspace"
           @click="back"
           class="mt-0.8 -mr-1.8"
+          :class="[isMacOS ? 'mb-0.5' : '']"
         />
         <div class="flex flex-nowrap">
-          <div class="text-sm text-nowrap">{{ pageLabel }}</div>
+          <div class="text-sm text-nowrap" :class="[isMacOS ? 'mb-0.5' : '']">{{ pageLabel }}</div>
         </div>
         <q-space />
 
         <q-btn
+          v-if="!isMacOS"
           :disable="
             (() => {
               // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
@@ -98,6 +103,7 @@
         />
         <!-- <q-btn dense flat icon="crop_square" @click="toggleMaximize" /> -->
         <q-btn
+          v-if="!isMacOS"
           :disable="
             (() => {
               // 在键音专辑创建期间, 应禁止选择器的使用, 避免意外选择其它键音专辑造成创建被中断, 以及其它混乱问题。
