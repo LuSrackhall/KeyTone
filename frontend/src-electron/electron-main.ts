@@ -389,6 +389,8 @@ function createWindow() {
   });
 }
 
+let once = true;
+
 //  建立一个全局可知的原始菜单模板(用于后续功能实现)<只需将此数组传入Menu.buildFromTemplate()中, 即可得到托盘菜单>
 //  * TIPS: 需要注意的是, Menu.buildFromTemplate()在处理原始模板数组时, 不论外部的数组引用如何, 其只会根据数组的元素做判断
 //          > 这个判断方式直接排除了相同引用的数组元素对象(即使你更改了某个数组元素对象的某个字段值), 也不会为你更新托盘菜单
@@ -400,6 +402,16 @@ const menuTemplate = [
     label: 'Electron.tray.show',
     click: () => {
       mainWindow?.show();
+
+      if (once) {
+        once = false;
+        setTimeout(() => {
+          mainWindow?.hide();
+          setTimeout(() => {
+            mainWindow?.show();
+          }, 30);
+        }, 30);
+      }
     },
   },
   {
