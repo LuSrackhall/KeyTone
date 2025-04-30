@@ -264,7 +264,7 @@ function getMacOSStatus() {
 
   /* 将背景的设置从body 转移到此处, 以避免对实现圆角的功能产生影响*/
   /* background: #edc0bf; */
-  background: linear-gradient(90deg, #edc0bf 0%, #c4caef 58%);
+  // background: linear-gradient(90deg, #edc0bf 0%, #c4caef 58%);
   /* border-radius: 30px; 圆角<这里设置的远大于实际的即可> */
   /* border-radius: 1.0rem; */
   /* 顶部圆角设置 */

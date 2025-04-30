@@ -274,6 +274,10 @@ function createWindow() {
       // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
       preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
     },
+
+    // 毛玻璃特效参考链接(https://www.electronjs.org/docs/latest/api/browser-window#:~:text=win.setVibrancy(type,22H2%20and%20up.)
+    vibrancy: 'fullscreen-ui', // 仅对macos可用的毛玻璃特效
+    backgroundMaterial: 'acrylic', // 仅对win11(22h2及以上)可用的毛玻璃特效
   });
 
   // 作用：启用指定窗口的远程访问，使得渲染进程可以通过 @electron/remote 模块访问主进程的功能。
