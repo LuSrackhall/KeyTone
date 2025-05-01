@@ -4912,13 +4912,13 @@ onUnmounted(() => {
   @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
 }
 
-// 对于多选的, 带芯片的选择框, 某芯片内的名称内容过长的情况, 采取溢出滚动的策略。
-:deep(.ellipsis) {
-  // 对溢出的情况, 采取滚动策略
-  @apply max-w-full overflow-auto whitespace-nowrap  text-clip;
-  // 隐藏滚动策略的滚动条。
-  @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
-}
+// // 对于多选的, 带芯片的选择框, 某芯片内的名称内容过长的情况, 采取溢出滚动的策略。
+// :deep(.ellipsis) {
+//   // 对溢出的情况, 采取滚动策略
+//   @apply max-w-full overflow-auto whitespace-nowrap  text-clip;
+//   // 隐藏滚动策略的滚动条。
+//   @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+// }
 
 // 对本组件选择框添加的可清楚图标的大小做设置
 :deep(.q-field__focusable-action) {
@@ -4951,5 +4951,17 @@ onUnmounted(() => {
 
 :global(.q-card) {
   @apply mr-2.33;
+}
+
+// 对于键音专辑组件的选择框, 键音专辑的名称内容过长的情况, 采取溢出滚动的策略。
+// 对于多选的, 带芯片的选择框, 某芯片内的名称内容过长的情况, 采取溢出滚动的策略。
+:deep(.ellipsis) {
+  // 对溢出的情况, 采取滚动策略
+  @apply max-w-full overflow-auto whitespace-nowrap  text-clip;
+  // // 隐藏滚动策略的滚动条。
+  // @apply [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none];
+
+  // 添加细微滚动条
+  @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
 }
 </style>
