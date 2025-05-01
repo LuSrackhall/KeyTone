@@ -332,11 +332,13 @@ module.exports = configure(function (/* ctx */) {
         },
 
         mac: {
+          // WARN: 我绝对不再折腾这个问题了。 -> 即 为 应用名称.app 授予的辅助功能权限, 无法作用于 应用名称.app/Contents/MacOS/应用名称 这个二进制可执行文件。 (为 应用名称.app 授予的权限实际上可能是给到了 builderId/appid 或是整个包的签名证书上, 很有可能是没有使用签名证书的缘故造成的包内部可执行程序无法访问权限。) 总之, 在我不打算买苹果开发者账号之前, 不需要解决此问题。
           identity: 'Copyright (C) 2024 LuSrackhall',
           provisioningProfile: '../../KeyTone.provisionprofile', // 这个文件通常由 Apple 提供，包含应用程序的分发许可和其他信息，确保应用程序可以在特定设备或环境中运行。(这应该就是苹果平台的签名文件了吧)
           icon: 'icons/icon.icns', // 不多解释了, 它将在应用程序包中用于显示应用程序图标
           gatekeeperAssess: false, //  控制是否执行 Gatekeeper 评估。 Gatekeeper 是 macOS 的一项安全功能，用于确保应用程序来自受信任的开发者。将此设置为 false 将跳过 Gatekeeper 的评估。一般情况下，不建议关闭。
           hardenedRuntime: true, // 启用或禁用强化运行时。强化运行时是一项 macOS 的安全功能，增强应用程序的安全性和保护措施。启用它可以帮助防止应用程序被恶意修改。
+          // `plutil -lint entitlements.plist`命令可用于检测.plist文件的正确性, 如此命令的执行结果应为`entitlements.plist: OK`
           entitlements: '../../entitlements.mas.plist', // 指定权限文件的路径。权限文件定义了应用程序请求的系统资源（如文件系统、网络访问、硬件等）。这个文件通常需要进行签名，并且在打包和分发过程中与应用一起提供。
           // 用于向 Info.plist 文件添加额外的键值对。( Info.plist 是 macOS 应用程序的核心配置文件，包含了应用的基本信息。这个字段可以用来添加一些应用程序运行所需的特定键值。)
           // extendInfo: {
