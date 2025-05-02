@@ -49,6 +49,7 @@ interface LocationOption {
 const localeOptions: Array<LocationOption> = [
   { value: 'en-US', label: 'English' },
   { value: 'zh-CN', label: '中文-简体' },
+  { value: 'zh-TW', label: '中文-繁体' },
 ];
 
 /**

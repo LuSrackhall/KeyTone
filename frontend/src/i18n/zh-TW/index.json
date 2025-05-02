@@ -1,0 +1,317 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "製作者",
+    "setting": {
+      "index": "設定",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "鍵音專輯",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "鍵音專輯",
+    "copyright": "版權所有 © 2024-",
+    "license": "授權協議",
+    "privacyPolicy": "隱私政策",
+    "userAgreement": "使用者協議",
+    "emptyState": {
+      "noAlbum": "暫無鍵音專輯",
+      "goToAlbumPage": "前往鍵音專輯頁面",
+      "createOrImportTip": "在開始使用前，請先建立或匯入鍵音專輯"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "新建專輯",
+    "import": "匯入專輯",
+    "export": "匯出專輯",
+    "delete": "刪除專輯",
+    "label": "鍵音專輯",
+    "emptyState": {
+      "noAlbum": "暫無鍵音專輯"
+    },
+    "notify": {
+      "deleteSuccess": "專輯刪除成功",
+      "deleteFailed": "專輯刪除失敗",
+      "importSuccess": "專輯匯入成功",
+      "importFailed": "專輯匯入失敗",
+      "exportSuccess": "專輯匯出成功",
+      "exportFailed": "專輯匯出失敗",
+      "invalidFormat": "請選擇 .ktalbum 格式的專輯檔案",
+      "refreshFailed": "專輯已覆蓋，但重新整理失敗，請手動重新整理",
+      "importOverwriteSuccess": "專輯覆蓋匯入成功",
+      "importSaveAsNewSuccess": "專輯已儲存為新專輯",
+      "fileDescription": "KeyTone 專輯檔案"
+    },
+    "importDialog": {
+      "title": "匯入專輯",
+      "message": "已存在相同的專輯，請選擇操作方式：",
+      "overwrite": "覆蓋現有專輯",
+      "saveAsNew": "儲存為新專輯",
+      "cancel": "取消匯入",
+      "confirm": "確認"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "製作新的鍵音專輯",
+      "name": {
+        "name": "鍵音專輯名稱",
+        "defaultValue": "新的鍵音專輯",
+        "errorMessage": "您必須為鍵音專輯設置一個名字"
+      }
+    },
+    "or": "或",
+    "close": "關閉",
+    "cancel": "取消",
+    "confirm": "確定",
+    "continue": "繼續",
+    "back": "返回",
+    "confirmEdit": "確認修改",
+    "delete": "刪除",
+    "playMode": {
+      "single": "獨立",
+      "random": "隨機",
+      "loop": "順序"
+    },
+    "options": {
+      "audioFile": "音訊源檔案",
+      "sound": "預定義聲音片段",
+      "keySound": "至臻鍵音",
+
+      "audioFile_0": "音訊檔案",
+      "sound_0": "聲音片段",
+      "keySound_0": "至臻鍵音"
+    },
+    "notify": {
+      "deleteSuccess": "刪除成功",
+      "deleteFailed": "刪除失敗",
+      "addSuccess": "新增成功",
+      "addFailed": "新增失敗",
+      "saveSuccess": "儲存成功",
+      "modifySuccess": "修改成功",
+      "modifyFailed": "修改失敗",
+      "noFilesToManage": "當前沒有可管理的源檔案",
+      "noSoundsToEdit": "當前沒有可編輯的聲音",
+      "noKeySoundsToEdit": "當前沒有可編輯的至臻鍵音",
+      "selectSoundEffect": "請選擇聲效",
+      "selectSoundEffectForKeys": "請為所選單鍵 {keys}- 選擇聲效",
+      "deleteSuccessForKeys": "單鍵 {keys}- 的聲效已成功刪除",
+      "configSuccess": "設定儲存成功",
+      "selectKey": "請選擇按鍵",
+      "confirmDeleteSingleKeyEffect": "您確定要刪除此單鍵聲效設定嗎?",
+      "confirmDeleteSingleKeyEffectMessage": "您的當前設定中, 按下和抬起音效均為空, 故本次修改操作相當於刪除",
+      "noChangesDetected": "未檢測到更改",
+      "selectSourceFile": "請選擇一個源檔案",
+      "endTimeGreaterThanStartTime": "結束時間必須大於開始時間",
+      "selectAudioFile": "請先選擇音訊源檔案",
+      "timeValueCannotBeNegative": "時間值不能為負數",
+      "playFailed": "播放失敗",
+      "downSoundInvalid": "失敗: '按下聲音'不符合要求",
+      "upSoundInvalid": "失敗: '抬起聲音'不符合要求",
+      "unifiedSoundEffectConfigFailed": "全鍵聲效設定失敗",
+      "keyAlreadySelected": "所錄製按鍵已在選擇框中",
+      "noSoundEffectSelected": "未進行任何單鍵聲效設定",
+      "singleKeySoundEffectConfigFailed": "單鍵 {key} 聲效設定失敗",
+      "singleKeySoundEffectConfigError": "單鍵 {key} 聲效設定時發生錯誤",
+      "partialSingleKeySoundEffectConfigSuccess": "僅部分單鍵聲效設定成功",
+      "configFileReadFailed": "鍵音專輯設定檔案讀取失敗"
+    },
+    "loadAudioFile": {
+      "title": "載入音訊檔案",
+      "description": "為當前專輯載入原始的音訊檔案以供後續步驟使用",
+      "addNewFile": "新增新的音訊源檔案",
+      "addNewFile_1": "載入新的音訊源檔案",
+      "dragAndDrop": "點擊選擇或直接往此處拖放檔案",
+      "audioFile": "音訊源檔案",
+      "supportedFormats": "支援 WAV、MP3、OGG 格式",
+      "addAsNeeded": "數量不定，跟隨製作喜好新增即可",
+      "confirmAdd": "確認新增",
+      "manageExistingFiles": "管理已載入的源檔案",
+      "selectFileToManage": "選擇要管理的源檔案",
+      "emptyFileName": "空檔案名可能增加後續管理成本",
+      "renameFile": "檔案名(可更改)"
+    },
+    "defineSounds": {
+      "title": "裁剪定義聲音",
+      "description": "根據載入的原始音訊檔案裁剪定義出需要的聲音",
+      "createNewSound": "製作新的聲音",
+      "soundName": "為聲音命名(非必填)",
+      "sourceFile": "音訊源檔案",
+      "cropSound": "從音訊源檔案中裁剪定義出我們需要的聲音",
+      "startTime": "開始時間(毫秒)",
+      "endTime": "結束時間(毫秒)",
+      "volume": "聲音音量",
+      "error": {
+        "negativeTime": "時間不能為負數"
+      },
+      "previewSound": "預覽聲音",
+      "confirmAdd": "確定新增",
+      "editExistingSound": "編輯已有聲音",
+      "selectSoundToManage": "選擇要管理的聲音",
+      "tooltip": {
+        "noImpactOnSource": "通過此步驟製作的聲音不會影響聲音源檔案",
+        "multipleSoundsFromSameSource": "使用者可針對同一聲音源檔案裁剪定義出多個獨立的聲音",
+        "soundName": "聲音的名稱",
+        "soundDuration": "聲音的開始時間和結束時間，以毫秒為單位。由於是按鍵使用，所以時間不宜過長。",
+        "volume": "0為原始音量，大於0為提升音量，小於0為降低音量。常用步進為0.1",
+        "volume_1": "當然您也可以手動輸入以做更細膩的調整, 如0.0001等。請在每次音量調整後重新預覽以查看效果, 防止音量過小或過大。",
+        "previewSound": "按鍵用的聲音通常很短, 因此連續預覽的聲音會並發播放, 且不提供進度條和停止按鈕(必要時候可通過重啟本應用來停止)。因此請遵循聲音定義的原則。"
+      }
+    },
+    "craftKeySounds": {
+      "title": "鑄造至臻鍵音",
+      "description": "鍵音, 實際就是按鍵聲音或稱按鍵音。 本步驟預設根據裁剪定義好的聲音, 製作按鍵音。",
+      "newKeySound": "製作新的至臻鍵音",
+      "keySoundName": "至臻鍵音名稱",
+      "keySoundName-placeholder": "新的至臻鍵音",
+      "configureDownSound": "設定按下聲音",
+      "configureUpSound": "設定抬起聲音",
+      "selectPlayMode": "選擇播放模式",
+      "selectSounds": "選擇聲音(多選)",
+      "error": {
+        "singleMode": "獨立模式下, 至多選擇一個聲音"
+      },
+      "confirmAdd": "確認新增",
+      "tooltip": {
+        "description_0": "理論上每個按鍵音, 都應包括按下和抬起聲音。",
+        "description_1": "製作時需分別定義它們, 但這並不是強制的。",
+        "description_2": "按下聲音和抬起聲音都可根據需要選擇性定義。",
+        "description_3": "可以都定義, 也可以只定義其中一個, 或者都不定義。",
+        "audioFile": "使能/失能 音訊源檔案",
+        "soundList": "使能/失能 預定義聲音片段",
+        "keySounds": "使能/失能 至臻鍵音",
+        "inheritKeySound": "此項可做到對其他至臻鍵音的繼承",
+        "inheritRule": "原則: 按下繼承按下，抬起繼承抬起"
+      },
+      "editExistingKeySound": "編輯已有至臻鍵音",
+      "selectKeySoundToEdit": "選擇要編輯的至臻鍵音"
+    },
+    "linkageEffects": {
+      "title": "按鍵聯動聲效",
+      "description": "為按鍵設置聯動聲效，按下或抬起按鍵時，自動播放預設聲效。",
+      "enableTestSound": "是否啟用內嵌測試音",
+      "downTestSound": "按下測試音",
+      "upTestSound": "抬起測試音",
+      "globalSettings": "全鍵聲效設置",
+      "singleKeySettings": "單鍵聲效設置",
+      "global": {
+        "description": "無需指定任何按鍵, 直接進行全局統一的聲效設置。",
+        "setKeyDownSound": "設置全鍵按下聲效",
+        "setKeyUpSound": "設置全鍵抬起聲效"
+      },
+      "single": {
+        "description": "指定單個或多個按鍵, 以進行局部獨立的聲效設置。",
+        "addSingleKeyEffect": "快速增設單鍵聲效",
+        "dialog": {
+          "selectKeyAndEffect": "請選擇按鍵和對應的聲效設置。",
+          "selectSingleKey": "選擇單鍵(數量任意)",
+          "selectSingleKey-placeholder_record": "在此鍵入錄製單鍵",
+          "selectSingleKey-placeholder_search": "在此鍵入搜尋單鍵",
+          "downSoundEffect": "按下聲效",
+          "upSoundEffect": "抬起聲效",
+          "setDownSoundEffect": "設置按下聲效",
+          "setUpSoundEffect": "設置抬起聲效",
+          "noSingleKeyEffects": "目前沒有已設置單鍵聲效的按鍵",
+          "singleKeyEffects": "已設置單鍵聲效的按鍵",
+          "clickToView": " 點擊查看聲效",
+          "editSingleKey": "編輯單鍵",
+          "soundEffect": "的聲效",
+          "soundEffect-down": "的按下聲效",
+          "soundEffect-up": "的抬起聲效"
+        }
+      },
+      "confirm": "確定",
+      "tooltips": {
+        "description": "\"音訊檔案\"、\"預設聲音\"、\"至臻鍵音\" 均可作為聲效與按鍵聯動。",
+        "testSound": "KeyTone內嵌了測試用的全鍵聲效，\n供使用者檢測軟體是否正常運行。\n預設開啟，如有需要可手動關閉。\n播放優先級低於全/單鍵聲效設置。",
+        "globalPriority": "播放優先級高於內嵌測試音，但低於單鍵聲效",
+        "singleKeyPriority": "播放優先級高於全鍵聲效和內嵌測試音",
+        "ultimateKeySound": {
+          "title": "至臻鍵音",
+          "anchored": "（已錨定）",
+          "unanchored": "（已解除錨定）",
+          "tooltip": "此錨定僅作用於在設置聲效為至臻鍵音時"
+        },
+        "audioFile": "支援將音訊源檔案設置為聲效",
+        "soundList": "支援將預定義聲音片段設置為聲效",
+        "keySounds": "支援將至臻鍵音設置為聲效\n若本選項勾選, 則自動提供用於至臻鍵音的錨定功能\n此功能旨在方便您操作, 您也可解除錨定, 更自由的定義聲效",
+        "fastDelete": "也可利用空的按下/抬起聲效設置來快速批量的刪除按鍵。",
+        "stopRecording": "停止錄製單鍵",
+        "startRecording": "開始錄製單鍵",
+        "save": "儲存當前編輯的內容",
+        "delete": "刪除當前單鍵的按下和抬起聲效"
+      }
+    }
+  },
+  "setting": {
+    "setting": "設定",
+    "language": {
+      "index": "語言",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "啟動與自動啟動",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "啟動時隱藏視窗",
+        "caption": "開啟應用時最小化到系統托盤"
+      },
+      "自动启动": {
+        "index": "自動啟動",
+        "appxIndex": "Microsoft Store版預設啟用此項",
+        "caption": "是否要在電腦開機時自動啟動本應用",
+        "appxCaption": "可在系統'設定'>'應用程式'>'啟動'中關閉"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "自動啟動時隱藏視窗",
+        "caption": "電腦開機自動啟動本應用時最小化到系統托盤"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "原始音量增減調節",
+        "caption": "對原始的音訊檔案預設音量, 進行演算法提升/縮減。注意: 調整限度不宜過大, 適量調整即可, 否則可能破壞音訊的原始音質"
+      },
+      "重置": "重置",
+      "音量": "音量",
+      "AmplifyLimit": {
+        "index": "提升上限",
+        "rulesErrorInfo": "輸入值值需大於0且小於100,000,000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "主頁面相關", "caption": "對主頁面上的相關功能進行自定義設定" },
+      "音量降幅": {
+        "index": "音量降幅",
+        "rulesErrorInfo": "輸入值需大於等於5且小於100,000,000"
+      },
+      "重置": "重置",
+      "音量调试滑块": { "index": "音量調試滑塊", "caption": "開啟後, 會在主頁的音量進度條下方, 額外顯示音量調試滑塊" }
+    }
+  },
+  "language": {
+    "setting language": "設定語言/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "正在嘗試獲取設定檔案...",
+    "获取配置文件失败": "獲取設定檔案失敗",
+    "配置文件获取成功, 正在读取配置": "設定檔案獲取成功, 正在讀取設定...",
+    "配置读取成功": "設定讀取成功",
+    "配置文件读取失败,请重启应用": "設定檔案讀取失敗,請重啟應用",
+    "功能正在开发中": "功能正在開發中",
+    "音量0%时无法打开声音": "音量0%時無法開啟聲音"
+  },
+  "Electron": {
+    "tray": {
+      "show": "顯示",
+      "quit": "退出",
+      "mute": "靜音",
+      "unmute": "取消靜音"
+    }
+  }
+}
