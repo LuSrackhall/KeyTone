@@ -1,3 +1,8 @@
+// 个人对i18n文件的明明规范, 以中文简体为例:
+// * zh的字母简写, 来自ISO 639-2: https://www.loc.gov/standards/iso639-2/php/code_list.php
+// * CH的字母简写, 来自ISO 3166: https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+// * 当然最后, 还需要通过搜索引擎或ai搜索"i18n中 '中文简体'的简写字母是", 以判断最终正确性。 (当然, 这里还有常用的i18n简写字母介绍 https://github.com/teojs/vue-resume/issues/5)
+// * quasar框架内的语言本地化api的支持列: https://github.com/quasarframework/quasar/tree/dev/ui/lang (我们的标准不参考这个, 这个主要用于下方导出键值对中的key的名称)
 import enUS from './en-US/index.json';
 import zhCN from './zh-CN/index.json';
 import zhHK from './zh-HK/index.json';
