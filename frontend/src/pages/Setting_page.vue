@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <q-page>
+  <q-page style="min-height: 0px" class="w-[379px] h-[458.5px]">
     <q-scroll-area class="w-[379px] h-[458.5px]">
       <q-list>
         <template v-for="(menuItem, index) in menuList" :key="index">

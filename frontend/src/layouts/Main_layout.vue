@@ -262,7 +262,7 @@ function getMacOSStatus() {
 /* 抽屉尺寸适配 */
 .sizeChange {
   :deep(.q-drawer) {
-    height: calc(100% - 42px);
+    height: calc(100% - 41.5px);
     border-bottom-left-radius: 0.25rem /* 4px */;
   }
 }
