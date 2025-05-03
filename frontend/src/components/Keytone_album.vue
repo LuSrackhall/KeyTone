@@ -19,7 +19,7 @@
 
 <template>
   <q-page>
-    <q-scroll-area class="w-[379px] h-[458.5px]">
+    <q-scroll-area :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
       <div :class="['flex flex-col gap-5  p-8 ']">
         <q-input
           outlined
@@ -4883,6 +4883,14 @@ onUnmounted(() => {
     app_store.eventSource.removeEventListener('messageAudioPackage', messageAudioPackageListener);
   }
 });
+
+const isMacOS = ref(getMacOSStatus());
+function getMacOSStatus() {
+  if (process.env.MODE === 'electron') {
+    return window.myWindowAPI.getMacOSStatus();
+  }
+  return false;
+}
 </script>
 
 <style lang="scss" scoped>

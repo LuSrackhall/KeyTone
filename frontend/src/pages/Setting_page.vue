@@ -18,8 +18,8 @@
 -->
 
 <template>
-  <q-page style="min-height: 0px" class="w-[379px] h-[458.5px]">
-    <q-scroll-area class="w-[379px] h-[458.5px]">
+  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
+    <q-scroll-area :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
       <q-list>
         <template v-for="(menuItem, index) in menuList" :key="index">
           <q-expansion-item
@@ -84,6 +84,7 @@ const menuList = [
 ];
 
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 let clickCount = 0;
 let clickTimer: NodeJS.Timeout | null = null;
@@ -102,6 +103,14 @@ function dblclick(menuItemTo: string) {
 }
 
 const router = useRouter();
+
+const isMacOS = ref(getMacOSStatus());
+function getMacOSStatus() {
+  if (process.env.MODE === 'electron') {
+    return window.myWindowAPI.getMacOSStatus();
+  }
+  return false;
+}
 </script>
 
 <style lang="scss" scoped>
