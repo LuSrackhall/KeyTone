@@ -1,0 +1,320 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "開発者",
+    "setting": {
+      "index": "設定",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "キーサウンドアルバム",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "キーサウンドアルバム",
+    "copyright": "著作権 © 2024-",
+    "license": "ライセンス",
+    "privacyPolicy": "プライバシーポリシー",
+    "userAgreement": "利用規約",
+    "emptyState": {
+      "noAlbum": "キーサウンドアルバムがありません",
+      "goToAlbumPage": "キーサウンドアルバムページへ",
+      "createOrImportTip": "使用を開始する前に、キーサウンドアルバムを作成またはインポートしてください"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "新規アルバム",
+    "import": "アルバムのインポート",
+    "export": "アルバムのエクスポート",
+    "delete": "アルバムの削除",
+    "label": "キーサウンドアルバム",
+    "emptyState": {
+      "noAlbum": "キーサウンドアルバムがありません"
+    },
+    "notify": {
+      "deleteSuccess": "アルバムが正常に削除されました",
+      "deleteFailed": "アルバムの削除に失敗しました",
+      "importSuccess": "アルバムが正常にインポートされました",
+      "importFailed": "アルバムのインポートに失敗しました",
+      "exportSuccess": "アルバムが正常にエクスポートされました",
+      "exportFailed": "アルバムのエクスポートに失敗しました",
+      "invalidFormat": ".ktalbum形式のアルバムファイルを選択してください",
+      "refreshFailed": "アルバムは上書きされましたが、更新に失敗しました。手動で更新してください",
+      "importOverwriteSuccess": "アルバムが正常に上書きインポートされました",
+      "importSaveAsNewSuccess": "アルバムが新しいアルバムとして保存されました",
+      "fileDescription": "KeyTone アルバムファイル"
+    },
+    "importDialog": {
+      "title": "アルバムのインポート",
+      "message": "同じアルバムが既に存在します。操作を選択してください：",
+      "overwrite": "既存のアルバムを上書き",
+      "saveAsNew": "新しいアルバムとして保存",
+      "cancel": "インポートをキャンセル",
+      "confirm": "確認"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "新しいキーサウンドアルバムを作成",
+      "name": {
+        "name": "キーサウンドアルバム名",
+        "defaultValue": "新しいキーサウンドアルバム",
+        "errorMessage": "キーサウンドアルバムに名前を設定する必要があります"
+      }
+    },
+    "or": "または",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "continue": "続ける",
+    "back": "戻る",
+    "confirmEdit": "編集を確認",
+    "delete": "削除",
+    "playMode": {
+      "single": "シングル",
+      "random": "ランダム",
+      "loop": "ループ"
+    },
+    "options": {
+      "audioFile": "オーディオソースファイル",
+      "sound": "定義済みサウンド",
+      "keySound": "究極のキーサウンド",
+
+      "audioFile_0": "オーディオファイル",
+      "sound_0": "サウンド",
+      "keySound_0": "究極のキーサウンド"
+    },
+    "notify": {
+      "deleteSuccess": "削除成功",
+      "deleteFailed": "削除失敗",
+      "addSuccess": "追加成功",
+      "addFailed": "追加失敗",
+      "saveSuccess": "保存成功",
+      "modifySuccess": "修正成功",
+      "modifyFailed": "修正失敗",
+      "noFilesToManage": "管理可能なソースファイルがありません",
+      "noSoundsToEdit": "編集可能なサウンドがありません",
+      "noKeySoundsToEdit": "編集可能な究極のキーサウンドがありません",
+      "selectSoundEffect": "サウンドエフェクトを選択してください",
+      "selectSoundEffectForKeys": "選択されたキー {keys}- のサウンドエフェクトを選択してください",
+      "deleteSuccessForKeys": "キー {keys}- のサウンドエフェクトが正常に削除されました",
+      "configSuccess": "設定が正常に保存されました",
+      "selectKey": "キーを選択してください",
+      "confirmDeleteSingleKeyEffect": "このキーのサウンドエフェクト設定を削除してもよろしいですか？",
+      "confirmDeleteSingleKeyEffectMessage": "現在の設定では、キーを押す音と離す音の両方が空なので、この操作は削除と同じです",
+      "noChangesDetected": "変更が検出されませんでした",
+      "selectSourceFile": "ソースファイルを選択してください",
+      "endTimeGreaterThanStartTime": "終了時間は開始時間より大きくなければなりません",
+      "selectAudioFile": "オーディオソースファイルを選択してください",
+      "timeValueCannotBeNegative": "時間値は負の値にできません",
+      "playFailed": "再生に失敗しました",
+      "downSoundInvalid": "失敗：「キーを押す音」が要件を満たしていません",
+      "upSoundInvalid": "失敗：「キーを離す音」が要件を満たしていません",
+      "unifiedSoundEffectConfigFailed": "全キーサウンドエフェクト設定に失敗しました",
+      "keyAlreadySelected": "録音されたキーは既に選択ボックスにあります",
+      "noSoundEffectSelected": "キーのサウンドエフェクト設定が行われていません",
+      "singleKeySoundEffectConfigFailed": "キー {key} のサウンドエフェクト設定に失敗しました",
+      "singleKeySoundEffectConfigError": "キー {key} のサウンドエフェクト設定中にエラーが発生しました",
+      "partialSingleKeySoundEffectConfigSuccess": "一部のキーのサウンドエフェクト設定のみ成功しました",
+      "configFileReadFailed": "キーサウンドアルバム設定ファイルの読み込みに失敗しました"
+    },
+    "loadAudioFile": {
+      "title": "オーディオファイルの読み込み",
+      "description": "現在のアルバムに元のオーディオファイルを読み込み、後続のステップで使用します",
+      "addNewFile": "新規オーディオソース追加",
+      "addNewFile_1": "新しいオーディオソースファイルを読み込む",
+      "dragAndDrop": "クリックして選択するか、ここにファイルをドラッグ＆ドロップしてください",
+      "audioFile": "オーディオソースファイル",
+      "supportedFormats": "WAV、MP3、OGG形式をサポート",
+      "addAsNeeded": "必要に応じて任意の数を追加できます",
+      "confirmAdd": "追加を確認",
+      "manageExistingFiles": "オーディオソースの管理",
+      "selectFileToManage": "管理するソースファイルを選択",
+      "emptyFileName": "空のファイル名は後の管理コストを増加させる可能性があります",
+      "renameFile": "ファイル名（変更可能）"
+    },
+    "defineSounds": {
+      "title": "サウンドの定義と編集",
+      "description": "読み込まれた元のオーディオファイルから必要なサウンドを切り取って定義します",
+      "createNewSound": "新しいサウンドを作成",
+      "soundName": "サウンドに名前を付ける（任意）",
+      "sourceFile": "オーディオソースファイル",
+      "cropSound": "オーディオソースファイルから必要なサウンドを切り取って定義します",
+      "startTime": "開始時間（ミリ秒）",
+      "endTime": "終了時間（ミリ秒）",
+      "volume": "音量",
+      "error": {
+        "negativeTime": "時間は負の値にできません"
+      },
+      "previewSound": "サウンドをプレビュー",
+      "confirmAdd": "追加を確認",
+      "editExistingSound": "既存のサウンドを編集",
+      "selectSoundToManage": "管理するサウンドを選択",
+      "tooltip": {
+        "noImpactOnSource": "このステップで作成されたサウンドはソースファイルに影響を与えません",
+        "multipleSoundsFromSameSource": "同じソースファイルから複数の独立したサウンドを切り取って定義できます",
+        "soundName": "サウンドの名前",
+        "soundDuration": "サウンドの開始時間と終了時間（ミリ秒単位）。キーボード用なので、長すぎないようにしてください。",
+        "volume": "0は元の音量、0より大きい値は音量を上げ、0より小さい値は音量を下げます。一般的なステップは0.1です",
+        "volume_1": "もちろん、手動で入力して0.0001などのより細かい調整も可能です。音量調整後は必ずプレビューして効果を確認し、音量が小さすぎたり大きすぎたりしないようにしてください。",
+        "previewSound": "キー用のサウンドは通常短いため、連続プレビューのサウンドは同時に再生され、プログレスバーや停止ボタンは提供されません（必要な場合はアプリを再起動して停止できます）。したがって、サウンド定義の原則に従ってください。"
+      }
+    },
+    "craftKeySounds": {
+      "title": "究極のキーサウンドの作成",
+      "description": "キーサウンドとは、キーを押したときの音のことです。このステップでは、定義済みのサウンドからキーサウンドを作成します。",
+      "newKeySound": "新規究極キーサウンド作成",
+      "keySoundName": "究極のキーサウンド名",
+      "keySoundName-placeholder": "新しい究極のキーサウンド",
+      "configureDownSound": "キーを押す音を設定",
+      "configureUpSound": "キーを離す音を設定",
+      "selectPlayMode": "再生モードを選択",
+      "selectSounds": "サウンドを選択（複数可）",
+      "error": {
+        "singleMode": "シングルモードでは、最大1つのサウンドしか選択できません"
+      },
+      "confirmAdd": "追加を確認",
+      "tooltip": {
+        "description_0": "理論的には、各キーサウンドにはキーを押す音とキーを離す音の両方が含まれるべきです。",
+        "description_1": "作成時にはそれらを個別に定義する必要がありますが、必須ではありません。",
+        "description_2": "キーを押す音とキーを離す音は、必要に応じて選択的に定義できます。",
+        "description_3": "両方定義することも、どちらか一方だけ定義することも、どちらも定義しないこともできます。",
+        "audioFile": "オーディオソースファイルの有効化/無効化",
+        "soundList": "定義済みサウンドの有効化/無効化",
+        "keySounds": "究極のキーサウンドの有効化/無効化",
+        "inheritKeySound": "この項目は他の究極のキーサウンドから継承可能です",
+        "inheritRule": "原則：キーを押す音はキーを押す音から継承、キーを離す音はキーを離す音から継承"
+      },
+      "editExistingKeySound": "究極のキーサウンドを編集",
+      "selectKeySoundToEdit": "編集する究極のキーサウンドを選択"
+    },
+    "linkageEffects": {
+      "title": "キー連動サウンドエフェクト",
+      "description": "キーに連動サウンドエフェクトを設定し、キーを押したり離したりするときに自動的にプリセットサウンドを再生します。",
+      "enableTestSound": "テストサウンドを有効にする",
+      "downTestSound": "キーを押すテストサウンド",
+      "upTestSound": "キーを離すテストサウンド",
+      "globalSettings": "全キーサウンド設定",
+      "singleKeySettings": "個別キーサウンド設定",
+      "global": {
+        "description": "キーを指定せず、グローバルなサウンドエフェクト設定を行います。",
+        "setKeyDownSound": "全キーの押下サウンドを設定",
+        "setKeyUpSound": "全キーの解放サウンドを設定"
+      },
+      "single": {
+        "description": "個別のキーを指定して、独立したサウンドエフェクト設定を行います。",
+        "addSingleKeyEffect": "個別キーエフェクトを追加",
+        "dialog": {
+          "selectKeyAndEffect": "キーとサウンドエフェクトを選択してください。",
+          "selectSingleKey": "キーを選択（任意の数）",
+          "selectSingleKey-placeholder_record": "ここでキーを録音",
+          "selectSingleKey-placeholder_search": "ここでキーを検索",
+          "downSoundEffect": "キーを押すサウンド",
+          "upSoundEffect": "キーを離すサウンド",
+          "setDownSoundEffect": "キーを押すサウンドを設定",
+          "setUpSoundEffect": "キーを離すサウンドを設定",
+          "noSingleKeyEffects": "現在、サウンドエフェクトが設定されているキーはありません",
+          "singleKeyEffects": "サウンドエフェクトが設定されているキー",
+          "clickToView": " クリックして表示",
+          "editSingleKey": "キーを編集",
+          "soundEffect": "のサウンドエフェクト",
+          "soundEffect-down": "のキーを押すサウンド",
+          "soundEffect-up": "のキーを離すサウンド"
+        }
+      },
+      "confirm": "確認",
+      "tooltips": {
+        "description": "「オーディオファイル」、「プリセットサウンド」、「究極のキーサウンド」はすべてキー連動のサウンドエフェクトとして使用できます。",
+        "testSound": "KeyToneにはテスト用の全キーサウンドが組み込まれており、\nソフトウェアが正常に動作しているかをユーザーが確認できます。\nデフォルトで有効になっていますが、必要に応じて無効にできます。\n再生優先度は全キー/個別キーサウンド設定よりも低くなっています。",
+        "globalPriority": "再生優先度は組み込みテストサウンドより高く、個別キーサウンドより低くなっています",
+        "singleKeyPriority": "再生優先度は全キーサウンドと組み込みテストサウンドより高くなっています",
+        "ultimateKeySound": {
+          "title": "究極のキーサウンド",
+          "anchored": "（アンカー済み）",
+          "unanchored": "（アンカー解除済み）",
+          "tooltip": "このアンカーはサウンドエフェクトを究極のキーサウンドに設定する場合にのみ適用されます"
+        },
+        "audioFile": "オーディオソースファイルをサウンドエフェクトとして設定できます",
+        "soundList": "定義済みサウンドをサウンドエフェクトとして設定できます",
+        "keySounds": "究極のキーサウンドをサウンドエフェクトとして設定できます\nこのオプションがチェックされている場合、究極のキーサウンド用のアンカー機能が自動的に提供されます\nこの機能は操作を容易にするためのものですが、アンカーを解除してより自由にサウンドエフェクトを定義することもできます",
+        "fastDelete": "空のキーを押す/離すサウンドエフェクト設定を使用して、キーをまとめて削除することもできます。",
+        "stopRecording": "キー録音を停止",
+        "startRecording": "キー録音を開始",
+        "save": "現在の編集内容を保存",
+        "delete": "現在のキーのサウンドエフェクトを削除"
+      }
+    }
+  },
+  "setting": {
+    "setting": "設定",
+    "language": {
+      "index": "言語",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "起動と自動起動",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "起動時にウィンドウを非表示",
+        "caption": "アプリを開くときにシステムトレイに最小化"
+      },
+      "自动启动": {
+        "index": "自動起動",
+        "appxIndex": "Microsoft Store版ではデフォルトで有効",
+        "caption": "コンピューター起動時にこのアプリを自動的に起動するかどうか",
+        "appxCaption": "システム「設定」>「アプリ」>「スタートアップ」で無効にできます"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "自動起動時にウィンドウを非表示",
+        "caption": "コンピューター起動時にこのアプリを自動的に起動するときにシステムトレイに最小化"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "元の音量調整",
+        "caption": "元のオーディオファイルのデフォルト音量をアルゴリズムで増減します。注意：調整範囲は大きくしすぎないでください。適度な調整にとどめ、オーディオの元の音質を損なわないようにしてください"
+      },
+      "重置": "リセット",
+      "音量": "音量",
+      "AmplifyLimit": {
+        "index": "増幅上限",
+        "rulesErrorInfo": "入力値は0より大きく100,000,000未満である必要があります"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "メインページ関連", "caption": "メインページの関連機能をカスタマイズ設定" },
+      "音量降幅": {
+        "index": "音量減衰",
+        "rulesErrorInfo": "入力値は5以上100,000,000未満である必要があります"
+      },
+      "重置": "リセット",
+      "音量调试滑块": {
+        "index": "音量デバッグスライダー",
+        "caption": "有効にすると、メインページの音量プログレスバーの下に音量デバッグスライダーが追加表示されます"
+      }
+    }
+  },
+  "language": {
+    "setting language": "言語設定/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "設定ファイルを取得しています...",
+    "获取配置文件失败": "設定ファイルの取得に失敗しました",
+    "配置文件获取成功, 正在读取配置": "設定ファイルを正常に取得しました。設定を読み込んでいます...",
+    "配置读取成功": "設定の読み込みに成功しました",
+    "配置文件读取失败,请重启应用": "設定ファイルの読み込みに失敗しました。アプリを再起動してください",
+    "功能正在开发中": "機能は開発中です",
+    "音量0%时无法打开声音": "音量0%では音を有効にできません"
+  },
+  "Electron": {
+    "tray": {
+      "show": "表示",
+      "quit": "終了",
+      "mute": "ミュート",
+      "unmute": "ミュート解除"
+    }
+  }
+}
