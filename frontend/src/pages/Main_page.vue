@@ -24,7 +24,7 @@
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
 
-  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
+  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
     <div
       :class="[
         '',

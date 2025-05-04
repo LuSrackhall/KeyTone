@@ -18,8 +18,8 @@
 -->
 
 <template>
-  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
-    <q-scroll-area :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
+  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
+    <q-scroll-area :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
       <q-list>
         <template v-for="(menuItem, index) in menuList" :key="index">
           <q-expansion-item
