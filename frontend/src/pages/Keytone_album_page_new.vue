@@ -1,7 +1,7 @@
 <template>
   <div :class="[isMacOS ? 'w-[389px] h-[458.5px]' : 'w-[379px] h-[458.5px]', 'overflow-hidden']">
     <!-- 展开按钮 -->
-    <div v-if="isCollapsed" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+    <div v-if="isCollapsed" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50">
       <q-btn flat class="custom-expand-btn" @click="isCollapsed = false">
         <div class="chevron-down"></div>
       </q-btn>
