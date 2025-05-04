@@ -25,6 +25,16 @@
       v-model="setting_store.languageDefault"
       :options="localeOptions"
       :label="$t('language.setting language')"
+      :option-value="
+        (item) => {
+          if (Array.isArray(item.value)) {
+            return item.value[0];
+          } else {
+            return item.value;
+          }
+        }
+      "
+      @update:model-value="(item__setting_store_languageDefault) => {}"
       dense
       borderless
       emit-value
@@ -37,9 +47,10 @@
 
 <script setup lang="ts">
 import { useSettingStore } from 'src/stores/setting-store';
+import { watch } from 'vue';
 
 interface LocationOption {
-  value: string;
+  value: string | Array<string>;
   label: string;
 }
 
@@ -52,8 +63,7 @@ const localeOptions: Array<LocationOption> = [
   { value: 'zh-TW', label: '中文-繁体' },
   { value: 'ja', label: '日本語' },
   { value: 'ko-KR', label: '한국어' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'de-DE', label: 'Deutsch' },
+  { value: ['de', 'de-DE'], label: 'Deutsch' },
 ];
 
 /**
@@ -64,6 +74,28 @@ const localeOptions: Array<LocationOption> = [
  * * 2、 会触发sqlite的存储逻辑, 将用户的手动设置持久化保存至sqlite的数据库文件中。
  */
 const setting_store = useSettingStore();
+
+watch(
+  () => setting_store.languageDefault,
+  (newVal, oldVal) => {
+    localeOptions.forEach((item_0: LocationOption) => {
+      if (Array.isArray(item_0.value)) {
+        let pushItem: string | null = null;
+        item_0.value.forEach((item_1, index_1) => {
+          if (item_1 === newVal) {
+            console.log('i18n的language存在', item_0.value, 'index_1=', index_1);
+            pushItem = newVal;
+          }
+        });
+        if (pushItem !== null) {
+          item_0.value.unshift(newVal);
+        }
+        console.log('数组的首个元素已更新', item_0.value);
+      }
+    });
+  },
+  { immediate: true }
+);
 </script>
 
 <style lang="scss" scoped>
