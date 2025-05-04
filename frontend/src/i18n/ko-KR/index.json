@@ -1,0 +1,317 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "개발자",
+    "setting": {
+      "index": "설정",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "키톤 앨범",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "키톤 앨범",
+    "copyright": "저작권 © 2024-",
+    "license": "라이선스",
+    "privacyPolicy": "개인정보 처리방침",
+    "userAgreement": "이용약관",
+    "emptyState": {
+      "noAlbum": "키톤 앨범이 없습니다",
+      "goToAlbumPage": "키톤 앨범 페이지로 이동",
+      "createOrImportTip": "사용하기 전에 키톤 앨범을 생성하거나 가져오세요"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "새 앨범",
+    "import": "앨범 가져오기",
+    "export": "앨범 내보내기",
+    "delete": "앨범 삭제",
+    "label": "키톤 앨범",
+    "emptyState": {
+      "noAlbum": "키톤 앨범이 없습니다"
+    },
+    "notify": {
+      "deleteSuccess": "앨범 삭제 성공",
+      "deleteFailed": "앨범 삭제 실패",
+      "importSuccess": "앨범 가져오기 성공",
+      "importFailed": "앨범 가져오기 실패",
+      "exportSuccess": "앨범 내보내기 성공",
+      "exportFailed": "앨범 내보내기 실패",
+      "invalidFormat": ".ktalbum 형식의 앨범 파일을 선택하세요",
+      "refreshFailed": "앨범이 덮어쓰기되었지만 새로고침에 실패했습니다. 수동으로 새로고침하세요",
+      "importOverwriteSuccess": "앨범 덮어쓰기 가져오기 성공",
+      "importSaveAsNewSuccess": "앨범이 새 앨범으로 저장되었습니다",
+      "fileDescription": "KeyTone 앨범 파일"
+    },
+    "importDialog": {
+      "title": "앨범 가져오기",
+      "message": "동일한 앨범이 이미 존재합니다. 작업 방식을 선택하세요:",
+      "overwrite": "기존 앨범 덮어쓰기",
+      "saveAsNew": "새 앨범으로 저장",
+      "cancel": "가져오기 취소",
+      "confirm": "확인"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "새 키톤 앨범 만들기",
+      "name": {
+        "name": "키톤 앨범 이름",
+        "defaultValue": "새 키톤 앨범",
+        "errorMessage": "키톤 앨범에 이름을 설정해야 합니다"
+      }
+    },
+    "or": "또는",
+    "close": "닫기",
+    "cancel": "취소",
+    "confirm": "확인",
+    "continue": "계속",
+    "back": "뒤로",
+    "confirmEdit": "수정 확인",
+    "delete": "삭제",
+    "playMode": {
+      "single": "단일",
+      "random": "무작위",
+      "loop": "순차"
+    },
+    "options": {
+      "audioFile": "오디오 소스 파일",
+      "sound": "사전 정의된 사운드 클립",
+      "keySound": "키톤 사운드",
+
+      "audioFile_0": "오디오 파일",
+      "sound_0": "사운드 클립",
+      "keySound_0": "키톤 사운드"
+    },
+    "notify": {
+      "deleteSuccess": "삭제 성공",
+      "deleteFailed": "삭제 실패",
+      "addSuccess": "추가 성공",
+      "addFailed": "추가 실패",
+      "saveSuccess": "저장 성공",
+      "modifySuccess": "수정 성공",
+      "modifyFailed": "수정 실패",
+      "noFilesToManage": "현재 관리할 소스 파일이 없습니다",
+      "noSoundsToEdit": "현재 편집할 사운드가 없습니다",
+      "noKeySoundsToEdit": "현재 편집할 키톤 사운드가 없습니다",
+      "selectSoundEffect": "사운드 이펙트를 선택하세요",
+      "selectSoundEffectForKeys": "선택한 키 {keys}- 의 사운드 이펙트를 선택하세요",
+      "deleteSuccessForKeys": "키 {keys}- 의 사운드 이펙트가 성공적으로 삭제되었습니다",
+      "configSuccess": "설정 저장 성공",
+      "selectKey": "키를 선택하세요",
+      "confirmDeleteSingleKeyEffect": "이 단일 키 사운드 이펙트 설정을 삭제하시겠습니까?",
+      "confirmDeleteSingleKeyEffectMessage": "현재 설정에서 키 다운 및 키 업 효과가 모두 비어 있으므로 이 수정 작업은 삭제와 동일합니다",
+      "noChangesDetected": "변경 사항이 감지되지 않았습니다",
+      "selectSourceFile": "소스 파일을 선택하세요",
+      "endTimeGreaterThanStartTime": "종료 시간은 시작 시간보다 커야 합니다",
+      "selectAudioFile": "오디오 소스 파일을 먼저 선택하세요",
+      "timeValueCannotBeNegative": "시간 값은 음수가 될 수 없습니다",
+      "playFailed": "재생 실패",
+      "downSoundInvalid": "실패: '키 다운 사운드'가 요구 사항을 충족하지 않습니다",
+      "upSoundInvalid": "실패: '키 업 사운드'가 요구 사항을 충족하지 않습니다",
+      "unifiedSoundEffectConfigFailed": "전체 키 사운드 이펙트 설정 실패",
+      "keyAlreadySelected": "녹음된 키가 이미 선택 상자에 있습니다",
+      "noSoundEffectSelected": "단일 키 사운드 이펙트 설정이 없습니다",
+      "singleKeySoundEffectConfigFailed": "단일 키 {key} 사운드 이펙트 설정 실패",
+      "singleKeySoundEffectConfigError": "단일 키 {key} 사운드 이펙트 설정 중 오류 발생",
+      "partialSingleKeySoundEffectConfigSuccess": "일부 단일 키 사운드 이펙트만 설정 성공",
+      "configFileReadFailed": "키톤 앨범 설정 파일 읽기 실패"
+    },
+    "loadAudioFile": {
+      "title": "오디오 파일 로드",
+      "description": "현재 앨범에 원본 오디오 파일을 로드하여 후속 단계에서 사용합니다",
+      "addNewFile": "새 오디오 소스 파일 추가",
+      "addNewFile_1": "새 오디오 소스 파일 로드",
+      "dragAndDrop": "클릭하여 선택하거나 여기에 파일을 끌어다 놓으세요",
+      "audioFile": "오디오 소스 파일",
+      "supportedFormats": "WAV, MP3, OGG 형식 지원",
+      "addAsNeeded": "필요에 따라 원하는 만큼 추가할 수 있습니다",
+      "confirmAdd": "추가 확인",
+      "manageExistingFiles": "로드된 소스 파일 관리",
+      "selectFileToManage": "관리할 소스 파일 선택",
+      "emptyFileName": "빈 파일 이름은 향후 관리 비용을 증가시킬 수 있습니다",
+      "renameFile": "파일 이름(변경 가능)"
+    },
+    "defineSounds": {
+      "title": "사운드 정의 및 편집",
+      "description": "로드된 원본 오디오 파일에서 필요한 사운드를 정의하고 편집합니다",
+      "createNewSound": "새 사운드 만들기",
+      "soundName": "사운드 이름(선택 사항)",
+      "sourceFile": "오디오 소스 파일",
+      "cropSound": "오디오 소스 파일에서 필요한 사운드를 잘라내 정의합니다",
+      "startTime": "시작 시간(밀리초)",
+      "endTime": "종료 시간(밀리초)",
+      "volume": "사운드 볼륨",
+      "error": {
+        "negativeTime": "시간은 음수가 될 수 없습니다"
+      },
+      "previewSound": "사운드 미리 듣기",
+      "confirmAdd": "추가 확인",
+      "editExistingSound": "기존 사운드 편집",
+      "selectSoundToManage": "관리할 사운드 선택",
+      "tooltip": {
+        "noImpactOnSource": "이 단계에서 만든 사운드는 소스 파일에 영향을 주지 않습니다",
+        "multipleSoundsFromSameSource": "동일한 소스 파일에서 여러 개의 독립적인 사운드를 정의할 수 있습니다",
+        "soundName": "사운드 이름",
+        "soundDuration": "사운드의 시작 시간과 종료 시간(밀리초 단위). 키보드용으로 사용되므로 너무 길지 않아야 합니다.",
+        "volume": "0은 원래 볼륨, 0보다 크면 볼륨 증가, 0보다 작으면 볼륨 감소. 일반적으로 0.1 단위로 조정합니다",
+        "volume_1": "물론 0.0001과 같이 수동으로 입력하여 더 미세한 조정을 할 수도 있습니다. 볼륨이 너무 작거나 너무 크지 않도록 볼륨을 조정할 때마다 다시 미리 들어보세요.",
+        "previewSound": "키보드용 사운드는 보통 매우 짧으므로, 연속 미리듣기는 동시에 재생되며 진행 표시줄이나 중지 버튼이 제공되지 않습니다(필요한 경우 앱을 다시 시작하여 중지할 수 있음). 따라서 사운드 정의 원칙을 따르세요."
+      }
+    },
+    "craftKeySounds": {
+      "title": "키톤 사운드 제작",
+      "description": "키 사운드는 키보드 사운드 또는 키 오디오라고도 합니다. 이 단계에서는 정의된 사운드를 기반으로 키 사운드를 만듭니다.",
+      "newKeySound": "새 키톤 사운드 제작",
+      "keySoundName": "키톤 사운드 이름",
+      "keySoundName-placeholder": "새 키톤 사운드",
+      "configureDownSound": "키 다운 사운드 설정",
+      "configureUpSound": "키 업 사운드 설정",
+      "selectPlayMode": "재생 모드 선택",
+      "selectSounds": "사운드 선택(다중 선택)",
+      "error": {
+        "singleMode": "단일 모드에서는 하나의 사운드만 선택할 수 있습니다"
+      },
+      "confirmAdd": "추가 확인",
+      "tooltip": {
+        "description_0": "이론적으로 각 키 사운드는 키 다운과 키 업 사운드를 모두 포함해야 합니다.",
+        "description_1": "제작 시 이들을 별도로 정의해야 하지만 이는 필수는 아닙니다.",
+        "description_2": "키 다운 사운드와 키 업 사운드는 필요에 따라 선택적으로 정의할 수 있습니다.",
+        "description_3": "둘 다 정의하거나, 하나만 정의하거나, 둘 다 정의하지 않을 수 있습니다.",
+        "audioFile": "오디오 소스 파일 활성화/비활성화",
+        "soundList": "사전 정의된 사운드 클립 활성화/비활성화",
+        "keySounds": "키톤 사운드 활성화/비활성화",
+        "inheritKeySound": "이 항목으로 다른 키톤 사운드를 상속할 수 있습니다",
+        "inheritRule": "원칙: 키 다운은 키 다운을, 키 업은 키 업을 상속합니다"
+      },
+      "editExistingKeySound": "기존 키톤 사운드 편집",
+      "selectKeySoundToEdit": "편집할 키톤 사운드 선택"
+    },
+    "linkageEffects": {
+      "title": "키 사운드 이펙트 연결",
+      "description": "키에 사운드 이펙트를 설정하여 키를 누르거나 뗄 때 자동으로 사전 설정된 이펙트를 재생합니다.",
+      "enableTestSound": "내장 테스트 사운드 활성화",
+      "downTestSound": "키 다운 테스트 사운드",
+      "upTestSound": "키 업 테스트 사운드",
+      "globalSettings": "전체 키 이펙트 설정",
+      "singleKeySettings": "단일 키 이펙트 설정",
+      "global": {
+        "description": "특정 키를 지정하지 않고 전체 키에 대한 통일된 이펙트를 설정합니다.",
+        "setKeyDownSound": "전체 키 다운 이펙트 설정",
+        "setKeyUpSound": "전체 키 업 이펙트 설정"
+      },
+      "single": {
+        "description": "특정 키를 지정하여 개별적인 이펙트를 설정합니다.",
+        "addSingleKeyEffect": "단일 키 이펙트 빠르게 추가",
+        "dialog": {
+          "selectKeyAndEffect": "키와 해당 이펙트 설정을 선택하세요.",
+          "selectSingleKey": "단일 키 선택(수량 무제한)",
+          "selectSingleKey-placeholder_record": "여기에 키를 입력하여 녹음",
+          "selectSingleKey-placeholder_search": "여기에 키를 입력하여 검색",
+          "downSoundEffect": "키 다운 이펙트",
+          "upSoundEffect": "키 업 이펙트",
+          "setDownSoundEffect": "키 다운 이펙트 설정",
+          "setUpSoundEffect": "키 업 이펙트 설정",
+          "noSingleKeyEffects": "현재 설정된 단일 키 이펙트가 없습니다",
+          "singleKeyEffects": "단일 키 이펙트가 설정된 키",
+          "clickToView": " 클릭하여 이펙트 보기",
+          "editSingleKey": "단일 키 편집",
+          "soundEffect": "의 이펙트",
+          "soundEffect-down": "의 키 다운 이펙트",
+          "soundEffect-up": "의 키 업 이펙트"
+        }
+      },
+      "confirm": "확인",
+      "tooltips": {
+        "description": "\"오디오 파일\", \"사전 정의된 사운드\", \"키톤 사운드\" 모두 키와 연결되는 이펙트로 사용할 수 있습니다.",
+        "testSound": "KeyTone에는 소프트웨어가 정상적으로 작동하는지 확인하기 위한\n테스트용 전체 키 이펙트가 내장되어 있습니다.\n기본적으로 활성화되어 있으며 필요에 따라 수동으로 비활성화할 수 있습니다.\n재생 우선순위는 전체/단일 키 이펙트 설정보다 낮습니다.",
+        "globalPriority": "재생 우선순위는 내장 테스트 사운드보다 높지만 단일 키 이펙트보다는 낮습니다",
+        "singleKeyPriority": "재생 우선순위는 전체 키 이펙트와 내장 테스트 사운드보다 높습니다",
+        "ultimateKeySound": {
+          "title": "키톤 사운드",
+          "anchored": "(고정됨)",
+          "unanchored": "(고정 해제됨)",
+          "tooltip": "이 고정은 이펙트를 키톤 사운드로 설정할 때만 적용됩니다"
+        },
+        "audioFile": "오디오 소스 파일을 이펙트로 설정할 수 있습니다",
+        "soundList": "사전 정의된 사운드 클립을 이펙트로 설정할 수 있습니다",
+        "keySounds": "키톤 사운드를 이펙트로 설정할 수 있습니다\n이 옵션을 선택하면 키톤 사운드를 위한 고정 기능이 자동으로 제공됩니다\n이 기능은 조작을 편리하게 하기 위한 것이며, 고정을 해제하여 더 자유롭게 이펙트를 정의할 수도 있습니다",
+        "fastDelete": "빈 키 다운/업 이펙트 설정을 사용하여 키를 빠르게 일괄 삭제할 수도 있습니다.",
+        "stopRecording": "단일 키 녹음 중지",
+        "startRecording": "단일 키 녹음 시작",
+        "save": "현재 편집 내용 저장",
+        "delete": "현재 단일 키의 키 다운 및 키 업 이펙트 삭제"
+      }
+    }
+  },
+  "setting": {
+    "setting": "설정",
+    "language": {
+      "index": "언어",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "시작 및 자동 시작",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "시작 시 창 숨기기",
+        "caption": "앱을 열 때 시스템 트레이로 최소화"
+      },
+      "自动启动": {
+        "index": "자동 시작",
+        "appxIndex": "Microsoft Store 버전은 기본적으로 활성화되어 있습니다",
+        "caption": "컴퓨터 시작 시 자동으로 이 앱을 시작할지 여부",
+        "appxCaption": "시스템 '설정'>'앱'>'시작'에서 끌 수 있습니다"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "자동 시작 시 창 숨기기",
+        "caption": "컴퓨터 시작 시 앱이 자동으로 시작될 때 시스템 트레이로 최소화"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "원본 볼륨 조정",
+        "caption": "원본 오디오 파일의 기본 볼륨을 알고리즘적으로 높이거나 낮춥니다. 참고: 조정 범위가 너무 크지 않아야 하며, 적당히 조정해야 합니다. 그렇지 않으면 오디오의 원본 품질이 손상될 수 있습니다"
+      },
+      "重置": "초기화",
+      "音量": "볼륨",
+      "AmplifyLimit": {
+        "index": "증폭 한도",
+        "rulesErrorInfo": "입력 값은 0보다 크고 100,000,000보다 작아야 합니다"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "메인 페이지 관련", "caption": "메인 페이지의 관련 기능을 사용자 정의합니다" },
+      "音量降幅": {
+        "index": "볼륨 감소",
+        "rulesErrorInfo": "입력 값은 5보다 크거나 같고 100,000,000보다 작아야 합니다"
+      },
+      "重置": "초기화",
+      "音量调试滑块": { "index": "볼륨 디버그 슬라이더", "caption": "활성화하면 메인 페이지의 볼륨 진행 막대 아래에 추가 볼륨 디버그 슬라이더가 표시됩니다" }
+    }
+  },
+  "language": {
+    "setting language": "언어 설정/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "설정 파일을 가져오는 중...",
+    "获取配置文件失败": "설정 파일 가져오기 실패",
+    "配置文件获取成功, 正在读取配置": "설정 파일을 성공적으로 가져왔습니다. 설정을 읽는 중...",
+    "配置读取成功": "설정 읽기 성공",
+    "配置文件读取失败,请重启应用": "설정 파일 읽기 실패, 앱을 다시 시작하세요",
+    "功能正在开发中": "기능이 개발 중입니다",
+    "音量0%时无法打开声音": "볼륨이 0%일 때는 소리를 켤 수 없습니다"
+  },
+  "Electron": {
+    "tray": {
+      "show": "표시",
+      "quit": "종료",
+      "mute": "음소거",
+      "unmute": "음소거 해제"
+    }
+  }
+}
