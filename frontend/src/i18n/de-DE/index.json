@@ -1,0 +1,323 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Entwickler",
+    "setting": {
+      "index": "Einstellung",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Tastensound-Album",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Tastensound-Album",
+    "copyright": "Copyright © 2024-",
+    "license": "Lizenz",
+    "privacyPolicy": "Datenschutz",
+    "userAgreement": "Nutzungsvereinbarung",
+    "emptyState": {
+      "noAlbum": "Keine Tastensound-Alben",
+      "goToAlbumPage": "Zur Album-Seite",
+      "createOrImportTip": "Keine Alben - erstellen oder importieren"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Neues Album",
+    "import": "Album importieren",
+    "export": "Album exportieren",
+    "delete": "Album löschen",
+    "label": "Tastensound-Album",
+    "emptyState": {
+      "noAlbum": "Keine Alben"
+    },
+    "notify": {
+      "deleteSuccess": "Löschen erfolgreich",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "importSuccess": "Import erfolgreich",
+      "importFailed": "Import fehlgeschlagen",
+      "exportSuccess": "Export erfolgreich",
+      "exportFailed": "Export fehlgeschlagen",
+      "invalidFormat": ".ktalbum-Datei wählen",
+      "refreshFailed": "Aktualisierung fehlgeschlagen, manuell versuchen",
+      "importOverwriteSuccess": "Überschreiben erfolgreich",
+      "importSaveAsNewSuccess": "Als neu gespeichert",
+      "fileDescription": "KeyTone Album-Datei"
+    },
+    "importDialog": {
+      "title": "Album importieren",
+      "message": "Album existiert, Option wählen:",
+      "overwrite": "Überschreiben",
+      "saveAsNew": "Als neu speichern",
+      "cancel": "Abbrechen",
+      "confirm": "OK"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Neues Tastensound-Album erstellen",
+      "name": {
+        "name": "Tastensound-Album Name",
+        "defaultValue": "Neues Tastensound-Album",
+        "errorMessage": "Sie müssen einen Namen für das Tastensound-Album vergeben"
+      }
+    },
+    "or": "ODER",
+    "close": "Schließen",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "continue": "Weiter",
+    "back": "Zurück",
+    "confirmEdit": "Speichern",
+    "delete": "Löschen",
+    "playMode": {
+      "single": "Einzeln",
+      "random": "Zufällig",
+      "loop": "Sequentiell"
+    },
+    "options": {
+      "audioFile": "Audio-Quelldatei",
+      "sound": "Vordefinierte Soundclips",
+      "keySound": "Tastensounds",
+
+      "audioFile_0": "Audiodatei",
+      "sound_0": "Soundclip",
+      "keySound_0": "Tastensound"
+    },
+    "notify": {
+      "deleteSuccess": "Erfolgreich gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "addSuccess": "Erfolgreich hinzugefügt",
+      "addFailed": "Hinzufügen fehlgeschlagen",
+      "saveSuccess": "Erfolgreich gespeichert",
+      "modifySuccess": "Änderung erfolgreich",
+      "modifyFailed": "Änderung fehlgeschlagen",
+      "noFilesToManage": "Keine Dateien zum Verwalten",
+      "noSoundsToEdit": "Keine bearbeitbaren Sounds verfügbar",
+      "noKeySoundsToEdit": "Keine Tastensounds zum Bearbeiten",
+      "selectSoundEffect": "Bitte SFX wählen",
+      "selectSoundEffectForKeys": "Bitte SFX für Tasten {keys} wählen",
+      "deleteSuccessForKeys": "SFX für Tasten {keys} erfolgreich gelöscht",
+      "configSuccess": "Konfiguration erfolgreich gespeichert",
+      "selectKey": "Bitte Taste wählen",
+      "confirmDeleteSingleKeyEffect": "Möchten Sie den Tasten-SFX löschen?",
+      "confirmDeleteSingleKeyEffectMessage": "In Ihrer Konfiguration sind Drücken- und Loslassen-SFX leer, entspricht Löschen",
+      "noChangesDetected": "Keine Änderungen erkannt",
+      "selectSourceFile": "Bitte Quelldatei auswählen",
+      "endTimeGreaterThanStartTime": "Endzeit muss nach Startzeit liegen",
+      "selectAudioFile": "Bitte Audio-Quelldatei auswählen",
+      "timeValueCannotBeNegative": "Zeitwert darf nicht negativ sein",
+      "playFailed": "Wiedergabe fehlgeschlagen",
+      "downSoundInvalid": "Fehler: 'Drücken-Sound' nicht konform",
+      "upSoundInvalid": "Fehler: 'Loslassen-Sound' nicht konform",
+      "unifiedSoundEffectConfigFailed": "Globale SFX-Konfiguration fehlgeschlagen",
+      "keyAlreadySelected": "Aufgenommene Taste bereits ausgewählt",
+      "noSoundEffectSelected": "Kein Tasten-SFX konfiguriert",
+      "singleKeySoundEffectConfigFailed": "Tasten-SFX für {key} fehlgeschlagen",
+      "singleKeySoundEffectConfigError": "Fehler bei Tasten-SFX für {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Nur einige Tasten-SFX erfolgreich",
+      "configFileReadFailed": "Tastensound-Album laden fehlgeschlagen"
+    },
+    "loadAudioFile": {
+      "title": "Audiodateien laden",
+      "description": "Originale Audiodateien für spätere Schritte laden",
+      "addNewFile": "Neue Audio-Quelldatei hinzufügen",
+      "addNewFile_1": "Neue Audio-Quelldatei hinzufügen",
+      "dragAndDrop": "Klicken oder Dateien hierher ziehen",
+      "audioFile": "Audio-Quelldatei",
+      "supportedFormats": "Unterstützt: WAV, MP3, OGG",
+      "addAsNeeded": "Nach Bedarf Dateien hinzufügen",
+      "confirmAdd": "Hinzufügen bestätigen",
+      "manageExistingFiles": "Geladene Dateien verwalten",
+      "selectFileToManage": "Zu verwaltende Datei auswählen",
+      "emptyFileName": "Leerer Dateiname erschwert die Verwaltung",
+      "renameFile": "Dateiname (änderbar)"
+    },
+    "defineSounds": {
+      "title": "Sounds zuschneiden",
+      "description": "Benötigte Sounds aus geladenen Audiodateien zuschneiden",
+      "createNewSound": "Neuen Sound erstellen",
+      "soundName": "Sound-Name (optional)",
+      "sourceFile": "Audio-Quelldatei",
+      "cropSound": "Sound aus Quelldatei zuschneiden",
+      "startTime": "Startzeit (ms)",
+      "endTime": "Endzeit (ms)",
+      "volume": "Lautstärke",
+      "error": {
+        "negativeTime": "Zeit darf nicht negativ sein"
+      },
+      "previewSound": "Sound-Vorschau",
+      "confirmAdd": "Hinzufügen bestätigen",
+      "editExistingSound": "Vorhandenen Sound bearbeiten",
+      "selectSoundToManage": "Zu verwaltenden Sound auswählen",
+      "tooltip": {
+        "noImpactOnSource": "Hier erstellte Sounds beeinflussen Quelldateien nicht",
+        "multipleSoundsFromSameSource": "Mehrere eigenständige Sounds aus derselben Quelldatei möglich",
+        "soundName": "Sound-Name",
+        "soundDuration": "Start- und Endzeit in Millisekunden. Für Tastendruck sollte die Dauer nicht zu lang sein",
+        "volume": "0=Original, >0=verstärken, <0=abschwächen. 0,1-Schritte verwenden",
+        "volume_1": "Manuelle Eingabe für feinere Anpassungen möglich (z.B. 0,0001). Nach jeder Anpassung Vorschau anhören",
+        "previewSound": "Tastatur-Sounds sind kurz, Vorschauen werden gleichzeitig abgespielt ohne Fortschrittsanzeige oder Stopp-Taste"
+      }
+    },
+    "craftKeySounds": {
+      "title": "Tastensounds erstellen",
+      "description": "Dieser Schritt erstellt Tastensounds basierend auf den definierten Sounds",
+      "newKeySound": "Neuer Tastensound",
+      "keySoundName": "Tastensound-Name",
+      "keySoundName-placeholder": "Neuer Tastensound",
+      "configureDownSound": "Drücken-Sound konfigurieren",
+      "configureUpSound": "Loslassen-Sound konfigurieren",
+      "selectPlayMode": "Wiedergabemodus wählen",
+      "selectSounds": "Sounds wählen (mehrere möglich)",
+      "error": {
+        "singleMode": "Einzelmodus erlaubt nur einen Sound"
+      },
+      "confirmAdd": "Hinzufügen bestätigen",
+      "tooltip": {
+        "description_0": "Jede Taste kann Drücken- und Loslassen-Sounds haben",
+        "description_1": "Diese werden separat konfiguriert",
+        "description_2": "Nach Bedarf konfigurierbar",
+        "description_3": "Beide, nur einen oder keinen definieren",
+        "audioFile": "Audio-Quelldateien ein/aus",
+        "soundList": "Vordefinierte Soundclips ein/aus",
+        "keySounds": "Tastensounds ein/aus",
+        "inheritKeySound": "Von anderen Tastensounds erben",
+        "inheritRule": "Drücken erbt von Drücken, Loslassen erbt von Loslassen"
+      },
+      "editExistingKeySound": "Tastensound bearbeiten",
+      "selectKeySoundToEdit": "Zu bearbeitenden Tastensound auswählen"
+    },
+    "linkageEffects": {
+      "title": "Album Kern-Effekte (SFX)",
+      "description": "Tasten-Effekte konfigurieren für automatische Sounds beim Drücken und Loslassen",
+      "enableTestSound": "Integrierte Test-Sounds aktivieren",
+      "downTestSound": "Drücken Test-Sound",
+      "upTestSound": "Loslassen Test-Sound",
+      "globalSettings": "Globale SFX-Einstellungen",
+      "singleKeySettings": "Tasten-SFX-Einstellungen",
+      "global": {
+        "description": "Globale Soundeffekte ohne Tastenangabe einstellen",
+        "setKeyDownSound": "Globalen Drücken-SFX festlegen",
+        "setKeyUpSound": "Globalen Loslassen-SFX festlegen"
+      },
+      "single": {
+        "description": "Eine oder mehrere Tasten für eigenständige SFX-Einstellungen angeben",
+        "addSingleKeyEffect": "Schnell Tasten-SFX einrichten",
+        "dialog": {
+          "selectKeyAndEffect": "Tasten und SFX-Einstellungen wählen",
+          "selectSingleKey": "Tasten-Auswahl (beliebige Anzahl)",
+          "selectSingleKey-placeholder_record": "Taste hier aufnehmen",
+          "selectSingleKey-placeholder_search": "Taste hier suchen",
+          "downSoundEffect": "Drücken-SFX",
+          "upSoundEffect": "Loslassen-SFX",
+          "setDownSoundEffect": "Drücken-SFX festlegen",
+          "setUpSoundEffect": "Loslassen-SFX festlegen",
+          "noSingleKeyEffects": "Noch keine Tasten-SFX eingerichtet",
+          "singleKeyEffects": "Tasten mit SFX",
+          "clickToView": "Klicken zum Anzeigen",
+          "editSingleKey": "Bearbeiten",
+          "soundEffect": "Tasten-SFX",
+          "soundEffect-down": "Drücken-SFX",
+          "soundEffect-up": "Loslassen-SFX"
+        }
+      },
+      "confirm": "Bestätigen",
+      "tooltips": {
+        "description": "\"Audiodateien\", \"Voreingestellte Sounds\", \"Ultimate Tastensounds\" können als Effekte genutzt werden",
+        "testSound": "KeyTone enthält Test-Soundeffekte zum Prüfen der Software\nStandardmäßig aktiviert, kann deaktiviert werden\nNiedrigere Priorität als globale/Tasten-Einstellungen",
+        "globalPriority": "Höhere Priorität als Test-Sounds, niedriger als Tasten-Einstellungen",
+        "singleKeyPriority": "Höchste Abspielpriorität",
+        "ultimateKeySound": {
+          "title": "Ultimate Tastensound",
+          "anchored": " (Verankert)",
+          "unanchored": " (Unverankert)",
+          "tooltip": "Verankerung wirkt nur bei Ultimate Tastensounds"
+        },
+        "audioFile": "Audio-Quelldateien als SFX unterstützt",
+        "soundList": "Vordefinierte Soundclips als SFX unterstützt",
+        "keySounds": "Ultimate Tastensounds als SFX unterstützt\nBei Auswahl wird Verankerungsfunktion bereitgestellt\nFür einfachere Bedienung, kann gelöst werden für freiere Definition",
+        "fastDelete": "Leere Drücken/Loslassen-Einstellungen zum Löschen mehrerer Tasten nutzen",
+        "stopRecording": "Tastenaufnahme stoppen",
+        "startRecording": "Tastenaufnahme starten",
+        "save": "Änderungen speichern",
+        "delete": "Drücken/Loslassen-SFX für aktuelle Taste löschen"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Einstellung",
+    "language": {
+      "index": "Sprache",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Start und Autostart",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Fenster beim Start ausblenden",
+        "caption": "Beim Öffnen in System-Tray minimieren"
+      },
+      "自动启动": {
+        "index": "Autostart",
+        "appxIndex": "In Microsoft Store-Version standardmäßig aktiviert",
+        "caption": "Soll die App beim Computerstart automatisch starten?",
+        "appxCaption": "Kann in System 'Einstellungen' > 'Apps' > 'Autostart' deaktiviert werden"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Fenster bei Autostart ausblenden",
+        "caption": "App bei Computerstart in System-Tray minimieren"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Lautstärkeanpassung des Originals",
+        "caption": "Standardlautstärke der Originaldatei algorithmisch anpassen. Hinweis: Anpassung moderat halten, um Klangqualität zu erhalten"
+      },
+      "重置": "Zurücksetzen",
+      "音量": "Lautstärke",
+      "AmplifyLimit": {
+        "index": "Verstärkungsgrenze",
+        "rulesErrorInfo": "Wert muss größer als 0 und kleiner als 100.000.000 sein"
+      }
+    },
+    "mainHome": {
+      "音量调试滑块": {
+        "index": "Lautstärke-Schieberegler",
+        "caption": "Bei Aktivierung wird zusätzlicher Lautstärke-Schieberegler auf der Startseite angezeigt"
+      },
+      "重置": "Zurücksetzen",
+      "音量降幅": {
+        "index": "Lautstärkereduktion",
+        "rulesErrorInfo": "Wert muss größer/gleich 5 und kleiner als 100.000.000 sein"
+      },
+      "mainHome": {
+        "index": "Startseite",
+        "caption": "Funktionen der Startseite anpassen"
+      }
+    }
+  },
+  "language": {
+    "setting language": "Sprache einstellen/设置语言"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Lade Konfigurationsdatei...",
+    "获取配置文件失败": "Konfigurationsdatei nicht gefunden",
+    "配置文件获取成功, 正在读取配置": "Konfigurationsdatei gefunden, wird gelesen...",
+    "配置读取成功": "Konfiguration erfolgreich gelesen",
+    "配置文件读取失败,请重启应用": "Konfigurationsdatei-Lesefehler, bitte App neu starten",
+    "功能正在开发中": "Funktion in Entwicklung",
+    "音量0%时无法打开声音": "Bei 0% Lautstärke kann Sound nicht aktiviert werden"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Anzeigen",
+      "quit": "Beenden",
+      "mute": "Stummschalten",
+      "unmute": "Stummschaltung aufheben"
+    }
+  }
+}

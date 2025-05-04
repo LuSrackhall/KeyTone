@@ -52,6 +52,8 @@ const localeOptions: Array<LocationOption> = [
   { value: 'zh-TW', label: '中文-繁体' },
   { value: 'ja', label: '日本語' },
   { value: 'ko-KR', label: '한국어' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'de-DE', label: 'Deutsch' },
 ];
 
 /**
