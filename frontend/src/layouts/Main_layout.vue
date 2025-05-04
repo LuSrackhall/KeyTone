@@ -4,7 +4,14 @@
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
   <q-layout view="hHh lpR lFr" style="min-height: 0px" class="sizeChange">
-    <q-header elevated :class="['bg-blue/36 text-white rounded-b-lg rounded-t-[0.5rem]', isMacOS ? '' : 'taskbar']">
+    <q-header
+      elevated
+      :class="[
+        'bg-blue/36 text-white rounded-b-lg rounded-t-[0.5rem]',
+        leftDrawerOpen ? 'rounded-bl-none' : '',
+        isMacOS ? '' : 'taskbar',
+      ]"
+    >
       <!-- TODO: 工具栏后续可以做的更丰富
              - completed(已完成)    1. 可以根据非'/'路由路径, 使back按钮独立至Menu右面
              - 过分设计, 无需解决   2. 可以对主题Label标题, 添加点击事件, 使其点击后可直接跳转至主页面路由路径'/'  (TIPS: 简单应用涉及的路径太浅, 没必要)
