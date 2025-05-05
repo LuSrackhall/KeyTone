@@ -56,7 +56,7 @@
             :name="1"
             :title="$t('KeyToneAlbum.loadAudioFile.title')"
             icon="create_new_folder"
-            :done="step > 1"
+            :done="soundFileList.length !== 0"
             :disable="step === 99 && soundFileList.length === 0"
             :header-nav="false"
             @click="
@@ -75,6 +75,7 @@
                 if (header) {
                   step = step === 1 ? 99 : 1;
                 }
+                // q-step 组件是否为展开状态的逻辑很简单。 只要step的值等于其某个q-step的name字段即可。只要不相等则处于关闭状态, 只要相等就处于展开状态。
               }
             "
           >
@@ -381,7 +382,7 @@
             :name="2"
             :title="$t('KeyToneAlbum.defineSounds.title')"
             icon="add_comment"
-            :done="step > 2"
+            :done="soundList.length !== 0"
             :disable="step === 99 && soundList.length === 0"
             :header-nav="false"
             @click="
@@ -878,7 +879,7 @@
             :name="3"
             :title="$t('KeyToneAlbum.craftKeySounds.title')"
             icon="add_comment"
-            :done="step > 3"
+            :done="keySoundList.length !== 0"
             :disable="step === 99 && keySoundList.length === 0"
             :header-nav="false"
             @click="
@@ -1679,7 +1680,15 @@
             :name="4"
             :title="$t('KeyToneAlbum.linkageEffects.title')"
             icon="settings"
-            :done="step > 3"
+            :done="
+              !(
+                isEnableEmbeddedTestSound.down === true &&
+                isEnableEmbeddedTestSound.up === true &&
+                !keyDownUnifiedSoundEffectSelect &&
+                !keyUpUnifiedSoundEffectSelect &&
+                keysWithSoundEffect.size === 0
+              )
+            "
             :disable="
               step === 99 &&
               isEnableEmbeddedTestSound.down === true &&
