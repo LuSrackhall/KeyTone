@@ -32,12 +32,12 @@
     <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
 
     <div :class="['w-[100%] grid justify-items-center']">
-      <div :class="['w-[90%] flex justify-between items-center ml-3 mb-10']">
-        <q-badge :class="['bg-cyan-700 h-5 ml-0']">
-          {{ $t('setting.原始音量增减调节.音量') }} : {{ setting_store.audioVolumeProcessing.volumeAmplify }}
+      <div :class="['min-w-[90%] flex justify-between items-center -ml-6 mb-10']">
+        <q-badge :class="['bg-cyan-700 h-5 ml-1.5']">
+          {{ $t('setting.原始音量增减调节.音量') }}:{{ setting_store.audioVolumeProcessing.volumeAmplify }}
         </q-badge>
         <q-btn
-          :class="['min-w-15 min-h-5 ml-0 mr-2.3']"
+          :class="['min-w-15 min-h-5 ml-2']"
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"
@@ -47,7 +47,7 @@
 
       <div :class="['w-[100%] grid justify-items-center']">
         <q-slider
-          :class="['w-[80%]']"
+          :class="['w-[88%] -ml-5']"
           v-model="setting_store.audioVolumeProcessing.volumeAmplify"
           :max="max"
           :min="min"
@@ -66,11 +66,11 @@
     <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
 
     <div :class="['w-[100%] grid justify-items-center']">
-      <div :class="['w-[88%] flex justify-between items-center']">
+      <div :class="['min-w-[90%] flex justify-between items-center -ml-1.5']">
         <q-input
           dense
           hide-bottom-space
-          :class="['w-[55%] h-10.5 ']"
+          :class="['min-w-[55%] h-10.5 mr-4']"
           v-model.number="setting_store.audioVolumeProcessing.volumeAmplifyLimit"
           type="number"
           filled
@@ -80,7 +80,7 @@
         />
 
         <q-btn
-          :class="['min-w-15 min-h-5']"
+          :class="['min-w-15 min-h-5 mr-2']"
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"
