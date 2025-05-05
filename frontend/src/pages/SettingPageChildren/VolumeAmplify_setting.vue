@@ -37,7 +37,7 @@
           {{ $t('setting.原始音量增减调节.音量') }} : {{ setting_store.audioVolumeProcessing.volumeAmplify }}
         </q-badge>
         <q-btn
-          :class="['w-15 h-5 ml-0 mr-2.3']"
+          :class="['min-w-15 min-h-5 ml-0 mr-2.3']"
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"
@@ -80,7 +80,7 @@
         />
 
         <q-btn
-          :class="['w-15 h-5']"
+          :class="['min-w-15 min-h-5']"
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"

@@ -22,11 +22,11 @@
     <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
 
     <div :class="['w-[100%] grid']">
-      <div :class="['w-[88%] flex justify-between items-center']">
+      <div :class="['w-[92%] flex justify-between items-center flex-nowrap  gap-[12px]']">
         <q-input
           dense
           hide-bottom-space
-          :class="['w-[72%] h-10.5 ']"
+          :class="['w-[66%] h-10.5 ']"
           v-model.number="setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope"
           type="number"
           filled
@@ -36,7 +36,7 @@
         />
 
         <q-btn
-          :class="['w-15 h-5']"
+          :class="['min-w-15 min-h-5']"
           color="primary"
           size="10px"
           :label="$t('setting.mainHome.重置')"

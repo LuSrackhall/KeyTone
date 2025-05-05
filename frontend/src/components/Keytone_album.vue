@@ -20,7 +20,7 @@
 <template>
   <q-page>
     <q-scroll-area :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
-      <div :class="['flex flex-col gap-5  p-8 ']">
+      <div :class="['flex flex-col gap-5  p-8  scale-102']">
         <q-input
           outlined
           stack-label
@@ -4974,5 +4974,16 @@ function getMacOSStatus() {
 
   // 添加细微滚动条
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+
+:deep(.q-btn) {
+  @apply text-xs;
+  @apply p-2;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+
+:deep(.q-stepper__step-inner) {
+  padding: 0 12px 32px 55px;
 }
 </style>
