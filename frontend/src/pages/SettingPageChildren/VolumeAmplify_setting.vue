@@ -70,7 +70,7 @@
         <q-input
           dense
           hide-bottom-space
-          :class="['min-w-[55%] h-10.5 mr-4']"
+          :class="['min-w-[55%] h-10.5 mr-1']"
           v-model.number="setting_store.audioVolumeProcessing.volumeAmplifyLimit"
           type="number"
           filled
@@ -80,7 +80,7 @@
         />
 
         <q-btn
-          :class="['min-w-15 min-h-5 mr-2']"
+          :class="['min-w-15 min-h-6.5 mr-2.5']"
           color="primary"
           size="10px"
           :label="$t('setting.原始音量增减调节.重置')"
