@@ -14,10 +14,11 @@ import deDE from './de-DE/index.json';
 export default {
   'en-US': enUS,
   'zh-CN': zhCN,
-  'zh-HK': zhHK, // 由于quasar相关语言本地化api的列表默认值中没有zh-HK相关的, 因此此行代码理论上不起任何作用。(万一quasar以后支持了, 就省的适配了。)(设置列表中对中文繁体的相关key选择为zh-HK或zh-TW都行, 都代表中文繁体, 但只能选择其中一个, 目前用的是zh-TW, 毕竟quasar目前只支持zh-TW。)
+  // 'zh-HK': zhHK, // 由于quasar相关语言本地化api的列表默认值中没有zh-HK相关的, 因此此行代码理论上不起任何作用。(万一quasar以后支持了, 就省的适配了。)(设置列表中对中文繁体的相关key选择为zh-HK或zh-TW都行, 都代表中文繁体, 但只能选择其中一个, 目前用的是zh-TW, 毕竟quasar目前只支持zh-TW。)
   'zh-TW': zhHK,
   ja: jaJP,
   'ko-KR': koKR,
   de: deDE,
   'de-DE': deDE,
+  'de-CH': deDE,
 };
