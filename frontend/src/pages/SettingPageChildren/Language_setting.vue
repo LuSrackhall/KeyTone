@@ -66,6 +66,7 @@ const localeOptions: Array<LocationOption> = [
   { value: ['de', 'de-DE', 'de-CH'], label: 'Deutsch' },
   { value: 'ru', label: 'Русский' },
   { value: 'fr', label: 'Français' },
+  { value: 'it', label: 'Italiano' },
 ];
 
 /**

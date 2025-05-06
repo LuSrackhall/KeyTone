@@ -1,0 +1,318 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Sviluppatore",
+    "setting": {
+      "index": "Impostazioni",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Album di suoni tasti",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Album di suoni tasti",
+    "copyright": "Copyright © 2024-",
+    "license": "Licenza",
+    "licenseText": "KeyTone è rilasciato sotto licenza {license}",
+    "privacyPolicy": "Informativa sulla privacy",
+    "userAgreement": "Accordo utente",
+    "emptyState": {
+      "noAlbum": "Nessun album di suoni tasti",
+      "goToAlbumPage": "Vai alla pagina degli album",
+      "createOrImportTip": "Prima di iniziare, crea o importa un album di suoni tasti"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Nuovo album",
+    "import": "Importa album",
+    "export": "Esporta album",
+    "delete": "Elimina album",
+    "label": "Album di suoni tasti",
+    "emptyState": {
+      "noAlbum": "Nessun album di suoni tasti"
+    },
+    "notify": {
+      "deleteSuccess": "Album eliminato con successo",
+      "deleteFailed": "Eliminazione album fallita",
+      "importSuccess": "Album importato con successo",
+      "importFailed": "Importazione album fallita",
+      "exportSuccess": "Album esportato con successo",
+      "exportFailed": "Esportazione album fallita",
+      "invalidFormat": "Seleziona un file album in formato .ktalbum",
+      "refreshFailed": "Album sovrascritto, ma aggiornamento fallito. Aggiorna manualmente",
+      "importOverwriteSuccess": "Album sovrascritto con successo",
+      "importSaveAsNewSuccess": "Album salvato come nuovo album",
+      "fileDescription": "File album KeyTone"
+    },
+    "importDialog": {
+      "title": "Importa album",
+      "message": "Esiste già un album identico, seleziona un'opzione:",
+      "overwrite": "Sovrascrivi album esistente",
+      "saveAsNew": "Salva come nuovo album",
+      "cancel": "Annulla importazione",
+      "confirm": "Conferma"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Crea nuovo album di suoni tasti",
+      "name": {
+        "name": "Nome album di suoni tasti",
+        "defaultValue": "Nuovo album di suoni tasti",
+        "errorMessage": "È necessario impostare un nome per l'album"
+      }
+    },
+    "or": "oppure",
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "continue": "Continua",
+    "back": "Indietro",
+    "confirmEdit": "Conferma modifica",
+    "delete": "Elimina",
+    "playMode": {
+      "single": "Singolo",
+      "random": "Casuale",
+      "loop": "Sequenziale"
+    },
+    "options": {
+      "audioFile": "File audio sorgente",
+      "sound": "Frammenti audio predefiniti",
+      "keySound": "Suoni tasti ottimizzati",
+
+      "audioFile_0": "File audio",
+      "sound_0": "Frammenti audio",
+      "keySound_0": "Suoni tasti ottimizzati"
+    },
+    "notify": {
+      "deleteSuccess": "Eliminazione completata",
+      "deleteFailed": "Eliminazione fallita",
+      "addSuccess": "Aggiunta completata",
+      "addFailed": "Aggiunta fallita",
+      "saveSuccess": "Salvataggio completato",
+      "modifySuccess": "Modifica completata",
+      "modifyFailed": "Modifica fallita",
+      "noFilesToManage": "Nessun file sorgente da gestire",
+      "noSoundsToEdit": "Nessun suono da modificare",
+      "noKeySoundsToEdit": "Nessun suono tasto da modificare",
+      "selectSoundEffect": "Seleziona un effetto sonoro",
+      "selectSoundEffectForKeys": "Seleziona un effetto sonoro per i tasti {keys}",
+      "deleteSuccessForKeys": "Effetto sonoro per i tasti {keys} eliminato con successo",
+      "configSuccess": "Configurazione salvata con successo",
+      "selectKey": "Seleziona un tasto",
+      "confirmDeleteSingleKeyEffect": "Sei sicuro di voler eliminare questa configurazione dell'effetto tasto?",
+      "confirmDeleteSingleKeyEffectMessage": "Nella configurazione attuale, gli effetti di pressione e rilascio sono vuoti, quindi questa modifica equivale a un'eliminazione",
+      "noChangesDetected": "Nessuna modifica rilevata",
+      "selectSourceFile": "Seleziona un file sorgente",
+      "endTimeGreaterThanStartTime": "Il tempo di fine deve essere maggiore del tempo di inizio",
+      "selectAudioFile": "Seleziona prima un file audio sorgente",
+      "timeValueCannotBeNegative": "Il valore del tempo non può essere negativo",
+      "playFailed": "Riproduzione fallita",
+      "downSoundInvalid": "Fallito: il 'suono di pressione' non soddisfa i requisiti",
+      "upSoundInvalid": "Fallito: il 'suono di rilascio' non soddisfa i requisiti",
+      "unifiedSoundEffectConfigFailed": "Configurazione effetto sonoro globale fallita",
+      "keyAlreadySelected": "Il tasto registrato è già presente nella selezione",
+      "noSoundEffectSelected": "Nessuna configurazione effetto sonoro per singolo tasto",
+      "singleKeySoundEffectConfigFailed": "Configurazione effetto sonoro per il tasto {key} fallita",
+      "singleKeySoundEffectConfigError": "Errore durante la configurazione dell'effetto sonoro per il tasto {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Solo parte della configurazione effetti sonori per singoli tasti completata con successo",
+      "configFileReadFailed": "Lettura file di configurazione album fallita"
+    },
+    "loadAudioFile": {
+      "title": "Carica file audio",
+      "description": "Carica file audio originali per l'album corrente da utilizzare nei passaggi successivi",
+      "addNewFile": "Aggiungi nuovo file audio sorgente",
+      "addNewFile_1": "Carica nuovo file audio sorgente",
+      "dragAndDrop": "Clicca per selezionare o trascina qui i file",
+      "audioFile": "File audio sorgente",
+      "supportedFormats": "Formati supportati: WAV, MP3, OGG",
+      "addAsNeeded": "Aggiungi la quantità necessaria in base alle tue preferenze",
+      "confirmAdd": "Conferma aggiunta",
+      "manageExistingFiles": "Gestisci file sorgente caricati",
+      "selectFileToManage": "Seleziona file da gestire",
+      "emptyFileName": "Un nome file vuoto potrebbe aumentare i costi di gestione successivi",
+      "renameFile": "Nome file (modificabile)"
+    },
+    "defineSounds": {
+      "title": "Definisci e ritaglia suoni",
+      "description": "Ritaglia e definisci i suoni necessari dai file audio originali caricati",
+      "createNewSound": "Crea nuovo suono",
+      "soundName": "Assegna un nome al suono (opzionale)",
+      "sourceFile": "File audio sorgente",
+      "cropSound": "Ritaglia e definisci i suoni necessari dal file audio sorgente",
+      "startTime": "Tempo di inizio (millisecondi)",
+      "endTime": "Tempo di fine (millisecondi)",
+      "volume": "Volume del suono",
+      "error": {
+        "negativeTime": "Il tempo non può essere negativo"
+      },
+      "previewSound": "Anteprima suono",
+      "confirmAdd": "Conferma aggiunta",
+      "editExistingSound": "Modifica suoni esistenti",
+      "selectSoundToManage": "Seleziona suono da gestire",
+      "tooltip": {
+        "noImpactOnSource": "I suoni creati in questo passaggio non influenzeranno il file sorgente",
+        "multipleSoundsFromSameSource": "Puoi ritagliare e definire più suoni indipendenti dallo stesso file sorgente",
+        "soundName": "Nome del suono",
+        "soundDuration": "Tempo di inizio e fine del suono in millisecondi. Poiché sarà usato per i tasti, il tempo non dovrebbe essere troppo lungo.",
+        "volume": "0 per volume originale, maggiore di 0 per aumentare il volume, minore di 0 per ridurre il volume. Incremento comune: 0.1",
+        "volume_1": "Puoi anche inserire manualmente valori più precisi come 0.0001. Riproduci nuovamente dopo ogni regolazione del volume per verificare l'effetto, evitando volumi troppo alti o troppo bassi.",
+        "previewSound": "I suoni per i tasti sono generalmente brevi, quindi le anteprime consecutive verranno riprodotte contemporaneamente, senza barre di avanzamento o pulsanti di arresto (se necessario, riavvia l'applicazione per interrompere). Segui quindi i principi di definizione del suono."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Crea suoni tasti ottimizzati",
+      "description": "I suoni tasti sono suoni associati ai tasti. Questo passaggio crea suoni tasti in base ai suoni definiti e ritagliati.",
+      "newKeySound": "Crea nuovo suono tasto ottimizzato",
+      "keySoundName": "Nome suono tasto ottimizzato",
+      "keySoundName-placeholder": "Nuovo suono tasto ottimizzato",
+      "configureDownSound": "Configura suono pressione",
+      "configureUpSound": "Configura suono rilascio",
+      "selectPlayMode": "Seleziona modalità riproduzione",
+      "selectSounds": "Seleziona suoni (selezione multipla)",
+      "error": {
+        "singleMode": "In modalità singola, seleziona al massimo un suono"
+      },
+      "confirmAdd": "Conferma aggiunta",
+      "tooltip": {
+        "description_0": "Teoricamente, ogni suono tasto dovrebbe includere suoni di pressione e rilascio.",
+        "description_1": "Devono essere definiti separatamente durante la creazione, ma non è obbligatorio.",
+        "description_2": "I suoni di pressione e rilascio possono essere definiti selettivamente in base alle necessità.",
+        "description_3": "Puoi definirli entrambi, definirne solo uno, o non definirne nessuno.",
+        "audioFile": "Abilita/disabilita file audio sorgente",
+        "soundList": "Abilita/disabilita frammenti audio predefiniti",
+        "keySounds": "Abilita/disabilita suoni tasti ottimizzati",
+        "inheritKeySound": "Questa opzione permette di ereditare da altri suoni tasti ottimizzati",
+        "inheritRule": "Principio: pressione eredita pressione, rilascio eredita rilascio"
+      },
+      "editExistingKeySound": "Modifica suono tasto esistente",
+      "selectKeySoundToEdit": "Seleziona suono tasto da modificare"
+    },
+    "linkageEffects": {
+      "title": "Effetti di collegamento tasti",
+      "description": "Imposta effetti di collegamento per i tasti, riproducendo automaticamente effetti preimpostati quando si preme o si rilascia un tasto.",
+      "enableTestSound": "Abilita suoni di test incorporati",
+      "downTestSound": "Suono test pressione",
+      "upTestSound": "Suono test rilascio",
+      "globalSettings": "Impostazioni effetti globali",
+      "singleKeySettings": "Impostazioni effetti tasto singolo",
+      "global": {
+        "description": "Configura impostazioni effetti globali uniformi senza specificare alcun tasto.",
+        "setKeyDownSound": "Imposta effetto pressione globale",
+        "setKeyUpSound": "Imposta effetto rilascio globale"
+      },
+      "single": {
+        "description": "Specifica uno o più tasti per configurare impostazioni effetti indipendenti locali.",
+        "addSingleKeyEffect": "Aggiungi rapidamente effetto tasto singolo",
+        "dialog": {
+          "selectKeyAndEffect": "Seleziona tasto e relative impostazioni effetti.",
+          "selectSingleKey": "Seleziona tasto singolo (quantità arbitraria)",
+          "selectSingleKey-placeholder_record": "Digita qui per registrare tasto singolo",
+          "selectSingleKey-placeholder_search": "Digita qui per cercare tasto singolo",
+          "downSoundEffect": "Effetto pressione",
+          "upSoundEffect": "Effetto rilascio",
+          "setDownSoundEffect": "Imposta effetto pressione",
+          "setUpSoundEffect": "Imposta effetto rilascio",
+          "noSingleKeyEffects": "Nessun tasto con effetti tasto singolo configurati",
+          "singleKeyEffects": "Tasti con effetti tasto singolo configurati",
+          "clickToView": " Clicca per vedere gli effetti",
+          "editSingleKey": "Modifica tasto singolo",
+          "soundEffect": "effetto di",
+          "soundEffect-down": "effetto pressione di",
+          "soundEffect-up": "effetto rilascio di"
+        }
+      },
+      "confirm": "Conferma",
+      "tooltips": {
+        "description": "\"File audio\", \"Suoni predefiniti\" e \"Suoni tasti ottimizzati\" possono tutti essere usati come effetti collegati ai tasti.",
+        "testSound": "KeyTone ha effetti tasti globali di test incorporati,\nper verificare che il software funzioni correttamente.\nAttivi per impostazione predefinita, possono essere disattivati manualmente se necessario.\nPriorità di riproduzione inferiore alle impostazioni effetti globali/singolo tasto.",
+        "globalPriority": "Priorità di riproduzione superiore ai suoni di test incorporati, ma inferiore agli effetti tasto singolo",
+        "singleKeyPriority": "Priorità di riproduzione superiore agli effetti globali e ai suoni di test incorporati",
+        "ultimateKeySound": {
+          "title": "Suoni tasti ottimizzati",
+          "anchored": "(ancorato)",
+          "unanchored": "(ancoraggio rimosso)",
+          "tooltip": "Questo ancoraggio agisce solo quando si imposta un suono tasto ottimizzato come effetto"
+        },
+        "audioFile": "Supporta l'impostazione di file audio sorgente come effetti",
+        "soundList": "Supporta l'impostazione di frammenti audio predefiniti come effetti",
+        "keySounds": "Supporta l'impostazione di suoni tasti ottimizzati come effetti\nSe selezionato, fornisce automaticamente funzionalità di ancoraggio per suoni tasti ottimizzati\nQuesta funzione facilita le operazioni, ma puoi rimuovere l'ancoraggio per definire gli effetti più liberamente",
+        "fastDelete": "Puoi anche utilizzare impostazioni effetti pressione/rilascio vuote per eliminare rapidamente tasti in serie.",
+        "stopRecording": "Interrompi registrazione tasto singolo",
+        "startRecording": "Inizia registrazione tasto singolo",
+        "save": "Salva contenuto attualmente modificato",
+        "delete": "Elimina effetti pressione e rilascio del tasto singolo corrente"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Impostazioni",
+    "language": {
+      "index": "Lingua",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Avvio e avvio automatico",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Nascondi finestra all'avvio",
+        "caption": "Minimizza l'applicazione nella barra delle applicazioni all'apertura"
+      },
+      "自动启动": {
+        "index": "Avvio automatico",
+        "appxIndex": "Opzione abilitata per impostazione predefinita nella versione Microsoft Store",
+        "caption": "Avvia automaticamente l'applicazione all'accensione del computer",
+        "appxCaption": "Può essere disattivato in 'Impostazioni'>'App'>'Avvio' del sistema"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Nascondi finestra all'avvio automatico",
+        "caption": "Minimizza l'applicazione nella barra delle applicazioni quando si avvia automaticamente all'accensione del computer"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Regolazione volume originale",
+        "caption": "Aumenta/diminuisce algoritmicamente il volume predefinito dei file audio originali. Nota: la regolazione non dovrebbe essere eccessiva, solo moderata, altrimenti potrebbe compromettere la qualità audio originale"
+      },
+      "重置": "Ripristina",
+      "音量": "Volume",
+      "AmplifyLimit": {
+        "index": "Limite di amplificazione",
+        "rulesErrorInfo": "Il valore inserito deve essere maggiore di 0 e minore di 100.000.000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Pagina principale", "caption": "Personalizza le funzionalità relative alla pagina principale" },
+      "音量降幅": {
+        "index": "Riduzione volume",
+        "rulesErrorInfo": "Il valore inserito deve essere maggiore o uguale a 5 e minore di 100.000.000"
+      },
+      "重置": "Ripristina",
+      "音量调试滑块": { "index": "Slider debug volume", "caption": "Quando attivato, mostra uno slider aggiuntivo per il debug del volume sotto la barra di avanzamento del volume nella pagina principale" }
+    }
+  },
+  "language": {
+    "setting language": "Imposta lingua/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Tentativo di recupero file di configurazione...",
+    "获取配置文件失败": "Recupero file di configurazione fallito",
+    "配置文件获取成功, 正在读取配置": "File di configurazione recuperato con successo, lettura configurazione in corso...",
+    "配置读取成功": "Lettura configurazione completata",
+    "配置文件读取失败,请重启应用": "Lettura file di configurazione fallita, riavvia l'applicazione",
+    "功能正在开发中": "Funzionalità in fase di sviluppo",
+    "音量0%时无法打开声音": "Impossibile attivare il suono con volume allo 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Mostra",
+      "quit": "Esci",
+      "mute": "Disattiva audio",
+      "unmute": "Attiva audio"
+    }
+  }
+} 

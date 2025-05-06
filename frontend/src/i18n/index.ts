@@ -11,6 +11,7 @@ import koKR from './ko-KR/index.json';
 import deDE from './de-DE/index.json';
 import ruRU from './ru-RU/index.json';
 import frFR from './fr-FR/index.json';
+import itIT from './it-IT/index.json';
 
 // 一下键值对中的key的名称, 以quasar框架(或其它的项目框架)的语言本地化api的列表为准。(如quasar的列表默认值的参考链接https://github.com/quasarframework/quasar/tree/dev/ui/lang)
 export default {
@@ -25,4 +26,5 @@ export default {
   'de-CH': deDE,
   ru: ruRU,
   fr: frFR,
+  it: itIT,
 };
