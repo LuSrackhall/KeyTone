@@ -67,7 +67,7 @@
               {{ version }}
             </div>
           </div> -->
-          <div class="text-xs pt-2.6">
+          <div class="text-xs pt-2.6" v-if="router.currentRoute.value.fullPath === '/'">
             <div class="ml-2 flex text-[12px]" :class="[isMacOS ? 'mb-0.5' : '']">
               {{ version }}
             </div>
