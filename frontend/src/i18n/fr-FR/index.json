@@ -1,0 +1,318 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Développeur",
+    "setting": {
+      "index": "Paramètres",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Albums sonores",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Album sonore",
+    "copyright": "Copyright © 2024-",
+    "license": "Licence",
+    "licenseText": "KeyTone est publié sous licence {license}",
+    "privacyPolicy": "Politique de confidentialité",
+    "userAgreement": "Conditions d'utilisation",
+    "emptyState": {
+      "noAlbum": "Aucun album sonore",
+      "goToAlbumPage": "Aller à la page d'albums",
+      "createOrImportTip": "Veuillez créer ou importer un album sonore avant de commencer"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Nouvel album",
+    "import": "Importer",
+    "export": "Exporter",
+    "delete": "Supprimer",
+    "label": "Albums sonores",
+    "emptyState": {
+      "noAlbum": "Aucun album sonore"
+    },
+    "notify": {
+      "deleteSuccess": "Album supprimé avec succès",
+      "deleteFailed": "Échec de la suppression",
+      "importSuccess": "Album importé avec succès",
+      "importFailed": "Échec de l'importation",
+      "exportSuccess": "Album exporté avec succès",
+      "exportFailed": "Échec de l'exportation",
+      "invalidFormat": "Veuillez sélectionner un fichier au format .ktalbum",
+      "refreshFailed": "Album remplacé, mais l'actualisation a échoué. Veuillez actualiser manuellement",
+      "importOverwriteSuccess": "Album remplacé avec succès",
+      "importSaveAsNewSuccess": "Album enregistré comme nouvel album",
+      "fileDescription": "Fichier d'album KeyTone"
+    },
+    "importDialog": {
+      "title": "Importer un album",
+      "message": "Un album identique existe déjà. Veuillez choisir une action :",
+      "overwrite": "Remplacer l'album existant",
+      "saveAsNew": "Enregistrer comme nouvel album",
+      "cancel": "Annuler l'importation",
+      "confirm": "Confirmer"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Créer un nouvel album sonore",
+      "name": {
+        "name": "Nom de l'album sonore",
+        "defaultValue": "Nouvel album sonore",
+        "errorMessage": "Vous devez nommer votre album sonore"
+      }
+    },
+    "or": "ou",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "continue": "Continuer",
+    "back": "Retour",
+    "confirmEdit": "Confirmer les modifications",
+    "delete": "Supprimer",
+    "playMode": {
+      "single": "Unique",
+      "random": "Aléatoire",
+      "loop": "Séquentiel"
+    },
+    "options": {
+      "audioFile": "Fichier audio source",
+      "sound": "Segments sonores prédéfinis",
+      "keySound": "Sons de touche premium",
+
+      "audioFile_0": "Fichier audio",
+      "sound_0": "Segment sonore",
+      "keySound_0": "Son de touche premium"
+    },
+    "notify": {
+      "deleteSuccess": "Suppression réussie",
+      "deleteFailed": "Échec de la suppression",
+      "addSuccess": "Ajout réussi",
+      "addFailed": "Échec de l'ajout",
+      "saveSuccess": "Enregistrement réussi",
+      "modifySuccess": "Modification réussie",
+      "modifyFailed": "Échec de la modification",
+      "noFilesToManage": "Aucun fichier source à gérer",
+      "noSoundsToEdit": "Aucun son à modifier",
+      "noKeySoundsToEdit": "Aucun son de touche premium à modifier",
+      "selectSoundEffect": "Veuillez sélectionner un effet sonore",
+      "selectSoundEffectForKeys": "Veuillez sélectionner un effet sonore pour les touches {keys}",
+      "deleteSuccessForKeys": "Effet sonore pour les touches {keys} supprimé avec succès",
+      "configSuccess": "Configuration enregistrée avec succès",
+      "selectKey": "Veuillez sélectionner une touche",
+      "confirmDeleteSingleKeyEffect": "Voulez-vous vraiment supprimer cette configuration d'effet sonore?",
+      "confirmDeleteSingleKeyEffectMessage": "Dans votre configuration actuelle, les effets d'appui et de relâchement sont vides, cette modification équivaut donc à une suppression",
+      "noChangesDetected": "Aucune modification détectée",
+      "selectSourceFile": "Veuillez sélectionner un fichier source",
+      "endTimeGreaterThanStartTime": "Le temps de fin doit être supérieur au temps de début",
+      "selectAudioFile": "Veuillez d'abord sélectionner un fichier audio source",
+      "timeValueCannotBeNegative": "La valeur de temps ne peut pas être négative",
+      "playFailed": "Échec de la lecture",
+      "downSoundInvalid": "Échec : le 'son d'appui' ne répond pas aux exigences",
+      "upSoundInvalid": "Échec : le 'son de relâchement' ne répond pas aux exigences",
+      "unifiedSoundEffectConfigFailed": "Échec de la configuration de l'effet sonore global",
+      "keyAlreadySelected": "La touche enregistrée est déjà dans la zone de sélection",
+      "noSoundEffectSelected": "Aucune configuration d'effet sonore individuel n'a été effectuée",
+      "singleKeySoundEffectConfigFailed": "Échec de la configuration de l'effet sonore pour la touche {key}",
+      "singleKeySoundEffectConfigError": "Erreur lors de la configuration de l'effet sonore pour la touche {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Seule une partie des configurations d'effets sonores a réussi",
+      "configFileReadFailed": "Échec de lecture du fichier de configuration de l'album sonore"
+    },
+    "loadAudioFile": {
+      "title": "Charger des fichiers audio",
+      "description": "Chargez des fichiers audio originaux pour l'album actuel à utiliser dans les étapes suivantes",
+      "addNewFile": "Ajouter un nouveau fichier audio source",
+      "addNewFile_1": "Charger un nouveau fichier audio source",
+      "dragAndDrop": "Cliquez pour sélectionner ou glissez-déposez les fichiers ici",
+      "audioFile": "Fichier audio source",
+      "supportedFormats": "Formats WAV, MP3, OGG pris en charge",
+      "addAsNeeded": "Ajoutez autant que nécessaire selon vos préférences",
+      "confirmAdd": "Confirmer l'ajout",
+      "manageExistingFiles": "Gérer les fichiers déjà chargés",
+      "selectFileToManage": "Sélectionnez un fichier à gérer",
+      "emptyFileName": "Un nom de fichier vide peut augmenter les coûts de gestion ultérieurs",
+      "renameFile": "Nom du fichier (modifiable)"
+    },
+    "defineSounds": {
+      "title": "Définir et découper les sons",
+      "description": "Découpez et définissez les sons nécessaires à partir des fichiers audio originaux chargés",
+      "createNewSound": "Créer un nouveau son",
+      "soundName": "Nommer le son (facultatif)",
+      "sourceFile": "Fichier audio source",
+      "cropSound": "Découpez et définissez le son dont vous avez besoin à partir du fichier audio source",
+      "startTime": "Temps de début (ms)",
+      "endTime": "Temps de fin (ms)",
+      "volume": "Volume sonore",
+      "error": {
+        "negativeTime": "Le temps ne peut pas être négatif"
+      },
+      "previewSound": "Prévisualiser le son",
+      "confirmAdd": "Confirmer l'ajout",
+      "editExistingSound": "Modifier un son existant",
+      "selectSoundToManage": "Sélectionnez un son à gérer",
+      "tooltip": {
+        "noImpactOnSource": "Les sons créés à cette étape n'affecteront pas les fichiers sources",
+        "multipleSoundsFromSameSource": "Vous pouvez découper et définir plusieurs sons indépendants à partir du même fichier source",
+        "soundName": "Nom du son",
+        "soundDuration": "Temps de début et de fin du son, en millisecondes. Comme il sera utilisé pour les touches, la durée ne devrait pas être trop longue.",
+        "volume": "0 est le volume original, supérieur à 0 augmente le volume, inférieur à 0 diminue le volume. La progression habituelle est de 0.1",
+        "volume_1": "Vous pouvez également saisir manuellement des valeurs plus précises, comme 0.0001. Prévisualisez après chaque ajustement pour éviter un volume trop faible ou trop élevé.",
+        "previewSound": "Les sons de touche sont généralement courts, donc les prévisualisations consécutives se joueront simultanément sans barre de progression ni bouton d'arrêt (redémarrez l'application si nécessaire pour arrêter). Suivez donc les principes de définition des sons."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Créer des sons de touche premium",
+      "description": "Les sons de touche sont les sons émis par les touches. Cette étape permet de créer des sons de touche à partir des sons prédéfinis.",
+      "newKeySound": "Créer un nouveau son de touche premium",
+      "keySoundName": "Nom du son de touche premium",
+      "keySoundName-placeholder": "Nouveau son de touche premium",
+      "configureDownSound": "Configurer le son d'appui",
+      "configureUpSound": "Configurer le son de relâchement",
+      "selectPlayMode": "Sélectionner le mode de lecture",
+      "selectSounds": "Sélectionner les sons (multiple)",
+      "error": {
+        "singleMode": "En mode unique, sélectionnez au maximum un son"
+      },
+      "confirmAdd": "Confirmer l'ajout",
+      "tooltip": {
+        "description_0": "En théorie, chaque son de touche devrait inclure un son d'appui et de relâchement.",
+        "description_1": "Vous devez les définir séparément, mais ce n'est pas obligatoire.",
+        "description_2": "Les sons d'appui et de relâchement peuvent être définis selon vos besoins.",
+        "description_3": "Vous pouvez définir les deux, un seul, ou aucun.",
+        "audioFile": "Activer/désactiver les fichiers audio sources",
+        "soundList": "Activer/désactiver les segments sonores prédéfinis",
+        "keySounds": "Activer/désactiver les sons de touche premium",
+        "inheritKeySound": "Cette option permet d'hériter d'autres sons de touche premium",
+        "inheritRule": "Principe : appui hérite de l'appui, relâchement hérite du relâchement"
+      },
+      "editExistingKeySound": "Modifier un son de touche premium existant",
+      "selectKeySoundToEdit": "Sélectionnez un son de touche premium à modifier"
+    },
+    "linkageEffects": {
+      "title": "Effets sonores liés aux touches",
+      "description": "Configurez des effets sonores liés aux touches, qui jouent automatiquement lorsque vous appuyez ou relâchez une touche.",
+      "enableTestSound": "Activer le son de test intégré",
+      "downTestSound": "Son de test d'appui",
+      "upTestSound": "Son de test de relâchement",
+      "globalSettings": "Paramètres d'effets globaux",
+      "singleKeySettings": "Paramètres d'effets par touche",
+      "global": {
+        "description": "Configurez des effets sonores uniformes pour toutes les touches sans spécifier de touches particulières.",
+        "setKeyDownSound": "Configurer l'effet sonore global d'appui",
+        "setKeyUpSound": "Configurer l'effet sonore global de relâchement"
+      },
+      "single": {
+        "description": "Spécifiez une ou plusieurs touches pour configurer des effets sonores indépendants localement.",
+        "addSingleKeyEffect": "Ajouter rapidement un effet de touche individuelle",
+        "dialog": {
+          "selectKeyAndEffect": "Veuillez sélectionner une touche et l'effet sonore correspondant.",
+          "selectSingleKey": "Sélectionner des touches individuelles (nombre quelconque)",
+          "selectSingleKey-placeholder_record": "Tapez ici pour enregistrer une touche",
+          "selectSingleKey-placeholder_search": "Tapez ici pour rechercher une touche",
+          "downSoundEffect": "Effet sonore d'appui",
+          "upSoundEffect": "Effet sonore de relâchement",
+          "setDownSoundEffect": "Configurer l'effet sonore d'appui",
+          "setUpSoundEffect": "Configurer l'effet sonore de relâchement",
+          "noSingleKeyEffects": "Aucune touche avec des effets individuels configurés pour le moment",
+          "singleKeyEffects": "Touches avec des effets individuels configurés",
+          "clickToView": " Cliquez pour voir l'effet",
+          "editSingleKey": "Modifier une touche individuelle",
+          "soundEffect": "effet sonore de",
+          "soundEffect-down": "effet sonore d'appui de",
+          "soundEffect-up": "effet sonore de relâchement de"
+        }
+      },
+      "confirm": "Confirmer",
+      "tooltips": {
+        "description": "Les \"fichiers audio\", \"sons prédéfinis\" et \"sons de touche premium\" peuvent tous être utilisés comme effets sonores liés aux touches.",
+        "testSound": "KeyTone intègre des effets sonores de test pour toutes les touches,\npermettant aux utilisateurs de vérifier si le logiciel fonctionne correctement.\nActivé par défaut, peut être désactivé manuellement si nécessaire.\nPriorité de lecture inférieure aux paramètres d'effets globaux/individuels.",
+        "globalPriority": "Priorité de lecture supérieure au son de test intégré, mais inférieure aux effets de touches individuelles",
+        "singleKeyPriority": "Priorité de lecture supérieure aux effets globaux et au son de test intégré",
+        "ultimateKeySound": {
+          "title": "Sons de touche premium",
+          "anchored": "(Ancré)",
+          "unanchored": "(Désancré)",
+          "tooltip": "Cet ancrage n'agit que lorsqu'un son de touche premium est défini comme effet"
+        },
+        "audioFile": "Permet d'utiliser des fichiers audio sources comme effets",
+        "soundList": "Permet d'utiliser des segments sonores prédéfinis comme effets",
+        "keySounds": "Permet d'utiliser des sons de touche premium comme effets\nSi cette option est cochée, la fonction d'ancrage pour sons de touche premium est automatiquement fournie\nCette fonction vise à faciliter votre utilisation, vous pouvez aussi désancrer pour définir les effets plus librement",
+        "fastDelete": "Vous pouvez également utiliser des configurations vides d'effets d'appui/relâchement pour supprimer rapidement en masse des touches.",
+        "stopRecording": "Arrêter l'enregistrement de touche",
+        "startRecording": "Commencer l'enregistrement de touche",
+        "save": "Enregistrer le contenu actuellement édité",
+        "delete": "Supprimer les effets d'appui et de relâchement de la touche actuelle"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Paramètres",
+    "language": {
+      "index": "Langue",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Démarrage et démarrage automatique",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Masquer la fenêtre au démarrage",
+        "caption": "Réduire l'application dans la barre d'état système au démarrage"
+      },
+      "自动启动": {
+        "index": "Démarrage automatique",
+        "appxIndex": "Activé par défaut pour la version Microsoft Store",
+        "caption": "Démarrer automatiquement l'application au démarrage de l'ordinateur",
+        "appxCaption": "Peut être désactivé dans les paramètres système 'Applications' > 'Démarrage'"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Masquer la fenêtre au démarrage automatique",
+        "caption": "Réduire l'application dans la barre d'état système lors du démarrage automatique"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Ajustement du volume original",
+        "caption": "Augmente/réduit algorithmiquement le volume par défaut des fichiers audio originaux. Remarque : l'ajustement ne doit pas être excessif, un ajustement modéré est recommandé pour éviter d'altérer la qualité audio originale"
+      },
+      "重置": "Réinitialiser",
+      "音量": "Volume",
+      "AmplifyLimit": {
+        "index": "Limite d'amplification",
+        "rulesErrorInfo": "La valeur doit être supérieure à 0 et inférieure à 100 000 000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Page principale", "caption": "Personnaliser les fonctionnalités de la page principale" },
+      "音量降幅": {
+        "index": "Réduction du volume",
+        "rulesErrorInfo": "La valeur doit être supérieure ou égale à 5 et inférieure à 100 000 000"
+      },
+      "重置": "Réinitialiser",
+      "音量调试滑块": { "index": "Curseur de débogage du volume", "caption": "Lorsqu'activé, affiche un curseur de débogage du volume supplémentaire sous la barre de progression du volume de la page principale" }
+    }
+  },
+  "language": {
+    "setting language": "Réglage de la langue/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Tentative de récupération du fichier de configuration...",
+    "获取配置文件失败": "Échec de la récupération du fichier de configuration",
+    "配置文件获取成功, 正在读取配置": "Fichier de configuration récupéré avec succès, lecture de la configuration...",
+    "配置读取成功": "Configuration lue avec succès",
+    "配置文件读取失败,请重启应用": "Échec de lecture du fichier de configuration, veuillez redémarrer l'application",
+    "功能正在开发中": "Fonctionnalité en cours de développement",
+    "音量0%时无法打开声音": "Impossible d'activer le son lorsque le volume est à 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Afficher",
+      "quit": "Quitter",
+      "mute": "Muet",
+      "unmute": "Activer le son"
+    }
+  }
+} 
