@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "キーサウンドアルバム",
     "copyright": "著作権 © 2024-",
     "license": "ライセンス",
+    "licenseText": "KeyToneは{license}のもとで公開されています",
     "privacyPolicy": "プライバシーポリシー",
     "userAgreement": "利用規約",
     "emptyState": {

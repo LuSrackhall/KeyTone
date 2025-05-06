@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "키톤 앨범",
     "copyright": "저작권 © 2024-",
     "license": "라이선스",
+    "licenseText": "KeyTone은 {license} 하에 배포됩니다",
     "privacyPolicy": "개인정보 처리방침",
     "userAgreement": "이용약관",
     "emptyState": {

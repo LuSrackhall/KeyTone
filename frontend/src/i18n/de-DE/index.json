@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "Tastensound-Album",
     "copyright": "Copyright © 2024-",
     "license": "Lizenz",
+    "licenseText": "KeyTone wird unter der {license} veröffentlicht",
     "privacyPolicy": "Datenschutz",
     "userAgreement": "Nutzungsvereinbarung",
     "emptyState": {

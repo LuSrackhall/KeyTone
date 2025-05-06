@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "Key sound album",
     "copyright": "Copyright © 2024-",
     "license": "License",
+    "licenseText": "KeyTone is released under the {license}",
     "privacyPolicy": "Privacy Policy",
     "userAgreement": "User Agreement",
     "emptyState": {

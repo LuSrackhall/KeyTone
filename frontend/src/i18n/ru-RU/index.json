@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "Альбом звуков клавиш",
     "copyright": "Авторское право © 2024-",
     "license": "Лицензионное соглашение",
+    "licenseText": "KeyTone распространяется под лицензией {license}",
     "privacyPolicy": "Политика конфиденциальности",
     "userAgreement": "Пользовательское соглашение",
     "emptyState": {

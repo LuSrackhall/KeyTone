@@ -177,35 +177,20 @@
           LuSrackhall
         </div>
       </div>
-      <div v-if="$t('mainHome.license') === 'License'" class="flex justify-center items-center">
-        <!-- 关于许可协议的描述,
-             * 没加the可在此链接参考https://www.kernel.org/doc/html/latest/process/license-rules.html#:~:text=Module%20is%20licensed%20under%20GPL%20version%202
-             * 加the的可在此链接参考https://projects.blender.org/blender/blender?utm_medium=www-footer#:~:text=is%20licensed%20under%20the%20GNU%20General%20Public%20License%2C%20Version%203.
-             * 使用released的链接参考https://www.blender.org/about/license/#:~:text=Blender%20is%20released%20under%20the%20GNU%20General%20Public%20License%20(GPL%2C%20or%20%E2%80%9Cfree%20software%E2%80%9D).
-             总结,
-             * 是否加the并不影响含义和语法。
-             * 源码文档处声明尽量使用licensed, 软件下载网站页面和软件本身的ui界面中尽量使用released。
-         -->
-        KeyTone is released under the&nbsp;
-        <div
-          class="cursor-pointer hover:bg-gray-100"
-          @click="openExternal('https://choosealicense.com/licenses/gpl-3.0/')"
-        >
-          GNU GPLv3
-        </div>
-      </div>
-      <div v-else class="flex justify-center items-center">
-        <!-- 此时相当于 v-if="$t('mainHome.license') === '许可协议'" -->
-        <!-- 关于许可协议的描述, 可以在此链接参考https://www.kernel.org/doc/html/latest/translations/zh_CN/process/license-rules.html#:~:text=%E2%80%9CGPL%E2%80%9D-,%E6%A8%A1%E5%9D%97%E6%98%AF%E6%A0%B9%E6%8D%AEGPL%E7%89%88%E6%9C%AC2%E8%AE%B8%E5%8F%AF%E7%9A%84,-%E3%80%82%E8%BF%99%E5%B9%B6%E4%B8%8D%E8%A1%A8%E7%A4%BA -->
-        <!-- 总之可在 '根据'  `基于`  `遵循` 等三个词语中选择 -->
-        KeyTone 根据&nbsp;
-        <div
-          class="cursor-pointer hover:bg-gray-100"
-          @click="openExternal('https://choosealicense.com/licenses/gpl-3.0/')"
-        >
-          GNU GPLv3
-        </div>
-        &nbsp;许可证发布
+      <div class="flex justify-center items-center">
+        <!-- Using i18n component with license slot interpolation -->
+        <i18n-t keypath="mainHome.licenseText" tag="div" class="flex justify-center items-center">
+          <template #license>
+            &nbsp;
+            <div
+              class="cursor-pointer hover:bg-gray-100"
+              @click="openExternal('https://choosealicense.com/licenses/gpl-3.0/')"
+            >
+              GNU GPLv3
+            </div>
+            &nbsp;
+          </template>
+        </i18n-t>
       </div>
     </div>
     <div

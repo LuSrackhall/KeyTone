@@ -15,6 +15,7 @@
     "selectedKeySoundAlbum": "键音专辑",
     "copyright": "版权所有 © 2024-",
     "license": "许可协议",
+    "licenseText": "KeyTone 根据 {license} 许可证发布",
     "privacyPolicy": "隐私政策",
     "userAgreement": "用户协议",
     "emptyState": {
