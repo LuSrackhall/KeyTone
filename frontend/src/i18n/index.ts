@@ -13,6 +13,8 @@ import ruRU from './ru-RU/index.json';
 import frFR from './fr-FR/index.json';
 import itIT from './it-IT/index.json';
 import esES from './es-ES/index.json';
+import ptPT from './pt-PT/index.json';
+import ptBR from './pt-BR/index.json';
 
 // 一下键值对中的key的名称, 以quasar框架(或其它的项目框架)的语言本地化api的列表为准。(如quasar的列表默认值的参考链接https://github.com/quasarframework/quasar/tree/dev/ui/lang)
 export default {
@@ -29,4 +31,6 @@ export default {
   fr: frFR,
   it: itIT,
   es: esES,
+  pt: ptPT,
+  'pt-BR': ptBR,
 };

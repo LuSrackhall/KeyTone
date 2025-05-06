@@ -1,0 +1,318 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Criador",
+    "setting": {
+      "index": "Configurações",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Álbum de Sons de Teclas",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Álbum de Sons de Teclas",
+    "copyright": "Direitos autorais © 2024-",
+    "license": "Licença",
+    "licenseText": "KeyTone é disponibilizado sob a licença {license}",
+    "privacyPolicy": "Política de Privacidade",
+    "userAgreement": "Acordo de Usuário",
+    "emptyState": {
+      "noAlbum": "Sem álbuns de sons de teclas",
+      "goToAlbumPage": "Ir para a página de álbuns",
+      "createOrImportTip": "Antes de começar, crie ou importe um álbum de sons de teclas"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Novo Álbum",
+    "import": "Importar Álbum",
+    "export": "Exportar Álbum",
+    "delete": "Excluir Álbum",
+    "label": "Álbuns de Sons de Teclas",
+    "emptyState": {
+      "noAlbum": "Sem álbuns de sons de teclas"
+    },
+    "notify": {
+      "deleteSuccess": "Álbum excluído com sucesso",
+      "deleteFailed": "Falha ao excluir álbum",
+      "importSuccess": "Álbum importado com sucesso",
+      "importFailed": "Falha ao importar álbum",
+      "exportSuccess": "Álbum exportado com sucesso",
+      "exportFailed": "Falha ao exportar álbum",
+      "invalidFormat": "Por favor, selecione um arquivo de álbum no formato .ktalbum",
+      "refreshFailed": "Álbum substituído, mas falha na atualização. Por favor, atualize manualmente",
+      "importOverwriteSuccess": "Álbum sobrescrito com sucesso",
+      "importSaveAsNewSuccess": "Álbum salvo como novo álbum",
+      "fileDescription": "Arquivo de Álbum KeyTone"
+    },
+    "importDialog": {
+      "title": "Importar Álbum",
+      "message": "Já existe um álbum idêntico. Selecione uma opção:",
+      "overwrite": "Substituir álbum existente",
+      "saveAsNew": "Salvar como novo álbum",
+      "cancel": "Cancelar importação",
+      "confirm": "Confirmar"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Criar novo álbum de sons de teclas",
+      "name": {
+        "name": "Nome do álbum de sons de teclas",
+        "defaultValue": "Novo álbum de sons de teclas",
+        "errorMessage": "Você deve atribuir um nome ao álbum de sons de teclas"
+      }
+    },
+    "or": "ou",
+    "close": "Fechar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "continue": "Continuar",
+    "back": "Voltar",
+    "confirmEdit": "Confirmar Edição",
+    "delete": "Excluir",
+    "playMode": {
+      "single": "Individual",
+      "random": "Aleatório",
+      "loop": "Sequencial"
+    },
+    "options": {
+      "audioFile": "Arquivo de áudio original",
+      "sound": "Segmento de som predefinido",
+      "keySound": "Som de tecla premium",
+
+      "audioFile_0": "Arquivo de áudio",
+      "sound_0": "Segmento de som",
+      "keySound_0": "Som de tecla premium"
+    },
+    "notify": {
+      "deleteSuccess": "Excluído com sucesso",
+      "deleteFailed": "Falha ao excluir",
+      "addSuccess": "Adicionado com sucesso",
+      "addFailed": "Falha ao adicionar",
+      "saveSuccess": "Salvo com sucesso",
+      "modifySuccess": "Modificado com sucesso",
+      "modifyFailed": "Falha ao modificar",
+      "noFilesToManage": "Não existem arquivos originais para gerenciar",
+      "noSoundsToEdit": "Não existem sons para editar",
+      "noKeySoundsToEdit": "Não existem sons de teclas premium para editar",
+      "selectSoundEffect": "Por favor, selecione um efeito sonoro",
+      "selectSoundEffectForKeys": "Por favor, selecione um efeito sonoro para as teclas {keys}",
+      "deleteSuccessForKeys": "Efeitos sonoros para as teclas {keys} excluídos com sucesso",
+      "configSuccess": "Configuração salva com sucesso",
+      "selectKey": "Por favor, selecione uma tecla",
+      "confirmDeleteSingleKeyEffect": "Você tem certeza que deseja excluir esta configuração de efeito sonoro para esta tecla?",
+      "confirmDeleteSingleKeyEffectMessage": "Na sua configuração atual, os efeitos de pressionar e soltar estão vazios, esta alteração equivale a excluir",
+      "noChangesDetected": "Nenhuma alteração detectada",
+      "selectSourceFile": "Por favor, selecione um arquivo de origem",
+      "endTimeGreaterThanStartTime": "O tempo final deve ser maior que o tempo inicial",
+      "selectAudioFile": "Por favor, selecione primeiro um arquivo de áudio original",
+      "timeValueCannotBeNegative": "O valor do tempo não pode ser negativo",
+      "playFailed": "Falha na reprodução",
+      "downSoundInvalid": "Falha: 'Som de pressionar' não atende aos requisitos",
+      "upSoundInvalid": "Falha: 'Som de soltar' não atende aos requisitos",
+      "unifiedSoundEffectConfigFailed": "Falha na configuração do efeito sonoro para todas as teclas",
+      "keyAlreadySelected": "A tecla gravada já está na caixa de seleção",
+      "noSoundEffectSelected": "Nenhuma configuração de efeito sonoro de tecla única foi feita",
+      "singleKeySoundEffectConfigFailed": "Falha na configuração do efeito sonoro para a tecla {key}",
+      "singleKeySoundEffectConfigError": "Erro ao configurar o efeito sonoro para a tecla {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Apenas configurações parciais de efeitos sonoros de teclas individuais foram bem-sucedidas",
+      "configFileReadFailed": "Falha ao ler o arquivo de configuração do álbum de sons de teclas"
+    },
+    "loadAudioFile": {
+      "title": "Carregar Arquivo de Áudio",
+      "description": "Carregue arquivos de áudio originais para o álbum atual para utilização em passos posteriores",
+      "addNewFile": "Adicionar novo arquivo de áudio original",
+      "addNewFile_1": "Carregar novo arquivo de áudio original",
+      "dragAndDrop": "Clique para selecionar ou arraste e solte arquivos aqui",
+      "audioFile": "Arquivo de áudio original",
+      "supportedFormats": "Formatos suportados: WAV, MP3, OGG",
+      "addAsNeeded": "Adicione quantos forem necessários conforme sua preferência",
+      "confirmAdd": "Confirmar adição",
+      "manageExistingFiles": "Gerenciar arquivos já carregados",
+      "selectFileToManage": "Selecione o arquivo para gerenciar",
+      "emptyFileName": "Um nome de arquivo vazio pode aumentar o custo de gerenciamento subsequente",
+      "renameFile": "Nome do arquivo (editável)"
+    },
+    "defineSounds": {
+      "title": "Definir e Recortar Sons",
+      "description": "Recortar e definir sons necessários a partir dos arquivos de áudio originais",
+      "createNewSound": "Criar novo som",
+      "soundName": "Nome do som (opcional)",
+      "sourceFile": "Arquivo de áudio original",
+      "cropSound": "Recortar e definir os sons necessários a partir do arquivo de áudio original",
+      "startTime": "Tempo inicial (milissegundos)",
+      "endTime": "Tempo final (milissegundos)",
+      "volume": "Volume do som",
+      "error": {
+        "negativeTime": "O tempo não pode ser negativo"
+      },
+      "previewSound": "Pré-visualizar som",
+      "confirmAdd": "Confirmar adição",
+      "editExistingSound": "Editar som existente",
+      "selectSoundToManage": "Selecione o som para gerenciar",
+      "tooltip": {
+        "noImpactOnSource": "Os sons criados nesta etapa não afetam os arquivos de áudio originais",
+        "multipleSoundsFromSameSource": "Você pode recortar e definir múltiplos sons independentes a partir do mesmo arquivo de áudio original",
+        "soundName": "Nome do som",
+        "soundDuration": "Tempo inicial e final do som em milissegundos. Como será utilizado para teclas, o tempo não deve ser muito longo.",
+        "volume": "0 para volume original, maior que 0 para aumentar, menor que 0 para diminuir. O incremento comum é 0,1",
+        "volume_1": "Também pode inserir manualmente para ajustes mais precisos, como 0,0001. Por favor, pré-visualize após cada ajuste de volume para verificar o efeito, evitando volume muito alto ou muito baixo.",
+        "previewSound": "Os sons para teclas geralmente são curtos, portanto, as pré-visualizações contínuas serão reproduzidas simultaneamente, sem barra de progresso ou botão de parar (se necessário, reinicie a aplicação para parar). Siga os princípios de definição de som."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Criar Sons de Teclas Premium",
+      "description": "Os sons de teclas são os sons produzidos ao pressionar teclas. Esta etapa cria sons de teclas baseados nos sons recortados e definidos.",
+      "newKeySound": "Criar novo som de tecla premium",
+      "keySoundName": "Nome do som de tecla premium",
+      "keySoundName-placeholder": "Novo som de tecla premium",
+      "configureDownSound": "Configurar som de pressionar",
+      "configureUpSound": "Configurar som de soltar",
+      "selectPlayMode": "Selecionar modo de reprodução",
+      "selectSounds": "Selecionar sons (múltipla escolha)",
+      "error": {
+        "singleMode": "No modo individual, selecione no máximo um som"
+      },
+      "confirmAdd": "Confirmar adição",
+      "tooltip": {
+        "description_0": "Teoricamente, cada som de tecla deve incluir sons de pressionar e soltar.",
+        "description_1": "Eles devem ser definidos separadamente durante a criação, mas isto não é obrigatório.",
+        "description_2": "Os sons de pressionar e soltar podem ser definidos seletivamente conforme necessário.",
+        "description_3": "Você pode definir ambos, apenas um deles, ou nenhum.",
+        "audioFile": "Ativar/Desativar arquivos de áudio originais",
+        "soundList": "Ativar/Desativar segmentos de som predefinidos",
+        "keySounds": "Ativar/Desativar sons de teclas premium",
+        "inheritKeySound": "Esta opção permite herdar de outros sons de teclas premium",
+        "inheritRule": "Princípio: pressionar herda pressionar, soltar herda soltar"
+      },
+      "editExistingKeySound": "Editar som de tecla premium existente",
+      "selectKeySoundToEdit": "Selecione o som de tecla premium para editar"
+    },
+    "linkageEffects": {
+      "title": "Efeitos Sonoros de Teclas",
+      "description": "Configurar efeitos sonoros para teclas, reproduzindo automaticamente efeitos predefinidos ao pressionar ou soltar teclas.",
+      "enableTestSound": "Ativar som de teste integrado",
+      "downTestSound": "Som de teste ao pressionar",
+      "upTestSound": "Som de teste ao soltar",
+      "globalSettings": "Configurações para todas as teclas",
+      "singleKeySettings": "Configurações para teclas individuais",
+      "global": {
+        "description": "Configure efeitos sonoros globais unificados sem especificar teclas.",
+        "setKeyDownSound": "Definir efeito sonoro de pressionar para todas as teclas",
+        "setKeyUpSound": "Definir efeito sonoro de soltar para todas as teclas"
+      },
+      "single": {
+        "description": "Especifique uma ou várias teclas para configurações de efeitos sonoros independentes.",
+        "addSingleKeyEffect": "Adicionar rapidamente efeito para tecla individual",
+        "dialog": {
+          "selectKeyAndEffect": "Selecione a tecla e a configuração do efeito sonoro correspondente.",
+          "selectSingleKey": "Selecione a tecla individual (qualquer quantidade)",
+          "selectSingleKey-placeholder_record": "Digite aqui para gravar tecla individual",
+          "selectSingleKey-placeholder_search": "Digite aqui para procurar tecla individual",
+          "downSoundEffect": "Efeito sonoro ao pressionar",
+          "upSoundEffect": "Efeito sonoro ao soltar",
+          "setDownSoundEffect": "Definir efeito sonoro ao pressionar",
+          "setUpSoundEffect": "Definir efeito sonoro ao soltar",
+          "noSingleKeyEffects": "Atualmente não há teclas com efeitos sonoros configurados",
+          "singleKeyEffects": "Teclas com efeitos sonoros configurados",
+          "clickToView": " Clique para visualizar efeito",
+          "editSingleKey": "Editar tecla individual",
+          "soundEffect": "efeito sonoro",
+          "soundEffect-down": "efeito sonoro ao pressionar",
+          "soundEffect-up": "efeito sonoro ao soltar"
+        }
+      },
+      "confirm": "Confirmar",
+      "tooltips": {
+        "description": "\"Arquivos de áudio\", \"Sons predefinidos\" e \"Sons de teclas premium\" podem ser usados como efeitos sonoros para teclas.",
+        "testSound": "O KeyTone tem efeitos sonoros de teste integrados para todas as teclas,\npermitindo aos usuários verificar se o software está funcionando corretamente.\nAtivado por padrão, pode ser desativado manualmente se necessário.\nPrioridade de reprodução inferior às configurações de efeitos sonoros globais/individuais.",
+        "globalPriority": "Prioridade de reprodução superior aos sons de teste integrados, mas inferior aos efeitos de teclas individuais",
+        "singleKeyPriority": "Prioridade de reprodução superior aos efeitos sonoros globais e sons de teste integrados",
+        "ultimateKeySound": {
+          "title": "Som de tecla premium",
+          "anchored": "(Ancorado)",
+          "unanchored": "(Desancorado)",
+          "tooltip": "Esta ancoragem só funciona ao definir um som de tecla premium como efeito sonoro"
+        },
+        "audioFile": "Suporta definir arquivos de áudio originais como efeitos sonoros",
+        "soundList": "Suporta definir segmentos de som predefinidos como efeitos sonoros",
+        "keySounds": "Suporta definir sons de teclas premium como efeitos sonoros\nSe esta opção estiver marcada, fornece automaticamente funcionalidade de ancoragem para sons de teclas premium\nEsta funcionalidade destina-se a facilitar sua operação, você também pode desancorar para definir efeitos sonoros mais livremente",
+        "fastDelete": "Também pode utilizar configurações vazias de pressionar/soltar para excluir rapidamente teclas em massa.",
+        "stopRecording": "Parar gravação de tecla individual",
+        "startRecording": "Iniciar gravação de tecla individual",
+        "save": "Salvar o conteúdo da edição atual",
+        "delete": "Excluir os efeitos sonoros de pressionar e soltar para a tecla atual"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Configurações",
+    "language": {
+      "index": "Idioma",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Inicialização e Inicialização Automática",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Ocultar janela ao iniciar",
+        "caption": "Minimizar para a bandeja do sistema ao abrir o aplicativo"
+      },
+      "自动启动": {
+        "index": "Inicialização automática",
+        "appxIndex": "Ativado por padrão para a versão da Microsoft Store",
+        "caption": "Iniciar automaticamente este aplicativo quando o computador inicia",
+        "appxCaption": "Pode ser desativado em 'Configurações'>'Aplicativos'>'Inicialização' do sistema"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Ocultar janela na inicialização automática",
+        "caption": "Minimizar para a bandeja do sistema quando o aplicativo inicia automaticamente na inicialização do computador"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Ajuste de Volume Original",
+        "caption": "Aumentar/diminuir algoritmicamente o volume padrão dos arquivos de áudio originais. Nota: O ajuste não deve ser excessivo, apenas moderado, caso contrário pode degradar a qualidade de áudio original"
+      },
+      "重置": "Redefinir",
+      "音量": "Volume",
+      "AmplifyLimit": {
+        "index": "Limite de amplificação",
+        "rulesErrorInfo": "O valor inserido deve ser maior que 0 e menor que 100.000.000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Página Principal", "caption": "Personalizar configurações relacionadas à página principal" },
+      "音量降幅": {
+        "index": "Redução de volume",
+        "rulesErrorInfo": "O valor inserido deve ser maior ou igual a 5 e menor que 100.000.000"
+      },
+      "重置": "Redefinir",
+      "音量调试滑块": { "index": "Controle deslizante de depuração de volume", "caption": "Quando ativado, exibe um controle deslizante adicional de depuração de volume sob a barra de progresso de volume na página principal" }
+    }
+  },
+  "language": {
+    "setting language": "Definir idioma/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Tentando obter o arquivo de configuração...",
+    "获取配置文件失败": "Falha ao obter o arquivo de configuração",
+    "配置文件获取成功, 正在读取配置": "Arquivo de configuração obtido com sucesso, lendo configurações...",
+    "配置读取成功": "Configurações lidas com sucesso",
+    "配置文件读取失败,请重启应用": "Falha ao ler o arquivo de configuração, reinicie o aplicativo",
+    "功能正在开发中": "Funcionalidade em desenvolvimento",
+    "音量0%时无法打开声音": "Não é possível ativar o som quando o volume está em 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Mostrar",
+      "quit": "Sair",
+      "mute": "Silenciar",
+      "unmute": "Ativar som"
+    }
+  }
+} 

@@ -68,6 +68,8 @@ const localeOptions: Array<LocationOption> = [
   { value: 'fr', label: 'Français' },
   { value: 'it', label: 'Italiano' },
   { value: 'es', label: 'Español' },
+  { value: 'pt', label: 'Português' },
+  { value: 'pt-BR', label: 'Português (Brasil)' },
 ];
 
 /**
