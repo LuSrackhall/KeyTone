@@ -123,8 +123,8 @@
     "loadAudioFile": {
       "title": "Carregar Arquivo de Áudio",
       "description": "Carregue arquivos de áudio originais para o álbum atual para utilização em passos posteriores",
-      "addNewFile": "Adicionar novo arquivo de áudio original",
-      "addNewFile_1": "Carregar novo arquivo de áudio original",
+      "addNewFile": "Novo arquivo de áudio original",
+      "addNewFile_1": "Adicionar novo arquivo de áudio original",
       "dragAndDrop": "Clique para selecionar ou arraste e solte arquivos aqui",
       "audioFile": "Arquivo de áudio original",
       "supportedFormats": "Formatos suportados: WAV, MP3, OGG",
@@ -138,7 +138,7 @@
     "defineSounds": {
       "title": "Definir e Recortar Sons",
       "description": "Recortar e definir sons necessários a partir dos arquivos de áudio originais",
-      "createNewSound": "Criar novo som",
+      "createNewSound": "Criar novo trecho de som",
       "soundName": "Nome do som (opcional)",
       "sourceFile": "Arquivo de áudio original",
       "cropSound": "Recortar e definir os sons necessários a partir do arquivo de áudio original",
@@ -150,7 +150,7 @@
       },
       "previewSound": "Pré-visualizar som",
       "confirmAdd": "Confirmar adição",
-      "editExistingSound": "Editar som existente",
+      "editExistingSound": "Editar trecho de som existente",
       "selectSoundToManage": "Selecione o som para gerenciar",
       "tooltip": {
         "noImpactOnSource": "Os sons criados nesta etapa não afetam os arquivos de áudio originais",
@@ -187,7 +187,7 @@
         "inheritKeySound": "Esta opção permite herdar de outros sons de teclas premium",
         "inheritRule": "Princípio: pressionar herda pressionar, soltar herda soltar"
       },
-      "editExistingKeySound": "Editar som de tecla premium existente",
+      "editExistingKeySound": "Gerenciar sons de teclas premium",
       "selectKeySoundToEdit": "Selecione o som de tecla premium para editar"
     },
     "linkageEffects": {
@@ -196,8 +196,8 @@
       "enableTestSound": "Ativar som de teste integrado",
       "downTestSound": "Som de teste ao pressionar",
       "upTestSound": "Som de teste ao soltar",
-      "globalSettings": "Configurações para todas as teclas",
-      "singleKeySettings": "Configurações para teclas individuais",
+      "globalSettings": "Config. para todas as teclas",
+      "singleKeySettings": "Config. para teclas individuais",
       "global": {
         "description": "Configure efeitos sonoros globais unificados sem especificar teclas.",
         "setKeyDownSound": "Definir efeito sonoro de pressionar para todas as teclas",
@@ -286,13 +286,19 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Página Principal", "caption": "Personalizar configurações relacionadas à página principal" },
+      "mainHome": {
+        "index": "Página Principal",
+        "caption": "Personalizar configurações relacionadas à página principal"
+      },
       "音量降幅": {
         "index": "Redução de volume",
         "rulesErrorInfo": "O valor inserido deve ser maior ou igual a 5 e menor que 100.000.000"
       },
       "重置": "Redefinir",
-      "音量调试滑块": { "index": "Controle deslizante de depuração de volume", "caption": "Quando ativado, exibe um controle deslizante adicional de depuração de volume sob a barra de progresso de volume na página principal" }
+      "音量调试滑块": {
+        "index": "Controle deslizante de depuração de volume",
+        "caption": "Quando ativado, exibe um controle deslizante adicional de depuração de volume sob a barra de progresso de volume na página principal"
+      }
     }
   },
   "language": {
@@ -315,4 +321,4 @@
       "unmute": "Ativar som"
     }
   }
-} 
+}
