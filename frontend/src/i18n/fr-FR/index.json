@@ -123,7 +123,7 @@
     "loadAudioFile": {
       "title": "Charger des fichiers audio",
       "description": "Chargez des fichiers audio originaux pour l'album actuel à utiliser dans les étapes suivantes",
-      "addNewFile": "Ajouter un nouveau fichier audio source",
+      "addNewFile": "Ajouter des fichiers audio sources",
       "addNewFile_1": "Charger un nouveau fichier audio source",
       "dragAndDrop": "Cliquez pour sélectionner ou glissez-déposez les fichiers ici",
       "audioFile": "Fichier audio source",
@@ -292,7 +292,10 @@
         "rulesErrorInfo": "La valeur doit être supérieure ou égale à 5 et inférieure à 100 000 000"
       },
       "重置": "Réinitialiser",
-      "音量调试滑块": { "index": "Curseur de débogage du volume", "caption": "Lorsqu'activé, affiche un curseur de débogage du volume supplémentaire sous la barre de progression du volume de la page principale" }
+      "音量调试滑块": {
+        "index": "Curseur de débogage du volume",
+        "caption": "Lorsqu'activé, affiche un curseur de débogage du volume supplémentaire sous la barre de progression du volume de la page principale"
+      }
     }
   },
   "language": {
@@ -315,4 +318,4 @@
       "unmute": "Activer le son"
     }
   }
-} 
+}
