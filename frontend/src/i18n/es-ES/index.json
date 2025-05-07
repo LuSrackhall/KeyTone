@@ -193,11 +193,11 @@
     "linkageEffects": {
       "title": "Efectos vinculados a teclas",
       "description": "Configura efectos de sonido vinculados a teclas, que se reproducirán automáticamente al pulsar o liberar teclas.",
-      "enableTestSound": "Habilitar sonido de prueba integrado",
-      "downTestSound": "Sonido de prueba para pulsación",
-      "upTestSound": "Sonido de prueba para liberación",
-      "globalSettings": "Configuración global de teclas",
-      "singleKeySettings": "Configuración de teclas individuales",
+      "enableTestSound": "Activar sonidos de prueba",
+      "downTestSound": "Sonido de prueba al pulsar",
+      "upTestSound": "Sonido de prueba al liberar",
+      "globalSettings": "Config. global de teclas",
+      "singleKeySettings": "Config. de teclas individuales",
       "global": {
         "description": "Configura efectos de sonido uniformes globalmente sin especificar teclas.",
         "setKeyDownSound": "Establecer efecto de sonido para pulsación global",
@@ -286,13 +286,19 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Página principal", "caption": "Personalizar la configuración de funciones relacionadas con la página principal" },
+      "mainHome": {
+        "index": "Página principal",
+        "caption": "Personalizar la configuración de funciones relacionadas con la página principal"
+      },
       "音量降幅": {
         "index": "Reducción de volumen",
         "rulesErrorInfo": "El valor debe ser mayor o igual a 5 y menor que 100,000,000"
       },
       "重置": "Restablecer",
-      "音量调试滑块": { "index": "Control deslizante de depuración de volumen", "caption": "Cuando está activado, muestra un control deslizante adicional de depuración de volumen debajo de la barra de progreso de volumen en la página principal" }
+      "音量调试滑块": {
+        "index": "Control deslizante de depuración de volumen",
+        "caption": "Cuando está activado, muestra un control deslizante adicional de depuración de volumen debajo de la barra de progreso de volumen en la página principal"
+      }
     }
   },
   "language": {
@@ -315,4 +321,4 @@
       "unmute": "Activar sonido"
     }
   }
-} 
+}
