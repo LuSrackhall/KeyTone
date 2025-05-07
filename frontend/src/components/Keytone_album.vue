@@ -4987,7 +4987,7 @@ function getMacOSStatus() {
 
 :deep(.q-btn) {
   @apply text-xs;
-  @apply p-2;
+  @apply p-1.5;
   @apply transition-transform hover:scale-105;
   @apply scale-103;
 }
