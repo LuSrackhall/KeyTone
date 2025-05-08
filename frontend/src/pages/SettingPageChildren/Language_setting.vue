@@ -74,6 +74,7 @@ const localeOptions: Array<LocationOption> = [
   { value: 'tr', label: 'Türkçe' },
   { value: 'vi', label: 'Tiếng Việt' },
   { value: 'id', label: 'Bahasa Indonesia' },
+  { value: 'ar', label: 'العربية' },
 ];
 
 /**
