@@ -286,18 +286,18 @@
       }
     },
     "mainHome": {
-      "音量调试滑块": {
-        "index": "Volume Debug slider",
-        "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
+      "mainHome": {
+        "index": "Main page related",
+        "caption": "Customize the related functions on the main page"
       },
-      "重置": "Reset",
       "音量降幅": {
         "index": "Volume decrease range",
         "rulesErrorInfo": "The input value must be greater than or equal to 5 and less than 100,000,000"
       },
-      "mainHome": {
-        "index": "Main page related",
-        "caption": "Customize the related functions on the main page"
+      "重置": "Reset",
+      "音量调试滑块": {
+        "index": "Volume Debug slider",
+        "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
       }
     }
   },

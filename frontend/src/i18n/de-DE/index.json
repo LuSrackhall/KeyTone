@@ -286,18 +286,18 @@
       }
     },
     "mainHome": {
-      "音量调试滑块": {
-        "index": "Lautstärke-Schieberegler",
-        "caption": "Bei Aktivierung wird zusätzlicher Lautstärke-Schieberegler auf der Startseite angezeigt"
+      "mainHome": {
+        "index": "Startseite",
+        "caption": "Funktionen der Startseite anpassen"
       },
-      "重置": "Zurücksetzen",
       "音量降幅": {
         "index": "Lautstärkereduktion",
         "rulesErrorInfo": "Wert muss größer/gleich 5 und kleiner als 100.000.000 sein"
       },
-      "mainHome": {
-        "index": "Startseite",
-        "caption": "Funktionen der Startseite anpassen"
+      "重置": "Zurücksetzen",
+      "音量调试滑块": {
+        "index": "Lautstärke-Schieberegler",
+        "caption": "Bei Aktivierung wird zusätzlicher Lautstärke-Schieberegler auf der Startseite angezeigt"
       }
     }
   },

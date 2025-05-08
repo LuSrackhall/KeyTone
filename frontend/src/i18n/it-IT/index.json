@@ -286,13 +286,19 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Pagina principale", "caption": "Personalizza le funzionalità relative alla pagina principale" },
+      "mainHome": {
+        "index": "Pagina principale",
+        "caption": "Personalizza le funzionalità relative alla pagina principale"
+      },
       "音量降幅": {
         "index": "Riduzione volume",
         "rulesErrorInfo": "Il valore inserito deve essere maggiore o uguale a 5 e minore di 100.000.000"
       },
       "重置": "Ripristina",
-      "音量调试滑块": { "index": "Slider debug volume", "caption": "Quando attivato, mostra uno slider aggiuntivo per il debug del volume sotto la barra di avanzamento del volume nella pagina principale" }
+      "音量调试滑块": {
+        "index": "Slider debug volume",
+        "caption": "Quando attivato, mostra uno slider aggiuntivo per il debug del volume sotto la barra di avanzamento del volume nella pagina principale"
+      }
     }
   },
   "language": {
@@ -315,4 +321,4 @@
       "unmute": "Attiva audio"
     }
   }
-} 
+}

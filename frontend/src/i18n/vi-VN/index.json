@@ -253,46 +253,49 @@
       "index": "Ngôn ngữ",
       "caption": ""
     },
-    "Khởi động và tự động khởi động": {
-      "Khởi động và tự động khởi động": {
+    "启动与自动启动": {
+      "启动与自动启动": {
         "index": "Khởi động và tự động khởi động",
         "caption": ""
       },
-      "Ẩn cửa sổ khi khởi động": {
+      "启动时隐藏窗口": {
         "index": "Ẩn cửa sổ khi khởi động",
         "caption": "Thu nhỏ vào khay hệ thống khi mở ứng dụng"
       },
-      "Tự động khởi động": {
+      "自动启动": {
         "index": "Tự động khởi động",
         "appxIndex": "Phiên bản Microsoft Store mặc định bật tùy chọn này",
         "caption": "Có tự động khởi động ứng dụng khi bật máy tính không",
         "appxCaption": "Có thể tắt trong 'Cài đặt'>'Ứng dụng'>'Khởi động' của hệ thống"
       },
-      "Ẩn cửa sổ khi tự động khởi động": {
+      "自动启动时隐藏窗口": {
         "index": "Ẩn cửa sổ khi tự động khởi động",
         "caption": "Thu nhỏ vào khay hệ thống khi tự động khởi động ứng dụng"
       }
     },
-    "Điều chỉnh âm lượng gốc": {
-      "Điều chỉnh âm lượng gốc": {
+    "原始音量增减调节": {
+      "原始音量增减调节": {
         "index": "Điều chỉnh âm lượng gốc",
         "caption": "Tăng/giảm âm lượng mặc định của file âm thanh gốc bằng thuật toán. Lưu ý: Không nên điều chỉnh quá mức, chỉ nên điều chỉnh vừa phải, nếu không có thể làm hỏng chất lượng âm thanh gốc"
       },
-      "Đặt lại": "Đặt lại",
-      "Âm lượng": "Âm lượng",
+      "重置": "Đặt lại",
+      "音量": "Âm lượng",
       "AmplifyLimit": {
         "index": "Giới hạn tăng",
         "rulesErrorInfo": "Giá trị nhập phải lớn hơn 0 và nhỏ hơn 100,000,000"
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Trang chủ", "caption": "Tùy chỉnh cấu hình các chức năng liên quan trên trang chủ" },
-      "Mức giảm âm lượng": {
+      "mainHome": {
+        "index": "Trang chủ",
+        "caption": "Tùy chỉnh cấu hình các chức năng liên quan trên trang chủ"
+      },
+      "音量降幅": {
         "index": "Mức giảm âm lượng",
         "rulesErrorInfo": "Giá trị nhập phải lớn hơn hoặc bằng 5 và nhỏ hơn 100,000,000"
       },
-      "Đặt lại": "Đặt lại",
-      "Thanh trượt điều chỉnh âm lượng": {
+      "重置": "Đặt lại",
+      "音量调试滑块": {
         "index": "Thanh trượt điều chỉnh âm lượng",
         "caption": "Khi bật, sẽ hiển thị thêm thanh trượt điều chỉnh âm lượng dưới thanh tiến trình âm lượng trên trang chủ"
       }
@@ -302,13 +305,13 @@
     "setting language": "Cài đặt ngôn ngữ/setting language"
   },
   "Notify": {
-    "Đang cố gắng lấy file cấu hình": "Đang cố gắng lấy file cấu hình...",
-    "Lấy file cấu hình thất bại": "Lấy file cấu hình thất bại",
-    "Lấy file cấu hình thành công, đang đọc cấu hình": "Lấy file cấu hình thành công, đang đọc cấu hình...",
-    "Đọc cấu hình thành công": "Đọc cấu hình thành công",
-    "Đọc file cấu hình thất bại, vui lòng khởi động lại ứng dụng": "Đọc file cấu hình thất bại, vui lòng khởi động lại ứng dụng",
-    "Tính năng đang được phát triển": "Tính năng đang được phát triển",
-    "Không thể bật âm thanh khi âm lượng 0%": "Không thể bật âm thanh khi âm lượng 0%"
+    "正在尝试获取配置文件": "Đang cố gắng lấy file cấu hình...",
+    "获取配置文件失败": "Lấy file cấu hình thất bại",
+    "配置文件获取成功, 正在读取配置": "Lấy file cấu hình thành công, đang đọc cấu hình...",
+    "配置读取成功": "Đọc cấu hình thành công",
+    "配置文件读取失败,请重启应用": "Đọc file cấu hình thất bại, vui lòng khởi động lại ứng dụng",
+    "功能正在开发中": "Tính năng đang được phát triển",
+    "音量0%时无法打开声音": "Không thể bật âm thanh khi âm lượng 0%"
   },
   "Electron": {
     "tray": {

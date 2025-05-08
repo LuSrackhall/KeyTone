@@ -286,7 +286,10 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Page principale", "caption": "Personnaliser les fonctionnalités de la page principale" },
+      "mainHome": {
+        "index": "Page principale",
+        "caption": "Personnaliser les fonctionnalités de la page principale"
+      },
       "音量降幅": {
         "index": "Réduction du volume",
         "rulesErrorInfo": "La valeur doit être supérieure ou égale à 5 et inférieure à 100 000 000"
