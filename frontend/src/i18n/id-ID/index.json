@@ -1,0 +1,324 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Pengembang",
+    "setting": {
+      "index": "Pengaturan",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Album KeyTone",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Album KeyTone",
+    "copyright": "Hak Cipta © 2024-",
+    "license": "Lisensi",
+    "licenseText": "KeyTone dirilis di bawah lisensi {license}",
+    "privacyPolicy": "Kebijakan Privasi",
+    "userAgreement": "Perjanjian Pengguna",
+    "emptyState": {
+      "noAlbum": "Belum ada album KeyTone",
+      "goToAlbumPage": "Pergi ke halaman album KeyTone",
+      "createOrImportTip": "Silakan buat atau impor album KeyTone sebelum mulai menggunakan"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Album Baru",
+    "import": "Impor Album",
+    "export": "Ekspor Album",
+    "delete": "Hapus Album",
+    "label": "Album KeyTone",
+    "emptyState": {
+      "noAlbum": "Belum ada album KeyTone"
+    },
+    "notify": {
+      "deleteSuccess": "Album berhasil dihapus",
+      "deleteFailed": "Gagal menghapus album",
+      "importSuccess": "Album berhasil diimpor",
+      "importFailed": "Gagal mengimpor album",
+      "exportSuccess": "Album berhasil diekspor",
+      "exportFailed": "Gagal mengekspor album",
+      "invalidFormat": "Silakan pilih file album dengan format .ktalbum",
+      "refreshFailed": "Album telah ditimpa, tetapi gagal diperbarui, silakan perbarui secara manual",
+      "importOverwriteSuccess": "Album berhasil ditimpa",
+      "importSaveAsNewSuccess": "Album telah disimpan sebagai album baru",
+      "fileDescription": "File Album KeyTone"
+    },
+    "importDialog": {
+      "title": "Impor Album",
+      "message": "Album yang sama sudah ada, silakan pilih tindakan:",
+      "overwrite": "Timpa album yang ada",
+      "saveAsNew": "Simpan sebagai album baru",
+      "cancel": "Batalkan impor",
+      "confirm": "Konfirmasi"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Buat Album KeyTone Baru",
+      "name": {
+        "name": "Nama Album KeyTone",
+        "defaultValue": "Album KeyTone Baru",
+        "errorMessage": "Anda harus memberikan nama untuk album KeyTone"
+      }
+    },
+    "or": "atau",
+    "close": "Tutup",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "continue": "Lanjutkan",
+    "back": "Kembali",
+    "confirmEdit": "Konfirmasi Perubahan",
+    "delete": "Hapus",
+    "playMode": {
+      "single": "Tunggal",
+      "random": "Acak",
+      "loop": "Berurutan"
+    },
+    "options": {
+      "audioFile": "File Audio Sumber",
+      "sound": "Potongan Suara",
+      "keySound": "KeyTone Premium",
+
+      "audioFile_0": "File Audio",
+      "sound_0": "Potongan Suara",
+      "keySound_0": "KeyTone Premium"
+    },
+    "notify": {
+      "deleteSuccess": "Berhasil dihapus",
+      "deleteFailed": "Gagal menghapus",
+      "addSuccess": "Berhasil ditambahkan",
+      "addFailed": "Gagal menambahkan",
+      "saveSuccess": "Berhasil disimpan",
+      "modifySuccess": "Berhasil dimodifikasi",
+      "modifyFailed": "Gagal memodifikasi",
+      "noFilesToManage": "Tidak ada file sumber yang dapat dikelola",
+      "noSoundsToEdit": "Tidak ada suara yang dapat diedit",
+      "noKeySoundsToEdit": "Tidak ada KeyTone Premium yang dapat diedit",
+      "selectSoundEffect": "Silakan pilih efek suara",
+      "selectSoundEffectForKeys": "Silakan pilih efek suara untuk tombol {keys}-",
+      "deleteSuccessForKeys": "Efek suara untuk tombol {keys}- berhasil dihapus",
+      "configSuccess": "Konfigurasi berhasil disimpan",
+      "selectKey": "Silakan pilih tombol",
+      "confirmDeleteSingleKeyEffect": "Apakah Anda yakin ingin menghapus konfigurasi efek suara tombol ini?",
+      "confirmDeleteSingleKeyEffectMessage": "Dalam konfigurasi Anda saat ini, efek suara tekan dan lepas kosong, sehingga operasi ini setara dengan penghapusan",
+      "noChangesDetected": "Tidak terdeteksi perubahan",
+      "selectSourceFile": "Silakan pilih file sumber",
+      "endTimeGreaterThanStartTime": "Waktu akhir harus lebih besar dari waktu mulai",
+      "selectAudioFile": "Silakan pilih file audio sumber terlebih dahulu",
+      "timeValueCannotBeNegative": "Nilai waktu tidak boleh negatif",
+      "playFailed": "Gagal memutar",
+      "downSoundInvalid": "Gagal: 'Suara tekan' tidak memenuhi persyaratan",
+      "upSoundInvalid": "Gagal: 'Suara lepas' tidak memenuhi persyaratan",
+      "unifiedSoundEffectConfigFailed": "Konfigurasi efek suara global gagal",
+      "keyAlreadySelected": "Tombol yang direkam sudah ada dalam kotak pilihan",
+      "noSoundEffectSelected": "Tidak ada konfigurasi efek suara tombol tunggal",
+      "singleKeySoundEffectConfigFailed": "Konfigurasi efek suara tombol {key} gagal",
+      "singleKeySoundEffectConfigError": "Terjadi kesalahan saat mengkonfigurasi efek suara tombol {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Hanya sebagian konfigurasi efek suara tombol tunggal yang berhasil",
+      "configFileReadFailed": "Gagal membaca file konfigurasi album KeyTone"
+    },
+    "loadAudioFile": {
+      "title": "Muat File Audio",
+      "description": "Muat file audio asli untuk album saat ini untuk digunakan dalam langkah selanjutnya",
+      "addNewFile": "Tambahkan file audio sumber baru",
+      "addNewFile_1": "Muat file audio sumber baru",
+      "dragAndDrop": "Klik untuk memilih atau seret file ke sini",
+      "audioFile": "File Audio Sumber",
+      "supportedFormats": "Mendukung format WAV, MP3, OGG",
+      "addAsNeeded": "Jumlah tidak terbatas, tambahkan sesuai kebutuhan",
+      "confirmAdd": "Konfirmasi Penambahan",
+      "manageExistingFiles": "Kelola file sumber yang sudah dimuat",
+      "selectFileToManage": "Pilih file sumber yang akan dikelola",
+      "emptyFileName": "Nama file kosong dapat meningkatkan biaya manajemen",
+      "renameFile": "Nama File (Dapat Diubah)"
+    },
+    "defineSounds": {
+      "title": "Definisikan Potongan Suara",
+      "description": "Potong dan definisikan suara yang diperlukan dari file audio sumber",
+      "createNewSound": "Buat Suara Baru",
+      "soundName": "Beri Nama Suara (Opsional)",
+      "sourceFile": "File Audio Sumber",
+      "cropSound": "Potong dan definisikan suara yang kita butuhkan dari file audio sumber",
+      "startTime": "Waktu Mulai (milidetik)",
+      "endTime": "Waktu Akhir (milidetik)",
+      "volume": "Volume Suara",
+      "error": {
+        "negativeTime": "Waktu tidak boleh negatif"
+      },
+      "previewSound": "Pratinjau Suara",
+      "confirmAdd": "Konfirmasi Penambahan",
+      "editExistingSound": "Edit Suara yang Ada",
+      "selectSoundToManage": "Pilih suara yang akan dikelola",
+      "tooltip": {
+        "noImpactOnSource": "Suara yang dibuat melalui langkah ini tidak akan mempengaruhi file sumber",
+        "multipleSoundsFromSameSource": "Pengguna dapat memotong dan mendefinisikan beberapa suara independen dari file sumber yang sama",
+        "soundName": "Nama suara",
+        "soundDuration": "Waktu mulai dan akhir suara dalam milidetik. Karena digunakan untuk tombol, waktu tidak boleh terlalu lama.",
+        "volume": "0 adalah volume asli, lebih dari 0 untuk meningkatkan volume, kurang dari 0 untuk menurunkan volume. Langkah umum adalah 0.1",
+        "volume_1": "Anda juga dapat memasukkan secara manual untuk penyesuaian yang lebih halus, seperti 0.0001. Silakan pratinjau ulang setelah setiap penyesuaian volume untuk memeriksa efeknya, hindari volume terlalu kecil atau terlalu besar.",
+        "previewSound": "Suara untuk tombol biasanya sangat pendek, sehingga suara pratinjau akan diputar secara bersamaan, dan tidak menyediakan bilah kemajuan dan tombol berhenti (jika perlu, Anda dapat menghentikannya dengan me-restart aplikasi). Oleh karena itu, ikuti prinsip definisi suara."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Buat KeyTone Premium",
+      "description": "KeyTone adalah suara tombol. Langkah ini secara default membuat suara tombol berdasarkan suara yang telah dipotong dan didefinisikan.",
+      "newKeySound": "Buat KeyTone Premium Baru",
+      "keySoundName": "Nama KeyTone Premium",
+      "keySoundName-placeholder": "KeyTone Premium Baru",
+      "configureDownSound": "Konfigurasi Suara Tekan",
+      "configureUpSound": "Konfigurasi Suara Lepas",
+      "selectPlayMode": "Pilih Mode Pemutaran",
+      "selectSounds": "Pilih Suara (Pilih Banyak)",
+      "error": {
+        "singleMode": "Dalam mode tunggal, maksimal satu suara dapat dipilih"
+      },
+      "confirmAdd": "Konfirmasi Penambahan",
+      "tooltip": {
+        "description_0": "Secara teori, setiap suara tombol harus mencakup suara tekan dan lepas.",
+        "description_1": "Mereka harus didefinisikan secara terpisah saat pembuatan, tetapi ini tidak wajib.",
+        "description_2": "Suara tekan dan lepas dapat didefinisikan sesuai kebutuhan.",
+        "description_3": "Keduanya dapat didefinisikan, atau hanya salah satu, atau tidak keduanya.",
+        "audioFile": "Aktifkan/nonaktifkan file audio sumber",
+        "soundList": "Aktifkan/nonaktifkan potongan suara",
+        "keySounds": "Aktifkan/nonaktifkan KeyTone Premium",
+        "inheritKeySound": "Opsi ini memungkinkan pewarisan dari KeyTone Premium lain",
+        "inheritRule": "Prinsip: Tekan mewarisi tekan, lepas mewarisi lepas"
+      },
+      "editExistingKeySound": "Edit KeyTone Premium yang Ada",
+      "selectKeySoundToEdit": "Pilih KeyTone Premium yang akan diedit"
+    },
+    "linkageEffects": {
+      "title": "Efek Suara Tombol",
+      "description": "Atur efek suara untuk tombol, efek suara yang telah ditentukan akan diputar secara otomatis saat tombol ditekan atau dilepas.",
+      "enableTestSound": "Aktifkan Suara Uji Internal",
+      "downTestSound": "Suara Uji Tekan",
+      "upTestSound": "Suara Uji Lepas",
+      "globalSettings": "Efek Suara Global",
+      "singleKeySettings": "Efek Suara Tunggal",
+      "global": {
+        "description": "Tidak perlu menentukan tombol apa pun, langsung lakukan pengaturan efek suara global yang seragam.",
+        "setKeyDownSound": "Atur Efek Suara Tekan Global",
+        "setKeyUpSound": "Atur Efek Suara Lepas Global"
+      },
+      "single": {
+        "description": "Tentukan satu atau beberapa tombol untuk pengaturan efek suara lokal yang independen.",
+        "addSingleKeyEffect": "Tambahkan Efek Suara Tombol Tunggal dengan Cepat",
+        "dialog": {
+          "selectKeyAndEffect": "Silakan pilih tombol dan pengaturan efek suara yang sesuai.",
+          "selectSingleKey": "Pilih Tombol Tunggal (jumlah bebas)",
+          "selectSingleKey-placeholder_record": "Ketik di sini untuk merekam tombol tunggal",
+          "selectSingleKey-placeholder_search": "Ketik di sini untuk mencari tombol",
+          "downSoundEffect": "Efek Suara Tekan",
+          "upSoundEffect": "Efek Suara Lepas",
+          "setDownSoundEffect": "Atur Efek Suara Tekan",
+          "setUpSoundEffect": "Atur Efek Suara Lepas",
+          "noSingleKeyEffects": "Saat ini tidak ada tombol dengan efek suara tunggal yang diatur",
+          "singleKeyEffects": "Tombol dengan efek suara tunggal yang diatur",
+          "clickToView": " Klik untuk melihat efek suara",
+          "editSingleKey": "Edit Tombol Tunggal",
+          "soundEffect": "Efek Suara",
+          "soundEffect-down": "Efek Suara Tekan",
+          "soundEffect-up": "Efek Suara Lepas"
+        }
+      },
+      "confirm": "Konfirmasi",
+      "tooltips": {
+        "description": "\"File Audio\", \"Suara yang Ditetapkan\", \"KeyTone Premium\" semuanya dapat digunakan sebagai efek suara untuk tombol.",
+        "testSound": "KeyTone menyertakan efek suara uji global,\nuntuk pengguna memeriksa apakah perangkat lunak berjalan dengan normal.\nDiaktifkan secara default, dapat dinonaktifkan secara manual jika diperlukan.\nPrioritas pemutaran lebih rendah dari pengaturan efek suara global/tunggal.",
+        "globalPriority": "Prioritas pemutaran lebih tinggi dari suara uji internal, tetapi lebih rendah dari efek suara tunggal",
+        "singleKeyPriority": "Prioritas pemutaran lebih tinggi dari efek suara global dan suara uji internal",
+        "ultimateKeySound": {
+          "title": "KeyTone Premium",
+          "anchored": "(Terikat)",
+          "unanchored": "(Tidak Terikat)",
+          "tooltip": "Pengikatan ini hanya berlaku saat mengatur efek suara sebagai KeyTone Premium"
+        },
+        "audioFile": "Mendukung penggunaan file audio sumber sebagai efek suara",
+        "soundList": "Mendukung penggunaan potongan suara yang telah ditentukan sebagai efek suara",
+        "keySounds": "Mendukung penggunaan KeyTone Premium sebagai efek suara\nJika opsi ini dicentang, fungsi pengikatan untuk KeyTone Premium akan disediakan secara otomatis\nFungsi ini dirancang untuk memudahkan operasi Anda, Anda juga dapat melepaskan pengikatan untuk mendefinisikan efek suara dengan lebih bebas",
+        "fastDelete": "Anda juga dapat menggunakan pengaturan efek suara tekan/lepas kosong untuk menghapus tombol secara cepat.",
+        "stopRecording": "Berhenti merekam tombol tunggal",
+        "startRecording": "Mulai merekam tombol tunggal",
+        "save": "Simpan konten yang sedang diedit",
+        "delete": "Hapus efek suara tekan dan lepas untuk tombol saat ini"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Pengaturan",
+    "language": {
+      "index": "Bahasa",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Peluncuran dan Peluncuran Otomatis",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Sembunyikan Jendela Saat Peluncuran",
+        "caption": "Minimalkan ke baki sistem saat membuka aplikasi"
+      },
+      "自动启动": {
+        "index": "Peluncuran Otomatis",
+        "appxIndex": "Versi Microsoft Store mengaktifkan opsi ini secara default",
+        "caption": "Apakah Anda ingin aplikasi ini diluncurkan secara otomatis saat komputer menyala",
+        "appxCaption": "Dapat dinonaktifkan di 'Pengaturan'>'Aplikasi'>'Peluncuran' sistem"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Sembunyikan Jendela Saat Peluncuran Otomatis",
+        "caption": "Minimalkan ke baki sistem saat aplikasi diluncurkan secara otomatis saat komputer menyala"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Penyesuaian Volume Asli",
+        "caption": "Meningkatkan/mengurangi volume default file audio asli menggunakan algoritma. Catatan: Batas penyesuaian tidak boleh terlalu besar, sesuaikan secukupnya, jika tidak dapat merusak kualitas audio asli"
+      },
+      "重置": "Reset",
+      "音量": "Volume",
+      "AmplifyLimit": {
+        "index": "Batas Peningkatan",
+        "rulesErrorInfo": "Nilai input harus lebih besar dari 0 dan kurang dari 100,000,000"
+      }
+    },
+    "mainHome": {
+      "mainHome": {
+        "index": "Terkait Halaman Utama",
+        "caption": "Konfigurasi kustom untuk fungsi terkait di halaman utama"
+      },
+      "音量降幅": {
+        "index": "Penurunan Volume",
+        "rulesErrorInfo": "Nilai input harus lebih besar dari atau sama dengan 5 dan kurang dari 100,000,000"
+      },
+      "重置": "Reset",
+      "音量调试滑块": {
+        "index": "Slider Debug Volume",
+        "caption": "Jika diaktifkan, slider debug volume tambahan akan ditampilkan di bawah bilah kemajuan volume di halaman utama"
+      }
+    }
+  },
+  "language": {
+    "setting language": "Atur Bahasa/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Mencoba mendapatkan file konfigurasi...",
+    "获取配置文件失败": "Gagal mendapatkan file konfigurasi",
+    "配置文件获取成功, 正在读取配置": "File konfigurasi berhasil didapatkan, sedang membaca konfigurasi...",
+    "配置读取成功": "Konfigurasi berhasil dibaca",
+    "配置文件读取失败,请重启应用": "Gagal membaca file konfigurasi, silakan restart aplikasi",
+    "功能正在开发中": "Fitur sedang dalam pengembangan",
+    "音量0%时无法打开声音": "Tidak dapat mengaktifkan suara saat volume 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Tampilkan",
+      "quit": "Keluar",
+      "mute": "Bisukan",
+      "unmute": "Aktifkan Suara"
+    }
+  }
+}

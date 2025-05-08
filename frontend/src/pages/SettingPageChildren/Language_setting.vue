@@ -73,6 +73,7 @@ const localeOptions: Array<LocationOption> = [
   { value: 'pl', label: 'Polski' },
   { value: 'tr', label: 'Türkçe' },
   { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'id', label: 'Bahasa Indonesia' },
 ];
 
 /**
