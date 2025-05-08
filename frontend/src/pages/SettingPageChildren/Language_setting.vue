@@ -71,6 +71,7 @@ const localeOptions: Array<LocationOption> = [
   { value: 'pt', label: 'Português' },
   { value: 'pt-BR', label: 'Português (Brasil)' },
   { value: 'pl', label: 'Polski' },
+  { value: 'tr', label: 'Türkçe' },
 ];
 
 /**

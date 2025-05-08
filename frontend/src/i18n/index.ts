@@ -16,6 +16,7 @@ import esES from './es-ES/index.json';
 import ptPT from './pt-PT/index.json';
 import ptBR from './pt-BR/index.json';
 import plPL from './pl-PL/index.json';
+import trTR from './tr-TR/index.json';
 
 // 一下键值对中的key的名称, 以quasar框架(或其它的项目框架)的语言本地化api的列表为准。(如quasar的列表默认值的参考链接https://github.com/quasarframework/quasar/tree/dev/ui/lang)
 export default {
@@ -35,4 +36,5 @@ export default {
   pt: ptPT,
   'pt-BR': ptBR,
   pl: plPL,
+  tr: trTR,
 };

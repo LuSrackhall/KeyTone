@@ -1,0 +1,321 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Geliştirici",
+    "setting": {
+      "index": "Ayarlar",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Tuş Sesi Albümü",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Tuş Sesi Albümü",
+    "copyright": "Telif Hakkı © 2024-",
+    "license": "Lisans",
+    "licenseText": "KeyTone {license} lisansı altında yayınlanmıştır",
+    "privacyPolicy": "Gizlilik Politikası",
+    "userAgreement": "Kullanıcı Sözleşmesi",
+    "emptyState": {
+      "noAlbum": "Henüz tuş sesi albümü yok",
+      "goToAlbumPage": "Tuş sesi albümü sayfasına git",
+      "createOrImportTip": "Kullanmaya başlamadan önce, lütfen bir tuş sesi albümü oluşturun veya içe aktarın"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Yeni Albüm",
+    "import": "Albüm İçe Aktar",
+    "export": "Albüm Dışa Aktar",
+    "delete": "Albümü Sil",
+    "label": "Tuş Sesi Albümü",
+    "emptyState": {
+      "noAlbum": "Henüz tuş sesi albümü yok"
+    },
+    "notify": {
+      "deleteSuccess": "Albüm başarıyla silindi",
+      "deleteFailed": "Albüm silinemedi",
+      "importSuccess": "Albüm başarıyla içe aktarıldı",
+      "importFailed": "Albüm içe aktarılamadı",
+      "exportSuccess": "Albüm başarıyla dışa aktarıldı",
+      "exportFailed": "Albüm dışa aktarılamadı",
+      "invalidFormat": "Lütfen .ktalbum formatında bir albüm dosyası seçin",
+      "refreshFailed": "Albüm üzerine yazıldı, ancak yenileme başarısız oldu, lütfen manuel olarak yenileyin",
+      "importOverwriteSuccess": "Albüm başarıyla üzerine yazıldı",
+      "importSaveAsNewSuccess": "Albüm yeni albüm olarak kaydedildi",
+      "fileDescription": "KeyTone Albüm Dosyası"
+    },
+    "importDialog": {
+      "title": "Albüm İçe Aktar",
+      "message": "Aynı isimde bir albüm zaten var, lütfen işlem seçin:",
+      "overwrite": "Mevcut albümün üzerine yaz",
+      "saveAsNew": "Yeni albüm olarak kaydet",
+      "cancel": "İçe aktarmayı iptal et",
+      "confirm": "Onayla"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Yeni Tuş Sesi Albümü Oluştur",
+      "name": {
+        "name": "Tuş Sesi Albümü Adı",
+        "defaultValue": "Yeni Tuş Sesi Albümü",
+        "errorMessage": "Tuş sesi albümü için bir isim belirlemelisiniz"
+      }
+    },
+    "or": "veya",
+    "close": "Kapat",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "continue": "Devam Et",
+    "back": "Geri",
+    "confirmEdit": "Değişiklikleri Onayla",
+    "delete": "Sil",
+    "playMode": {
+      "single": "Tekli",
+      "random": "Rastgele",
+      "loop": "Sıralı"
+    },
+    "options": {
+      "audioFile": "Ses Kaynak Dosyası",
+      "sound": "Önceden Tanımlanmış Ses",
+      "keySound": "Premium Tuş Sesi",
+
+      "audioFile_0": "Ses Dosyası",
+      "sound_0": "Ses Parçası",
+      "keySound_0": "Premium Tuş Sesi"
+    },
+    "notify": {
+      "deleteSuccess": "Başarıyla silindi",
+      "deleteFailed": "Silme başarısız oldu",
+      "addSuccess": "Başarıyla eklendi",
+      "addFailed": "Ekleme başarısız oldu",
+      "saveSuccess": "Başarıyla kaydedildi",
+      "modifySuccess": "Başarıyla değiştirildi",
+      "modifyFailed": "Değiştirme başarısız oldu",
+      "noFilesToManage": "Şu anda yönetilecek kaynak dosya yok",
+      "noSoundsToEdit": "Şu anda düzenlenecek ses yok",
+      "noKeySoundsToEdit": "Şu anda düzenlenecek premium tuş sesi yok",
+      "selectSoundEffect": "Lütfen bir ses efekti seçin",
+      "selectSoundEffectForKeys": "Lütfen seçili tuşlar {keys}- için ses efekti seçin",
+      "deleteSuccessForKeys": "{keys}- tuşlarının ses efekti başarıyla silindi",
+      "configSuccess": "Yapılandırma başarıyla kaydedildi",
+      "selectKey": "Lütfen bir tuş seçin",
+      "confirmDeleteSingleKeyEffect": "Bu tek tuş ses efektini silmek istediğinizden emin misiniz?",
+      "confirmDeleteSingleKeyEffectMessage": "Mevcut yapılandırmanızda, basma ve bırakma ses efektleri boş olduğu için bu işlem silme işlemi olarak değerlendirilecek",
+      "noChangesDetected": "Değişiklik tespit edilmedi",
+      "selectSourceFile": "Lütfen bir kaynak dosya seçin",
+      "endTimeGreaterThanStartTime": "Bitiş zamanı başlangıç zamanından büyük olmalıdır",
+      "selectAudioFile": "Lütfen önce bir ses kaynak dosyası seçin",
+      "timeValueCannotBeNegative": "Zaman değeri negatif olamaz",
+      "playFailed": "Oynatma başarısız oldu",
+      "downSoundInvalid": "Başarısız: 'Basma sesi' gereksinimleri karşılamıyor",
+      "upSoundInvalid": "Başarısız: 'Bırakma sesi' gereksinimleri karşılamıyor",
+      "unifiedSoundEffectConfigFailed": "Tüm tuşlar için ses efekti yapılandırması başarısız oldu",
+      "keyAlreadySelected": "Kaydedilen tuş zaten seçim kutusunda",
+      "noSoundEffectSelected": "Hiçbir tek tuş ses efekti yapılandırması yapılmadı",
+      "singleKeySoundEffectConfigFailed": "{key} tuşu için ses efekti yapılandırması başarısız oldu",
+      "singleKeySoundEffectConfigError": "{key} tuşu için ses efekti yapılandırılırken hata oluştu",
+      "partialSingleKeySoundEffectConfigSuccess": "Sadece bazı tek tuş ses efektleri başarıyla yapılandırıldı",
+      "configFileReadFailed": "Tuş sesi albümü yapılandırma dosyası okunamadı"
+    },
+    "loadAudioFile": {
+      "title": "Ses Dosyası Yükle",
+      "description": "Sonraki adımlar için mevcut albüme orijinal ses dosyalarını yükleyin",
+      "addNewFile": "Yeni ses kaynak dosyası ekle",
+      "addNewFile_1": "Yeni ses kaynak dosyası yükle",
+      "dragAndDrop": "Dosya seçmek için tıklayın veya buraya sürükleyin",
+      "audioFile": "Ses Kaynak Dosyası",
+      "supportedFormats": "WAV, MP3, OGG formatları desteklenir",
+      "addAsNeeded": "İstediğiniz kadar ekleyebilirsiniz",
+      "confirmAdd": "Ekle",
+      "manageExistingFiles": "Yüklenmiş kaynak dosyaları yönet",
+      "selectFileToManage": "Yönetilecek kaynak dosyayı seçin",
+      "emptyFileName": "Boş dosya adı ileride yönetimi zorlaştırabilir",
+      "renameFile": "Dosya adı (değiştirilebilir)"
+    },
+    "defineSounds": {
+      "title": "Ses Kliplerini Tanımla",
+      "description": "Yüklenen orijinal ses dosyalarından ihtiyaç duyulan sesleri kesip tanımlayın",
+      "createNewSound": "Yeni ses klipleri oluştur",
+      "soundName": "Ses için isim (isteğe bağlı)",
+      "sourceFile": "Ses Kaynak Dosyası",
+      "cropSound": "Ses kaynak dosyasından ihtiyacımız olan sesi kesip tanımlayın",
+      "startTime": "Başlangıç zamanı (milisaniye)",
+      "endTime": "Bitiş zamanı (milisaniye)",
+      "volume": "Ses seviyesi",
+      "error": {
+        "negativeTime": "Zaman negatif olamaz"
+      },
+      "previewSound": "Sesi önizle",
+      "confirmAdd": "Ekle",
+      "editExistingSound": "Mevcut ses kliplerini yönet",
+      "selectSoundToManage": "Yönetilecek sesi seçin",
+      "tooltip": {
+        "noImpactOnSource": "Bu adımda oluşturulan sesler kaynak dosyayı etkilemez",
+        "multipleSoundsFromSameSource": "Kullanıcı aynı kaynak dosyadan birden fazla bağımsız ses oluşturabilir",
+        "soundName": "Sesin adı",
+        "soundDuration": "Sesin başlangıç ve bitiş zamanı, milisaniye cinsinden. Tuş kullanımı için olduğundan süre çok uzun olmamalıdır.",
+        "volume": "0 orijinal ses seviyesidir, 0'dan büyük değerler sesi artırır, 0'dan küçük değerler sesi azaltır. Genellikle 0.1 adımlarla ayarlanır",
+        "volume_1": "Daha hassas ayarlar için manuel olarak 0.0001 gibi değerler girebilirsiniz. Her ses seviyesi değişikliğinden sonra etkiyi görmek için önizleme yapın, sesin çok düşük veya yüksek olmamasına dikkat edin.",
+        "previewSound": "Tuş sesleri genellikle çok kısadır, bu nedenle sürekli önizleme sesleri eşzamanlı olarak çalınır ve ilerleme çubuğu veya durdurma düğmesi yoktur (gerekirse uygulamayı yeniden başlatarak durdurabilirsiniz). Bu nedenle lütfen ses tanımlama prensiplerine uyun."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Premium Tuş Sesleri Oluştur",
+      "description": "Tuş sesi, aslında tuşa basma veya bırakma sesidir. Bu adım varsayılan olarak tanımlanmış seslerden tuş sesleri oluşturur.",
+      "newKeySound": "Yeni premium tuş sesi oluştur",
+      "keySoundName": "Premium Tuş Sesi Adı",
+      "keySoundName-placeholder": "Yeni Premium Tuş Sesi",
+      "configureDownSound": "Basma sesini yapılandır",
+      "configureUpSound": "Bırakma sesini yapılandır",
+      "selectPlayMode": "Oynatma modunu seçin",
+      "selectSounds": "Sesleri seçin (çoklu seçim)",
+      "error": {
+        "singleMode": "Tekli modda en fazla bir ses seçilebilir"
+      },
+      "confirmAdd": "Ekle",
+      "tooltip": {
+        "description_0": "Teorik olarak her tuş sesi, basma ve bırakma sesini içermelidir.",
+        "description_1": "Oluştururken bunları ayrı ayrı tanımlamanız gerekir, ancak bu zorunlu değildir.",
+        "description_2": "Basma ve bırakma sesleri ihtiyaca göre seçimli olarak tanımlanabilir.",
+        "description_3": "İkisi de tanımlanabilir, sadece biri tanımlanabilir veya hiçbiri tanımlanmayabilir.",
+        "audioFile": "Ses kaynak dosyasını etkinleştir/devre dışı bırak",
+        "soundList": "Önceden tanımlanmış sesleri etkinleştir/devre dışı bırak",
+        "keySounds": "Premium tuş seslerini etkinleştir/devre dışı bırak",
+        "inheritKeySound": "Bu seçenek diğer premium tuş seslerinden miras almanızı sağlar",
+        "inheritRule": "Kural: Basma basmadan, bırakma bırakmadan miras alır"
+      },
+      "editExistingKeySound": "Mevcut premium tuş sesini düzenle",
+      "selectKeySoundToEdit": "Düzenlenecek premium tuş sesini seçin"
+    },
+    "linkageEffects": {
+      "title": "Tuş Bağlantılı Ses Efektleri",
+      "description": "Tuşlara bağlantılı ses efektleri ayarlayın, tuşa basıldığında veya bırakıldığında otomatik olarak önceden ayarlanmış ses efektleri çalınır.",
+      "enableTestSound": "Gömülü test sesini etkinleştir",
+      "downTestSound": "Basma test sesi",
+      "upTestSound": "Bırakma test sesi",
+      "globalSettings": "Tüm tuşlar için ses efekti ayarları",
+      "singleKeySettings": "Tek tuş ses efekti ayarları",
+      "global": {
+        "description": "Herhangi bir tuş belirtmeden, doğrudan global ses efekti ayarları yapın.",
+        "setKeyDownSound": "Tüm tuşlar için basma ses efektini ayarla",
+        "setKeyUpSound": "Tüm tuşlar için bırakma ses efektini ayarla"
+      },
+      "single": {
+        "description": "Belirli bir veya birden fazla tuş için bağımsız ses efekti ayarları yapın.",
+        "addSingleKeyEffect": "Hızlı tek tuş ses efekti ekle",
+        "dialog": {
+          "selectKeyAndEffect": "Lütfen tuş ve ilgili ses efekti ayarlarını seçin.",
+          "selectSingleKey": "Tek tuş seçin (istediğiniz kadar)",
+          "selectSingleKey-placeholder_record": "Buraya tek tuş kaydetmek için yazın",
+          "selectSingleKey-placeholder_search": "Buraya tuş aramak için yazın",
+          "downSoundEffect": "Basma ses efekti",
+          "upSoundEffect": "Bırakma ses efekti",
+          "setDownSoundEffect": "Basma ses efektini ayarla",
+          "setUpSoundEffect": "Bırakma ses efektini ayarla",
+          "noSingleKeyEffects": "Şu anda ses efekti ayarlanmış tuş yok",
+          "singleKeyEffects": "Ses efekti ayarlanmış tuşlar",
+          "clickToView": "Ses efektini görüntülemek için tıklayın",
+          "editSingleKey": "Tek tuşu düzenle",
+          "soundEffect": "ses efekti",
+          "soundEffect-down": "basma ses efekti",
+          "soundEffect-up": "bırakma ses efekti"
+        }
+      },
+      "confirm": "Onayla",
+      "tooltips": {
+        "description": "\"Ses dosyası\", \"önceden tanımlanmış ses\" ve \"premium tuş sesi\" tuşlarla bağlantılı ses efekti olarak kullanılabilir.",
+        "testSound": "KeyTone, yazılımın düzgün çalışıp çalışmadığını kontrol etmek için gömülü test sesi içerir.\nVarsayılan olarak açıktır, gerekirse manuel olarak kapatılabilir.\nOynatma önceliği tüm/tek tuş ses efekti ayarlarından düşüktür.",
+        "globalPriority": "Oynatma önceliği gömülü test sesinden yüksek, ancak tek tuş ses efektinden düşüktür",
+        "singleKeyPriority": "Oynatma önceliği tüm tuş ses efektlerinden ve gömülü test sesinden yüksektir",
+        "ultimateKeySound": {
+          "title": "Premium Tuş Sesi",
+          "anchored": "(sabitlendi)",
+          "unanchored": "(sabit kaldırıldı)",
+          "tooltip": "Bu sabitleme sadece ses efekti premium tuş sesi olarak ayarlandığında geçerlidir"
+        },
+        "audioFile": "Ses kaynak dosyasını ses efekti olarak ayarlamayı destekler",
+        "soundList": "Önceden tanımlanmış ses parçalarını ses efekti olarak ayarlamayı destekler",
+        "keySounds": "Premium tuş sesini ses efekti olarak ayarlamayı destekler\nBu seçenek işaretlenirse, premium tuş sesleri için otomatik olarak sabitleme özelliği sunulur\nBu özellik işlemlerinizi kolaylaştırmak içindir, sabitlemeyi kaldırarak daha özgür bir şekilde ses efekti tanımlayabilirsiniz",
+        "fastDelete": "Boş basma/bırakma ses efekti ayarlarını kullanarak tuşları hızlıca toplu olarak silebilirsiniz.",
+        "stopRecording": "Tek tuş kaydını durdur",
+        "startRecording": "Tek tuş kaydını başlat",
+        "save": "Mevcut düzenlemeleri kaydet",
+        "delete": "Mevcut tuşun basma ve bırakma ses efektlerini sil"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Ayarlar",
+    "language": {
+      "index": "Dil",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Başlatma ve Otomatik Başlatma",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Başlatırken pencereyi gizle",
+        "caption": "Uygulama açıldığında sistem tepsisine küçült"
+      },
+      "自动启动": {
+        "index": "Otomatik başlat",
+        "appxIndex": "Microsoft Store sürümü varsayılan olarak etkindir",
+        "caption": "Bilgisayar açıldığında uygulamanın otomatik başlatılmasını ister misiniz",
+        "appxCaption": "Sistem 'Ayarlar'>'Uygulamalar'>'Başlangıç'tan kapatılabilir"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Otomatik başlatırken pencereyi gizle",
+        "caption": "Bilgisayar açıldığında uygulama otomatik başlatıldığında sistem tepsisine küçült"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Orijinal Ses Seviyesi Ayarlaması",
+        "caption": "Orijinal ses dosyasının varsayılan ses seviyesini algoritma ile artırın/azaltın. Not: Ayarlama sınırı çok büyük olmamalıdır, aşırı ayarlama ses kalitesini bozabilir"
+      },
+      "重置": "Sıfırla",
+      "音量": "Ses Seviyesi",
+      "AmplifyLimit": {
+        "index": "Artırma Limiti",
+        "rulesErrorInfo": "Girilen değer 0'dan büyük ve 100,000,000'dan küçük olmalıdır"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Ana Sayfa Ayarları", "caption": "Ana sayfadaki ilgili işlevleri özelleştirin" },
+      "音量降幅": {
+        "index": "Ses Azaltma Oranı",
+        "rulesErrorInfo": "Girilen değer 5'ten büyük veya eşit ve 100,000,000'dan küçük olmalıdır"
+      },
+      "重置": "Sıfırla",
+      "音量调试滑块": {
+        "index": "Ses Ayar Kaydırıcısı",
+        "caption": "Açıldığında, ana sayfadaki ses seviyesi çubuğunun altında ek bir ses ayar kaydırıcısı gösterilir"
+      }
+    }
+  },
+  "language": {
+    "setting language": "Dil ayarı/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Yapılandırma dosyası alınmaya çalışılıyor...",
+    "获取配置文件失败": "Yapılandırma dosyası alınamadı",
+    "配置文件获取成功, 正在读取配置": "Yapılandırma dosyası başarıyla alındı, yapılandırma okunuyor...",
+    "配置读取成功": "Yapılandırma başarıyla okundu",
+    "配置文件读取失败,请重启应用": "Yapılandırma dosyası okunamadı, lütfen uygulamayı yeniden başlatın",
+    "功能正在开发中": "Bu özellik geliştirme aşamasında",
+    "音量0%时无法打开声音": "Ses seviyesi %0 iken ses açılamaz"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Göster",
+      "quit": "Çıkış",
+      "mute": "Sessiz",
+      "unmute": "Sesi Aç"
+    }
+  }
+}
