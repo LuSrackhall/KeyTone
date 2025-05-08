@@ -1,0 +1,321 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Twórca",
+    "setting": {
+      "index": "Ustawienia",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Album dźwięków klawiszy",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Album dźwięków klawiszy",
+    "copyright": "Wszelkie prawa zastrzeżone © 2024-",
+    "license": "Licencja",
+    "licenseText": "KeyTone jest wydawany na licencji {license}",
+    "privacyPolicy": "Polityka prywatności",
+    "userAgreement": "Umowa użytkownika",
+    "emptyState": {
+      "noAlbum": "Brak albumów dźwięków klawiszy",
+      "goToAlbumPage": "Przejdź do strony albumów",
+      "createOrImportTip": "Przed rozpoczęciem, utwórz lub zaimportuj album dźwięków klawiszy"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Nowy album",
+    "import": "Importuj album",
+    "export": "Eksportuj album",
+    "delete": "Usuń album",
+    "label": "Album dźwięków klawiszy",
+    "emptyState": {
+      "noAlbum": "Brak albumów dźwięków klawiszy"
+    },
+    "notify": {
+      "deleteSuccess": "Album został pomyślnie usunięty",
+      "deleteFailed": "Nie udało się usunąć albumu",
+      "importSuccess": "Album został pomyślnie zaimportowany",
+      "importFailed": "Nie udało się zaimportować albumu",
+      "exportSuccess": "Album został pomyślnie wyeksportowany",
+      "exportFailed": "Nie udało się wyeksportować albumu",
+      "invalidFormat": "Wybierz plik albumu w formacie .ktalbum",
+      "refreshFailed": "Album został nadpisany, ale odświeżenie nie powiodło się. Odśwież ręcznie",
+      "importOverwriteSuccess": "Album został pomyślnie nadpisany",
+      "importSaveAsNewSuccess": "Album został zapisany jako nowy",
+      "fileDescription": "Plik albumu KeyTone"
+    },
+    "importDialog": {
+      "title": "Importuj album",
+      "message": "Istnieje już album o tej samej nazwie. Wybierz opcję:",
+      "overwrite": "Nadpisz istniejący album",
+      "saveAsNew": "Zapisz jako nowy album",
+      "cancel": "Anuluj import",
+      "confirm": "Potwierdź"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Utwórz nowy album dźwięków klawiszy",
+      "name": {
+        "name": "Nazwa albumu dźwięków klawiszy",
+        "defaultValue": "Nowy album dźwięków klawiszy",
+        "errorMessage": "Musisz nadać nazwę albumowi dźwięków klawiszy"
+      }
+    },
+    "or": "lub",
+    "close": "Zamknij",
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "continue": "Kontynuuj",
+    "back": "Wróć",
+    "confirmEdit": "Potwierdź zmiany",
+    "delete": "Usuń",
+    "playMode": {
+      "single": "Pojedynczy",
+      "random": "Losowy",
+      "loop": "Sekwencyjny"
+    },
+    "options": {
+      "audioFile": "Plik źródłowy",
+      "sound": "Predefiniowane dźwięki",
+      "keySound": "Dźwięk klawisza",
+
+      "audioFile_0": "Plik audio",
+      "sound_0": "Dźwięk",
+      "keySound_0": "Dźwięk klawisza"
+    },
+    "notify": {
+      "deleteSuccess": "Usunięto pomyślnie",
+      "deleteFailed": "Nie udało się usunąć",
+      "addSuccess": "Dodano pomyślnie",
+      "addFailed": "Nie udało się dodać",
+      "saveSuccess": "Zapisano pomyślnie",
+      "modifySuccess": "Zmodyfikowano pomyślnie",
+      "modifyFailed": "Nie udało się zmodyfikować",
+      "noFilesToManage": "Brak plików źródłowych do zarządzania",
+      "noSoundsToEdit": "Brak dźwięków do edycji",
+      "noKeySoundsToEdit": "Brak dźwięków klawiszy do edycji",
+      "selectSoundEffect": "Wybierz efekt dźwiękowy",
+      "selectSoundEffectForKeys": "Wybierz efekt dźwiękowy dla klawiszy {keys}",
+      "deleteSuccessForKeys": "Efekt dźwiękowy dla klawiszy {keys} został pomyślnie usunięty",
+      "configSuccess": "Konfiguracja została pomyślnie zapisana",
+      "selectKey": "Wybierz klawisz",
+      "confirmDeleteSingleKeyEffect": "Czy na pewno chcesz usunąć efekt dźwiękowy dla tego klawisza?",
+      "confirmDeleteSingleKeyEffectMessage": "W Twojej obecnej konfiguracji, efekty dźwiękowe naciśnięcia i zwolnienia są puste, więc ta operacja jest równoznaczna z usunięciem",
+      "noChangesDetected": "Nie wykryto zmian",
+      "selectSourceFile": "Wybierz plik źródłowy",
+      "endTimeGreaterThanStartTime": "Czas końcowy musi być większy niż czas początkowy",
+      "selectAudioFile": "Najpierw wybierz plik źródłowy",
+      "timeValueCannotBeNegative": "Wartość czasu nie może być ujemna",
+      "playFailed": "Odtwarzanie nie powiodło się",
+      "downSoundInvalid": "Błąd: 'Dźwięk naciśnięcia' nie spełnia wymagań",
+      "upSoundInvalid": "Błąd: 'Dźwięk zwolnienia' nie spełnia wymagań",
+      "unifiedSoundEffectConfigFailed": "Konfiguracja efektu dźwiękowego dla wszystkich klawiszy nie powiodła się",
+      "keyAlreadySelected": "Wybrany klawisz jest już w polu wyboru",
+      "noSoundEffectSelected": "Nie skonfigurowano żadnego efektu dźwiękowego dla klawisza",
+      "singleKeySoundEffectConfigFailed": "Konfiguracja efektu dźwiękowego dla klawisza {key} nie powiodła się",
+      "singleKeySoundEffectConfigError": "Wystąpił błąd podczas konfiguracji efektu dźwiękowego dla klawisza {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Tylko część efektów dźwiękowych dla klawiszy została skonfigurowana pomyślnie",
+      "configFileReadFailed": "Nie udało się odczytać pliku konfiguracyjnego albumu dźwięków klawiszy"
+    },
+    "loadAudioFile": {
+      "title": "Załaduj plik audio",
+      "description": "Załaduj oryginalny plik audio dla bieżącego albumu do dalszego użycia",
+      "addNewFile": "Dodaj nowy plik źródłowy audio",
+      "addNewFile_1": "Dodaj nowy plik źródłowy audio",
+      "dragAndDrop": "Kliknij, aby wybrać lub przeciągnij plik tutaj",
+      "audioFile": "Plik źródłowy",
+      "supportedFormats": "Obsługiwane formaty: WAV, MP3, OGG",
+      "addAsNeeded": "Liczba nieograniczona, dodawaj według potrzeb",
+      "confirmAdd": "Potwierdź dodanie",
+      "manageExistingFiles": "Zarządzaj plikami źródłowymi audio",
+      "selectFileToManage": "Wybierz plik do zarządzania",
+      "emptyFileName": "Pusta nazwa pliku może utrudnić późniejsze zarządzanie",
+      "renameFile": "Nazwa pliku (można zmienić)"
+    },
+    "defineSounds": {
+      "title": "Zdefiniuj fragmenty dźwięku",
+      "description": "Wytnij i zdefiniuj potrzebne dźwięki z załadowanego oryginalnego pliku audio",
+      "createNewSound": "Utwórz nowy fragment dźwięku",
+      "soundName": "Nazwij dźwięk (opcjonalnie)",
+      "sourceFile": "Plik źródłowy",
+      "cropSound": "Wytnij i zdefiniuj potrzebne dźwięki z pliku źródłowego",
+      "startTime": "Czas początkowy (ms)",
+      "endTime": "Czas końcowy (ms)",
+      "volume": "Głośność dźwięku",
+      "error": {
+        "negativeTime": "Czas nie może być ujemny"
+      },
+      "previewSound": "Podgląd dźwięku",
+      "confirmAdd": "Potwierdź dodanie",
+      "editExistingSound": "Zarządzaj fragmentami dźwięku",
+      "selectSoundToManage": "Wybierz dźwięk do zarządzania",
+      "tooltip": {
+        "noImpactOnSource": "Dźwięki utworzone w tym kroku nie wpływają na plik źródłowy",
+        "multipleSoundsFromSameSource": "Możesz wyciąć wiele niezależnych dźwięków z tego samego pliku źródłowego",
+        "soundName": "Nazwa dźwięku",
+        "soundDuration": "Czas początkowy i końcowy dźwięku w milisekundach. Ponieważ jest to używane dla klawiszy, czas nie powinien być zbyt długi.",
+        "volume": "0 to oryginalna głośność, wartości większe niż 0 zwiększają głośność, mniejsze niż 0 zmniejszają. Zalecany krok to 0.1",
+        "volume_1": "Możesz również ręcznie wprowadzić bardziej precyzyjne wartości, np. 0.0001. Po każdej zmianie głośności odtwórz podgląd, aby sprawdzić efekt i uniknąć zbyt cichego lub zbyt głośnego dźwięku.",
+        "previewSound": "Dźwięki klawiszy są zazwyczaj krótkie, więc podgląd będzie odtwarzał dźwięki jednocześnie, bez paska postępu i przycisku stop (w razie potrzeby możesz zrestartować aplikację, aby zatrzymać). Proszę przestrzegać zasad definiowania dźwięków."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Twórz dźwięki klawiszy",
+      "description": "Dźwięk klawisza to dźwięk wydawany przy naciśnięciu klawisza. Ten krok domyślnie tworzy dźwięki klawiszy na podstawie wcześniej zdefiniowanych dźwięków.",
+      "newKeySound": "Utwórz nowy dźwięk klawisza",
+      "keySoundName": "Nazwa dźwięku klawisza",
+      "keySoundName-placeholder": "Nowy dźwięk klawisza",
+      "configureDownSound": "Skonfiguruj dźwięk naciśnięcia",
+      "configureUpSound": "Skonfiguruj dźwięk zwolnienia",
+      "selectPlayMode": "Wybierz tryb odtwarzania",
+      "selectSounds": "Wybierz dźwięki (wielokrotny wybór)",
+      "error": {
+        "singleMode": "W trybie pojedynczym można wybrać tylko jeden dźwięk"
+      },
+      "confirmAdd": "Potwierdź dodanie",
+      "tooltip": {
+        "description_0": "Teoretycznie każdy dźwięk klawisza powinien zawierać dźwięk naciśnięcia i zwolnienia.",
+        "description_1": "Podczas tworzenia należy je zdefiniować osobno, ale nie jest to obowiązkowe.",
+        "description_2": "Można zdefiniować oba dźwięki, tylko jeden lub żaden.",
+        "description_3": "Można zdefiniować oba, tylko jeden lub żaden.",
+        "audioFile": "Włącz/wyłącz plik źródłowy",
+        "soundList": "Włącz/wyłącz predefiniowane dźwięki",
+        "keySounds": "Włącz/wyłącz dźwięki klawiszy",
+        "inheritKeySound": "Ta opcja pozwala na dziedziczenie z innych dźwięków klawiszy",
+        "inheritRule": "Zasada: naciśnięcie dziedziczy naciśnięcie, zwolnienie dziedziczy zwolnienie"
+      },
+      "editExistingKeySound": "Edytuj istniejący dźwięk klawisza",
+      "selectKeySoundToEdit": "Wybierz dźwięk klawisza do edycji"
+    },
+    "linkageEffects": {
+      "title": "Efekty dźwiękowe klawiszy",
+      "description": "Ustaw efekty dźwiękowe dla klawiszy, które będą automatycznie odtwarzane przy naciśnięciu lub zwolnieniu klawisza.",
+      "enableTestSound": "Włącz wbudowany dźwięk testowy",
+      "downTestSound": "Dźwięk testowy naciśnięcia",
+      "upTestSound": "Dźwięk testowy zwolnienia",
+      "globalSettings": "Ustawienia globalne",
+      "singleKeySettings": "Ustawienia pojedynczego klawisza",
+      "global": {
+        "description": "Nie trzeba określać żadnych klawiszy, bezpośrednio ustaw globalne efekty dźwiękowe.",
+        "setKeyDownSound": "Ustaw globalny dźwięk naciśnięcia",
+        "setKeyUpSound": "Ustaw globalny dźwięk zwolnienia"
+      },
+      "single": {
+        "description": "Określ pojedynczy lub wiele klawiszy, aby ustawić dla nich indywidualne efekty dźwiękowe.",
+        "addSingleKeyEffect": "Szybko dodaj efekt dźwiękowy dla klawisza",
+        "dialog": {
+          "selectKeyAndEffect": "Wybierz klawisz i odpowiadający mu efekt dźwiękowy.",
+          "selectSingleKey": "Wybierz klawisz (dowolna liczba)",
+          "selectSingleKey-placeholder_record": "Wpisz tutaj, aby nagrać klawisz",
+          "selectSingleKey-placeholder_search": "Wpisz tutaj, aby wyszukać klawisz",
+          "downSoundEffect": "Efekt dźwiękowy naciśnięcia",
+          "upSoundEffect": "Efekt dźwiękowy zwolnienia",
+          "setDownSoundEffect": "Ustaw efekt dźwiękowy naciśnięcia",
+          "setUpSoundEffect": "Ustaw efekt dźwiękowy zwolnienia",
+          "noSingleKeyEffects": "Brak klawiszy z ustawionymi efektami dźwiękowymi",
+          "singleKeyEffects": "Klawisze z ustawionymi efektami dźwiękowymi",
+          "clickToView": " Kliknij, aby zobaczyć efekt",
+          "editSingleKey": "Edytuj klawisz",
+          "soundEffect": "efekt dźwiękowy",
+          "soundEffect-down": "efekt dźwiękowy naciśnięcia",
+          "soundEffect-up": "efekt dźwiękowy zwolnienia"
+        }
+      },
+      "confirm": "Potwierdź",
+      "tooltips": {
+        "description": "Jako efekty dźwiękowe można użyć 'pliku audio', 'predefiniowanych dźwięków' lub 'dźwięków klawiszy'.",
+        "testSound": "KeyTone zawiera wbudowany dźwięk testowy dla wszystkich klawiszy,\ndo sprawdzenia, czy oprogramowanie działa poprawnie.\nDomyślnie włączony, można go ręcznie wyłączyć.\nPriorytet odtwarzania niższy niż ustawienia globalne/pojedynczego klawisza.",
+        "globalPriority": "Priorytet odtwarzania wyższy niż wbudowany dźwięk testowy, ale niższy niż efekt pojedynczego klawisza",
+        "singleKeyPriority": "Priorytet odtwarzania wyższy niż efekty globalne i wbudowany dźwięk testowy",
+        "ultimateKeySound": {
+          "title": "Dźwięk klawisza",
+          "anchored": "（zakotwiczony）",
+          "unanchored": "（odkotwiczony）",
+          "tooltip": "To kotwiczenie działa tylko przy ustawianiu efektu dźwiękowego jako dźwięku klawisza"
+        },
+        "audioFile": "Można ustawić plik źródłowy jako efekt dźwiękowy",
+        "soundList": "Można ustawić predefiniowane dźwięki jako efekt dźwiękowy",
+        "keySounds": "Można ustawić dźwięk klawisza jako efekt dźwiękowy\nJeśli ta opcja jest zaznaczona, automatycznie włącza się funkcja kotwiczenia dla dźwięków klawiszy\nTa funkcja ma ułatwić obsługę, możesz też odkotwiczyć, aby swobodniej definiować efekty",
+        "fastDelete": "Można też szybko usunąć klawisze, ustawiając puste efekty dźwiękowe naciśnięcia/zwolnienia.",
+        "stopRecording": "Zatrzymaj nagrywanie klawisza",
+        "startRecording": "Rozpocznij nagrywanie klawisza",
+        "save": "Zapisz bieżące zmiany",
+        "delete": "Usuń efekty dźwiękowe naciśnięcia i zwolnienia dla bieżącego klawisza"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Ustawienia",
+    "language": {
+      "index": "Język",
+      "caption": ""
+    },
+    "启动与自动启动": {
+      "启动与自动启动": {
+        "index": "Uruchamianie i autostart",
+        "caption": ""
+      },
+      "启动时隐藏窗口": {
+        "index": "Ukryj okno przy starcie",
+        "caption": "Minimalizuj do zasobnika systemowego przy otwieraniu aplikacji"
+      },
+      "自动启动": {
+        "index": "Autostart",
+        "appxIndex": "Wersja Microsoft Store domyślnie włącza tę opcję",
+        "caption": "Czy chcesz, aby aplikacja uruchamiała się automatycznie przy starcie komputera",
+        "appxCaption": "Można wyłączyć w 'Ustawieniach systemu'>'Aplikacje'>'Uruchamianie'"
+      },
+      "自动启动时隐藏窗口": {
+        "index": "Ukryj okno przy autostarcie",
+        "caption": "Minimalizuj do zasobnika systemowego przy automatycznym uruchamianiu aplikacji"
+      }
+    },
+    "原始音量增减调节": {
+      "原始音量增减调节": {
+        "index": "Regulacja oryginalnej głośności",
+        "caption": "Algorytmiczne zwiększanie/zmniejszanie domyślnej głośności oryginalnego pliku audio. Uwaga: nie należy przesadzać z regulacją, umiarkowane zmiany są wystarczające, w przeciwnym razie może to zniszczyć oryginalną jakość dźwięku"
+      },
+      "重置": "Resetuj",
+      "音量": "Głośność",
+      "AmplifyLimit": {
+        "index": "Limit wzmocnienia",
+        "rulesErrorInfo": "Wartość musi być większa niż 0 i mniejsza niż 100,000,000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Strona główna", "caption": "Konfiguracja funkcji na stronie głównej" },
+      "音量降幅": {
+        "index": "Spadek głośności",
+        "rulesErrorInfo": "Wartość musi być większa lub równa 5 i mniejsza niż 100,000,000"
+      },
+      "重置": "Resetuj",
+      "音量调试滑块": {
+        "index": "Suwak regulacji głośności",
+        "caption": "Po włączeniu, pod paskiem głośności na stronie głównej pojawi się dodatkowy suwak regulacji głośności"
+      }
+    }
+  },
+  "language": {
+    "setting language": "Ustaw język/setting language"
+  },
+  "Notify": {
+    "正在尝试获取配置文件": "Próba pobrania pliku konfiguracyjnego...",
+    "获取配置文件失败": "Nie udało się pobrać pliku konfiguracyjnego",
+    "配置文件获取成功, 正在读取配置": "Pomyślnie pobrano plik konfiguracyjny, odczytywanie konfiguracji...",
+    "配置读取成功": "Pomyślnie odczytano konfigurację",
+    "配置文件读取失败,请重启应用": "Nie udało się odczytać pliku konfiguracyjnego, zrestartuj aplikację",
+    "功能正在开发中": "Funkcja jest w trakcie rozwoju",
+    "音量0%时无法打开声音": "Nie można włączyć dźwięku przy głośności 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Pokaż",
+      "quit": "Wyjdź",
+      "mute": "Wycisz",
+      "unmute": "Włącz dźwięk"
+    }
+  }
+}
