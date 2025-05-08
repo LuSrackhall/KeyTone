@@ -1,0 +1,321 @@
+{
+  "KeyTone": {
+    "KeyTone": "KeyTone",
+    "developer": "Nhà phát triển",
+    "setting": {
+      "index": "Cài đặt",
+      "caption": ""
+    },
+    "KeyToneAlbum": {
+      "index": "Album âm thanh phím",
+      "caption": ""
+    }
+  },
+  "mainHome": {
+    "selectedKeySoundAlbum": "Album âm thanh phím",
+    "copyright": "Bản quyền © 2024-",
+    "license": "Giấy phép",
+    "licenseText": "KeyTone được phát hành theo giấy phép {license}",
+    "privacyPolicy": "Chính sách bảo mật",
+    "userAgreement": "Thỏa thuận người dùng",
+    "emptyState": {
+      "noAlbum": "Chưa có album âm thanh phím",
+      "goToAlbumPage": "Đi đến trang album âm thanh phím",
+      "createOrImportTip": "Vui lòng tạo hoặc nhập album âm thanh phím trước khi bắt đầu sử dụng"
+    }
+  },
+  "keyToneAlbumPage": {
+    "new": "Tạo album mới",
+    "import": "Nhập album",
+    "export": "Xuất album",
+    "delete": "Xóa album",
+    "label": "Album âm thanh phím",
+    "emptyState": {
+      "noAlbum": "Chưa có album âm thanh phím"
+    },
+    "notify": {
+      "deleteSuccess": "Xóa album thành công",
+      "deleteFailed": "Xóa album thất bại",
+      "importSuccess": "Nhập album thành công",
+      "importFailed": "Nhập album thất bại",
+      "exportSuccess": "Xuất album thành công",
+      "exportFailed": "Xuất album thất bại",
+      "invalidFormat": "Vui lòng chọn file album định dạng .ktalbum",
+      "refreshFailed": "Album đã được ghi đè, nhưng làm mới thất bại, vui lòng làm mới thủ công",
+      "importOverwriteSuccess": "Ghi đè album thành công",
+      "importSaveAsNewSuccess": "Album đã được lưu dưới dạng album mới",
+      "fileDescription": "File album KeyTone"
+    },
+    "importDialog": {
+      "title": "Nhập album",
+      "message": "Đã tồn tại album tương tự, vui lòng chọn cách xử lý:",
+      "overwrite": "Ghi đè album hiện có",
+      "saveAsNew": "Lưu dưới dạng album mới",
+      "cancel": "Hủy nhập",
+      "confirm": "Xác nhận"
+    }
+  },
+  "KeyToneAlbum": {
+    "new": {
+      "new": "Tạo album âm thanh phím mới",
+      "name": {
+        "name": "Tên album âm thanh phím",
+        "defaultValue": "Album âm thanh phím mới",
+        "errorMessage": "Bạn phải đặt tên cho album âm thanh phím"
+      }
+    },
+    "or": "hoặc",
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "continue": "Tiếp tục",
+    "back": "Quay lại",
+    "confirmEdit": "Xác nhận chỉnh sửa",
+    "delete": "Xóa",
+    "playMode": {
+      "single": "Đơn lẻ",
+      "random": "Ngẫu nhiên",
+      "loop": "Tuần tự"
+    },
+    "options": {
+      "audioFile": "File âm thanh nguồn",
+      "sound": "Đoạn âm thanh định sẵn",
+      "keySound": "Âm thanh phím tối ưu",
+
+      "audioFile_0": "File âm thanh",
+      "sound_0": "Đoạn âm thanh",
+      "keySound_0": "Âm thanh phím tối ưu"
+    },
+    "notify": {
+      "deleteSuccess": "Xóa thành công",
+      "deleteFailed": "Xóa thất bại",
+      "addSuccess": "Thêm thành công",
+      "addFailed": "Thêm thất bại",
+      "saveSuccess": "Lưu thành công",
+      "modifySuccess": "Chỉnh sửa thành công",
+      "modifyFailed": "Chỉnh sửa thất bại",
+      "noFilesToManage": "Hiện không có file nguồn để quản lý",
+      "noSoundsToEdit": "Hiện không có âm thanh để chỉnh sửa",
+      "noKeySoundsToEdit": "Hiện không có âm thanh phím tối ưu để chỉnh sửa",
+      "selectSoundEffect": "Vui lòng chọn hiệu ứng âm thanh",
+      "selectSoundEffectForKeys": "Vui lòng chọn hiệu ứng âm thanh cho các phím {keys}-",
+      "deleteSuccessForKeys": "Đã xóa hiệu ứng âm thanh cho phím {keys}- thành công",
+      "configSuccess": "Lưu cấu hình thành công",
+      "selectKey": "Vui lòng chọn phím",
+      "confirmDeleteSingleKeyEffect": "Bạn có chắc chắn muốn xóa cấu hình hiệu ứng âm thanh cho phím này không?",
+      "confirmDeleteSingleKeyEffectMessage": "Trong cấu hình hiện tại của bạn, cả hiệu ứng nhấn và thả đều trống, nên thao tác này tương đương với việc xóa",
+      "noChangesDetected": "Không phát hiện thay đổi",
+      "selectSourceFile": "Vui lòng chọn một file nguồn",
+      "endTimeGreaterThanStartTime": "Thời gian kết thúc phải lớn hơn thời gian bắt đầu",
+      "selectAudioFile": "Vui lòng chọn file âm thanh nguồn trước",
+      "timeValueCannotBeNegative": "Giá trị thời gian không thể âm",
+      "playFailed": "Phát thất bại",
+      "downSoundInvalid": "Thất bại: 'Âm thanh nhấn' không đáp ứng yêu cầu",
+      "upSoundInvalid": "Thất bại: 'Âm thanh thả' không đáp ứng yêu cầu",
+      "unifiedSoundEffectConfigFailed": "Cấu hình hiệu ứng âm thanh toàn bộ phím thất bại",
+      "keyAlreadySelected": "Phím đã ghi đã được chọn trong hộp chọn",
+      "noSoundEffectSelected": "Chưa cấu hình hiệu ứng âm thanh cho phím nào",
+      "singleKeySoundEffectConfigFailed": "Cấu hình hiệu ứng âm thanh cho phím {key} thất bại",
+      "singleKeySoundEffectConfigError": "Lỗi khi cấu hình hiệu ứng âm thanh cho phím {key}",
+      "partialSingleKeySoundEffectConfigSuccess": "Chỉ cấu hình thành công một phần hiệu ứng âm thanh cho phím",
+      "configFileReadFailed": "Đọc file cấu hình album âm thanh phím thất bại"
+    },
+    "loadAudioFile": {
+      "title": "tệp âm thanh gốc",
+      "description": "Tải file âm thanh gốc cho album hiện tại để sử dụng trong các bước tiếp theo",
+      "addNewFile": "Thêm file âm thanh nguồn mới",
+      "addNewFile_1": "Thêm file âm thanh nguồn mới",
+      "dragAndDrop": "Nhấp để chọn hoặc kéo thả file vào đây",
+      "audioFile": "File âm thanh nguồn",
+      "supportedFormats": "Hỗ trợ định dạng WAV, MP3, OGG",
+      "addAsNeeded": "Số lượng không giới hạn, thêm tùy theo sở thích",
+      "confirmAdd": "Xác nhận thêm",
+      "manageExistingFiles": "Quản lý file nguồn đã tải",
+      "selectFileToManage": "Chọn file nguồn để quản lý",
+      "emptyFileName": "Tên file trống có thể làm tăng chi phí quản lý sau này",
+      "renameFile": "Tên file (có thể thay đổi)"
+    },
+    "defineSounds": {
+      "title": "Cắt và định nghĩa âm thanh",
+      "description": "Cắt và định nghĩa âm thanh cần thiết từ file âm thanh gốc đã tải",
+      "createNewSound": "Thêm đoạn âm thanh mới",
+      "soundName": "Đặt tên cho âm thanh (không bắt buộc)",
+      "sourceFile": "File âm thanh nguồn",
+      "cropSound": "Cắt và định nghĩa âm thanh từ file âm thanh nguồn",
+      "startTime": "Thời gian bắt đầu (mili giây)",
+      "endTime": "Thời gian kết thúc (mili giây)",
+      "volume": "Âm lượng",
+      "error": {
+        "negativeTime": "Thời gian không thể âm"
+      },
+      "previewSound": "Xem trước âm thanh",
+      "confirmAdd": "Xác nhận thêm",
+      "editExistingSound": "Chỉnh sửa âm thanh hiện có",
+      "selectSoundToManage": "Chọn âm thanh để quản lý",
+      "tooltip": {
+        "noImpactOnSource": "Âm thanh tạo ra trong bước này không ảnh hưởng đến file nguồn",
+        "multipleSoundsFromSameSource": "Người dùng có thể cắt và định nghĩa nhiều âm thanh độc lập từ cùng một file nguồn",
+        "soundName": "Tên của âm thanh",
+        "soundDuration": "Thời gian bắt đầu và kết thúc của âm thanh, tính bằng mili giây. Vì dùng cho phím nên thời gian không nên quá dài.",
+        "volume": "0 là âm lượng gốc, lớn hơn 0 là tăng âm lượng, nhỏ hơn 0 là giảm âm lượng. Bước nhảy thường là 0.1",
+        "volume_1": "Bạn cũng có thể nhập thủ công để điều chỉnh chi tiết hơn, như 0.0001. Vui lòng xem trước sau mỗi lần điều chỉnh âm lượng để tránh âm lượng quá nhỏ hoặc quá lớn.",
+        "previewSound": "Âm thanh dùng cho phím thường rất ngắn, nên âm thanh xem trước sẽ phát đồng thời và không có thanh tiến trình và nút dừng (có thể khởi động lại ứng dụng để dừng nếu cần). Vì vậy hãy tuân theo nguyên tắc định nghĩa âm thanh."
+      }
+    },
+    "craftKeySounds": {
+      "title": "Tạo âm thanh phím tối ưu",
+      "description": "Âm thanh phím là âm thanh khi nhấn phím. Bước này mặc định tạo âm thanh phím dựa trên âm thanh đã được cắt và định nghĩa.",
+      "newKeySound": "Tạo âm thanh phím tối ưu mới",
+      "keySoundName": "Tên âm thanh phím tối ưu",
+      "keySoundName-placeholder": "Âm thanh phím tối ưu mới",
+      "configureDownSound": "Cấu hình âm thanh nhấn",
+      "configureUpSound": "Cấu hình âm thanh thả",
+      "selectPlayMode": "Chọn chế độ phát",
+      "selectSounds": "Chọn âm thanh (nhiều lựa chọn)",
+      "error": {
+        "singleMode": "Ở chế độ đơn lẻ, chỉ được chọn tối đa một âm thanh"
+      },
+      "confirmAdd": "Xác nhận thêm",
+      "tooltip": {
+        "description_0": "Về lý thuyết, mỗi âm thanh phím nên bao gồm cả âm thanh nhấn và thả.",
+        "description_1": "Cần định nghĩa riêng khi tạo, nhưng không bắt buộc.",
+        "description_2": "Có thể định nghĩa cả hai, chỉ một, hoặc không định nghĩa âm thanh nhấn và thả.",
+        "description_3": "Có thể định nghĩa cả hai, chỉ một, hoặc không định nghĩa.",
+        "audioFile": "Bật/tắt file âm thanh nguồn",
+        "soundList": "Bật/tắt đoạn âm thanh định sẵn",
+        "keySounds": "Bật/tắt âm thanh phím tối ưu",
+        "inheritKeySound": "Có thể kế thừa từ âm thanh phím tối ưu khác",
+        "inheritRule": "Nguyên tắc: Nhấn kế thừa nhấn, thả kế thừa thả"
+      },
+      "editExistingKeySound": "Quản lý âm thanh phím tối ưu",
+      "selectKeySoundToEdit": "Chọn âm thanh phím tối ưu để chỉnh sửa"
+    },
+    "linkageEffects": {
+      "title": "Hiệu ứng âm thanh liên kết phím",
+      "description": "Thiết lập hiệu ứng âm thanh liên kết cho phím, tự động phát hiệu ứng đã cài đặt khi nhấn hoặc thả phím.",
+      "enableTestSound": "Bật âm thanh kiểm tra tích hợp",
+      "downTestSound": "Âm thanh kiểm tra nhấn",
+      "upTestSound": "Âm thanh kiểm tra thả",
+      "globalSettings": "Hiệu ứng toàn bộ phím",
+      "singleKeySettings": "Hiệu ứng từng phím",
+      "global": {
+        "description": "Không cần chỉ định phím nào, thiết lập hiệu ứng âm thanh thống nhất toàn cục.",
+        "setKeyDownSound": "Thiết lập hiệu ứng âm thanh nhấn cho toàn bộ phím",
+        "setKeyUpSound": "Thiết lập hiệu ứng âm thanh thả cho toàn bộ phím"
+      },
+      "single": {
+        "description": "Chỉ định một hoặc nhiều phím để thiết lập hiệu ứng âm thanh độc lập cục bộ.",
+        "addSingleKeyEffect": "Thêm nhanh hiệu ứng âm thanh cho phím",
+        "dialog": {
+          "selectKeyAndEffect": "Vui lòng chọn phím và cài đặt hiệu ứng tương ứng.",
+          "selectSingleKey": "Chọn phím (số lượng tùy ý)",
+          "selectSingleKey-placeholder_record": "Nhập để ghi phím",
+          "selectSingleKey-placeholder_search": "Nhập để tìm kiếm phím",
+          "downSoundEffect": "Hiệu ứng âm thanh nhấn",
+          "upSoundEffect": "Hiệu ứng âm thanh thả",
+          "setDownSoundEffect": "Thiết lập hiệu ứng âm thanh nhấn",
+          "setUpSoundEffect": "Thiết lập hiệu ứng âm thanh thả",
+          "noSingleKeyEffects": "Hiện không có phím nào được thiết lập hiệu ứng âm thanh",
+          "singleKeyEffects": "Các phím đã thiết lập hiệu ứng âm thanh",
+          "clickToView": " Nhấp để xem hiệu ứng",
+          "editSingleKey": "Chỉnh sửa phím",
+          "soundEffect": "hiệu ứng âm thanh",
+          "soundEffect-down": "hiệu ứng âm thanh nhấn",
+          "soundEffect-up": "hiệu ứng âm thanh thả"
+        }
+      },
+      "confirm": "Xác nhận",
+      "tooltips": {
+        "description": "\"File âm thanh\", \"Âm thanh định sẵn\", \"Âm thanh phím tối ưu\" đều có thể được sử dụng làm hiệu ứng âm thanh liên kết với phím.",
+        "testSound": "KeyTone có sẵn hiệu ứng âm thanh kiểm tra toàn bộ phím,\nđể người dùng kiểm tra phần mềm hoạt động bình thường.\nMặc định bật, có thể tắt thủ công nếu cần.\nĐộ ưu tiên phát thấp hơn cài đặt hiệu ứng âm thanh toàn bộ/từng phím.",
+        "globalPriority": "Độ ưu tiên phát cao hơn âm thanh kiểm tra tích hợp, nhưng thấp hơn hiệu ứng âm thanh từng phím",
+        "singleKeyPriority": "Độ ưu tiên phát cao hơn hiệu ứng âm thanh toàn bộ phím và âm thanh kiểm tra tích hợp",
+        "ultimateKeySound": {
+          "title": "Âm thanh phím tối ưu",
+          "anchored": "(đã neo)",
+          "unanchored": "(đã bỏ neo)",
+          "tooltip": "Neo này chỉ áp dụng khi thiết lập hiệu ứng âm thanh là âm thanh phím tối ưu"
+        },
+        "audioFile": "Hỗ trợ thiết lập file âm thanh nguồn làm hiệu ứng âm thanh",
+        "soundList": "Hỗ trợ thiết lập đoạn âm thanh định sẵn làm hiệu ứng âm thanh",
+        "keySounds": "Hỗ trợ thiết lập âm thanh phím tối ưu làm hiệu ứng âm thanh\nNếu tùy chọn này được chọn, sẽ tự động cung cấp chức năng neo cho âm thanh phím tối ưu\nChức năng này nhằm giúp bạn dễ dàng thao tác, bạn cũng có thể bỏ neo để định nghĩa hiệu ứng âm thanh tự do hơn",
+        "fastDelete": "Cũng có thể sử dụng cài đặt hiệu ứng âm thanh nhấn/thả trống để xóa nhanh nhiều phím.",
+        "stopRecording": "Dừng ghi phím",
+        "startRecording": "Bắt đầu ghi phím",
+        "save": "Lưu nội dung đang chỉnh sửa",
+        "delete": "Xóa hiệu ứng âm thanh nhấn và thả của phím hiện tại"
+      }
+    }
+  },
+  "setting": {
+    "setting": "Cài đặt",
+    "language": {
+      "index": "Ngôn ngữ",
+      "caption": ""
+    },
+    "Khởi động và tự động khởi động": {
+      "Khởi động và tự động khởi động": {
+        "index": "Khởi động và tự động khởi động",
+        "caption": ""
+      },
+      "Ẩn cửa sổ khi khởi động": {
+        "index": "Ẩn cửa sổ khi khởi động",
+        "caption": "Thu nhỏ vào khay hệ thống khi mở ứng dụng"
+      },
+      "Tự động khởi động": {
+        "index": "Tự động khởi động",
+        "appxIndex": "Phiên bản Microsoft Store mặc định bật tùy chọn này",
+        "caption": "Có tự động khởi động ứng dụng khi bật máy tính không",
+        "appxCaption": "Có thể tắt trong 'Cài đặt'>'Ứng dụng'>'Khởi động' của hệ thống"
+      },
+      "Ẩn cửa sổ khi tự động khởi động": {
+        "index": "Ẩn cửa sổ khi tự động khởi động",
+        "caption": "Thu nhỏ vào khay hệ thống khi tự động khởi động ứng dụng"
+      }
+    },
+    "Điều chỉnh âm lượng gốc": {
+      "Điều chỉnh âm lượng gốc": {
+        "index": "Điều chỉnh âm lượng gốc",
+        "caption": "Tăng/giảm âm lượng mặc định của file âm thanh gốc bằng thuật toán. Lưu ý: Không nên điều chỉnh quá mức, chỉ nên điều chỉnh vừa phải, nếu không có thể làm hỏng chất lượng âm thanh gốc"
+      },
+      "Đặt lại": "Đặt lại",
+      "Âm lượng": "Âm lượng",
+      "AmplifyLimit": {
+        "index": "Giới hạn tăng",
+        "rulesErrorInfo": "Giá trị nhập phải lớn hơn 0 và nhỏ hơn 100,000,000"
+      }
+    },
+    "mainHome": {
+      "mainHome": { "index": "Trang chủ", "caption": "Tùy chỉnh cấu hình các chức năng liên quan trên trang chủ" },
+      "Mức giảm âm lượng": {
+        "index": "Mức giảm âm lượng",
+        "rulesErrorInfo": "Giá trị nhập phải lớn hơn hoặc bằng 5 và nhỏ hơn 100,000,000"
+      },
+      "Đặt lại": "Đặt lại",
+      "Thanh trượt điều chỉnh âm lượng": {
+        "index": "Thanh trượt điều chỉnh âm lượng",
+        "caption": "Khi bật, sẽ hiển thị thêm thanh trượt điều chỉnh âm lượng dưới thanh tiến trình âm lượng trên trang chủ"
+      }
+    }
+  },
+  "language": {
+    "setting language": "Cài đặt ngôn ngữ/setting language"
+  },
+  "Notify": {
+    "Đang cố gắng lấy file cấu hình": "Đang cố gắng lấy file cấu hình...",
+    "Lấy file cấu hình thất bại": "Lấy file cấu hình thất bại",
+    "Lấy file cấu hình thành công, đang đọc cấu hình": "Lấy file cấu hình thành công, đang đọc cấu hình...",
+    "Đọc cấu hình thành công": "Đọc cấu hình thành công",
+    "Đọc file cấu hình thất bại, vui lòng khởi động lại ứng dụng": "Đọc file cấu hình thất bại, vui lòng khởi động lại ứng dụng",
+    "Tính năng đang được phát triển": "Tính năng đang được phát triển",
+    "Không thể bật âm thanh khi âm lượng 0%": "Không thể bật âm thanh khi âm lượng 0%"
+  },
+  "Electron": {
+    "tray": {
+      "show": "Hiển thị",
+      "quit": "Thoát",
+      "mute": "Tắt tiếng",
+      "unmute": "Bật tiếng"
+    }
+  }
+}
