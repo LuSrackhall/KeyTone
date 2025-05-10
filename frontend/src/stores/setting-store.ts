@@ -3,6 +3,7 @@ import { Quasar, useQuasar } from 'quasar';
 import { StoreGet, StoreSet } from 'src/boot/query/store-query';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import messages from 'src/i18n';
 
 export const useSettingStore = defineStore('setting', () => {
   /*------------------------------------------------------------------------------------------------------------------*/
@@ -35,7 +36,11 @@ export const useSettingStore = defineStore('setting', () => {
    */
 
   const language = Quasar.lang.getLocale();
-  const languageDefault = ref<string>(language ? language : 'en-US');
+
+  type LanguageDefault = keyof typeof messages;
+  const languageDefault = ref<LanguageDefault>(
+    language && (language as LanguageDefault) in messages ? (language as LanguageDefault) : 'en-US'
+  );
 
   const { locale } = useI18n({ useScope: 'global' });
 
@@ -50,6 +55,11 @@ export const useSettingStore = defineStore('setting', () => {
   watch(
     languageDefault,
     () => {
+      languageDefault.value =
+        languageDefault.value && (languageDefault.value as LanguageDefault) in messages
+          ? (languageDefault.value as LanguageDefault)
+          : 'en-US';
+
       locale.value = languageDefault.value;
 
       modules[`../../node_modules/quasar/lang/${languageDefault.value}.js`]().then((item) => {
