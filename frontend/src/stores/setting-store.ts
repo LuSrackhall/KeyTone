@@ -39,6 +39,9 @@ export const useSettingStore = defineStore('setting', () => {
 
   const { locale } = useI18n({ useScope: 'global' });
 
+  // const modules = import.meta.glob('../../node_modules/quasar/lang/(de|en-US|es).js') // WARN: quasar官方提供的太麻烦, 还要自己去指定支持哪些 语言(如果遇到quasar语言包内不支持的简写, 会引起应用崩溃--这是我不希望的(毕竟只是语言问题))。(由于我对于此类限制, 可以随后在其它地方完成, 因此直接使用 通配符 * 最为方便。)
+  const modules = import.meta.glob('../../node_modules/quasar/lang/*.js'); //   - completed(已完成)    根源上解决了 languageDefault 为 quasar内部存在, 但未写入联合类型时的报错问题。(但为了避免quasar内部不存在的类型(几乎不可能) 或是 quasar内部存在但我的i18n中没有配置的语言包被误设置, 故仍需要在languageDefault的类型上, 作出相关限制-这个我会在随后的提交中做处理。)
+
   /**
    * 此处采用立即执行, 是为了当数据库为空时, 也能自动赋值所获取的当地语言值(即使不适配也无妨), 不至于所获得值被刷而被动强制
    * 为英语。
@@ -48,6 +51,11 @@ export const useSettingStore = defineStore('setting', () => {
     languageDefault,
     () => {
       locale.value = languageDefault.value;
+
+      modules[`../../node_modules/quasar/lang/${languageDefault.value}.js`]().then((item) => {
+        q.lang.set(item.default);
+      });
+      console.log('fff111=', Quasar.lang.getLocale());
     },
     { immediate: true }
   );
