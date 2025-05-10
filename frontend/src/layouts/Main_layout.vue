@@ -160,7 +160,7 @@
           "
         />
       </q-list>
-      <div class="q-mini-drawer-hide absolute" style="top: 15px; right: -17px">
+      <div class="q-mini-drawer-hide absolute top-[15px] right-[-17px]">
         <q-btn dense round unelevated color="accent" icon="chevron_left" @click="toggleLeftDrawer" />
       </div>
     </q-drawer>
