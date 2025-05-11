@@ -348,9 +348,10 @@ function createWindow() {
     mainWindow.setMenu(null); // 此方式比较彻底(等于彻底放弃了菜单栏, 甚至让开发工具快捷键都失效), 但是此api在macOS下无效。
     mainWindow.setMenuBarVisibility(false); // 此方式是彻底隐藏, 不受alt键影响。(TIPS: 主要用于解决MacOS下无法彻底放弃菜单栏的问题, 两个都开。)
     // we're on production; no access to devtools pls
-    mainWindow.webContents.on('devtools-opened', () => {
-      mainWindow?.webContents.closeDevTools();
-    });
+    // mainWindow.webContents.on('devtools-opened', () => {
+    //   mainWindow?.webContents.closeDevTools();
+    // });
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   // mainWindow.on('closed', () => {
