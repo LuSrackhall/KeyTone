@@ -140,6 +140,7 @@ function runChildProcess(command: string, parameter: Array<string>) {
       const portMatch = line.match(/KEYTONE_PORT=(\d+)/);
       if (portMatch) {
         backendPort = parseInt(portMatch[1], 10);
+        // 这里用于更新axios中的port。(由于electron主进程不受quasar或者说前端渲染进程boot函数逻辑内的端口修改影响, 因此这里需要自行修改用于electron主进程的端口号)
         UpdateApi(backendPort); // 目前只有这里有可能造成api的端口变更, 因此对于node端仅在此处更新即可。
         process.stdout.write(`[SDK] Using port: ${backendPort}\n`);
         sdkIsRun = true;
