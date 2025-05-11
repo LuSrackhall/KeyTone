@@ -884,7 +884,22 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 			return
 		}
-		albumName, ok := audioPackageList.GetAudioPackageName(path).(string)
+		albumName := audioPackageList.GetAudioPackageName(path)
+		retryCount := 0
+		for albumName == nil {
+			albumName = audioPackageList.GetAudioPackageName(path)
+			// 添加一个计数器和最大重试次数(防止死循环造成的资源占用问题)
+			if retryCount >= 6 {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 获取专辑名称失败: 超过最大重试次数",
+				})
+				return
+			}
+			retryCount++
+			fmt.Println("GetAudioPackageName为nil, 尝试重新获取。 获取次数=", retryCount)
+			time.Sleep(100 * time.Millisecond) // 添加短暂延迟
+		}
+		albumName, ok := albumName.(string)
 		if !ok {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"message": "error: 获取专辑名称失败: 类型转换错误",
