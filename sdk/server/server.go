@@ -419,11 +419,52 @@ func ServerRun() {
 	// 获取实际使用的端口
 	port := listener.Addr().(*net.TCPAddr).Port
 
-	// 输出端口信息，让Electron主进程可以捕获
-	fmt.Printf("KEYTONE_PORT=%d\n", port)
+	// 创建一个channel用于服务器就绪通知
+	ready := make(chan bool, 1)
 
 	// 使用listener启动服务
-	go r.RunListener(listener)
+	go func() {
+		// 启动服务器
+		go func() {
+
+			// time.Sleep(100000 * time.Millisecond)
+			if err := r.RunListener(listener); err != nil {
+				logger.Error("服务器启动失败:", err)
+				ready <- false
+			}
+		}()
+
+		// 检测服务器就绪状态
+		maxRetries := 50
+		retryInterval := 100 * time.Millisecond
+		client := http.Client{
+			Timeout: 100 * time.Millisecond, // 添加超时设置
+		}
+
+		for i := 0; i < maxRetries; i++ {
+			resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", port))
+			if err == nil {
+				resp.Body.Close()
+				if resp.StatusCode == 200 {
+					ready <- true
+					// fmt.Println("55555555555555666666666666666666666666666666777")
+					return
+				}
+			}
+			time.Sleep(retryInterval)
+			// fmt.Println("55555555555555666666666666666666666666666666")
+		}
+		ready <- false // 超过最大重试次数
+	}()
+
+	// 等待服务器就绪信号
+	isReady := <-ready
+	if !isReady {
+		fmt.Println("SDK本地server模块: 启动失败")
+		return
+	}
+	// 输出端口信息，让Electron主进程可以捕获
+	fmt.Printf("KEYTONE_PORT=%d\n", port)
 }
 
 func mainRouters(r *gin.Engine) {
