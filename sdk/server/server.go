@@ -426,41 +426,31 @@ func ServerRun() {
 	go func() {
 		// 启动服务器
 		go func() {
-
-			// time.Sleep(100000 * time.Millisecond)
+			// time.Sleep(10000 * time.Millisecond)
 			if err := r.RunListener(listener); err != nil {
 				logger.Error("服务器启动失败:", err)
 				ready <- false
 			}
 		}()
 
-		// 检测服务器就绪状态
-		maxRetries := 50
-		retryInterval := 100 * time.Millisecond
-		client := http.Client{
-			Timeout: 100 * time.Millisecond, // 添加超时设置
-		}
-
-		for i := 0; i < maxRetries; i++ {
-			resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", port))
-			if err == nil {
-				resp.Body.Close()
-				if resp.StatusCode == 200 {
-					ready <- true
-					// fmt.Println("55555555555555666666666666666666666666666666777")
-					return
-				}
+		// 这里我们没有设置超时限制, 所以会一直阻塞等待所请求的相关服务的返回信息, 直到返回成功或失败, 并解除阻塞。(未设置超时限制, 不会返回超时信息)(由于不做超时限制, 会节省一些损耗, 也能第够一时间作出响应)
+		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ping", port))
+		// 如果请求没有出错测继续
+		if err == nil {
+			resp.Body.Close()
+			// 如果请求成功则向通道发送true, 以向终端输出端口号信息。(如果失败则不做任何处理, 让本grouting自行结束即可)(如果失败的话, 相关服务启动失败后就会向通道发送false了->以向终端输出服务启动失败的相关信息, 故此处无需处理。)
+			if resp.StatusCode == 200 {
+				ready <- true
+				// fmt.Println("55555555555555666666666666666666666666666666777")
+				return
 			}
-			time.Sleep(retryInterval)
-			// fmt.Println("55555555555555666666666666666666666666666666")
 		}
-		ready <- false // 超过最大重试次数
 	}()
 
 	// 等待服务器就绪信号
 	isReady := <-ready
 	if !isReady {
-		fmt.Println("SDK本地server模块: 启动失败")
+		fmt.Println("SDK的本地server模块启动失败")
 		return
 	}
 	// 输出端口信息，让Electron主进程可以捕获
