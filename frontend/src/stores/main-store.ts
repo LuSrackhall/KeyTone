@@ -56,14 +56,6 @@ export const useMainStore = defineStore('main', () => {
           GetAudioPackageName(item).then((res) => {
             // console.log('res', res);
             keyTonePkgOptionsName.value.set(item, res.name);
-            if (!res.name) {
-              setTimeout(() => {
-                console.log('由于首次启动端口号的更改缓慢, 故尝试重新获取一次键音包名称');
-                GetAudioPackageName(item).then((res) => {
-                  keyTonePkgOptionsName.value.set(item, res.name);
-                });
-              }, 800);
-            }
           });
         });
       } else {
