@@ -145,6 +145,16 @@ function runChildProcess(command: string, parameter: Array<string>) {
         sdkIsRun = true;
       }
 
+      if (line.includes('SDK的本地server模块启动失败')) {
+        console.error('error: SDK的本地server模块启动失败');
+        sdkIsRun = true; //   - completed(已完成)    虽然报错了, 但仍应允许ui正常启动。 因为我们的ui逻辑中会检测到服务模块链接不上, 并在ui界面引导用户重新启动应用。
+        // 在这里可以添加更多的错误处理逻辑
+        // 例如：通知用户、尝试重启SDK、记录日志等
+        // sdkIsRun = false; // 本身就是false, 没必要再设置一次
+        // 可能需要重新初始化或者退出应用
+        // app.quit(); //   - errIdea(错误的思路,不必再考虑)     这里没必要让整个electron应用自行退出, 这样用户什么都感知不到, 不如交给用户抉择, 也能让开发者也就是我进一步了解sdk的服务模块启动时的稳定性。
+      }
+
       if (line.trim()) {
         process.stdout.write(`[SDK] ${line}\n`);
       }
