@@ -87,8 +87,7 @@
           flat
           icon="keyboard_backspace"
           @click="back"
-          class="mt-0.8 -mr-1.8"
-          :class="[isMacOS ? 'mb-0.5' : '']"
+          :class="[isMacOS ? 'mb-0.5' : '', Quasar.lang.props.rtl ? 'rotate-180 mb-0.8 -ml-1.8' : 'mt-0.8 -mr-1.8']"
         />
         <div class="flex flex-nowrap">
           <div class="text-sm text-nowrap" :class="[isMacOS ? 'mb-0.5' : '']">{{ pageLabel }}</div>
@@ -160,7 +159,10 @@
           "
         />
       </q-list>
-      <div class="q-mini-drawer-hide absolute top-[15px] right-[-17px]">
+      <div
+        class="q-mini-drawer-hide absolute top-[15px] right-[-17px]"
+        :class="[Quasar.lang.props.rtl ? 'rotate-180' : '']"
+      >
         <q-btn dense round unelevated color="accent" icon="chevron_left" @click="toggleLeftDrawer" />
       </div>
     </q-drawer>
@@ -175,6 +177,7 @@
 import { computed, ref } from 'vue';
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
 import { useI18n } from 'vue-i18n';
+import { Quasar } from 'quasar';
 
 const keytoneAlbum_store = useKeytoneAlbumStore();
 
