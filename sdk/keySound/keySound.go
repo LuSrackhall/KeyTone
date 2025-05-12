@@ -412,7 +412,7 @@ func KeySoundHandler(keyState string, keycode uint16) {
 		if soundEffectType == "key_sounds" {
 			key_sound_UUID := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".value")
 
-			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode)
+			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
@@ -456,7 +456,7 @@ func KeySoundHandler(keyState string, keycode uint16) {
 		if soundEffectType == "key_sounds" {
 			key_sound_UUID := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
 
-			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode)
+			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
@@ -522,7 +522,14 @@ func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 //   - single: 单一音效模式,按顺序播放配置的音效
 //   - random: 随机音效模式,随机选择一个音效播放
 //   - loop:   循环音效模式,循环播放配置的音效
-func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode uint16) {
+func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode uint16, count uint16) {
+	// 此处限制键音的嵌套数量上限为1000层, 这样即使键音专辑中存在至臻键音间的无限循环依赖也不必担心因此可能引起的  cpu超负荷风险 或 内存占用过多的内存溢出风险。
+	// * 理论上, 设置9999甚至更高也是可行的, 但没必要, 因为没有人会去制作继承嵌套超过1000层的键音。
+	if count > 1000 {
+		return
+	}
+	count = count + 1
+
 	mode := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".mode")
 	if mode == "single" {
 		value := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".value")
@@ -546,7 +553,7 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 				}
 				if vMap["type"] == "key_sounds" {
 					key_sound_UUID := vMap["value"].(string)
-					keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode)
+					keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 					return
 				}
 			}
@@ -584,7 +591,7 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_UUID := vMap["value"].(string)
-				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode)
+				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 				return
 			}
 		}
@@ -645,7 +652,7 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_UUID := vMap["value"].(string)
-				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode)
+				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 				return
 			}
 		}
