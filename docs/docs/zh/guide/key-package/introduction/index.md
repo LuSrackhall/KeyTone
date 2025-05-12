@@ -17,7 +17,7 @@
 
 ## **社区与简单示例**
 
-为了让您快速体验 KeyTone 的魅力，我们准备了一些键音专辑基础示例，您可下载并导入到软件中进行体验：
+为了让您快速体验 KeyTone 的魅力，我们准备了一些键音专辑的基础示例，您可下载并导入到软件中进行体验：
 > 感谢[mechvibes](https://github.com/hainguyents13/mechvibes)项目为这些示例提供**音频源文件**支持。
 
 <iframe frameborder="0" src="https://itch.io/embed/3523882" width="552" height="167"><a href="https://lusrackhall.itch.io/keytone-custom-album-example">Keytone-Custom-Album-Example by LuSrackhall</a></iframe>
