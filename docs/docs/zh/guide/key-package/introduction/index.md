@@ -19,6 +19,8 @@
 
 为了让您快速体验 KeyTone 的魅力，我们准备了一些键音专辑基础示例，您可下载并导入到软件中进行体验：
 
+<iframe frameborder="0" src="https://itch.io/embed/3523882" width="552" height="167"><a href="https://lusrackhall.itch.io/keytone-custom-album-example">Keytone-Custom-Album-Example by LuSrackhall</a></iframe>
+
 以上分享中的基础示例是发布在itch社区的, 大家可以在其中分享自己所创建的键音专辑。
 
 ## **下一步**
