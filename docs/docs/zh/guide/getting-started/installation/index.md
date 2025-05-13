@@ -1,6 +1,6 @@
 # 安装指南
 
-KeyTone 是一个开源的按键音效定制工具，它允许您为键盘按键添加自定义的音效，让每次按键的体验更加愉悦。作为开源软件，我们欢迎社区的贡献和反馈，共同打造更好的按键体验。
+KeyTone 是一款开源的按键音效定制工具，它允许您为键盘按键添加自定义的音效，让每次按键的体验更加愉悦。作为开源软件，我们欢迎社区的贡献和反馈，共同打造更好的按键体验。
 
 ## 下载与安装
 
@@ -8,17 +8,26 @@ KeyTone 是一个开源的按键音效定制工具，它允许您为键盘按键
 
 1. **GitHub Releases**
 
-   作为开源项目，您可以从我们的 [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) 页面下载最新版本。
+   作为开源项目，您可以从我们的 [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) 页面免费下载最新版本。
 
 2. **官方网站**
 
-   你也可以通过访问我们的[官方网站](https://keytone.xuanhall.com)获取最新版本和安装说明。
+   你也可以通过访问我们的[官方网站](https://keytone.xuanhall.com)免费获取最新版本和安装说明。
 
 3. **应用商店**
 
-   最后, 支持开发者的最佳方式是通过各平台的官方渠道商店下载 KeyTone。这不仅能确保您获得最新的稳定版本，还能提供少量资金来帮助我们更有动力的持续改进这个项目。
-   * Windows
-     * 从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取。
+   通过各平台的官方渠道商店获取 KeyTone 的最新版本。
+   * Windows &nbsp;——&nbsp; 从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取。
+   * MacOS &nbsp;&nbsp;&nbsp;&nbsp;——&nbsp; 敬请期待
+
+   通过应用商店下载的优势是, 可获得应用商店关于本软件的自动更新支持, 而且应用商店的内置沙盒机制、以及严格的应用审核管理机制，都可进一步为用户提供更强的安全保障。
+  
+**KeyTone软件是开源且免费的,** 但也欢迎大家通过应用商店进行购买。
+<blockquote style="border-left:none; padding-left:0;">
+<p>与大多数开源产品一样，KeyTone 无法独自发展。购买行为或是其它形式的赞助, 能够为开发者提供资金支持, 这有利于项目的持续维护和迭代。</p>
+</blockquote>
+
+<!-- `与大多数开源产品一样，KeyTone 无法独自发展。开源梦想是一项崇高的事业，它促进社区发展，代码得到培育。对开源项目进行赞助, 能够有效降低开源项目因缺少资金而被迫停止的风险概率。` -->
 
 ## 系统要求
 

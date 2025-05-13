@@ -2,7 +2,7 @@
   <img src="./frontend/src/assets/img/KeyTone.png" width="35%"><br/>
 </p>
 <p align="center">
-  在寂静中，让您的键盘唤醒舒适的声音。
+  在寂静中，让您的按键唤醒舒适的声音。
   <br/>
   <br/>
   <a href="https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE">
@@ -27,7 +27,7 @@
 
 ## 介绍
 
-KeyTone是一款实用的软件，能够在需要保持安静的环境下实时模拟键盘敲击的声音，从而提升您使用电脑的舒适度。
+KeyTone是一款实用的软件，能够在需要保持安静的环境下实时模拟按键的声音，从而提升您使用电脑的舒适度。
 
 尽管市面上已经有很多类似的软件，但KeyTone依然致力于为用户提供最佳的体验。
 
