@@ -11,7 +11,7 @@ interface Config extends LocaleSpecificConfig {
 export const META_URL = "https://keytone.xuanhall.com";
 export const META_TITLE = "KeyTone";
 export const META_DESCRIPTION =
-  "可以实时模拟键盘敲击的声音, 支持多平台Windows、Mac和Linux系统, 安装简单迅速。按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。开箱即用, 注重细节, 在寂静中，让您的键盘唤醒舒适的声音。";
+  "可以实时模拟按键敲击的声音, 支持多平台Windows、Mac和Linux系统, 安装简单迅速。按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。开箱即用, 注重细节, 在寂静中，让您的按键唤醒舒适的声音。";
 
 export const zhConfig: Config = {
   label: "中文",

@@ -4,8 +4,10 @@ layout: home
 
 hero:
   name: "KeyTone"
-  text: 在寂静中，让您的键盘唤醒舒适的声音。
-  # tagline: "可以实时模拟键盘敲击的声音"
+  # text: 在寂静中，让您的按键唤醒舒适的声音。
+  text: 让您的按键唤醒舒适的声音。
+  # text: 让您的按键“声”动起来！
+  # tagline: "可以实时模拟按键敲击的声音"
   image:
     # 放置在 public 中的资源将按原样复制到输出目录的根目录<请注意，您应该使用根绝对路径引用放置在 public 中的文件 - 例如， public/icon.png 应始终在源代码中引用为 /icon.png>
     src: /images/KeyTone.png
@@ -34,7 +36,7 @@ hero:
 
 features:
   - title: 开箱即用
-    details: 可以实时模拟键盘敲击的声音。
+    details: 可以实时模拟按键敲击的声音。
   - title: 注重细节
     details: 按键的按下和抬起, 拥有独立音效, 完美适配按键长按的场景。
   - title: 功能强大
