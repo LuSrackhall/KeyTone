@@ -24,14 +24,14 @@ KeyTone 是一款开源的按键音效定制工具，它允许您为按键添加
   
 **KeyTone软件是开源且免费的,** 但也欢迎大家通过应用商店进行购买。
 <blockquote style="border-left:none; padding-left:0;">
-<p>与大多数开源产品一样，KeyTone 无法独自发展。购买行为或是其它形式的赞助, 能够为开发者提供资金支持, 这有利于项目的持续维护和迭代。</p>
+<p>与大多数开源产品一样，KeyTone 无法独自发展。因此, 购买行为或是其它形式的赞助, 能够为开发者提供资金支持, 这有利于项目的持续维护和迭代。</p>
 </blockquote>
 
 <!-- `与大多数开源产品一样，KeyTone 无法独自发展。开源梦想是一项崇高的事业，它促进社区发展，代码得到培育。对开源项目进行赞助, 能够有效降低开源项目因缺少资金而被迫停止的风险概率。` -->
 
 ## 系统要求
 
-* Windows 10 或更高版本。
+* Windows 10 或更高版本。 macOS 11 或更高版本。
 * 音频输出设备。
 
 ## 遇到问题
@@ -45,9 +45,10 @@ KeyTone 是一款开源的按键音效定制工具，它允许您为按键添加
 
 如果您喜欢 KeyTone，可以通过以下方式支持我们：
 
-1. 在 Microsoft Store [购买KeyTone应用](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)。
+<!-- TODO: 1. 在 [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS) 或 [Apple Store]() 购买KeyTone应用。 -->
+1. 在 [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS) 购买KeyTone应用。
 2. 在 GitHub 上为[本项目](https://github.com/LuSrackhall/KeyTone)点亮 ⭐️。
 3. 向您的朋友推荐 [KeyTone](https://keytone.xuanhall.com)。
-4. 参与项目开发，提交代码或反馈建议。
+4. 参与项目开发，贡献代码或反馈建议。
 
 感谢您选择 KeyTone，希望它能为您的日常生活体验带来愉悦！
