@@ -29,6 +29,7 @@
     "import": "Album importieren",
     "export": "Album exportieren",
     "delete": "Album löschen",
+    "help": "Hilfe",
     "label": "Tastensound-Album",
     "emptyState": {
       "noAlbum": "Keine Alben"

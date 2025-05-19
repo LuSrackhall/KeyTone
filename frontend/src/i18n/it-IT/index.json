@@ -29,6 +29,7 @@
     "import": "Importa album",
     "export": "Esporta album",
     "delete": "Elimina album",
+    "help": "Aiuto",
     "label": "Album di suoni tasti",
     "emptyState": {
       "noAlbum": "Nessun album di suoni tasti"

@@ -29,6 +29,7 @@
     "import": "Nhập album",
     "export": "Xuất album",
     "delete": "Xóa album",
+    "help": "Trợ giúp",
     "label": "Album âm thanh phím",
     "emptyState": {
       "noAlbum": "Chưa có album âm thanh phím"

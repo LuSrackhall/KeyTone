@@ -29,6 +29,7 @@
     "import": "匯入專輯",
     "export": "匯出專輯",
     "delete": "刪除專輯",
+    "help": "幫助",
     "label": "鍵音專輯",
     "emptyState": {
       "noAlbum": "暫無鍵音專輯"

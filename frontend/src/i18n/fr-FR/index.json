@@ -29,6 +29,7 @@
     "import": "Importer",
     "export": "Exporter",
     "delete": "Supprimer",
+    "help": "Aide",
     "label": "Albums sonores",
     "emptyState": {
       "noAlbum": "Aucun album sonore"

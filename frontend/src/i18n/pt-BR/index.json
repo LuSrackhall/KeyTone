@@ -29,6 +29,7 @@
     "import": "Importar Álbum",
     "export": "Exportar Álbum",
     "delete": "Excluir Álbum",
+    "help": "Ajuda",
     "label": "Álbuns de Sons de Teclas",
     "emptyState": {
       "noAlbum": "Sem álbuns de sons de teclas"

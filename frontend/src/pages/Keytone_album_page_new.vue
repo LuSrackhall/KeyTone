@@ -98,6 +98,27 @@
                 {{ $t('keyToneAlbumPage.delete') }}
               </q-tooltip>
             </q-btn>
+
+            <!-- 新增帮助按钮 -->
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="help"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="openExternal('https://keytone.xuanhall.com/guide/key-package/introduction/')"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                {{ $t('keyToneAlbumPage.help') }}
+              </q-tooltip>
+            </q-btn>
           </div>
 
           <!-- 键音专辑选择器 -->
@@ -651,6 +672,12 @@ const importAlbum = async () => {
 
   // 触发文件选择
   input.click();
+};
+
+const openExternal = (url: string) => {
+  if (process.env.MODE === 'electron') {
+    window.myWindowAPI.openExternal(url);
+  }
 };
 
 const isMacOS = ref(getMacOSStatus());

@@ -29,6 +29,7 @@
     "import": "导入专辑",
     "export": "导出专辑",
     "delete": "删除专辑",
+    "help": "帮助",
     "label": "键音专辑",
     "emptyState": {
       "noAlbum": "暂无键音专辑"

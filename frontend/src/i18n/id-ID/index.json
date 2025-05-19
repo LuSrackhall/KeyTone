@@ -29,6 +29,7 @@
     "import": "Impor Album",
     "export": "Ekspor Album",
     "delete": "Hapus Album",
+    "help": "Bantuan",
     "label": "Album KeyTone",
     "emptyState": {
       "noAlbum": "Belum ada album KeyTone"

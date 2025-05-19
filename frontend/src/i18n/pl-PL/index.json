@@ -29,6 +29,7 @@
     "import": "Importuj album",
     "export": "Eksportuj album",
     "delete": "Usuń album",
+    "help": "Pomoc",
     "label": "Album dźwięków klawiszy",
     "emptyState": {
       "noAlbum": "Brak albumów dźwięków klawiszy"

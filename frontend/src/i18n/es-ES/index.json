@@ -29,6 +29,7 @@
     "import": "Importar álbum",
     "export": "Exportar álbum",
     "delete": "Eliminar álbum",
+    "help": "Ayuda",
     "label": "Álbum de sonidos",
     "emptyState": {
       "noAlbum": "No hay álbumes de sonidos"

@@ -29,6 +29,7 @@
     "import": "Import Album",
     "export": "Export Album",
     "delete": "Delete Album",
+    "help": "Help",
     "label": "Key Sound Album",
     "emptyState": {
       "noAlbum": "No Albums"

@@ -29,6 +29,7 @@
     "import": "앨범 가져오기",
     "export": "앨범 내보내기",
     "delete": "앨범 삭제",
+    "help": "도움말",
     "label": "키톤 앨범",
     "emptyState": {
       "noAlbum": "키톤 앨범이 없습니다"

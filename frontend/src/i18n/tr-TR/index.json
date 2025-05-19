@@ -29,6 +29,7 @@
     "import": "Albüm İçe Aktar",
     "export": "Albüm Dışa Aktar",
     "delete": "Albümü Sil",
+    "help": "Yardım",
     "label": "Tuş Sesi Albümü",
     "emptyState": {
       "noAlbum": "Henüz tuş sesi albümü yok"
