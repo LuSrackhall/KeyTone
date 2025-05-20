@@ -25,6 +25,13 @@ export default {
     app.mixin({
       // 在组件挂载时执行
       mounted() {
+        // 优先检查用户手动选择的语言
+        const storedLang = sessionStorage.getItem("keytone-lang");
+        if (storedLang) {
+          hasRedirected = true;
+          return;
+        }
+
         // 如果已经执行过重定向，则直接返回，避免重复执行
         if (hasRedirected) return;
 
@@ -36,13 +43,21 @@ export default {
         const router = useRouter();
 
         // 检查并执行重定向逻辑
-        if (userLanguage.startsWith("zh") && !route.path.startsWith("/zh")) {
-          // 如果用户使用中文，但当前不在中文路径下，重定向到中文路径
+        if (
+          (userLanguage.startsWith("zh") && !route.path.startsWith("/zh")) ||
+          (storedLang === "zh" && !route.path.startsWith("/zh"))
+        ) {
+          // 重定向到中文路径
           hasRedirected = true;
+          sessionStorage.setItem("keytone-lang", "zh");
           router.go("/zh" + route.path);
-        } else if (!userLanguage.startsWith("zh") && route.path.startsWith("/zh")) {
-          // 如果用户使用非中文，但当前在中文路径下，重定向到默认的英文路径(网站只支持中文和英文, 且未来也不打算支持更多类型的语言, 其它语言的访问者会自动重定向到英文页面, 用户可自行借助翻译工具翻译页面内容)
+        } else if (
+          (!userLanguage.startsWith("zh") && route.path.startsWith("/zh")) ||
+          (storedLang === "en" && route.path.startsWith("/zh"))
+        ) {
+          // 重定向到英文路径
           hasRedirected = true;
+          sessionStorage.setItem("keytone-lang", "en");
           router.go(route.path.replace("/zh", ""));
         }
       },
