@@ -4905,6 +4905,10 @@ function getMacOSStatus() {
   }
   return false;
 }
+
+const fontSize_俄语i18n = computed(() => {
+  return setting_store.languageDefault === 'ru' ? '0.66rem' : '0.75rem';
+});
 </script>
 
 <style lang="scss" scoped>
@@ -4989,6 +4993,9 @@ function getMacOSStatus() {
 
 :deep(.q-btn) {
   @apply text-xs;
+  // font-size: 0.66rem;
+  // line-height: 1rem;
+  font-size: v-bind(fontSize_俄语i18n);
   @apply p-1.5;
   @apply transition-transform hover:scale-105;
   @apply scale-103;
