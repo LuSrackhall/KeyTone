@@ -4995,4 +4995,8 @@ function getMacOSStatus() {
 :deep(.q-stepper__step-inner) {
   padding: 0 12px 32px 55px;
 }
+
+:deep(.q-field__label) {
+  @apply overflow-visible;
+}
 </style>

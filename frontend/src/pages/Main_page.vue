@@ -542,6 +542,10 @@ function getMacOSStatus() {
   // 添加细微滚动条
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
 }
+
+:deep(.q-field__label) {
+  @apply overflow-visible;
+}
 </style>
 
 <!-- 可以通过在 含有 scoped 的style中, 通过:global 来使用, 效果与下方相同 -->
