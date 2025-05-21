@@ -4991,7 +4991,8 @@ const fontSize_俄语i18n = computed(() => {
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
 }
 
-:deep(.q-btn) {
+.q-btn,
+.q-card .q-card__actions .q-btn {
   @apply text-xs;
   // font-size: 0.66rem;
   // line-height: 1rem;
