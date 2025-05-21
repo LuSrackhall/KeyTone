@@ -523,6 +523,7 @@
                     </q-card-section>
                     <q-card-actions align="right">
                       <q-btn
+                        class="mt-2"
                         dense
                         @click="
                           previewSound({
@@ -545,6 +546,7 @@
                         </q-tooltip>
                       </q-btn>
                       <q-btn
+                        class="mt-2"
                         @click="
                           saveSoundConfig({
                             // source_file_for_sound: sourceFileForSound ,  // 由于js/ts中，传递对象时是通过引用传递的。这意味着函数接收到的是对象的引用，而不是对象的副本。因此，函数内部可以访问和修改对象的所有属性。包括不希望有的name字段。
@@ -579,7 +581,7 @@
                         :label="$t('KeyToneAlbum.defineSounds.confirmAdd')"
                         color="primary"
                       />
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
+                      <q-btn class="mt-2" flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
