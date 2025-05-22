@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <q-page>
+  <q-page :style="{ '--i18n_fontSize': i18n_fontSize }">
     <q-scroll-area :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
       <div :class="['flex flex-col gap-5  p-8  scale-102']">
         <q-input
@@ -101,7 +101,11 @@
                   "
                 >
                 </q-btn>
-                <q-dialog v-model="addNewSoundFile" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="addNewSoundFile"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6">
                       {{ $t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
@@ -220,7 +224,11 @@
                     }
                   "
                 ></q-btn>
-                <q-dialog v-model="editSoundFile" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="editSoundFile"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card :class="['p-x-3  w-[96%]']">
                     <q-card-section class="row items-center q-pb-none text-h6">
                       {{ $t('KeyToneAlbum.loadAudioFile.manageExistingFiles') }}
@@ -419,7 +427,11 @@
                   "
                 >
                 </q-btn>
-                <q-dialog v-model="createNewSound" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="createNewSound"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6">
                       {{ $t('KeyToneAlbum.defineSounds.createNewSound') }}
@@ -609,7 +621,11 @@
                   "
                 >
                 </q-btn>
-                <q-dialog v-model="showEditSoundDialog" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="showEditSoundDialog"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card class="min-w-[100%]">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
@@ -931,7 +947,11 @@
                   "
                 >
                 </q-btn>
-                <q-dialog v-model="createNewKeySound" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="createNewKeySound"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card :class="['min-w-[90%]']">
                     <q-card-section class="row items-center q-pb-none text-h6">
                       {{ $t('KeyToneAlbum.craftKeySounds.newKeySound') }}
@@ -951,7 +971,11 @@
                           :label="$t('KeyToneAlbum.craftKeySounds.configureDownSound')"
                           @click="configureDownSound = true"
                         />
-                        <q-dialog v-model="configureDownSound" backdrop-filter="invert(70%)">
+                        <q-dialog
+                          :style="{ '--i18n_fontSize': i18n_fontSize }"
+                          v-model="configureDownSound"
+                          backdrop-filter="invert(70%)"
+                        >
                           <q-card :class="['min-w-[80%]']">
                             <q-card-section class="row items-center q-pb-none text-h6">
                               {{ $t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
@@ -1097,7 +1121,11 @@
                           :label="$t('KeyToneAlbum.craftKeySounds.configureUpSound')"
                           @click="configureUpSound = true"
                         />
-                        <q-dialog v-model="configureUpSound" backdrop-filter="invert(70%)">
+                        <q-dialog
+                          :style="{ '--i18n_fontSize': i18n_fontSize }"
+                          v-model="configureUpSound"
+                          backdrop-filter="invert(70%)"
+                        >
                           <q-card :class="['min-w-[80%]']">
                             <q-card-section class="row items-center q-pb-none text-h6">
                               {{ $t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
@@ -1290,7 +1318,11 @@
                   "
                 >
                 </q-btn>
-                <q-dialog v-model="editExistingKeySound" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="editExistingKeySound"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card :class="['min-w-[100%]']">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
@@ -1333,7 +1365,11 @@
                               :label="$t('KeyToneAlbum.craftKeySounds.configureDownSound')"
                               @click="edit_configureDownSound = true"
                             />
-                            <q-dialog v-model="edit_configureDownSound" backdrop-filter="invert(70%)">
+                            <q-dialog
+                              :style="{ '--i18n_fontSize': i18n_fontSize }"
+                              v-model="edit_configureDownSound"
+                              backdrop-filter="invert(70%)"
+                            >
                               <q-card :class="['min-w-[80%]']">
                                 <q-card-section class="row items-center q-pb-none text-h6">
                                   {{ $t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
@@ -1465,7 +1501,11 @@
                               :label="$t('KeyToneAlbum.craftKeySounds.configureUpSound')"
                               @click="edit_configureUpSound = true"
                             />
-                            <q-dialog v-model="edit_configureUpSound" backdrop-filter="invert(70%)">
+                            <q-dialog
+                              :style="{ '--i18n_fontSize': i18n_fontSize }"
+                              v-model="edit_configureUpSound"
+                              backdrop-filter="invert(70%)"
+                            >
                               <q-card :class="['min-w-[80%]']">
                                 <q-card-section class="row items-center q-pb-none text-h6">
                                   {{ $t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
@@ -1763,7 +1803,11 @@
                     <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.globalPriority') }}</span>
                   </q-tooltip>
                 </q-icon>
-                <q-dialog v-model="showEveryKeyEffectDialog" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="showEveryKeyEffectDialog"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card>
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
@@ -2116,7 +2160,11 @@
                     <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.singleKeyPriority') }}</span>
                   </q-tooltip>
                 </q-icon>
-                <q-dialog v-model="showSingleKeyEffectDialog" backdrop-filter="invert(70%)">
+                <q-dialog
+                  :style="{ '--i18n_fontSize': i18n_fontSize }"
+                  v-model="showSingleKeyEffectDialog"
+                  backdrop-filter="invert(70%)"
+                >
                   <q-card>
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
@@ -2143,6 +2191,7 @@
                         />
                         {{ $t('KeyToneAlbum.linkageEffects.single.addSingleKeyEffect') }}
                         <q-dialog
+                          :style="{ '--i18n_fontSize': i18n_fontSize }"
                           :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
                           v-model="isShowAddOrSettingSingleKeyEffectDialog"
                           backdrop-filter="invert(70%)"
@@ -2853,7 +2902,10 @@
                             'Dik-{' + item[0] + '}'
                           }}
                         </q-chip>
-                        <q-dialog v-model="isShowSingleKeySoundEffectEditDialog">
+                        <q-dialog
+                          :style="{ '--i18n_fontSize': i18n_fontSize }"
+                          v-model="isShowSingleKeySoundEffectEditDialog"
+                        >
                           <q-card style="min-width: 350px">
                             <q-card-section>
                               <div class="text-base flex flex-row items-center">
@@ -4906,7 +4958,7 @@ function getMacOSStatus() {
   return false;
 }
 
-const fontSize_俄语i18n = computed(() => {
+const i18n_fontSize = computed(() => {
   return setting_store.languageDefault === 'ru' ? '0.66rem' : '0.75rem';
 });
 </script>
@@ -4991,12 +5043,11 @@ const fontSize_俄语i18n = computed(() => {
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
 }
 
-.q-btn,
-.q-card .q-card__actions .q-btn {
+.q-btn {
   @apply text-xs;
   // font-size: 0.66rem;
   // line-height: 1rem;
-  font-size: v-bind(fontSize_俄语i18n);
+  font-size: var(--i18n_fontSize);
   @apply p-1.5;
   @apply transition-transform hover:scale-105;
   @apply scale-103;
