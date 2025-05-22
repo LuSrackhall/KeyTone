@@ -479,7 +479,7 @@
                     </q-card-section>
 
                     <q-card-section :class="['p-b-1']">
-                      <div class="text-[14.5px] text-gray-600">
+                      <div class="text-[13.5px] text-gray-600 p-b-2">
                         {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
                         <q-icon name="info" color="primary">
                           <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
@@ -626,7 +626,7 @@
                   v-model="showEditSoundDialog"
                   backdrop-filter="invert(70%)"
                 >
-                  <q-card class="min-w-[100%]">
+                  <q-card class="min-w-[106%]">
                     <q-card-section
                       class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
                     >
@@ -665,7 +665,7 @@
                       :class="['flex flex-col m-t-3']"
                       v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
                     >
-                      <q-card :class="['flex flex-col pb-3']" v-if="selectedSound">
+                      <q-card :class="['flex flex-col pb-3 w-[100%]']" v-if="selectedSound">
                         <q-card-section :class="['p-b-1 mt-3']">
                           <q-input
                             outlined
@@ -746,7 +746,7 @@
                         </q-card-section>
 
                         <q-card-section :class="['p-b-1']">
-                          <div class="text-[15px] text-gray-600">
+                          <div class="text-[13.5px] text-gray-600 p-b-2">
                             {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
                             <q-icon name="info" color="primary">
                               <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
