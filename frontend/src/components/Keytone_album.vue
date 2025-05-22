@@ -479,7 +479,7 @@
                     </q-card-section>
 
                     <q-card-section :class="['p-b-1']">
-                      <div class="text-[15px] text-gray-600">
+                      <div class="text-[14.5px] text-gray-600">
                         {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
                         <q-icon name="info" color="primary">
                           <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">

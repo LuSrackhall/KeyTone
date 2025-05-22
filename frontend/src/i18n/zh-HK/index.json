@@ -165,7 +165,7 @@
     },
     "craftKeySounds": {
       "title": "鑄造至臻鍵音",
-      "description": "鍵音, 實際就是按鍵聲音或稱按鍵音。 本步驟預設根據裁剪定義好的聲音, 製作按鍵音。",
+      "description": "鍵音, 實際就是按鍵聲音或稱按鍵音。 本步驟預設根據裁剪定義好的聲音, 製作按鍵音",
       "newKeySound": "製作新的至臻鍵音",
       "keySoundName": "至臻鍵音名稱",
       "keySoundName-placeholder": "新的至臻鍵音",
@@ -193,7 +193,7 @@
     },
     "linkageEffects": {
       "title": "按鍵聯動聲效",
-      "description": "為按鍵設置聯動聲效，按下或抬起按鍵時，自動播放預設聲效。",
+      "description": "為按鍵設置聯動聲效，按下或抬起按鍵時，自動播放預設聲效",
       "enableTestSound": "是否啟用內嵌測試音",
       "downTestSound": "按下測試音",
       "upTestSound": "抬起測試音",
