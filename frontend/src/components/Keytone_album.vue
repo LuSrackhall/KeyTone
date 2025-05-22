@@ -1434,7 +1434,7 @@
                                     ref="edit_downSoundSelectDom"
                                     @update:model-value="edit_downSoundSelectDom?.hidePopup()"
                                   />
-                                  <div class="h-3">
+                                  <div class="h-10">
                                     <q-option-group
                                       dense
                                       v-model="edit_downTypeGroup"
@@ -1572,7 +1572,7 @@
                                     ref="edit_upSoundSelectDom"
                                     @update:model-value="edit_upSoundSelectDom?.hidePopup()"
                                   />
-                                  <div class="h-3">
+                                  <div class="h-10">
                                     <q-option-group
                                       dense
                                       v-model="edit_upTypeGroup"
