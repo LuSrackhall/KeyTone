@@ -209,7 +209,7 @@
         "addSingleKeyEffect": "Ajouter rapidement un effet de touche individuelle",
         "dialog": {
           "selectKeyAndEffect": "Veuillez sélectionner une touche et l'effet sonore correspondant.",
-          "selectSingleKey": "Sélectionner des touches individuelles (nombre quelconque)",
+          "selectSingleKey": "Sélectionner des touches (nombre quelconque)",
           "selectSingleKey-placeholder_record": "Tapez ici pour enregistrer une touche",
           "selectSingleKey-placeholder_search": "Tapez ici pour rechercher une touche",
           "downSoundEffect": "Effet sonore d'appui",

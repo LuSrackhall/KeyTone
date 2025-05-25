@@ -37,7 +37,7 @@
         <div>全局键音规则</div>
         <div>对某个特定按键单独设置键音</div> -->
 
-        <q-stepper v-model="step" vertical header-nav color="primary" animated>
+        <q-stepper v-model="step" vertical header-nav color="primary" animated class="step-custom">
           <div
             :class="[
               // 字体
@@ -79,7 +79,7 @@
               }
             "
           >
-            <div :class="['mb-3']">{{ $t('KeyToneAlbum.loadAudioFile.description') }}</div>
+            <div :class="['mb-3', step_introduce_fontSize]">{{ $t('KeyToneAlbum.loadAudioFile.description') }}</div>
             <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
             <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
             <!-- <q-card class="bg-slate-500" :class="['p-2']"> -->
@@ -403,7 +403,7 @@
               }
             "
           >
-            <div class="mb-3">
+            <div :class="['mb-3', step_introduce_fontSize]">
               {{ $t('KeyToneAlbum.defineSounds.description') }}
               <q-icon name="info" color="primary">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
@@ -919,7 +919,7 @@
               }
             "
           >
-            <div class="mb-3">
+            <div :class="['mb-3', step_introduce_fontSize]">
               {{ $t('KeyToneAlbum.craftKeySounds.description') }}
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
@@ -1749,7 +1749,7 @@
               }
             "
           >
-            <div>
+            <div :class="['mb-3', step_introduce_fontSize]">
               {{ $t('KeyToneAlbum.linkageEffects.description') }}
               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                 <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
@@ -1757,9 +1757,9 @@
                 </q-tooltip>
               </q-icon>
             </div>
-            <div :class="['flex items-center m-t-2']">
+            <div :class="['flex items-center m-t-2 w-[130%]']">
               <span class="text-gray-500 mr-0.7">•</span>
-              <span>
+              <span class="text-nowrap">
                 {{ $t('KeyToneAlbum.linkageEffects.enableTestSound') }}:
                 <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                   <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
@@ -1768,7 +1768,14 @@
                 </q-icon>
               </span>
             </div>
-            <div :class="['flex items-center ml-3']">
+            <div
+              :class="[
+                'flex items-center ml-3',
+                setting_store.languageDefault === 'pt' || setting_store.languageDefault === 'pt-BR'
+                  ? 'flex-nowrap text-nowrap'
+                  : '',
+              ]"
+            >
               <span class="text-gray-500 mr-1.5">•</span>
               <q-toggle
                 v-model="isEnableEmbeddedTestSound.down"
@@ -1777,7 +1784,12 @@
                 dense
               />
             </div>
-            <div :class="['flex items-center ml-3']">
+            <div
+              :class="[
+                'flex items-center ml-3',
+                setting_store.languageDefault === 'fr' ? 'flex-nowrap text-nowrap' : '',
+              ]"
+            >
               <span class="text-gray-500 mr-1.5">•</span>
               <q-toggle
                 v-model="isEnableEmbeddedTestSound.up"
@@ -2068,7 +2080,7 @@
                           </q-icon>
                         </div>
                       </div>
-                      <div class="h-16 m-l-9">
+                      <div class="h-16 m-l-5.8">
                         <q-option-group dense v-model="unifiedTypeGroup" :options="options" type="checkbox">
                           <template #label-0="props">
                             <q-item-label>
@@ -2085,7 +2097,7 @@
                             </q-item-label>
                           </template>
                           <template v-slot:label-1="props">
-                            <q-item-label>
+                            <q-item-label :class="[setting_store.languageDefault === 'es' ? 'text-nowrap' : '']">
                               {{ $t(props.label) }}
                               <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                 <q-tooltip
@@ -2356,14 +2368,39 @@
                                   <!-- 按键选择 end -->
 
                                   <!-- 声效选择 start -->
-                                  <div class="flex flex-row items-center justify-center gap-9 w-[88%]">
+                                  <div class="flex flex-row items-center justify-center gap-x-9 gap-y-2 w-[95%]">
                                     <q-checkbox
                                       dense
+                                      :class="[
+                                        setting_store.languageDefault === 'ru' || setting_store.languageDefault === 'pl'
+                                          ? 'w-[200px] text-nowrap'
+                                          : setting_store.languageDefault === 'fr' ||
+                                            setting_store.languageDefault === 'pt' ||
+                                            setting_store.languageDefault === 'pt-BR' ||
+                                            setting_store.languageDefault === 'vi'
+                                          ? 'w-[180px] text-nowrap'
+                                          : setting_store.languageDefault === 'it' ||
+                                            setting_store.languageDefault === 'tr'
+                                          ? 'w-[102px] text-nowrap'
+                                          : '',
+                                      ]"
                                       v-model="isDownSoundEffectSelectEnabled"
                                       :label="$t('KeyToneAlbum.linkageEffects.single.dialog.downSoundEffect')"
                                     />
                                     <q-checkbox
                                       dense
+                                      :class="[
+                                        setting_store.languageDefault === 'ru' || setting_store.languageDefault === 'pl'
+                                          ? 'w-[200px] text-nowrap'
+                                          : setting_store.languageDefault === 'fr' ||
+                                            setting_store.languageDefault === 'pt' ||
+                                            setting_store.languageDefault === 'pt-BR' ||
+                                            setting_store.languageDefault === 'vi'
+                                          ? 'w-[180px] text-nowrap'
+                                          : setting_store.languageDefault === 'it'
+                                          ? 'w-[102px] text-nowrap'
+                                          : '',
+                                      ]"
                                       v-model="isUpSoundEffectSelectEnabled"
                                       :label="$t('KeyToneAlbum.linkageEffects.single.dialog.upSoundEffect')"
                                     />
@@ -2371,7 +2408,7 @@
                                   <div class="w-full">
                                     <q-card-section>
                                       <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
-                                        <div class="flex flex-col space-y-4 w-6.5/8">
+                                        <div class="flex flex-col space-y-4 w-[223px]">
                                           <!-- 选择单键按下声效的选项, 仅支持单选 -->
                                           <q-select
                                             v-show="isDownSoundEffectSelectEnabled"
@@ -2457,7 +2494,7 @@
                                         </div>
                                         <div
                                           v-show="isDownSoundEffectSelectEnabled && isUpSoundEffectSelectEnabled"
-                                          class="flex justify-end -m-l-2"
+                                          :class="['absolute -right-2']"
                                         >
                                           <q-icon
                                             @click="
@@ -2661,9 +2698,18 @@
                                             </q-item-label>
                                           </template>
                                           <template v-slot:label-1="props">
-                                            <q-item-label>
+                                            <q-item-label
+                                              :class="[
+                                                setting_store.languageDefault === 'fr' ||
+                                                setting_store.languageDefault === 'it' ||
+                                                setting_store.languageDefault === 'pt' ||
+                                                setting_store.languageDefault === 'pt-BR'
+                                                  ? 'text-nowrap'
+                                                  : '',
+                                              ]"
+                                            >
                                               {{ $t(props.label) }}
-                                              <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
+                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
                                                 <q-tooltip
                                                   :class="[
                                                     'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
@@ -4959,7 +5005,21 @@ function getMacOSStatus() {
 }
 
 const i18n_fontSize = computed(() => {
-  return setting_store.languageDefault === 'ru' ? '0.66rem' : '0.75rem';
+  return setting_store.languageDefault === 'ru' ||
+    setting_store.languageDefault === 'it' ||
+    setting_store.languageDefault === 'es' ||
+    setting_store.languageDefault === 'pt-BR' ||
+    setting_store.languageDefault === 'pl' ||
+    setting_store.languageDefault === 'tr' ||
+    setting_store.languageDefault === 'id'
+    ? '0.66rem'
+    : setting_store.languageDefault === 'fr'
+    ? '0.63rem'
+    : '0.75rem';
+});
+
+const step_introduce_fontSize = computed(() => {
+  return setting_store.languageDefault === 'ru' ? 'text-[0.80rem]' : 'text-[0.85rem]';
 });
 </script>
 
@@ -5025,6 +5085,9 @@ const i18n_fontSize = computed(() => {
   :deep(.q-field__native) {
     @apply h-auto;
   }
+  :deep(.q-field__messages) {
+    @apply text-nowrap;
+  }
 }
 
 :global(.q-card) {
@@ -5053,11 +5116,12 @@ const i18n_fontSize = computed(() => {
   @apply scale-103;
 }
 
-:deep(.q-stepper__step-inner) {
-  padding: 0 12px 32px 55px;
+.step-custom {
+  :deep(.q-stepper__step-inner) {
+    padding: 0 10px 32px 55px;
+  }
 }
-
 :deep(.q-field__label) {
-  @apply overflow-visible;
+  @apply overflow-visible -ml-1.5 text-[0.8rem];
 }
 </style>

@@ -157,15 +157,15 @@
         "noImpactOnSource": "通過此步驟製作的聲音不會影響聲音源檔案",
         "multipleSoundsFromSameSource": "使用者可針對同一聲音源檔案裁剪定義出多個獨立的聲音",
         "soundName": "聲音的名稱",
-        "soundDuration": "聲音的開始時間和結束時間，以毫秒為單位。由於是按鍵使用，所以時間不宜過長。",
-        "volume": "0為原始音量，大於0為提升音量，小於0為降低音量。常用步進為0.1",
-        "volume_1": "當然您也可以手動輸入以做更細膩的調整, 如0.0001等。請在每次音量調整後重新預覽以查看效果, 防止音量過小或過大。",
-        "previewSound": "按鍵用的聲音通常很短, 因此連續預覽的聲音會並發播放, 且不提供進度條和停止按鈕(必要時候可通過重啟本應用來停止)。因此請遵循聲音定義的原則。"
+        "soundDuration": "聲音的開始時間和結束時間,以毫秒為單位.由於是按鍵使用,所以時間不宜過長.",
+        "volume": "0為原始音量,大於0為提升音量,小於0為降低音量.常用步進為0.1",
+        "volume_1": "當然您也可以手動輸入以做更細膩的調整, 如0.0001等.請在每次音量調整後重新預覽以查看效果, 防止音量過小或過大.",
+        "previewSound": "按鍵用的聲音通常很短, 因此連續預覽的聲音會並發播放, 且不提供進度條和停止按鈕(必要時候可通過重啟本應用來停止).因此請遵循聲音定義的原則."
       }
     },
     "craftKeySounds": {
       "title": "鑄造至臻鍵音",
-      "description": "鍵音, 實際就是按鍵聲音或稱按鍵音。 本步驟預設根據裁剪定義好的聲音, 製作按鍵音",
+      "description": "鍵音,實際就是按鍵聲音或稱按鍵音.本步驟根據裁剪定義好的聲音,製作按鍵音",
       "newKeySound": "製作新的至臻鍵音",
       "keySoundName": "至臻鍵音名稱",
       "keySoundName-placeholder": "新的至臻鍵音",
@@ -178,37 +178,37 @@
       },
       "confirmAdd": "確認新增",
       "tooltip": {
-        "description_0": "理論上每個按鍵音, 都應包括按下和抬起聲音。",
-        "description_1": "製作時需分別定義它們, 但這並不是強制的。",
-        "description_2": "按下聲音和抬起聲音都可根據需要選擇性定義。",
-        "description_3": "可以都定義, 也可以只定義其中一個, 或者都不定義。",
+        "description_0": "理論上每個按鍵音, 都應包括按下和抬起聲音.",
+        "description_1": "製作時需分別定義它們, 但這並不是強制的.",
+        "description_2": "按下聲音和抬起聲音都可根據需要選擇性定義.",
+        "description_3": "可以都定義, 也可以只定義其中一個, 或者都不定義.",
         "audioFile": "使能/失能 音訊源檔案",
         "soundList": "使能/失能 預定義聲音片段",
         "keySounds": "使能/失能 至臻鍵音",
         "inheritKeySound": "此項可做到對其他至臻鍵音的繼承",
-        "inheritRule": "原則: 按下繼承按下，抬起繼承抬起"
+        "inheritRule": "原則: 按下繼承按下,抬起繼承抬起"
       },
       "editExistingKeySound": "編輯已有至臻鍵音",
       "selectKeySoundToEdit": "選擇要編輯的至臻鍵音"
     },
     "linkageEffects": {
       "title": "按鍵聯動聲效",
-      "description": "為按鍵設置聯動聲效，按下或抬起按鍵時，自動播放預設聲效",
+      "description": "為按鍵設置聯動聲效,按下或抬起按鍵時,自動播放預設聲效",
       "enableTestSound": "是否啟用內嵌測試音",
       "downTestSound": "按下測試音",
       "upTestSound": "抬起測試音",
       "globalSettings": "全鍵聲效設置",
       "singleKeySettings": "單鍵聲效設置",
       "global": {
-        "description": "無需指定任何按鍵, 直接進行全局統一的聲效設置。",
+        "description": "無需指定任何按鍵, 直接進行全局統一的聲效設置.",
         "setKeyDownSound": "設置全鍵按下聲效",
         "setKeyUpSound": "設置全鍵抬起聲效"
       },
       "single": {
-        "description": "指定單個或多個按鍵, 以進行局部獨立的聲效設置。",
+        "description": "指定單個或多個按鍵, 以進行局部獨立的聲效設置.",
         "addSingleKeyEffect": "快速增設單鍵聲效",
         "dialog": {
-          "selectKeyAndEffect": "請選擇按鍵和對應的聲效設置。",
+          "selectKeyAndEffect": "請選擇按鍵和對應的聲效設置.",
           "selectSingleKey": "選擇單鍵(數量任意)",
           "selectSingleKey-placeholder_record": "在此鍵入錄製單鍵",
           "selectSingleKey-placeholder_search": "在此鍵入搜尋單鍵",
