@@ -5021,8 +5021,14 @@ const i18n_fontSize = computed(() => {
 const step_introduce_fontSize = computed(() => {
   return isMacOS.value
     ? // MacOS
-      setting_store.languageDefault === 'ru'
+      setting_store.languageDefault === 'ru' ||
+      setting_store.languageDefault === 'ja' ||
+      setting_store.languageDefault === 'es'
       ? 'text-[0.80rem]'
+      : setting_store.languageDefault === 'ko-KR'
+      ? 'text-[0.83rem]'
+      : setting_store.languageDefault === 'id'
+      ? 'text-[0.87]'
       : 'text-[0.85rem]'
     : // windows
     setting_store.languageDefault === 'ru' ||
@@ -5032,7 +5038,6 @@ const step_introduce_fontSize = computed(() => {
     ? 'text-[0.80rem]'
     : setting_store.languageDefault === 'tr'
     ? 'text-[0.83rem]'
-
     : 'text-[0.85rem]';
 });
 </script>
