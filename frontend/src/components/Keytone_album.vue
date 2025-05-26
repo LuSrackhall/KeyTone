@@ -5019,7 +5019,21 @@ const i18n_fontSize = computed(() => {
 });
 
 const step_introduce_fontSize = computed(() => {
-  return setting_store.languageDefault === 'ru' ? 'text-[0.80rem]' : 'text-[0.85rem]';
+  return isMacOS.value
+    ? // MacOS
+      setting_store.languageDefault === 'ru'
+      ? 'text-[0.80rem]'
+      : 'text-[0.85rem]'
+    : // windows
+    setting_store.languageDefault === 'ru' ||
+      setting_store.languageDefault === 'ko-KR' ||
+      setting_store.languageDefault === 'pl' ||
+      setting_store.languageDefault === 'ar'
+    ? 'text-[0.80rem]'
+    : setting_store.languageDefault === 'tr'
+    ? 'text-[0.83rem]'
+
+    : 'text-[0.85rem]';
 });
 </script>
 
