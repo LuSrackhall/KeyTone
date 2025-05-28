@@ -2,7 +2,7 @@
   <img src="./frontend/src/assets/img/KeyTone.png" width="35%"><br/>
 </p>
 <p align="center">
-  In silence, let your keyboard bring forth pleasing sounds.
+  Let the keys awaken a comfortable sound.
   <br/>
   <br/>
   <a href="https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE">
@@ -27,7 +27,7 @@
 
 ## Introduction
 
-KeyTone is a practical software that can simulate the sound of keyboard strokes in real-time in environments where silence needs to be maintained, thereby enhancing your comfort in using the computer.
+KeyTone is a practical software that can simulate the sound of keystrokes in real-time in environments where silence is required, thereby enhancing your comfort when using a computer.
 
 Although there are already many similar software on the market, KeyTone is still committed to providing users with the best experience.
 
@@ -35,36 +35,60 @@ In addition, KeyTone is an open-source software that follows the GPL license.
 
 ## Features
 
-* Ready to use out of the box.
-* The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
-* Users can quickly customize the sound of each keypress according to their own needs.The software is designed around key sound albums, offering a rich and convenient set of features.
+* Simple functionality, ready to use out of the box.
+* Key press and release can be independently bound to sound effects.
+* Designed based on real key trigger conditions, sound effects are only played at the moment of pressing and releasing, and will not be repeated while holding down.
+* Highly customizable, users can quickly customize the sound of keys according to their own needs. This software has designed and developed a rich and convenient series of functions around key sound albums.
 
 ## Installation
 
-* You can download the latest version from our [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) page.
-* You can also visit our [official website](https://keytone.xuanhall.com) to get the latest version and installation instructions.
-* Finally, the best way to support the developers is to download KeyTone through the official channel stores on various platforms. This not only ensures you get the latest stable version but also provides a small amount of funding to help us stay motivated to continuously improve this project.
-  * Windows
-    * Get it from the [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS).
+You can obtain **KeyTone** through the following methods:
+
+1. **GitHub Releases**
+
+   As an open-source project, you can download the latest version for free from our [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) page.
+
+2. **Official Website**
+
+   You can also visit our [official website](https://keytone.xuanhall.com) to get the latest version and installation instructions for free.
+
+3. **App Stores**
+
+   Get the latest version of KeyTone through official app stores on various platforms.
+   * Windows  ——  Get from [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)
+
+      <a data-label="windows_phone" href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?ocid=webpdpshare" class="windows_phone_btn store_btn"><img src="https://static.itch.io/images/store_badges/windowsphone.png" srcset="https://static.itch.io/images/store_badges/windowsphone.png 1x, https://static.itch.io/images/store_badges/windowsphone@2x.png 2x"></a>
+   * MacOS  ——  No plans to list yet
+
+   The advantage of downloading through app stores is that you can get automatic update support for the listed software. In addition, the built-in sandbox mechanism of app stores and the strict application review management mechanism can provide users with further security guarantees.
+  
+**KeyTone software is open-source and free,** but we also welcome everyone to purchase through app stores.
+<blockquote style="border-left:none; padding-left:0;">
+<p>Like most open-source products, KeyTone cannot develop on its own. Therefore, purchasing or other forms of sponsorship can provide financial support to developers, which is beneficial for the continuous maintenance and iteration of the project.</p>
+</blockquote>
+
+## System Requirements
+
+* Windows 10 or higher. macOS 11 or higher.
+* Audio output device.
 
 ## Roadmap
 
-The project roadmap may be found [here](https://github.com/LuSrackhall/KeyTone/milestones). Please consult it before creating an enhancement request.😊
+The project's roadmap can be found [here](https://github.com/LuSrackhall/KeyTone/milestones). Please check it before creating enhancement requests. 😊
 
 ## Issues
 
-Any ideas are welcome!
+Welcome any ideas!
 
-## Contribution
+## Contributions
 
-Contributions of any kind are welcome!
+Welcome contributions in any form!
+<!-- Please check our contribution guidelines for details. -->
+
+## License
+
+This project follows the [GPL License](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).
 
 ## Copyright
 
 Copyright (C) 2024-present LuSrackhall
-
-## License
-
-This project follows the [GPL license](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).
-
-<!-- * Some parts of the code (such as those related to the Steam API) are not covered by the GPL license due to containing sensitive information. These parts will be released under a proprietary license that complies with Steam platform requirements for commercial use. -->
