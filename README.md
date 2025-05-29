@@ -85,6 +85,16 @@ Welcome any ideas!
 Welcome contributions in any form!
 <!-- Please check our contribution guidelines for details. -->
 
+## Star History
+
+<a href="https://www.star-history.com/#LuSrackhall/KeyTone&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
+ </picture>
+</a>
+
 ## License
 
 This project follows the [GPL License](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).

@@ -85,6 +85,16 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 欢迎任何形式的贡献！
 <!-- 请查看我们的贡献指南以了解详情。 -->
 
+## 星星增长趋势
+
+<a href="https://www.star-history.com/#LuSrackhall/KeyTone&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
+ </picture>
+</a>
+
 ## 许可证
 
 本项目遵循[GPL许可证](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE)。
