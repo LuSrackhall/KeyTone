@@ -30,20 +30,20 @@ const downloadMenu = computed(() => {
   switch (lang.value) {
     case "zh":
       return [
-        {
-          // text: `Windows ${version} x64 (.zip) - 推荐`,
-          // text: `Windows x64 (.zip) - 推荐`,
-          text: `Windows x64 (.zip)`,
-          // 这个不再区分, 仅链接github的下载。
-          // link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
-          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
-          icon: Windows,
-          event: "download",
-          eventPlatform: "windows",
-          eventType: "setup_zip",
-          eventArch: "x64",
-          eventLang: "zh",
-        },
+        // {
+        //   // text: `Windows ${version} x64 (.zip) - 推荐`,
+        //   // text: `Windows x64 (.zip) - 推荐`,
+        //   text: `Windows x64 (.zip)`,
+        //   // 这个不再区分, 仅链接github的下载。
+        //   // link: `https://gitee.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+        //   link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+        //   icon: Windows,
+        //   event: "download",
+        //   eventPlatform: "windows",
+        //   eventType: "setup_zip",
+        //   eventArch: "x64",
+        //   eventLang: "zh",
+        // },
         {
           // text: `Windows ${version} x64 安装包 (.exe)`,
           text: `Windows x64 安装包 (.exe)`,
@@ -57,21 +57,43 @@ const downloadMenu = computed(() => {
           eventArch: "x64",
           eventLang: "zh",
         },
+        {
+          text: `MacOS x64 安装包 (.dmg)`,
+          // 这个不再区分, 仅链接github的下载。
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-mac-x64.dmg`,
+          icon: Apple,
+          event: "download",
+          eventPlatform: "MacOS",
+          eventType: "dmg",
+          eventArch: "x64",
+          eventLang: "zh",
+        },
+        {
+          text: `MacOS arm64 安装包 (.dmg)`,
+          // 这个不再区分, 仅链接github的下载。
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-mac-arm64.dmg`,
+          icon: Apple,
+          event: "download",
+          eventPlatform: "MacOS",
+          eventType: "dmg",
+          eventArch: "arm64",
+          eventLang: "zh",
+        },
       ];
     default:
       return [
-        {
-          // text: `Windows ${version} x64 (.zip) - Recommended`,
-          // text: `Windows x64 (.zip) - Recommended`,
-          text: `Windows x64 (.zip)`,
-          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
-          icon: Windows,
-          event: "download",
-          eventPlatform: "windows",
-          eventType: "setup_zip",
-          eventArch: "x64",
-          eventLang: "en",
-        },
+        // {
+        //   // text: `Windows ${version} x64 (.zip) - Recommended`,
+        //   // text: `Windows x64 (.zip) - Recommended`,
+        //   text: `Windows x64 (.zip)`,
+        //   link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-win-x64_exe.zip`,
+        //   icon: Windows,
+        //   event: "download",
+        //   eventPlatform: "windows",
+        //   eventType: "setup_zip",
+        //   eventArch: "x64",
+        //   eventLang: "en",
+        // },
         {
           // text: `Windows ${version} x64 Installer (.exe)`,
           text: `Windows x64 Installer (.exe)`,
@@ -82,6 +104,28 @@ const downloadMenu = computed(() => {
           eventType: "setup",
           eventArch: "x64",
           eventLang: "en",
+        },
+        {
+          text: `MacOS x64 Installer (.dmg)`,
+          // 这个不再区分, 仅链接github的下载。
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-mac-x64.dmg`,
+          icon: Apple,
+          event: "download",
+          eventPlatform: "MacOS",
+          eventType: "dmg",
+          eventArch: "x64",
+          eventLang: "zh",
+        },
+        {
+          text: `MacOS arm64 Installer (.dmg)`,
+          // 这个不再区分, 仅链接github的下载。
+          link: `https://github.com/LuSrackhall/KeyTone/releases/download/${version}/KeyTone-${version}-mac-arm64.dmg`,
+          icon: Apple,
+          event: "download",
+          eventPlatform: "MacOS",
+          eventType: "dmg",
+          eventArch: "arm64",
+          eventLang: "zh",
         },
       ];
   }
