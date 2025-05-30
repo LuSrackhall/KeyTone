@@ -15,9 +15,9 @@ features:
     details: The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
   - title: Powerful Functionality 
     details: Users can quickly customize the sound of each keypress according to their own needs. 
-  - title: Open Source
-    details: This software is completely open source, feel safe to use and share it.
-    linkText: Source Code
-    link:  https://github.com/LuSrackhall/KeyTone
+  - title: Transparent and Open Source
+    details: 100% open source, welcome to experience and join our open-source community!
+    linkText: Explore the Source Code
+    link: https://github.com/LuSrackhall/KeyTone
 ---
 
