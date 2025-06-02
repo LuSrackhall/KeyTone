@@ -294,7 +294,25 @@ module.exports = configure(function (/* ctx */) {
           publisher: 'CN=54940991-8DDB-4049-B299-2C3D65A6BBCC', // 发布者信息
           publisherDisplayName: 'LuSrackhall', // Windows Store 中显示的发布者名称
           identityName: 'LuSrackhall.KeyTone', // 应用的身份名称
-          languages: ['zh-CN', 'en-US'], // 支持的语言
+          languages: [
+            'zh-CN',
+            'en-US',
+            'zh-TW',
+            'ja',
+            'ko-KR',
+            'de',
+            'ru',
+            'fr',
+            'it',
+            'es',
+            'pt',
+            'pt-BR',
+            'pl',
+            'tr',
+            'vi',
+            'id',
+            'ar',
+          ], // 支持的语言
           // backgroundColor: 'transparent', // 设置为透明
           backgroundColor: '#ffffff', // 应用启动时的背景色
           // showNameOnTiles: true, // 在磁贴上显示应用名称
