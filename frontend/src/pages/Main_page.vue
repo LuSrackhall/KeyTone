@@ -94,7 +94,17 @@
         <!-- 空状态额外提示 -->
         <transition name="fade">
           <div v-if="!main_store.keyTonePkgOptions.length" class="text-center mt-2">
-            <div class="text-xs text-gray-400 -ml-0.6">{{ $t('mainHome.emptyState.createOrImportTip') }}</div>
+            <div
+              class="text-xs text-gray-400 max-w-58"
+              :class="[
+                // 对溢出的情况, 采取滚动策略
+                'overflow-x-auto overflow-y-hidden whitespace-nowrap  text-clip',
+                // 添加细微滚动条
+                'pt-0.5 pb-0.5 [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50',
+              ]"
+            >
+              {{ $t('mainHome.emptyState.createOrImportTip') }}
+            </div>
           </div>
         </transition>
       </div>
