@@ -38,14 +38,32 @@
     <q-item-section>
       <q-item-label class="flex flew-row items-center bg-opacity-80">
         {{ $t('setting.启动与自动启动.自动启动.index') }}
-        <q-badge class="ml-2 bg-opacity-70 bg-purple-500 text-[0.66rem]" text-color="white" rounded>
-          {{ $t('setting.启动与自动启动.自动启动.appxIndex') }}
+        <q-badge class="ml-2 bg-opacity-70 bg-purple-500 text-[0.66rem] max-w-52" text-color="white" rounded>
+          <span
+            :class="[
+              // 对溢出的情况, 采取滚动策略
+              'overflow-x-auto overflow-y-hidden whitespace-nowrap  text-clip',
+              // 添加细微滚动条
+              'pt-0.5 pb-0.5 [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50',
+            ]"
+          >
+            {{ $t('setting.启动与自动启动.自动启动.appxIndex') }}
+          </span>
         </q-badge>
       </q-item-label>
       <q-item-label caption class="flex flex-col bg-opacity-80">
         {{ $t('setting.启动与自动启动.自动启动.caption') }}
-        <q-badge class="self-start mt-1 bg-opacity-70 bg-purple-500 text-[0.66rem]" text-color="white" rounded>
-          {{ $t('setting.启动与自动启动.自动启动.appxCaption') }}
+        <q-badge class="self-start mt-1 bg-opacity-70 bg-purple-500 text-[0.66rem] max-w-72" text-color="white" rounded>
+          <span
+            :class="[
+              // 对溢出的情况, 采取滚动策略
+              'overflow-x-auto overflow-y-hidden whitespace-nowrap  text-clip',
+              // 添加细微滚动条
+              'pt-0.5 pb-0.5 [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30  [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50',
+            ]"
+          >
+            {{ $t('setting.启动与自动启动.自动启动.appxCaption') }}
+          </span>
         </q-badge>
       </q-item-label>
     </q-item-section>
