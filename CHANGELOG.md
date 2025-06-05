@@ -1,3 +1,15 @@
+#  (2025-06-05)
+
+
+### Bug Fixes
+
+* 修复键音专辑页面没有专辑时, 提示用户的按钮的样式异常问题, 此问题会由i18n的语言变化引起。 ([0d5e68c](https://github.com/LuSrackhall/KeyTone/commit/0d5e68c08884d29fe6cb424b34cacd867a65a5a4))
+* 修复主页面中, 没有键音专辑时, 提示用户导入或创建的i18n文字过长时换行的不美观问题, 引入滚动条解决此问题。 ([dd3ddb8](https://github.com/LuSrackhall/KeyTone/commit/dd3ddb853008fc862cb1361c521f939fe941b368))
+* **appx:** 修复appx包中所支持的语言范围缺少中英外的其它实际支持的语言的问题。 ([f598c5d](https://github.com/LuSrackhall/KeyTone/commit/f598c5d72b154aef5eb071dbd97acf595c90ab85))
+* **appx:** 修复appx打包后, 设置界面中启动与自启动设置项内部文字过长引发的 设置界面 整体溢出 的bug, 文字过长多出现于不同i18n语言版本的切换过程中。 ([7e00b0c](https://github.com/LuSrackhall/KeyTone/commit/7e00b0cab068560dfe8bf678802af8754e8cd650))
+
+
+
 #  (2025-05-29)
 
 
