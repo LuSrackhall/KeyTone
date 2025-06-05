@@ -160,20 +160,20 @@
                     <q-btn
                       flat
                       dense
-                      class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                      class="empty-state-btn flex items-center bg-blue-500/10 p-1.5 rounded-lg"
                       @click="createNewAlbum"
                     >
                       <q-icon name="add" size="20px" class="mr-1.5" />
-                      <span class="text-sm font-medium">{{ $t('keyToneAlbumPage.new') }}</span>
+                      <span class="font-medium" :class="[i18n_fontSize]">{{ $t('keyToneAlbumPage.new') }}</span>
                     </q-btn>
                     <q-btn
                       flat
                       dense
-                      class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                      class="empty-state-btn flex items-center bg-blue-500/10 p-1.5 rounded-lg"
                       @click="importAlbum"
                     >
                       <q-icon name="upload_file" size="20px" class="mr-1.5" />
-                      <span class="text-sm font-medium">{{ $t('keyToneAlbumPage.import') }}</span>
+                      <span class="font-medium" :class="[i18n_fontSize]">{{ $t('keyToneAlbumPage.import') }}</span>
                     </q-btn>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
-import { nextTick, useTemplateRef } from 'vue';
+import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -687,6 +687,20 @@ function getMacOSStatus() {
   }
   return false;
 }
+
+const i18n_fontSize = computed(() => {
+  return setting_store.languageDefault === 'ru' ||
+    setting_store.languageDefault === 'it' ||
+    setting_store.languageDefault === 'es' ||
+    setting_store.languageDefault === 'pt-BR' ||
+    setting_store.languageDefault === 'pl' ||
+    setting_store.languageDefault === 'tr' ||
+    setting_store.languageDefault === 'id'
+    ? 'text-[0.63rem]'
+    : setting_store.languageDefault === 'fr'
+    ? 'text-[0.63rem]'
+    : 'text-[0.75rem] px-1.5';
+});
 </script>
 
 <style lang="scss" scoped>
