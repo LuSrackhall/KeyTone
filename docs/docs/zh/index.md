@@ -41,9 +41,9 @@ features:
     details: 模拟真实按键，仅在按下与抬起瞬间播放声效，流畅不重复。
   - title: 功能强大
     details: 高度可定制, 用户可以自由创作符合自身需求的按键声音专辑。
-  - title: 透明开源
-    details:  100%开源，欢迎体验并加入我们的开源社区！
-    linkText: 探索源码
+  - title: 代码开源
+    details: 本软件的代码完全开源，欢迎体验并加入我们的开源社区！
+    linkText: 源码地址
     link: https://github.com/LuSrackhall/KeyTone
 ---
 
