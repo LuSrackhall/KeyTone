@@ -88,7 +88,7 @@ Welcome any ideas!
 Welcome contributions in any form!
 <!-- Please check our contribution guidelines for details. -->
 
-## Star History
+<!-- ## Star History
 
 <a href="https://www.star-history.com/#LuSrackhall/KeyTone&Date">
  <picture>
@@ -96,7 +96,7 @@ Welcome contributions in any form!
    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
  </picture>
-</a>
+</a> -->
 
 ## License
 
