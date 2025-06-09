@@ -55,10 +55,12 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 3. **应用商店**
 
    通过各平台的官方渠道商店获取 KeyTone 的最新版本。
-   * Windows&nbsp; —— &nbsp;&nbsp;从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取
+   * Windows&nbsp; —— &nbsp;&nbsp;&nbsp;&nbsp;从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取
 
-     &nbsp;&nbsp;<a data-label="windows_phone" href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?ocid=webpdpshare" class="windows_phone_btn store_btn"><img src="https://static.itch.io/images/store_badges/windowsphone.png" srcset="https://static.itch.io/images/store_badges/windowsphone.png 1x, https://static.itch.io/images/store_badges/windowsphone@2x.png 2x"></a>
-   * MacOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;——&nbsp;&nbsp;  暂无上架计划
+      <a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct" style="display: inline-block; margin-left: 8px;">
+        <img src="https://get.microsoft.com/images/zh-cn%20dark.svg" width="200"/></a>
+
+   * MacOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;——&nbsp;&nbsp;&nbsp;&nbsp;  暂无上架计划
 
    通过应用商店下载的优势是, 可获得应用商店对所上架软件的自动更新支持。 此外, 应用商店的内置沙盒机制、以及严格的应用审核管理机制，都可为用户提供更进一步的安全保障。
   

@@ -55,10 +55,13 @@ You can obtain **KeyTone** through the following methods:
 3. **App Stores**
 
    Get the latest version of KeyTone through official app stores on various platforms.
-   * Windows  ——  Get from [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)
+   * Windows &nbsp;—— &nbsp;&nbsp;&nbsp; Get from [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)
 
-      <a data-label="windows_phone" href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?ocid=webpdpshare" class="windows_phone_btn store_btn"><img src="https://static.itch.io/images/store_badges/windowsphone.png" srcset="https://static.itch.io/images/store_badges/windowsphone.png 1x, https://static.itch.io/images/store_badges/windowsphone@2x.png 2x"></a>
-   * MacOS  ——  No plans to list yet
+      <a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct" style="display: inline-block; margin-left: 8px;">
+          <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
+      </a>
+
+   * MacOS &nbsp;&nbsp;&nbsp; —— &nbsp;&nbsp;&nbsp; No plans to list yet
 
    The advantage of downloading through app stores is that you can get automatic update support for the listed software. In addition, the built-in sandbox mechanism of app stores and the strict application review management mechanism can provide users with further security guarantees.
   
