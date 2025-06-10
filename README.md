@@ -57,9 +57,7 @@ You can obtain **KeyTone** through the following methods:
    Get the latest version of KeyTone through official app stores on various platforms.
    * Windows &nbsp;—— &nbsp;&nbsp;&nbsp; Get from [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)
 
-      <a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct" style="display: inline-block; margin-left: 8px;">
-          <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
-      </a>
+      &nbsp;&nbsp;<a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/></a>
 
    * MacOS &nbsp;&nbsp;&nbsp; —— &nbsp;&nbsp;&nbsp; No plans to list yet
 

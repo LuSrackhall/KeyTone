@@ -57,8 +57,7 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
    通过各平台的官方渠道商店获取 KeyTone 的最新版本。
    * Windows&nbsp; —— &nbsp;&nbsp;&nbsp;&nbsp;从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取
 
-      <a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct" style="display: inline-block; margin-left: 8px;">
-        <img src="https://get.microsoft.com/images/zh-cn%20dark.svg" width="200"/></a>
+      &nbsp;&nbsp;<a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct"><img src="https://get.microsoft.com/images/zh-cn%20dark.svg" width="200"/></a>
 
    * MacOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;——&nbsp;&nbsp;&nbsp;&nbsp;  暂无上架计划
 
