@@ -73,6 +73,10 @@ You can obtain **KeyTone** through the following methods:
 * Windows 10 or higher. macOS 11 or higher.
 * Audio output device.
 
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
+
 ## Development Environment & Local Debugging
 
 The project requires the following development environment:
@@ -126,10 +130,6 @@ Welcome contributions in any form!
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=LuSrackhall/KeyTone&type=Date" />
  </picture>
 </a> -->
-
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
 
 ## License
 

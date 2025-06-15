@@ -73,6 +73,10 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 * Windows 10 或更高版本。 macOS 11 或更高版本。
 * 音频输出设备。
 
+## 星路历程
+
+[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
+
 ## 开发环境与本地调试
 
 本项目开发环境依赖如下：
@@ -127,9 +131,7 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
  </picture>
 </a> -->
 
-## 星路历程
 
-[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
 
 ## 许可证
 
