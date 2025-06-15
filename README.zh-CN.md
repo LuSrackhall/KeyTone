@@ -127,6 +127,10 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
  </picture>
 </a> -->
 
+## 星路历程
+
+[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
+
 ## 许可证
 
 本项目遵循[GPL许可证](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE)。

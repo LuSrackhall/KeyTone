@@ -127,6 +127,10 @@ Welcome contributions in any form!
  </picture>
 </a> -->
 
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
+
 ## License
 
 This project follows the [GPL License](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).
