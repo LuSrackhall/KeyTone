@@ -73,6 +73,37 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 * Windows 10 或更高版本。 macOS 11 或更高版本。
 * 音频输出设备。
 
+## 开发环境与本地调试
+
+本项目开发环境依赖如下：
+
+* Go 1.22.0
+* Node.js 16.x
+* Quasar CLI
+
+### Windows 下环境搭建步骤
+
+1. 安装 [Go 1.22.0](https://go.dev/dl/) 并配置环境变量。
+2. 安装 [Node.js 16.x](https://nodejs.org/en/download/)。
+3. 全局安装 Quasar CLIo
+
+   ```shell
+   npm install -g @quasar/cli
+   ```
+
+4. 安装前端依赖：
+
+   ```shell
+   cd frontend
+   npm install
+   ```
+
+5. 启动开发环境（Electron 桌面端）：
+
+   ```shell
+   quasar dev -m electron
+   ```
+
 ## 路线图
 
 项目的路线图可以在[这里](https://github.com/LuSrackhall/KeyTone/milestones)找到。在创建增强请求之前，请先查阅它。😊

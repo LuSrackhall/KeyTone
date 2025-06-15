@@ -73,6 +73,37 @@ You can obtain **KeyTone** through the following methods:
 * Windows 10 or higher. macOS 11 or higher.
 * Audio output device.
 
+## Development Environment & Local Debugging
+
+The project requires the following development environment:
+
+* Go 1.22.0
+* Node.js 16.x
+* Quasar CLI
+
+### Setup Steps on Windows
+
+1. Install [Go 1.22.0](https://go.dev/dl/) and configure your environment variables.
+2. Install [Node.js 16.x](https://nodejs.org/en/download/).
+3. Install Quasar CLI globally:
+
+   ```shell
+   npm install -g @quasar/cli
+   ```
+
+4. Install frontend dependencies:
+
+   ```shell
+   cd frontend
+   npm install
+   ```
+
+5. Start the development environment (Electron desktop):
+
+   ```shell
+   quasar dev -m electron
+   ```
+
 ## Roadmap
 
 The project's roadmap can be found [here](https://github.com/LuSrackhall/KeyTone/milestones). Please check it before creating enhancement requests. 😊
