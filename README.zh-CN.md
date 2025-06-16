@@ -82,13 +82,13 @@ KeyTone是一款实用的软件，能够在需要保持安静的环境下实时�
 本项目开发环境依赖如下：
 
 * Go 1.22.0
-* Node.js 16.x
+* Node.js 18.x
 * Quasar CLI
 
 ### Windows 下环境搭建步骤
 
 1. 安装 [Go 1.22.0](https://go.dev/dl/) 并配置环境变量。
-2. 安装 [Node.js 16.x](https://nodejs.org/en/download/)。
+2. 安装 [Node.js 18.x](https://nodejs.org/en/download/)。
 3. 全局安装 Quasar CLIo
 
    ```shell
