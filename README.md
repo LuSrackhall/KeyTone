@@ -39,6 +39,22 @@ In addition, KeyTone is an open-source software that follows the GPL license.
 * Key press and release can be independently bound to sound effects.
 * Designed based on real key trigger conditions, sound effects are only played at the moment of pressing and releasing, and will not be repeated while holding down.
 * Highly customizable, users can quickly customize the sound of keys according to their own needs. This software has designed and developed a rich and convenient series of functions around key sound albums.
+* Provides rich [documentation support](https://keytone.xuanhall.com/zh/guide/getting-started/quick-start/) to help users quickly understand the software's features as much as possible.
+
+## Highlights
+
+Unleash your creativity with keystroke sounds to craft a unique and personalized auditory experience.
+
+KeyTone does not provide any audio files—this is by design!
+> We encourage you to tap into your creativity by uploading your own or collected audio to create your personalized keystroke sound collection.
+
+With KeyTone, you can:
+* Combine multiple sounds into a single ***advanced sound*** and bind it to a single key, setting these sounds to play randomly or in sequence each time the key is pressed (playing one sound at a time).
+* Allow these ***advanced sounds*** to be combined, inherited, and nested with each other, helping you create rich, varied sound effects and unlocking endless possibilities for keystroke sounds.
+
+* Of course, as a prerequisite, the sound files (or audio files) are not provided in this project and will not be provided in the future.
+
+KeyTone offers you a stage for free creation, turning every keystroke into a unique piece of sound art.
 
 ## Installation
 
