@@ -2,7 +2,7 @@
   <img src="./frontend/src/assets/img/KeyTone.png" width="35%"><br/>
 </p>
 <p align="center">
-  Let the keys awaken a comfortable sound.
+  让按键唤醒令人舒适的声音。
   <br/>
   <br/>
   <a href="https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE">
@@ -17,7 +17,8 @@
 <strong>
 <samp>
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+<!-- [English](README.md) · [简体中文](README.zh-CN.md) -->
+[English](README.en-US.md) · [简体中文](README.md)
 
 </samp>
 </strong>
@@ -25,119 +26,119 @@
 
 # KeyTone
 
-## Introduction
+## 介绍
 
-KeyTone is a practical software that can simulate the sound of keystrokes in real-time in environments where silence is required, thereby enhancing your comfort when using a computer.
+KeyTone是一款实用的软件，能够在需要保持安静的环境下实时模拟按键的声音，从而提升您使用电脑的舒适度。
 
-Although there are already many similar software on the market, KeyTone is still committed to providing users with the best experience.
+尽管市面上已经有很多类似的软件，但KeyTone依然致力于为用户提供最佳的体验。
 
-In addition, KeyTone is an open-source software that follows the GPL license.
+此外，KeyTone是一款遵循GPL协议的开源软件。
 
-## Features
+## 特性
 
-* Simple functionality, ready to use out of the box.
-* Key press and release can be independently bound to sound effects.
-* Designed based on real key trigger conditions, sound effects are only played at the moment of pressing and releasing, and will not be repeated while holding down.
-* Highly customizable, users can quickly customize the sound of keys according to their own needs. This software has designed and developed a rich and convenient series of functions around key sound albums.
-* Provides rich [documentation support](https://keytone.xuanhall.com/zh/guide/getting-started/quick-start/) to help users quickly understand the software's features as much as possible.
+* 功能简单、开箱即用。
+* 按键的按下和抬起, 都可独立绑定声效。
+* 基于真实按键的触发情况做设计, 仅按下与抬起的瞬间发出声效, 保持按压状态不会重复播放声效。
+* 高度可定制, 用户可以根据自身需求来快速定制按键的声音, 本软件围绕键音专辑, 设计开发了丰富且便捷的一系列功能。
+* 提供丰富的[文档支持](https://keytone.xuanhall.com/zh/guide/getting-started/quick-start/), 尽可能地帮助用户快速了解软件功能。
 
-## Highlights
+## 特点
 
-Unleash your creativity with keystroke sounds to craft a unique and personalized auditory experience.
+释放你的按键声音创意，助你打造独一无二的专属键音体验。
 
-KeyTone does not provide any audio files—this is by design!
-> We encourage you to tap into your creativity by uploading your own or collected audio to create your personalized keystroke sound collection.
+KeyTone 不提供任何音频文件——这是设计的初衷！
+> 我们希望你发挥无限创作力，上传自制或收集的音频，打造属于你的个性化键音专辑。
 
-With KeyTone, you can:
-* Combine multiple sounds into a single ***advanced sound*** and bind it to a single key, setting these sounds to play randomly or in sequence each time the key is pressed (playing one sound at a time).
-* Allow these ***advanced sounds*** to be combined, inherited, and nested with each other, helping you create rich, varied sound effects and unlocking endless possibilities for keystroke sounds.
+通过 KeyTone，你可以：
+* 将多个声音组合成一个***高级声音*** 然后绑定到单个按键上, 并设置这些声音在按键触发时可以 随机播放 或 顺序循环 播放(当然每次播放一个)。
+* 允许这些***高级声音*** 进行 相互的组合、继承 与 嵌套, 助力用户创造出层次丰富、变化无穷的音效组合，解锁按键声音的无限可能性。
 
-* Of course, as a prerequisite, the sound files (or audio files) are not provided in this project and will not be provided in the future.
+* 当然, 作为一切前提的声音文件(或者说音频文件), 本项目中并不提供, 未来也不会提供。
 
-KeyTone offers you a stage for free creation, turning every keystroke into a unique piece of sound art.
+KeyTone 赋予你自由创作的舞台，让每一次敲击键盘都成为独一无二的声音艺术。
 
-## Installation
+## 安装
 
-You can obtain **KeyTone** through the following methods:
+您可以通过以下方式获取 **KeyTone**
 
 1. **GitHub Releases**
 
-   As an open-source project, you can download the latest version for free from our [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) page.
+   作为开源项目，您可以从我们的 [GitHub Releases](https://github.com/LuSrackhall/KeyTone/releases) 页面免费下载最新版本。
 
-2. **Official Website**
+2. **官方网站**
 
-   You can also visit our [official website](https://keytone.xuanhall.com) to get the latest version and installation instructions for free.
+   你也可以通过访问我们的[官方网站](https://keytone.xuanhall.com)免费获取最新版本和安装说明。
 
-3. **App Stores**
+3. **应用商店**
 
-   Get the latest version of KeyTone through official app stores on various platforms.
-   * Windows &nbsp;—— &nbsp;&nbsp;&nbsp; Get from [Microsoft Store](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)
+   通过各平台的官方渠道商店获取 KeyTone 的最新版本。
+   * Windows&nbsp; —— &nbsp;&nbsp;&nbsp;&nbsp;从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取
 
-      &nbsp;&nbsp;<a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/></a>
+      &nbsp;&nbsp;<a href="https://apps.microsoft.com/detail/9ngkdxhpgjxd?referrer=appbadge&mode=direct"><img src="https://get.microsoft.com/images/zh-cn%20dark.svg" width="200"/></a>
 
-   * MacOS &nbsp;&nbsp;&nbsp; —— &nbsp;&nbsp;&nbsp; No plans to list yet
+   * MacOS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;——&nbsp;&nbsp;&nbsp;&nbsp;  暂无上架计划
 
-   The advantage of downloading through app stores is that you can get automatic update support for the listed software. In addition, the built-in sandbox mechanism of app stores and the strict application review management mechanism can provide users with further security guarantees.
+   通过应用商店下载的优势是, 可获得应用商店对所上架软件的自动更新支持。 此外, 应用商店的内置沙盒机制、以及严格的应用审核管理机制，都可为用户提供更进一步的安全保障。
   
-**KeyTone software is open-source and free,** but we also welcome everyone to purchase through app stores.
+**KeyTone软件是开源且免费的,** 但也欢迎大家通过应用商店进行购买。
 <blockquote style="border-left:none; padding-left:0;">
-<p>Like most open-source products, KeyTone cannot develop on its own. Therefore, purchasing or other forms of sponsorship can provide financial support to developers, which is beneficial for the continuous maintenance and iteration of the project.</p>
+<p>与大多数开源产品一样，KeyTone 无法独自发展。因此, 购买行为或是其它形式的赞助, 能够为开发者提供资金支持, 这有利于项目的持续维护和迭代。</p>
 </blockquote>
 
-## System Requirements
+## 系统要求
 
-* Windows 10 or higher. macOS 11 or higher.
-* Audio output device.
+* Windows 10 或更高版本。 macOS 11 或更高版本。
+* 音频输出设备。
 
-## Stargazers over time
+## 星路历程
 
 [![Stargazers over time](https://starchart.cc/LuSrackhall/KeyTone.svg?variant=adaptive)](https://starchart.cc/LuSrackhall/KeyTone)
 
-## Development Environment & Local Debugging
+## 开发环境与本地调试
 
-The project requires the following development environment:
+本项目开发环境依赖如下：
 
 * Go 1.22.0
 * Node.js 18.x
 * Quasar CLI
 
-### Setup Steps on Windows
+### Windows 下环境搭建步骤
 
-1. Install [Go 1.22.0](https://go.dev/dl/) and configure your environment variables.
-2. Install [Node.js 18.x](https://nodejs.org/en/download/).
-3. Install Quasar CLI globally:
+1. 安装 [Go 1.22.0](https://go.dev/dl/) 并配置环境变量。
+2. 安装 [Node.js 18.x](https://nodejs.org/en/download/)。
+3. 全局安装 Quasar CLIo
 
    ```shell
    npm install -g @quasar/cli
    ```
 
-4. Install frontend dependencies:
+4. 安装前端依赖：
 
    ```shell
    cd frontend
    npm install
    ```
 
-5. Start the development environment (Electron desktop):
+5. 启动开发环境（Electron 桌面端）：
 
    ```shell
    quasar dev -m electron
    ```
 
-## Roadmap
+## 路线图
 
-The project's roadmap can be found [here](https://github.com/LuSrackhall/KeyTone/milestones). Please check it before creating enhancement requests. 😊
+项目的路线图可以在[这里](https://github.com/LuSrackhall/KeyTone/milestones)找到。在创建增强请求之前，请先查阅它。😊
 
-## Issues
+## 问题
 
-Welcome any ideas!
+欢迎任何想法!
 
-## Contributions
+## 贡献
 
-Welcome contributions in any form!
-<!-- Please check our contribution guidelines for details. -->
+欢迎任何形式的贡献！
+<!-- 请查看我们的贡献指南以了解详情。 -->
 
-<!-- ## Star History
+<!-- ## 星星增长趋势
 
 <a href="https://www.star-history.com/#LuSrackhall/KeyTone&Date">
  <picture>
@@ -147,10 +148,14 @@ Welcome contributions in any form!
  </picture>
 </a> -->
 
-## License
 
-This project follows the [GPL License](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE).
 
-## Copyright
+## 许可证
 
-Copyright (C) 2024-present LuSrackhall
+本项目遵循[GPL许可证](https://github.com/LuSrackhall/KeyTone/blob/main/LICENSE)。
+
+## 著作权
+
+版权所有 (C) 2024-现在 LuSrackhall
+
+<!-- * 部分代码（如与 Steam API 相关的代码）因包含敏感信息而不在 GPL 许可范围内。这些代码将按照符合Steam平台要求的专有许可发布，用于商业用途。 -->
