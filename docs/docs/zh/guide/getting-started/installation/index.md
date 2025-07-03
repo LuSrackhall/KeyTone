@@ -14,7 +14,11 @@ KeyTone 是一款开源的按键音效定制工具，它允许您为按键添加
 
    你也可以通过访问我们的[官方网站](https://keytone.xuanhall.com)免费获取最新版本和安装说明。
 
-3. **应用商店**
+3. **itch.io**
+
+   通过itch网站进行下载, [点此进入发布页面](https://lusrackhall.itch.io/keytone)。
+
+4. **应用商店**
 
    通过各平台的官方渠道商店获取 KeyTone 的最新版本。
    * Windows &nbsp;——&nbsp; 从[Microsoft Store(微软商店)](https://apps.microsoft.com/store/detail/9NGKDXHPGJXD?cid=DevShareMCLPCS)获取。

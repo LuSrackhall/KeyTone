@@ -14,7 +14,11 @@ You can obtain KeyTone through the following methods:
 
     You can also get the latest version and installation instructions for free by visiting our [official website](https://keytone.xuanhall.com).
 
-3. **App Stores**
+3. **itch.io**
+
+   Download via the itch website, [click here to enter the release page](https://lusrackhall.itch.io/keytone).
+
+4. **App Stores**
 
     Get the latest version of KeyTone through the official channel stores of various platforms.
 
