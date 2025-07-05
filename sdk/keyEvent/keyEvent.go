@@ -40,8 +40,11 @@ func KeyEventListen() {
 	defer hook.End()
 
 	keycode_keycodeChan_map := make(map[uint16]chan hook.Event)
+	keycode_buttonChan_map := make(map[uint16]chan hook.Event)
 
 	for ev := range evChan {
+		// println("keyAll=", ev.String(), "|||||", ev.Keycode)
+
 		// 防止Dik为0的未知按键(前端一般称其为Unidentified)意外触发。
 		if ev.Keycode != 0 {
 			// if ev.Kind == 3 || ev.Kind == 4 || ev.Kind == 5 {
@@ -60,7 +63,7 @@ func KeyEventListen() {
 				 * MouseDrag  = 10       // 鼠标拖动时(如在桌面按左/右键移动, 会出现选框, 此时会触发此事件[稍后还需确认macos上是否会触发])
 				 * MouseWheel = 11       // 鼠标滚轮滚动时, 会触发此事件。
 				 */
-				println("keyAll=", ev.String(), "|||||", ev.Keycode)
+				// println("keyAll=", ev.String(), "|||||", ev.Keycode)
 				// if ev.Kind == 3 {
 				// 	println("down")
 				// 	println(ev.Keycode) // 按下时, 由于goHook的bug, 故无法判断实际的Keycode, 因此我们不使用这个事件。
@@ -83,12 +86,17 @@ func KeyEventListen() {
 			// 鼠标事件的Keycode等于0
 			if ev.Kind == 7 || ev.Kind == 8 {
 
-				println("keyAll=", ev.String(), "|||||", ev.Keycode)
-				if ev.Kind == 7 {
-					println("buttonDown=", ev.Button)
-				} else if ev.Kind == 8 {
-					println("buttonUp=", ev.Button)
+				// println("keyAll=", ev.String(), "|||||", ev.Keycode)
+				if _, exists := keycode_buttonChan_map[ev.Button]; exists {
+					keycode_buttonChan_map[ev.Button] <- ev
+				} else {
+					keycode_buttonChan_map[ev.Button] = make(chan hook.Event)
+					// 创建此按键专属 按键事件处理 的 goroutine
+					go handleKeyEvent(keycode_buttonChan_map[ev.Button])
+					// 将本次按键事件传递至相关通道channel
+					keycode_buttonChan_map[ev.Button] <- ev
 				}
+
 			}
 		}
 
@@ -161,18 +169,48 @@ func handleKeyEvent(evChan chan hook.Event) {
 			})
 		}
 
-		if ev.Kind == 6 || ev.Kind == 7 || ev.Kind == 8 || ev.Kind == 9 || ev.Kind == 10 || ev.Kind == 11 {
+		// var mouse_key_down_soundIsRun bool = false // mouse的hold不存在持续触发的问题, 因此不需要此变量
+
+		if ev.Kind == 7 {
+			// println("buttonDown=", ev.Button)
+
+			println("")
+			println("")
+			println("=====down=====")
+			println("   ********")
+			println("hold | down ======>", "mouse_button=", ev.Button, "  down")
+			println("仅播放 mouse_key_down 声音")
+			println("   ********")
+			println("=====down=====")
+			println("")
+
+			go keySound.KeySoundHandler(keySound.KeyStateMouseDown, ev.Button)
+			// mouse_key_down_soundIsRun = true
+			go sseBroadcast(&Clients_sse_stores, &Store{
+				Keycode: ev.Button,
+				State:   keySound.KeyStateMouseDown,
+			})
+		}
+
+		if ev.Kind == 8 {
+			// println("buttonUp=", ev.Button)
+
 			println("")
 			println("")
 			println("======up======")
 			println("   ********")
-			println("up          ======>", "keycode=", ev.Keycode, "  up")
-			// println("keyAll=", ev.String())
-			println("仅播放 key_up 声音")
+			println("up          ======>", "mouse_button=", ev.Button, "  up")
+			println("仅播放 mouse_key_up 声音")
 			println("   ********")
 			println("======up======")
 			println("")
 
+			go keySound.KeySoundHandler(keySound.KeyStateMouseUp, ev.Button)
+
+			go sseBroadcast(&Clients_sse_stores, &Store{
+				Keycode: ev.Button,
+				State:   keySound.KeyStateMouseUp,
+			})
 		}
 	}
 }

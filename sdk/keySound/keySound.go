@@ -360,8 +360,10 @@ func KeyUpSoundPlay() {
 
 // 添加常量定义按键状态
 const (
-	KeyStateDown = "down"
-	KeyStateUp   = "up"
+	KeyStateDown      = "down"
+	KeyStateUp        = "up"
+	KeyStateMouseDown = "mouseDown"
+	KeyStateMouseUp   = "mouseUp"
 )
 
 // 音频包处理器
