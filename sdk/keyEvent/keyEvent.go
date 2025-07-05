@@ -53,13 +53,14 @@ func KeyEventListen() {
 				 * KeyUp   = 5
 				 *
 				 * 鼠标的这些我们不需要,  只关注 button 即可
-				 * MouseUp    = 6
-				 * MouseHold  = 7
-				 * MouseDown  = 8
-				 * MouseMove  = 9
-				 * MouseDrag  = 10
-				 * MouseWheel = 11
+				 * MouseUp    = 6        // 由于MouseUp存在问题(Hold时间过长时, Up事件会失效)。
+				 * MouseHold  = 7        // 不必多说, 这就是Down了。
+				 * MouseDown  = 8				 // 因触发特性是抬起触发, 且不存在Hold时间过长时的失效问题, 故可作为Up使用。
+				 * MouseMove  = 9        // 鼠标移动时
+				 * MouseDrag  = 10       // 鼠标拖动时(如在桌面按左/右键移动, 会出现选框, 此时会触发此事件[稍后还需确认macos上是否会触发])
+				 * MouseWheel = 11       // 鼠标滚轮滚动时, 会触发此事件。
 				 */
+				println("keyAll=", ev.String(), "|||||", ev.Keycode)
 				// if ev.Kind == 3 {
 				// 	println("down")
 				// 	println(ev.Keycode) // 按下时, 由于goHook的bug, 故无法判断实际的Keycode, 因此我们不使用这个事件。
@@ -76,6 +77,17 @@ func KeyEventListen() {
 					// 将本次按键事件传递至相关通道channel
 					keycode_keycodeChan_map[ev.Keycode] <- ev
 
+				}
+			}
+		} else {
+			// 鼠标事件的Keycode等于0
+			if ev.Kind == 7 || ev.Kind == 8 {
+
+				println("keyAll=", ev.String(), "|||||", ev.Keycode)
+				if ev.Kind == 7 {
+					println("buttonDown=", ev.Button)
+				} else if ev.Kind == 8 {
+					println("buttonUp=", ev.Button)
 				}
 			}
 		}
@@ -147,6 +159,20 @@ func handleKeyEvent(evChan chan hook.Event) {
 				Keycode: ev.Keycode,
 				State:   keySound.KeyStateUp,
 			})
+		}
+
+		if ev.Kind == 6 || ev.Kind == 7 || ev.Kind == 8 || ev.Kind == 9 || ev.Kind == 10 || ev.Kind == 11 {
+			println("")
+			println("")
+			println("======up======")
+			println("   ********")
+			println("up          ======>", "keycode=", ev.Keycode, "  up")
+			// println("keyAll=", ev.String())
+			println("仅播放 key_up 声音")
+			println("   ********")
+			println("======up======")
+			println("")
+
 		}
 	}
 }
