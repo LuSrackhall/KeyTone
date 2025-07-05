@@ -21,6 +21,7 @@ package keyEvent
 
 import (
 	"KeyTone/keySound"
+	"runtime"
 	"sync"
 
 	hook "github.com/robotn/gohook"
@@ -107,6 +108,8 @@ func handleKeyEvent(evChan chan hook.Event) {
 
 	var key_down_soundIsRun bool = false
 
+	var mouse_button_down bool = false
+
 	for ev := range evChan {
 		if ev.Kind == 4 {
 			// println("hold")
@@ -174,43 +177,56 @@ func handleKeyEvent(evChan chan hook.Event) {
 		if ev.Kind == 7 {
 			// println("buttonDown=", ev.Button)
 
-			println("")
-			println("")
-			println("=====down=====")
-			println("   ********")
-			println("hold | down ======>", "mouse_button=", ev.Button, "  down")
-			println("仅播放 mouse_key_down 声音")
-			println("   ********")
-			println("=====down=====")
-			println("")
+			if os := runtime.GOOS; os == "darwin" && ev.Button > 2 {
+				if mouse_button_down {
+					mouse_up(ev)
+					mouse_button_down = false
+				} else {
+					println("")
+					println("")
+					println("=====down=====")
+					println("   ********")
+					println("hold | down ======>", "mouse_button=", ev.Button, "  down")
+					println("仅播放 mouse_key_down 声音")
+					println("   ********")
+					println("=====down=====")
+					println("")
 
-			go keySound.KeySoundHandler(keySound.KeyStateMouseDown, ev.Button)
-			// mouse_key_down_soundIsRun = true
-			go sseBroadcast(&Clients_sse_stores, &Store{
-				Keycode: ev.Button,
-				State:   keySound.KeyStateMouseDown,
-			})
+					go keySound.KeySoundHandler(keySound.KeyStateMouseDown, ev.Button)
+					// mouse_key_down_soundIsRun = true
+					go sseBroadcast(&Clients_sse_stores, &Store{
+						Keycode: ev.Button,
+						State:   keySound.KeyStateMouseDown,
+					})
+
+					mouse_button_down = true
+				}
+			} else {
+
+				println("")
+				println("")
+				println("=====down=====")
+				println("   ********")
+				println("hold | down ======>", "mouse_button=", ev.Button, "  down")
+				println("仅播放 mouse_key_down 声音")
+				println("   ********")
+				println("=====down=====")
+				println("")
+
+				go keySound.KeySoundHandler(keySound.KeyStateMouseDown, ev.Button)
+				// mouse_key_down_soundIsRun = true
+				go sseBroadcast(&Clients_sse_stores, &Store{
+					Keycode: ev.Button,
+					State:   keySound.KeyStateMouseDown,
+				})
+
+			}
 		}
 
 		if ev.Kind == 8 {
 			// println("buttonUp=", ev.Button)
+			mouse_up(ev)
 
-			println("")
-			println("")
-			println("======up======")
-			println("   ********")
-			println("up          ======>", "mouse_button=", ev.Button, "  up")
-			println("仅播放 mouse_key_up 声音")
-			println("   ********")
-			println("======up======")
-			println("")
-
-			go keySound.KeySoundHandler(keySound.KeyStateMouseUp, ev.Button)
-
-			go sseBroadcast(&Clients_sse_stores, &Store{
-				Keycode: ev.Button,
-				State:   keySound.KeyStateMouseUp,
-			})
 		}
 	}
 }
@@ -228,5 +244,24 @@ func sseBroadcast(Clients_sse_stores *sync.Map, store *Store) {
 			})
 			return true
 		}
+	})
+}
+
+func mouse_up(ev hook.Event) {
+	println("")
+	println("")
+	println("======up======")
+	println("   ********")
+	println("up          ======>", "mouse_button=", ev.Button, "  up")
+	println("仅播放 mouse_key_up 声音")
+	println("   ********")
+	println("======up======")
+	println("")
+
+	go keySound.KeySoundHandler(keySound.KeyStateMouseUp, ev.Button)
+
+	go sseBroadcast(&Clients_sse_stores, &Store{
+		Keycode: ev.Button,
+		State:   keySound.KeyStateMouseUp,
 	})
 }
