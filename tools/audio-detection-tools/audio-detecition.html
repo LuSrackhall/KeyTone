@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音频按键音检测工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #timeline {
+      position: relative;
+      height: 50px;
+      background-color: #f0f0f0;
+      margin-top: 10px;
+    }
+    .key-press {
+      position: absolute;
+      height: 100%;
+      background-color: #ff0000;
+      opacity: 0.5;
+    }
+    #progress {
+      position: absolute;
+      width: 2px;
+      height: 100%;
+      background-color: #0000ff;
+    }
+    #results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>音频按键音检测工具</h1>
+  <p>上传 MP3 音频文件，点击“分析”按钮以检测按键音的开始和结束时间。</p>
+  
+  <input type="file" id="fileInput" accept="audio/mpeg">
+  <br><br>
+  <label for="threshold">检测阈值: <span id="thresholdValue">128</span></label>
+  <input type="range" id="threshold" min="0" max="255" value="128">
+  <br><br>
+  <button id="analyzeButton">分析</button>
+  <br><br>
+  <audio id="audioPlayer" controls></audio>
+  <div id="timeline"></div>
+  <div id="results"></div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const thresholdInput = document.getElementById('threshold');
+    const thresholdValue = document.getElementById('thresholdValue');
+    const analyzeButton = document.getElementById('analyzeButton');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const timeline = document.getElementById('timeline');
+    const results = document.getElementById('results');
+
+    let audioContext;
+    let buffer;
+    let keyPressTimes = [];
+    let pixelsPerSecond = 100; // 每秒音频对应100像素
+
+    thresholdInput.addEventListener('input', () => {
+      thresholdValue.textContent = thresholdInput.value;
+    });
+
+    analyzeButton.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('请先选择一个 MP3 文件');
+        return;
+      }
+      results.innerHTML = '分析中...';
+      timeline.innerHTML = '';
+      keyPressTimes = [];
+      const arrayBuffer = await file.arrayBuffer();
+      audioContext = new AudioContext();
+      buffer = await audioContext.decodeAudioData(arrayBuffer);
+      detectKeyPressTimes(parseInt(thresholdInput.value));
+    });
+
+    function detectKeyPressTimes(threshold) {
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(analyser);
+      analyser.fftSize = 2048;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      let isKeyPress = false;
+      let startTime = 0;
+
+      function analyzeAudio() {
+        analyser.getByteTimeDomainData(dataArray);
+        const maxAmplitude = Math.max(...dataArray);
+        const currentTime = audioContext.currentTime;
+
+        if (maxAmplitude > threshold && !isKeyPress) {
+          startTime = currentTime;
+          isKeyPress = true;
+        } else if (maxAmplitude <= threshold && isKeyPress) {
+          keyPressTimes.push({ start: startTime, end: currentTime });
+          isKeyPress = false;
+        }
+
+        if (currentTime < buffer.duration) {
+          requestAnimationFrame(analyzeAudio);
+        } else {
+          displayResults();
+          setupAudioPlayer();
+        }
+      }
+
+      source.start();
+      analyzeAudio();
+    }
+
+    // function displayResults() {
+    //   results.innerHTML = '<h2>检测到的按键音时间段：</h2>';
+    //   const list = document.createElement('ul');
+    //   keyPressTimes.forEach((time, index) => {
+    //     const li = document.createElement('li');
+    //     li.textContent = `按键音 ${index + 1}: 开始于 ${time.start.toFixed(2)} 秒，结束于 ${time.end.toFixed(2)} 秒`;
+    //     list.appendChild(li);
+    //   });
+    //   results.appendChild(list);
+    // }
+    function displayResults() {
+      results.innerHTML = '<h2>检测到的按键音时间段：</h2>';
+      const list = document.createElement('ul');
+      keyPressTimes.forEach((time, index) => {
+        const li = document.createElement('li');
+        li.textContent = `按键音 ${index + 1}: 开始于 ${(time.start * 1000).toFixed(0)} 毫秒，结束于 ${(time.end * 1000).toFixed(0)} 毫秒`;
+        list.appendChild(li);
+      });
+      results.appendChild(list);
+    }
+
+    function setupAudioPlayer() {
+      const url = URL.createObjectURL(fileInput.files[0]);
+      audioPlayer.src = url;
+      audioPlayer.addEventListener('timeupdate', updateTimeline);
+      drawTimeline();
+    }
+
+    function drawTimeline() {
+      timeline.style.width = `${buffer.duration * pixelsPerSecond}px`;
+      keyPressTimes.forEach(time => {
+        const div = document.createElement('div');
+        div.className = 'key-press';
+        div.style.left = `${time.start * pixelsPerSecond}px`;
+        div.style.width = `${(time.end - time.start) * pixelsPerSecond}px`;
+        div.addEventListener('click', () => {
+          audioPlayer.currentTime = time.start;
+        });
+        timeline.appendChild(div);
+      });
+      const progress = document.createElement('div');
+      progress.id = 'progress';
+      timeline.appendChild(progress);
+    }
+
+    function updateTimeline() {
+      const progress = document.getElementById('progress');
+      const currentTime = audioPlayer.currentTime;
+      progress.style.left = `${currentTime * pixelsPerSecond}px`;
+    }
+  </script>
+</body>
+</html>
