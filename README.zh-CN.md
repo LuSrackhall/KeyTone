@@ -54,16 +54,24 @@ KeyTone 不提供任何音频文件——这是设计的初衷！
 * 允许这些***高级声音*** 进行 相互的组合、继承 与 嵌套, 助力用户创造出层次丰富、变化无穷的音效组合，解锁按键声音的无限可能性。
 
 * 当然, 作为一切前提的声音文件(或者说音频文件), 本项目中并不提供, 未来也不会提供。
-  > 不过, 开源社区及一些免费音频共享网站提供了丰富的资源:
-  >
-  > `大家可自由在本地使用这些音频资源; 但若需进一步分享，请务必查阅其具体许可协议。`
-  >
-  > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — 此仓库由[Nigh](https://github.com/Nigh)提供, 仓库内有其亲自录制并裁剪好的的高质量轴体声音, 及相关的使用介绍。
-  >   >  感谢 **Nigh** 的用心和投入。 同时, 还要感谢[小众软件社区](https://meta.appinn.net/)提供的分享交流渠道。
-  > * [Freesound](https://freesound.org/search/?q=typing) — 此网站提供了一些cc协议的声音, 但在使用时可能需要您自行裁剪。
-  >   > 感谢**小众软件社区**用户[feeshy](https://meta.appinn.net/t/topic/72445/4#:~:text=12%20%E5%A4%A9-,%E5%8F%AF%E4%BB%A5%E5%86%85%E7%BD%AE%E4%B8%80%E4%BA%9BCC%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%BD%95%E9%9F%B3,-freesound.org)向大家推荐此网站。
-  >
-  > 当然, 大家也可以自行录制。
+
+   <blockquote>
+   <details>
+
+   <summary>不过, 开源社区及一些免费音频共享网站提供了丰富的资源:</summary>
+
+   >
+   > `大家可自由在本地使用这些音频资源; 但若需进一步分享，请务必查阅其具体许可协议。`
+   >
+   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — 此仓库由[Nigh](https://github.com/Nigh)提供, 仓库内有其亲自录制并裁剪好的的高质量轴体声音, 及相关的使用介绍。
+   >   >  感谢 **Nigh** 的用心和投入。 同时, 还要感谢[小众软件社区](https://meta.appinn.net/)提供的分享交流渠道。
+   > * [Pixabay](https://pixabay.com/zh) — Pixabay是一个充满活力的社区，汇聚了作者、艺术家和创作者，分享免版税的图片、视频、音频和其他媒体内容。
+   > * [Freesound](https://freesound.org/search/?q=typing) — 此网站提供了一些cc协议的声音, 但在使用时可能需要您自行裁剪。
+   >   > 感谢**小众软件**用户[feeshy](https://meta.appinn.net/t/topic/72445/4#:~:text=12%20%E5%A4%A9-,%E5%8F%AF%E4%BB%A5%E5%86%85%E7%BD%AE%E4%B8%80%E4%BA%9BCC%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%BD%95%E9%9F%B3,-freesound.org)向大家推荐此网站。
+   >
+   > 当然, 大家也可以自行录制, 以永久记录下自己珍视键盘的每一个按键音, 并利用KeyTone制作成键音专辑保存起来。
+   </details>
+   </blockquote>
 
 KeyTone 赋予你自由创作的舞台，让每一次按键敲击都成为独一无二的声音艺术。
 
