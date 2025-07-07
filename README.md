@@ -55,7 +55,7 @@ KeyTone does not provide any audio files—this is by design!
 With KeyTone, you can:
 * Combine multiple sounds into a single ***advanced sound*** and bind it to a single key, setting these sounds to play randomly or in sequence each time the key is pressed (playing one sound at a time).
 * Allow these ***advanced sounds*** to be combined, inherited, and nested with each other, helping you create rich, varied sound effects and unlocking endless possibilities for keystroke sounds.
-
+* **Participate in the production and sharing of Keytone albums. The main sharing community is the [Keytone community on itch](https://lusrackhall.itch.io/keytone/community). Welcome to contribute topics or join discussions on existing topics!**
 * Of course, as a prerequisite, the sound files (or audio files) are not provided in this project and will not be provided in the future.
    <blockquote>
    <details>
