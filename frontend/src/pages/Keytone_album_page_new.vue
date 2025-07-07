@@ -42,7 +42,7 @@
               dense
               round
               size="xs"
-              icon="save_alt"
+              icon="input"
               color="primary"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
               @click="importAlbum"
@@ -96,6 +96,27 @@
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
                 {{ $t('keyToneAlbumPage.delete') }}
+              </q-tooltip>
+            </q-btn>
+
+            <!-- 新增社区按钮 -->
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="forum"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="openExternal('https://lusrackhall.itch.io/keytone/community')"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                {{ $t('keyToneAlbumPage.community') }}
               </q-tooltip>
             </q-btn>
 
