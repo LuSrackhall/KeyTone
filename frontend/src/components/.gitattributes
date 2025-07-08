@@ -1,0 +1,3 @@
+# 忽略包含过多html的组件代码统计, 这些代码量会影响实际的代码权重占比
+# *.vue linguist-language=HTML
+# *.vue linguist-vendored
