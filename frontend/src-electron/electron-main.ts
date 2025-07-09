@@ -362,8 +362,16 @@ function createWindow() {
     if (!(app as any).isQuiting) {
       event.preventDefault();
       mainWindow?.hide();
+      mainWindow?.hide(); // 解决最小化窗口情况下, 通过任务栏右键关闭窗口, 一次性关不掉的bug。
     }
     return false;
+  });
+
+  mainWindow.on('hide', () => {
+    // 解决win平台下的界面异常bug, 详见https://github.com/LuSrackhall/KeyTone/issues/73
+    mainWindow?.setSize(390, 500);
+    // width= 390,
+    // height: 500,;
   });
 
   // 监听 'new-window' 事件，防止在新窗口中打开链接
