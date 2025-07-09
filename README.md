@@ -59,16 +59,14 @@ With KeyTone, you can:
 * Of course, as a prerequisite, the sound files (or audio files) are not provided in this project and will not be provided in the future.
    <blockquote>
    <details>
-   <summary>However, the open-source community and some free audio sharing websites provide rich resources:</summary>
+   <summary>The open-source community and some free audio sharing websites provide rich resources:</summary>
 
    >
    > `You can freely use these audio resources locally; but if you need to share them further, be sure to check their specific license agreements.`
    >
    > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — This repository is provided by [Nigh](https://github.com/Nigh), containing high-quality switch sounds that they have personally recorded and edited, along with related usage instructions.
-   >   > Thanks to **Nigh** for their dedication and effort. Also, thanks to the [Appinn Community](https://meta.appinn.net/) for providing a sharing and communication channel.
-   > * [Pixabay](https://pixabay.com/) — Pixabay is a vibrant community of authors, artists and creators sharing royalty-free images, video, audio and other media.
-   > * [Freesound](https://freesound.org/search/?q=typing) — This website offers some sounds under the CC license.
-   >   > Thanks to **Appinn Community** user [feeshy](https://meta.appinn.net/t/topic/72445/4#:~:text=12%20%E5%A4%A9-,%E5%8F%AF%E4%BB%A5%E5%86%85%E7%BD%AE%E4%B8%80%E4%BA%9BCC%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%BD%95%E9%9F%B3,-freesound.org) for recommending this website to everyone.
+   > * [Pixabay](https://pixabay.com/sound-effects/search/keyboard/) — Pixabay is a vibrant community of authors, artists and creators sharing royalty-free images, video, audio and other media.
+   > * [Freesound](https://freesound.org/search/?q=keyboard) — This website offers some sounds under the CC license.
    >
    > Of course, everyone can also record their own sounds to permanently capture the sound of each key on their cherished keyboard and use KeyTone to create a key sound album for preservation.
    </details>
