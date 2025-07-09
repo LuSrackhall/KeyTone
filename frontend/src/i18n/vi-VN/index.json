@@ -31,6 +31,7 @@
     "delete": "Xóa album",
     "help": "Trợ giúp",
     "label": "Album âm thanh phím",
+    "community": "Cộng đồng",
     "emptyState": {
       "noAlbum": "Chưa có album âm thanh phím"
     },

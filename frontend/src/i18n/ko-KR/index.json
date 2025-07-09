@@ -31,6 +31,7 @@
     "delete": "앨범 삭제",
     "help": "도움말",
     "label": "키톤 앨범",
+    "community": "커뮤니티",
     "emptyState": {
       "noAlbum": "키톤 앨범이 없습니다"
     },

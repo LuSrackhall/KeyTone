@@ -31,6 +31,7 @@
     "delete": "刪除專輯",
     "help": "幫助",
     "label": "鍵音專輯",
+    "community": "社區",
     "emptyState": {
       "noAlbum": "暫無鍵音專輯"
     },

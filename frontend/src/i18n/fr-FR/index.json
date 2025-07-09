@@ -31,6 +31,7 @@
     "delete": "Supprimer",
     "help": "Aide",
     "label": "Albums sonores",
+    "community": "Communauté",
     "emptyState": {
       "noAlbum": "Aucun album sonore"
     },

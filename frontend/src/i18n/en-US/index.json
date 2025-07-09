@@ -31,6 +31,7 @@
     "delete": "Delete Album",
     "help": "Help",
     "label": "Key Sound Album",
+    "community": "Community",
     "emptyState": {
       "noAlbum": "No Albums"
     },

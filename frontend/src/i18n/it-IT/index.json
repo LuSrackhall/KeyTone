@@ -31,6 +31,7 @@
     "delete": "Elimina album",
     "help": "Aiuto",
     "label": "Album di suoni tasti",
+    "community": "Comunità",
     "emptyState": {
       "noAlbum": "Nessun album di suoni tasti"
     },

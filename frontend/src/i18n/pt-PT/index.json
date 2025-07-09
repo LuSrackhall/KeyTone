@@ -31,6 +31,7 @@
     "delete": "Eliminar Álbum",
     "help": "Ajuda",
     "label": "Álbuns de Sons de Teclas",
+    "community": "Comunidade",
     "emptyState": {
       "noAlbum": "Sem álbuns de sons de teclas"
     },

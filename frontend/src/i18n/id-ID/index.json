@@ -31,6 +31,7 @@
     "delete": "Hapus Album",
     "help": "Bantuan",
     "label": "Album KeyTone",
+    "community": "Komunitas",
     "emptyState": {
       "noAlbum": "Belum ada album KeyTone"
     },

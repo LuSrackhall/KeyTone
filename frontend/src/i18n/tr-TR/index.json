@@ -31,6 +31,7 @@
     "delete": "Albümü Sil",
     "help": "Yardım",
     "label": "Tuş Sesi Albümü",
+    "community": "Topluluk",
     "emptyState": {
       "noAlbum": "Henüz tuş sesi albümü yok"
     },

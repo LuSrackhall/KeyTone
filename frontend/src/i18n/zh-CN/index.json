@@ -31,6 +31,7 @@
     "delete": "删除专辑",
     "help": "帮助",
     "label": "键音专辑",
+    "community": "社区",
     "emptyState": {
       "noAlbum": "暂无键音专辑"
     },

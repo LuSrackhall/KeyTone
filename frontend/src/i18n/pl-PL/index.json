@@ -31,6 +31,7 @@
     "delete": "Usuń album",
     "help": "Pomoc",
     "label": "Album dźwięków klawiszy",
+    "community": "Społeczność",
     "emptyState": {
       "noAlbum": "Brak albumów dźwięków klawiszy"
     },
