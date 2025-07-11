@@ -165,6 +165,11 @@ onBeforeMount(async () => {
       // console.debug('后端钩子函数中的值(解析后) = ', data);
 
       keyEvent_store.keyCodeState.set(data.keycode, data.state);
+      if (data.state == 'down') {
+        setTimeout(() => {
+          keyEvent_store.keyCodeState.delete(data.keycode);
+        }, 2000);
+      }
 
       // console.group('[Debug] 键盘事件状态更新');
       // console.debug('keycode为', data.keycode, '的按键的当前状态 ->  ', data.state);
