@@ -48,7 +48,6 @@ var once_stores sync.Once
 
 var viperRWMutex sync.RWMutex
 
-
 // 加载音频包时使用(也可用于创建新的音频包时)
 func LoadConfig(configPath string, isCreate bool) {
 	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
@@ -91,7 +90,7 @@ func LoadConfig(configPath string, isCreate bool) {
 				// 否则为正常的加载, 默认不会创建配置文件, 以识别出有问题的键音包
 				logger.Error("未找到正确的音频包配置", "path", configPath)
 				// 如果未找到正确的音频包配置, 则应该清空Viper, 防止内存中残留的Viper被错误的使用(比如前端读取配置, 但实际上配置文件并不存在, 却读取到了内存中的残留配置)
-				Viper=nil
+				Viper = nil
 				// TODO: 可以返回给前端, 供其提示用户
 				// SSE
 			}
@@ -108,14 +107,13 @@ func LoadConfig(configPath string, isCreate bool) {
 		logger.Info("音频包diff和增量载入完成")
 	}
 
-
 	Viper.OnConfigChange(func(e fsnotify.Event) {
 		go func(Clients_sse_stores *sync.Map) {
 			stores := &Store{
 				Key:   "get_all_value",
 				Value: Viper.AllSettings(),
 			}
-			if(stores.Value == nil){
+			if stores.Value == nil {
 				return
 			}
 			Clients_sse_stores.Range(func(key, value interface{}) bool {
