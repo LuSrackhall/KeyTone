@@ -109,10 +109,12 @@ func LoadConfig(configPath string, isCreate bool) {
 
 	Viper.OnConfigChange(func(e fsnotify.Event) {
 		go func(Clients_sse_stores *sync.Map) {
+			viperRWMutex.RLock()
 			stores := &Store{
 				Key:   "get_all_value",
 				Value: Viper.AllSettings(),
 			}
+			viperRWMutex.RUnlock()
 			if stores.Value == nil {
 				return
 			}
