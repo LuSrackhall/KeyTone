@@ -52,6 +52,10 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
           type: 'warning',
           message: '按键录制期间, 尽量避免同时按下多个按键',
         });
+
+        // setTimeout(() => {
+        keyCodeState.clear();
+        // }, 100);
         return;
       }
 
