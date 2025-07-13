@@ -105,6 +105,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="addNewSoundFile"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6">
@@ -228,6 +229,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="editSoundFile"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card :class="['p-x-3  w-[96%]']">
                     <q-card-section class="row items-center q-pb-none text-h6">
@@ -431,6 +433,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="createNewSound"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card>
                     <q-card-section class="row items-center q-pb-none text-h6">
@@ -625,6 +628,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="showEditSoundDialog"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card class="min-w-[106%]">
                     <q-card-section
@@ -951,6 +955,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="createNewKeySound"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card :class="['min-w-[90%]']">
                     <q-card-section class="row items-center q-pb-none text-h6">
@@ -975,6 +980,7 @@
                           :style="{ '--i18n_fontSize': i18n_fontSize }"
                           v-model="configureDownSound"
                           backdrop-filter="invert(70%)"
+                          @mouseup="preventDefaultMouseWhenRecording"
                         >
                           <q-card :class="['min-w-[80%]']">
                             <q-card-section class="row items-center q-pb-none text-h6">
@@ -1125,6 +1131,7 @@
                           :style="{ '--i18n_fontSize': i18n_fontSize }"
                           v-model="configureUpSound"
                           backdrop-filter="invert(70%)"
+                          @mouseup="preventDefaultMouseWhenRecording"
                         >
                           <q-card :class="['min-w-[80%]']">
                             <q-card-section class="row items-center q-pb-none text-h6">
@@ -1322,6 +1329,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="editExistingKeySound"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card :class="['min-w-[100%]']">
                     <q-card-section
@@ -1369,6 +1377,7 @@
                               :style="{ '--i18n_fontSize': i18n_fontSize }"
                               v-model="edit_configureDownSound"
                               backdrop-filter="invert(70%)"
+                              @mouseup="preventDefaultMouseWhenRecording"
                             >
                               <q-card :class="['min-w-[80%]']">
                                 <q-card-section class="row items-center q-pb-none text-h6">
@@ -1505,6 +1514,7 @@
                               :style="{ '--i18n_fontSize': i18n_fontSize }"
                               v-model="edit_configureUpSound"
                               backdrop-filter="invert(70%)"
+                              @mouseup="preventDefaultMouseWhenRecording"
                             >
                               <q-card :class="['min-w-[80%]']">
                                 <q-card-section class="row items-center q-pb-none text-h6">
@@ -1819,6 +1829,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="showEveryKeyEffectDialog"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card>
                     <q-card-section
@@ -2176,6 +2187,7 @@
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="showSingleKeyEffectDialog"
                   backdrop-filter="invert(70%)"
+                  @mouseup="preventDefaultMouseWhenRecording"
                 >
                   <q-card>
                     <q-card-section
@@ -2207,26 +2219,7 @@
                           :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
                           v-model="isShowAddOrSettingSingleKeyEffectDialog"
                           backdrop-filter="invert(70%)"
-                          @mouseup="
-                              (event: MouseEvent) => {
-                                // TIPS: 需要在mouseup事件中阻止鼠标按键4、5的前进后退功能。
-                                //                  sdk的button值  |  前端的event.button值
-                                // 'MouseLeft'            1                    0
-                                // 'MouseRight'           2                    2
-                                // 'MouseMiddle'          3                    1
-                                // 'MouseBack'            4                    3
-                                // 'MouseForward'         5                    4
-                                // console.log(event.button);
-
-                                // 鼠标按钮4是后退，按钮5是前进
-                                if (event.button === 3 || event.button === 4) {
-                                  // 虽然无法录制'Enter'事件的原因就是select组件阻止了默认的'Enter'事件的冒泡行为,
-                                  // * 但为防止quasar后续更新改变它, 便再次手动阻止一次, 以防止本次修复被quasar的更新影响。
-                                  event.preventDefault(); // 阻止默认行为
-                                  event.stopPropagation(); // 阻止事件冒泡
-                                }
-                              }
-                            "
+                          @mouseup="preventDefaultMouseWhenRecording"
                         >
                           <q-card>
                             <q-card-section
@@ -2971,6 +2964,7 @@
                         <q-dialog
                           :style="{ '--i18n_fontSize': i18n_fontSize }"
                           v-model="isShowSingleKeySoundEffectEditDialog"
+                          @mouseup="preventDefaultMouseWhenRecording"
                         >
                           <q-card style="min-width: 350px">
                             <q-card-section>
@@ -4381,6 +4375,24 @@ function preventDefaultKeyBehaviorWhenRecording(event: KeyboardEvent) {
   // 更新oldSelectedSingleKeys, 以备下次使用
   oldSelectedSingleKeys = selectedSingleKeys.value.slice();
 }
+const preventDefaultMouseWhenRecording = (event: MouseEvent) => {
+  // TIPS: 需要在mouseup事件中阻止鼠标按键4、5的前进后退功能。
+  //                  sdk的button值  |  前端的event.button值
+  // 'MouseLeft'            1                    0
+  // 'MouseRight'           2                    2
+  // 'MouseMiddle'          3                    1
+  // 'MouseBack'            4                    3
+  // 'MouseForward'         5                    4
+  // console.log(event.button);
+
+  // 鼠标按钮4是后退，按钮5是前进
+  if (event.button === 3 || event.button === 4) {
+    // 虽然无法录制'Enter'事件的原因就是select组件阻止了默认的'Enter'事件的冒泡行为,
+    // * 但为防止quasar后续更新改变它, 便再次手动阻止一次, 以防止本次修复被quasar的更新影响。
+    event.preventDefault(); // 阻止默认行为
+    event.stopPropagation(); // 阻止事件冒泡
+  }
+};
 
 // -- -- 选择声效
 const isDownSoundEffectSelectEnabled = ref(true);
