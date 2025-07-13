@@ -230,6 +230,27 @@ onBeforeMount(async () => {
     keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, true);
   });
 
+  // 添加全局鼠标事件监听
+  // window.addEventListener('mousedown', handleMouseDown);
+  // TIPS: 需要在mouseup事件中阻止鼠标按键4、5的前进后退功能。
+  window.addEventListener('mouseup', (event: MouseEvent) => {
+    //                  sdk的button值  |  前端的event.button值
+    // 'MouseLeft'            1                    0
+    // 'MouseRight'           2                    2
+    // 'MouseMiddle'          3                    1
+    // 'MouseBack'            4                    3
+    // 'MouseForward'         5                    4
+    // console.log(event.button);
+
+    // 鼠标按钮4是后退，按钮5是前进
+    if (event.button === 3 || event.button === 4) {
+      // 虽然无法录制'Enter'事件的原因就是select组件阻止了默认的'Enter'事件的冒泡行为,
+      // * 但为防止quasar后续更新改变它, 便再次手动阻止一次, 以防止本次修复被quasar的更新影响。
+      event.preventDefault(); // 阻止默认行为
+      event.stopPropagation(); // 阻止事件冒泡
+    }
+  });
+
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- keyEvent end   -_-^_^-_- ^_^-_-^_^-_-
 });
 
