@@ -368,7 +368,7 @@ const (
 
 // 音频包处理器
 // * 此函数会根据处理结果来调用播放器播放对应的音频结果。
-func KeySoundHandler(keyState string, keycode uint16) {
+func KeySoundHandler(keyState string, keycode string) {
 	// 如果没有选择音频包，则默认使用内嵌的测试音频进行播放
 	if audioPackageConfig.Viper == nil {
 		PlayKeySound(&AudioFilePath{
@@ -379,12 +379,11 @@ func KeySoundHandler(keyState string, keycode uint16) {
 	// 从音频包配置中获取相关设置, 并根据配置决定如何播放
 
 	// TODO: 根据传入的具体按键Keycode, 来独立寻找其预设的播放配置, 以播放对应音频。
-	singleKey := fmt.Sprint(keycode)
-	single := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState)
+	single := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState)
 	fmt.Println("single====", single)
 	if single != nil {
 		// 将single转换为map类型以便访问其中的值
-		soundEffectType := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".type")
+		soundEffectType := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".type")
 		// TIPS: 这个虽然 single和global都有, 但也没必要提取, 因为它仍旧只会执行一次。(但提取后, 会使得仅播放嵌入测试音时, 也执行这个无关紧要的逻辑)
 		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
 		if !ok {
@@ -394,7 +393,7 @@ func KeySoundHandler(keyState string, keycode uint16) {
 
 		// TIPS: 没必要将single和global的 handleSoundEffect 的逻辑抽离到一个函数内。 因为这样我们在改传参的基础上, 还需要改返回值 并在此处调用后 通过返回值判断是否return。
 		if soundEffectType == "audio_files" {
-			audio_file_name := audioPackageConfig.GetValue("key_tone.single."+singleKey+"."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.single."+singleKey+"."+keyState+".value.type").(string)
+			audio_file_name := audioPackageConfig.GetValue("key_tone.single."+keycode+"."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.single."+keycode+"."+keyState+".value.type").(string)
 			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 
 			PlayKeySound(&AudioFilePath{
@@ -404,7 +403,7 @@ func KeySoundHandler(keyState string, keycode uint16) {
 		}
 
 		if soundEffectType == "sounds" {
-			sound_UUID := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".value")
+			sound_UUID := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".value")
 
 			soundParsePlay(sound_UUID.(string), audioPkgUUID)
 
@@ -412,7 +411,7 @@ func KeySoundHandler(keyState string, keycode uint16) {
 		}
 
 		if soundEffectType == "key_sounds" {
-			key_sound_UUID := audioPackageConfig.GetValue("key_tone.single." + singleKey + "." + keyState + ".value")
+			key_sound_UUID := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".value")
 
 			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
 			// PlayKeySound(&AudioFilePath{
@@ -524,7 +523,7 @@ func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 //   - single: 单一音效模式,按顺序播放配置的音效
 //   - random: 随机音效模式,随机选择一个音效播放
 //   - loop:   循环音效模式,循环播放配置的音效
-func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode uint16, count uint16) {
+func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode string, count uint16) {
 	// 此处限制键音的嵌套数量上限为1000层, 这样即使键音专辑中存在至臻键音间的无限循环依赖也不必担心因此可能引起的  cpu超负荷风险 或 内存占用过多的内存溢出风险。
 	// * 理论上, 设置9999甚至更高也是可行的, 但没必要, 因为没有人会去制作继承嵌套超过1000层的键音。
 	if count > 1000 {
