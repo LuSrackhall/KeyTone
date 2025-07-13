@@ -226,11 +226,11 @@ func mouse_down(ev hook.Event) {
 	println("=====down=====")
 	println("")
 
-	go keySound.KeySoundHandler(keySound.KeyStateMouseDown, "-"+fmt.Sprint(ev.Button))
+	go keySound.KeySoundHandler(keySound.KeyStateDown, "-"+fmt.Sprint(ev.Button))
 	// mouse_key_down_soundIsRun = true
 	go sseBroadcast(&Clients_sse_stores, &Store{
 		Keycode: "-" + fmt.Sprint(ev.Button),
-		State:   keySound.KeyStateMouseDown,
+		State:   keySound.KeyStateDown,
 	})
 }
 
@@ -245,10 +245,10 @@ func mouse_up(ev hook.Event) {
 	println("======up======")
 	println("")
 
-	go keySound.KeySoundHandler(keySound.KeyStateMouseUp, "-"+fmt.Sprint(ev.Button))
+	go keySound.KeySoundHandler(keySound.KeyStateUp, "-"+fmt.Sprint(ev.Button))
 
 	go sseBroadcast(&Clients_sse_stores, &Store{
 		Keycode: "-" + fmt.Sprint(ev.Button),
-		State:   keySound.KeyStateMouseUp,
+		State:   keySound.KeyStateUp,
 	})
 }
