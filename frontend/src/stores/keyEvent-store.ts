@@ -397,6 +397,13 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
     61008: 'Down',
     61003: 'Left',
     61005: 'Right',
+
+    // 自定义鼠标按键码
+    '-1': 'MouseLeft',
+    '-2': 'MouseRight',
+    '-3': 'MouseMiddle',
+    '-4': 'MouseBack',
+    '-5': 'MouseForward',
   }).forEach(([dikCode, name]) => {
     dikCodeToName.set(Number(dikCode), name as string);
   });
