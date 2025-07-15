@@ -33,7 +33,8 @@ KeyTone is a practical software that can simulate the sound of keystrokes in rea
 Although there are already many similar software on the market, KeyTone is still committed to providing users with the best experience.
 
 KeyTone's **core is implemented in high-performance Go**, which lays a solid foundation for the application's performance and allows for greater optimization potential.
-> At this stage, our hybrid architecture uses Electron as the UI layer because it enables **rapid and stable implementation of complex cross-platform features**. Although Electron applications tend to be large in size, this is **not a long-term bottleneck for the KeyTone project architecture**. From the early stages of the project, we have included the evaluation and integration of lighter Go desktop frameworks (such as Wails) in our technical roadmap, and **will smoothly migrate or refactor when their ecosystems are mature enough to completely solve the size issue.**
+
+> At this stage, our hybrid architecture selects Electron as the client framework due to its ability to quickly and reliably implement complex cross-platform functionalities. Although Electron applications are larger in size, this does **not pose a long-term bottleneck for the KeyTone project architecture**. From the project’s outset, our technical roadmap has included the evaluation and integration of lighter Go desktop frameworks, such as Wails. Wails achieves a smaller size by using the system’s native WebView instead of bundling an entire browser engine like Electron. [We will adopt Wails 3 upon its release](https://github.com/LuSrackhall/KeyTone/issues/69), fully addressing the size issue.
 
 In addition, KeyTone is an open-source software that follows the GPL license.
 
