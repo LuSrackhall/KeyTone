@@ -30,7 +30,7 @@ import (
 
 // 定义sse相关变量
 type Store struct {
-	Keycode string `json:"keycode"`
+	Keycode any `json:"keycode"`
 	State   string `json:"state"`
 }
 
@@ -135,7 +135,7 @@ func handleKeyEvent(evChan chan hook.Event) {
 				go keySound.KeySoundHandler(keySound.KeyStateDown, fmt.Sprint(ev.Keycode))
 				key_down_soundIsRun = true
 				go sseBroadcast(&Clients_sse_stores, &Store{
-					Keycode: fmt.Sprint(ev.Keycode),
+					Keycode: ev.Keycode,
 					State:   keySound.KeyStateDown,
 				})
 			}
@@ -168,7 +168,7 @@ func handleKeyEvent(evChan chan hook.Event) {
 			key_down_soundIsRun = false
 
 			go sseBroadcast(&Clients_sse_stores, &Store{
-				Keycode: fmt.Sprint(ev.Keycode),
+				Keycode: ev.Keycode,
 				State:   keySound.KeyStateUp,
 			})
 		}
@@ -229,7 +229,7 @@ func mouse_down(ev hook.Event) {
 	go keySound.KeySoundHandler(keySound.KeyStateDown, "-"+fmt.Sprint(ev.Button))
 	// mouse_key_down_soundIsRun = true
 	go sseBroadcast(&Clients_sse_stores, &Store{
-		Keycode: "-" + fmt.Sprint(ev.Button),
+		Keycode: -int32(ev.Button),
 		State:   keySound.KeyStateDown,
 	})
 }
@@ -248,7 +248,7 @@ func mouse_up(ev hook.Event) {
 	go keySound.KeySoundHandler(keySound.KeyStateUp, "-"+fmt.Sprint(ev.Button))
 
 	go sseBroadcast(&Clients_sse_stores, &Store{
-		Keycode: "-" + fmt.Sprint(ev.Button),
+		Keycode: -int32(ev.Button),
 		State:   keySound.KeyStateUp,
 	})
 }
