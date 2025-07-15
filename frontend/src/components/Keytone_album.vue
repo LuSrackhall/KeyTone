@@ -3743,7 +3743,7 @@ const options = reactive([
   { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds', label_0: 'KeyToneAlbum.options.keySound_0' },
 ]);
 
-const album_options_select_label = (item: any) => {
+const album_options_select_label = (item: any) : any=> {
   if (item.type === 'audio_files') {
     return (
       $t(options.find((option) => item.type === option.value)?.label_0 || '') +
