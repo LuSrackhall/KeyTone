@@ -4282,7 +4282,6 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
 };
 const persistentSingleKeysDataCallback = (keycode: number, keyName: string) => {
   dikCodeToName_custom.set(keycode, keyName);
-  ConfigSet('custom_single_keys_name.' + keycode, keyName);
 };
 
 watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
