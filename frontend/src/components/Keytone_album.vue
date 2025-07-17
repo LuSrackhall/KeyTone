@@ -4224,8 +4224,15 @@ const keyOptions = computed(() => {
 const filterOptions = ref(keyOptions.value); // 用于过滤选项
 
 const isGetsFocused = ref(false);
+
+let first_flag = false  // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
+
 const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('keycode=', keycode, 'keyName=', keyName);
+  if (!first_flag) {
+   first_flag = true
+   return
+  }
 
   // 如果按键不在列表中，则添加
   if (!selectedSingleKeys.value.includes(keycode)) {
@@ -4250,12 +4257,16 @@ watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
   }
 });
 
-watch(isRecordingSingleKeys, (newVal) => {
+watch(isRecordingSingleKeys, (newVal,oldVal) => {
   if (newVal) {
     // 录制单键时, 清空输入框。(由于是录制, 因此需要清空输入框, 防止用户输入内容。)
     // * 如何防止用户输入内容?
     // * * 当然也可以利用updateInputValue。但有更简单的解决思路, 即定义组件特有属性maxlength为0即可阻止用户输入内容。
     singleKeysSelectRef.value?.updateInputValue('');
+
+    if (!oldVal) {
+      first_flag = false
+    }
 
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
   } else {
