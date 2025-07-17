@@ -2343,6 +2343,13 @@
                                         });
                                       }
                                     "
+                                    @remove="
+                                    // TIPS: @remove事件是quasar的select组件提供的。用于多选时被选项减少时触发。(另一个@clear事件, 仅作用于单选时的总清楚按钮, 无法触发多选时各个芯片上的清楚按钮)
+                                      () => {
+                                        clear_flag = true;
+                                        singleKeysSelectRef?.focus() // remove事件会造成所选项被清空时, 选择组件失去焦点的问题。因此通过手动获取焦点来解决此问题。
+                                      }
+                                    "
                                   >
                                     <template v-slot:append>
                                       <q-btn
@@ -4225,13 +4232,18 @@ const filterOptions = ref(keyOptions.value); // 用于过滤选项
 
 const isGetsFocused = ref(false);
 
-let first_flag = false  // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
+let first_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
+let clear_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
 
 const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('keycode=', keycode, 'keyName=', keyName);
   if (!first_flag) {
-   first_flag = true
-   return
+    first_flag = true;
+    return;
+  }
+  if (clear_flag) {
+    clear_flag= false
+    return;
   }
 
   // 如果按键不在列表中，则添加
@@ -4257,7 +4269,7 @@ watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
   }
 });
 
-watch(isRecordingSingleKeys, (newVal,oldVal) => {
+watch(isRecordingSingleKeys, (newVal, oldVal) => {
   if (newVal) {
     // 录制单键时, 清空输入框。(由于是录制, 因此需要清空输入框, 防止用户输入内容。)
     // * 如何防止用户输入内容?
@@ -4265,7 +4277,7 @@ watch(isRecordingSingleKeys, (newVal,oldVal) => {
     singleKeysSelectRef.value?.updateInputValue('');
 
     if (!oldVal) {
-      first_flag = false
+      first_flag = false;
     }
 
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
