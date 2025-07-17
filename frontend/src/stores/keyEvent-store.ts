@@ -28,9 +28,7 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
         }
       });
       if (count_down > 1) {
-        // 清空keyDownStateName_ui, 防止 dik 与 name 的错误映射。
-        keyDownStateName_ui.value = '';
-        // 不希望这通知, 在应用未获取焦点时被意外触发, 因此将此部分移动至前端键盘事件的相关逻辑中去。 但 清空keyDownStateName_ui 的逻辑仍需保留, 以保证映射的准确性。
+        // 不希望这通知, 在应用未获取焦点时被意外触发, 因此将此部分移动至前端键盘事件的相关逻辑中去。
         // q.notify({
         //   message: '按键名称识别时, 检测到有多个按键被同时按下。',
         //   color: 'red',
@@ -74,24 +72,11 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
             // - 记录按键持续时间
             // - 执行相关动画
             // - 播放音效等
-            console.debug('[debug]: keycode为', keycode, '的按键从down变为up。其名称可能是', keyDownStateName_ui.value);
 
             // TIPS: 用于录制按键的相关的逻辑在此处执行
             if (keyStateCallback_Record) {
-              keyStateCallback_Record(keycode, keyDownStateName_ui.value);
-            }
-
-            // 使用keyDownStateName_ui, 来记录按键名称
-            if (keyDownStateName_ui.value) {
-              console.info('[info]:keycode为', keycode, '的按键从down变为up。其名称可能是', keyDownStateName_ui.value);
-
-              // TIPS: 用于记录的数据持久化相关的逻辑在此处执行
-              if (keyStateCallback_PersistentData) {
-                keyStateCallback_PersistentData(keycode, keyDownStateName_ui.value);
-              }
-
-              // 记录行为结束后, 清空keyDownStateName_ui
-              keyDownStateName_ui.value = '';
+              // 此处传递的keyName改为直接使用 代码中由开发人员定义好的dikCodeToName中的Name值。
+              keyStateCallback_Record(keycode, dikCodeToName.get(keycode) || '');
             }
           }
         }
@@ -141,8 +126,6 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
     }
   });
 
-  const keyDownStateName_ui = ref<string>('');
-
   // TIPS: 作为是否要启用'按键Dik码与name实时映射 与 持久化记录功能'的开关。(当某些ui组件需要时, 主动的开启它即可)
   const isOpeningTheRecord = ref<boolean>(false);
 
@@ -169,29 +152,6 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // 定义可配置的 '记录' 用的回调函数
-  // - (或者说持久化数据用的回调函数)
-  let keyStateCallback_PersistentData: ((keycode: number, keyName: string) => void) | null = null;
-
-  /**
-   * 此方法的作用是给回调用的函数变量'keyStateCallback_PersistentData', 设置真实逻辑, 以完成其定义。
-   * @param callback 回调函数(即要设置执行的真实逻辑)
-   */
-  function setKeyStateCallback_PersistentData(callback: (keycode: number, keyName: string) => void) {
-    // 因为记录的逻辑, 是为了服务与录制按键逻辑的, 因此这里无需重复的开启录制逻辑。
-    // isOpeningTheRecord.value = true;
-    keyStateCallback_PersistentData = callback;
-  }
-
-  /**
-   * 此方法的作用是为回调用的函数变量'keyStateCallback_PersistentData', 做清除处理, 使得其不再执行。
-   */
-  function clearKeyStateCallback_PersistentData(): void {
-    // 因为记录的逻辑, 是为了服务与录制按键逻辑的, 因此这里无需重复的关闭录制逻辑。
-    // isOpeningTheRecord.value = false;
-    keyStateCallback_PersistentData = null;
-  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -441,12 +401,9 @@ export const useKeyEventStore = defineStore('keyEvent', () => {
   return {
     keyCodeState,
     frontendKeyEventStateBool,
-    keyDownStateName_ui,
     isOpeningTheRecord,
     setKeyStateCallback_Record,
     clearKeyStateCallback_Record,
-    setKeyStateCallback_PersistentData,
-    clearKeyStateCallback_PersistentData,
     dikCodeToName,
   };
 });

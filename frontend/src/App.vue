@@ -193,20 +193,14 @@ onBeforeMount(async () => {
       keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, true);
     }
     if (keyEvent_store.frontendKeyEventStateBool.get(frontendKeyUUID) === true) {
-      // console.log('按键', event.code ? event.code : event.key, '的触发状态是: ', event.type);
+      // console.log('应用内按键', event.code ? event.code : event.key, '的触发状态是: ', event.type);
+
       // console.debug('录制的输入key:', event.key);
       // console.debug('录制的输入code:', event.code);
       // console.debug('录制的输入All:', event);
       // console.debug('按键的位置:', event.location);
       // TIPS: 在浏览器标准中keyCode已被弃用, 现今由code代替它。
       // console.debug('录制的输入keyCode:', event.keyCode);
-
-      // 为保证时间差, 因此在down状态下, 便对齐进行赋值
-      // * 进一步的, 为防止在识别按键名称时, 出现错误映射, 我们仅在字符串为空时, 才进行赋值。
-      //   > 否则, 以 'alt + j' 为例(前提是在系统中 主动 被快捷键映射工具 映射为 方向键 'down' 的情况下), 会错误的将 'alt'对应的Dik码, 映射为 'down' 的名称。
-      if (!keyEvent_store.keyDownStateName_ui) {
-        keyEvent_store.keyDownStateName_ui = identified;
-      }
 
       keyEvent_store.frontendKeyEventStateBool.set(frontendKeyUUID, false);
     }
@@ -219,7 +213,8 @@ onBeforeMount(async () => {
       return;
     }
     const frontendKeyUUID = identified + event.location;
-    // console.log('按键', event.code ? event.code : event.key, '的触发状态是: ', event.type);
+    // console.log('应用内按键', event.code ? event.code : event.key, '的触发状态是: ', event.type);
+
     // console.debug('录制的输入key:', event.key);
     // console.debug('录制的输入code:', event.code);
     // console.debug('录制的输入All:', event);

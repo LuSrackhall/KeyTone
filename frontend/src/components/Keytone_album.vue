@@ -2312,9 +2312,6 @@
                                       (option) => {
                                         return (
                                           keyEvent_store.dikCodeToName.get(option) || // 优先从项目作者制作的特定于 dik码 与 按键名称 的映射码表中取按键名。
-                                          (dikCodeToName_custom.get(option) // 其次从项目作者所编写的 dik码 与 前端keycode/key名 的自动映射逻辑生成的码表中取按键名。(这一步后续可能移除: 因为这一步只是作者为快速制作第一步中的码表, 才编写的特定程序, 以尽可能轻松定义特定的按键名称--毕竟定义每一个按键的名称, 且不能重复的工作量不小, 因此想借助前端已有的keycode或key的定义来加快进度。)
-                                            ? 'Temp-{' + dikCodeToName_custom.get(option) + '}' // 防止影响优先级流程
-                                            : '') || // 中间这个需要加上括号, 不然 '||' 运算符的优先级大于 '?'
                                           'Dik-{' + option + '}'
                                         ); // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
                                       }
@@ -2341,19 +2338,6 @@
                                               return true;
                                             }
 
-                                            // 其次过滤temp(由于名称中字符串'temp_'是显示时候加的, 因此不影响实际过滤行为)   TIPS: 由于结果0也是符合预期的(即第一个字符), 因此不能使用||来处理, 否则会造成第一个字符无法被识别。
-                                            ifre = dikCodeToName_custom
-                                              .get(item)
-                                              ?.toLowerCase()
-                                              ?.indexOf(inputValueLowerCase);
-                                            if (ifre !== undefined && ifre > -1) {
-                                              // TIPS: 举例子, 如系统a在temp中是 keyA, 且temp中所有的字母键都有key三个字符, 这就造成了当按下 k 或 e 或 y 时, 被误触发。
-                                              //       而此处的if, 就是防止被误触发的。(因为只要这个dik码在主表中存在并过滤过, 就没必要过滤temp表了。因为我们是以主表为主的, 这样判断可避免误触发。)
-                                              //       只要在主表中不存在即get结果为undefined时, 我们才启用temp表的过滤。
-                                              if (keyEvent_store.dikCodeToName.get(item) === undefined) {
-                                                return true;
-                                              }
-                                            }
                                             return false;
                                           });
                                         });
@@ -2807,21 +2791,13 @@
                                               isDeletes.forEach((key) => {
                                                 deleteString +=
                                                   '-[' +
-                                                  (keyEvent_store.dikCodeToName.get(key) ||
-                                                    (dikCodeToName_custom.get(key)
-                                                      ? 'Temp-{' + dikCodeToName_custom.get(key) + '}'
-                                                      : '') ||
-                                                    'Dik-{' + key + '}') +
+                                                  (keyEvent_store.dikCodeToName.get(key) || 'Dik-{' + key + '}') +
                                                   ']';
                                               });
                                               isNotSoundEffectSelect.forEach((key) => {
                                                 notSoundEffectSelectString +=
                                                   '-[' +
-                                                  (keyEvent_store.dikCodeToName.get(key) ||
-                                                    (dikCodeToName_custom.get(key)
-                                                      ? 'Temp-{' + dikCodeToName_custom.get(key) + '}'
-                                                      : '') ||
-                                                    'Dik-{' + key + '}') +
+                                                  (keyEvent_store.dikCodeToName.get(key) || 'Dik-{' + key + '}') +
                                                   ']';
                                               });
                                               q.notify({
@@ -2953,13 +2929,7 @@
                             }
                           "
                         >
-                          {{
-                            keyEvent_store.dikCodeToName.get(Number(item[0])) ||
-                            (dikCodeToName_custom.get(Number(item[0]))
-                              ? 'Temp-{' + dikCodeToName_custom.get(Number(item[0])) + '}'
-                              : '') ||
-                            'Dik-{' + item[0] + '}'
-                          }}
+                          {{ keyEvent_store.dikCodeToName.get(Number(item[0])) || 'Dik-{' + item[0] + '}' }}
                         </q-chip>
                         <q-dialog
                           :style="{ '--i18n_fontSize': i18n_fontSize }"
@@ -3743,7 +3713,7 @@ const options = reactive([
   { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds', label_0: 'KeyToneAlbum.options.keySound_0' },
 ]);
 
-const album_options_select_label = (item: any) : any=> {
+const album_options_select_label = (item: any): any => {
   if (item.type === 'audio_files') {
     return (
       $t(options.find((option) => item.type === option.value)?.label_0 || '') +
@@ -4235,7 +4205,6 @@ const isShowAddOrSettingSingleKeyEffectDialog = ref(false);
 
 const singleKeysSelectRef = useTemplateRef<QSelect>('singleKeysSelectRef');
 const selectedSingleKeys = ref<Array<number>>([]);
-const dikCodeToName_custom = reactive<Map<number, string>>(new Map<number, string>()); // 用于被持久化的实时映射数据的同步工作。(优先级很低, 甚至会被更新的版本覆盖, 仅勉强起个保底作用, 甚至项目完善后有可能删除这个)
 
 const keyEvent_store = useKeyEventStore();
 
@@ -4248,14 +4217,6 @@ const keyOptions = computed(() => {
   } else {
     // 默认以系统主映射表的keys为主
     const reArray = Array.from(keyEvent_store.dikCodeToName.keys());
-
-    // 其次是temp的keys(虽然后续可能会删除相关逻辑。)
-    Array.from(dikCodeToName_custom.keys()).forEach((item) => {
-      // 在遍历temp映射表的过程中, 检查其每个key是否在主映射表的keys中。如果主映射表中没有, 才会往里加(因为会始终以主映射表为主)。
-      if (!reArray.includes(item)) {
-        reArray.push(item);
-      }
-    });
 
     return reArray;
   }
@@ -4280,15 +4241,10 @@ const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
 
   console.debug('当前已选择的按键:', selectedSingleKeys.value);
 };
-const persistentSingleKeysDataCallback = (keycode: number, keyName: string) => {
-  dikCodeToName_custom.set(keycode, keyName);
-};
 
 watch(isShowAddOrSettingSingleKeyEffectDialog, (newVal) => {
   if (!newVal) {
     keyEvent_store.clearKeyStateCallback_Record();
-    keyEvent_store.clearKeyStateCallback_PersistentData();
-
     // 当通过点击对话框外使得对话框关闭时, 不会触发失去焦点的事件(因此此时isGetsFocused的值不会被置为false, 故补充此逻辑)
     isGetsFocused.value = false;
   }
@@ -4302,20 +4258,16 @@ watch(isRecordingSingleKeys, (newVal) => {
     singleKeysSelectRef.value?.updateInputValue('');
 
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
-    keyEvent_store.setKeyStateCallback_PersistentData(persistentSingleKeysDataCallback);
   } else {
     keyEvent_store.clearKeyStateCallback_Record();
-    keyEvent_store.clearKeyStateCallback_PersistentData();
   }
 });
 
 watch(isGetsFocused, (newVal) => {
   if (newVal && isRecordingSingleKeys.value) {
     keyEvent_store.setKeyStateCallback_Record(recordingSingleKeysCallback);
-    keyEvent_store.setKeyStateCallback_PersistentData(persistentSingleKeysDataCallback);
   } else {
     keyEvent_store.clearKeyStateCallback_Record();
-    keyEvent_store.clearKeyStateCallback_PersistentData();
   }
 });
 
@@ -4531,10 +4483,7 @@ function saveSingleKeySoundEffectConfig(
             type: 'negative',
             position: 'top',
             message: $t('KeyToneAlbum.notify.singleKeySoundEffectConfigFailed', {
-              key:
-                keyEvent_store.dikCodeToName.get(item) ||
-                (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
-                'Dik-{' + item + '}',
+              key: keyEvent_store.dikCodeToName.get(item) || 'Dik-{' + item + '}',
             }),
             timeout: 5000,
           });
@@ -4545,10 +4494,7 @@ function saveSingleKeySoundEffectConfig(
         allSuccess = false;
         console.error(
           $t('KeyToneAlbum.notify.singleKeySoundEffectConfigError', {
-            key:
-              keyEvent_store.dikCodeToName.get(item) ||
-              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
-              'Dik-{' + item + '}',
+            key: keyEvent_store.dikCodeToName.get(item) || 'Dik-{' + item + '}',
           }),
           err
         );
@@ -4556,10 +4502,7 @@ function saveSingleKeySoundEffectConfig(
           type: 'negative',
           position: 'top',
           message: $t('KeyToneAlbum.notify.singleKeySoundEffectConfigFailed', {
-            key:
-              keyEvent_store.dikCodeToName.get(item) ||
-              (dikCodeToName_custom.get(item) ? 'Temp-{' + dikCodeToName_custom.get(item) + '}' : '') ||
-              'Dik-{' + item + '}',
+            key: keyEvent_store.dikCodeToName.get(item) || 'Dik-{' + item + '}',
           }),
           timeout: 5000,
         });
@@ -4636,11 +4579,7 @@ let currentEditingKey_old = currentEditingKey.value; // TIPS: 此处旧值的记
 // });
 const currentEditingKeyOfName = computed(() => {
   return currentEditingKey.value !== null
-    ? keyEvent_store.dikCodeToName.get(currentEditingKey.value) ||
-        (dikCodeToName_custom.get(currentEditingKey.value)
-          ? 'Temp-{' + dikCodeToName_custom.get(currentEditingKey.value) + '}'
-          : '') ||
-        'Dik-{' + currentEditingKey.value + '}'
+    ? keyEvent_store.dikCodeToName.get(currentEditingKey.value) || 'Dik-{' + currentEditingKey.value + '}'
     : '';
 });
 
@@ -4802,14 +4741,6 @@ onBeforeMount(async () => {
         isEnableEmbeddedTestSound.up = data.key_tone.is_enable_embedded_test_sound.up;
       }
 
-      // 后续极大可能会删除它(单键声效的Temp的单键名称)(TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证)
-      if (data.custom_single_keys_name !== undefined) {
-        // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
-        Object.entries(data.custom_single_keys_name).forEach(([dikCode, name]) => {
-          dikCodeToName_custom.set(Number(dikCode), name as string);
-        });
-      }
-
       // TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证
       if (data.key_tone?.single !== undefined) {
         keysWithSoundEffect.value.clear();
@@ -4962,16 +4893,6 @@ onBeforeMount(async () => {
     if (keyTonePkgData.key_tone !== undefined) {
       isEnableEmbeddedTestSoundDelayed.cancel();
       isEnableEmbeddedTestSoundDelayed(keyTonePkgData.key_tone.is_enable_embedded_test_sound);
-    }
-
-    // 后续极大可能会删除它(Temp的单键名称)
-    // * 若仅依赖此逻辑, 添加声效时会因读取延迟使得第一时间仅能看到Dik码, 短暂的后续方可看到此项逻辑带来的Temp临时名称。
-    // * 若想直接看到, 就改变逻辑中在ConfigSet前注释掉的dikCodeToName_custom.set相关逻辑。(启用)
-    if (keyTonePkgData.custom_single_keys_name !== undefined) {
-      // 遍历 custom_single_keys_name 对象的每个键值对并设置到 dikCodeToName_custom 中
-      Object.entries(keyTonePkgData.custom_single_keys_name).forEach(([dikCode, name]) => {
-        dikCodeToName_custom.set(Number(dikCode), name as string);
-      });
     }
 
     if (keyTonePkgData.key_tone?.global !== undefined) {
