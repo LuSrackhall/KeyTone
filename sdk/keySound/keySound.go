@@ -374,21 +374,21 @@ func KeySoundHandler(keyState string, keycode string) {
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_down.MP3",
-				}, nil)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6})
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_up.MP3",
-				}, nil)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6})
 			}
 		default:
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_down.MP3",
-				}, nil)
+				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0})
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_up.MP3",
-				}, nil)
+				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0})
 			}
 		}
 
