@@ -369,9 +369,29 @@ const (
 func KeySoundHandler(keyState string, keycode string) {
 	// 如果没有选择音频包，则默认使用内嵌的测试音频进行播放
 	if audioPackageConfig.Viper == nil {
-		PlayKeySound(&AudioFilePath{
-			SS: "test_" + keyState + ".MP3",
-		}, nil)
+		switch keycode {
+		case "-1", "-2", "-3", "-4", "-5":
+			if keyState == KeyStateDown {
+				PlayKeySound(&AudioFilePath{
+					SS: "mouse_test_down.MP3",
+				}, nil)
+			} else {
+				PlayKeySound(&AudioFilePath{
+					SS: "mouse_test_up.MP3",
+				}, nil)
+			}
+		default:
+			if keyState == KeyStateDown {
+				PlayKeySound(&AudioFilePath{
+					SS: "test_down.MP3",
+				}, nil)
+			} else {
+				PlayKeySound(&AudioFilePath{
+					SS: "test_up.MP3",
+				}, nil)
+			}
+		}
+
 		return
 	}
 	// 从音频包配置中获取相关设置, 并根据配置决定如何播放
