@@ -63,12 +63,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5 # 安装go依赖
         with:
-          go-version: 1.22.0 # 指定go依赖版本
+          go-version: 1.24.5 # 指定go依赖版本
 
       - name: Install Node.js
         uses: actions/setup-node@v4 # 安装nodejs
         with:
-          node-version: "16" # 指定nodejs 版本
+          node-version: "18" # 指定nodejs 版本
 
       - name: Install Quasar CLI
         run: npm install -g @quasar/cli # 安装quasar/cli

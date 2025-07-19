@@ -120,13 +120,13 @@ You can obtain **KeyTone** through the following methods:
 
 The project requires the following development environment:
 
-* Go 1.22.0
+* Go 1.24.5
 * Node.js 18.x
 * Quasar CLI
 
 ### Setup Steps on Windows
 
-1. Install [Go 1.22.0](https://go.dev/dl/) and configure your environment variables.
+1. Install [Go 1.24.5](https://go.dev/dl/) and configure your environment variables.
 2. Install [Node.js 18.x](https://nodejs.org/en/download/).
 3. Install Quasar CLI globally:
 

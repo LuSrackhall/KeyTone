@@ -1,11 +1,11 @@
 module KeyTone
 
-go 1.22.0
+go 1.24.5
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
-	github.com/gopxl/beep/v2 v2.1.0
+	github.com/gopxl/beep/v2 v2.1.1
 	github.com/robotn/gohook v0.41.0
 )
 
@@ -55,12 +55,12 @@ require (
 )
 
 require (
-	github.com/ebitengine/oto/v3 v3.2.0 // indirect
-	github.com/ebitengine/purego v0.7.1 // indirect
+	github.com/ebitengine/oto/v3 v3.3.2 // indirect
+	github.com/ebitengine/purego v0.8.0 // indirect
 	github.com/gin-contrib/cors v1.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/viper v1.19.0
 	github.com/vcaesar/keycode v0.10.1 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 )

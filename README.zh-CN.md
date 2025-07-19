@@ -123,13 +123,13 @@ KeyTone 赋予你自由创作的舞台，让每一次按键敲击都成为独一
 
 本项目开发环境依赖如下：
 
-* Go 1.22.0
+* Go 1.24.5
 * Node.js 18.x
 * Quasar CLI
 
 ### Windows 下环境搭建步骤
 
-1. 安装 [Go 1.22.0](https://go.dev/dl/) 并配置环境变量。
+1. 安装 [Go 1.24.5](https://go.dev/dl/) 并配置环境变量。
 2. 安装 [Node.js 18.x](https://nodejs.org/en/download/)。
 3. 全局安装 Quasar CLI
 
