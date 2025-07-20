@@ -47,16 +47,12 @@ var Clients_sse_stores sync.Map
 var once_stores sync.Once
 
 var viperRWMutex sync.RWMutex
-var ch chan struct{} = make(chan struct{})
 
 // 加载音频包时使用(也可用于创建新的音频包时)
 func LoadConfig(configPath string, isCreate bool) {
 	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
 	viperRWMutex.RLock()
 	defer viperRWMutex.RUnlock()
-	if Viper != nil {
-		ch <- struct{}{}
-	}
 	Viper = nil
 	Viper = viper.New()
 
@@ -132,8 +128,6 @@ func LoadConfig(configPath string, isCreate bool) {
 					once_stores.Do(func() {
 						close(serverChan)
 					})
-					return true
-				case <-ch:
 					return true
 				}
 			})
