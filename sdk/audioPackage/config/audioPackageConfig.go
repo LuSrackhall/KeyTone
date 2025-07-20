@@ -210,18 +210,21 @@ func DeleteValue(key string) {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
 	}
 	Viper.Set(key, nil)
+	time.Sleep(time.Millisecond * 10)
 
 	Viper.Set(key, deleteKeyValue)
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
 	}
 	Viper.Set(key, nil)
+	time.Sleep(time.Millisecond * 10)
 
 	Viper.Set(key, deleteKeyValue)
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
 	}
 	Viper.Set(key, nil)
+	time.Sleep(time.Millisecond * 10)
 
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("删除键值对时发生致命错误", "err", err.Error())
