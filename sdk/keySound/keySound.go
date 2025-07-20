@@ -490,9 +490,28 @@ func KeySoundHandler(keyState string, keycode string) {
 	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound." + keyState)
 	// * 只要不是主动设置为false, 我们都使用默认音频
 	if isEnableEmbeddedTestSound == true || isEnableEmbeddedTestSound == nil {
-		PlayKeySound(&AudioFilePath{
-			SS: "test_" + keyState + ".MP3",
-		}, nil)
+		switch keycode {
+		case "-1", "-2", "-3", "-4", "-5":
+			if keyState == KeyStateDown {
+				PlayKeySound(&AudioFilePath{
+					SS: "mouse_test_down.MP3",
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6})
+			} else {
+				PlayKeySound(&AudioFilePath{
+					SS: "mouse_test_up.MP3",
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6})
+			}
+		default:
+			if keyState == KeyStateDown {
+				PlayKeySound(&AudioFilePath{
+					SS: "test_down.MP3",
+				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0})
+			} else {
+				PlayKeySound(&AudioFilePath{
+					SS: "test_up.MP3",
+				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0})
+			}
+		}
 		return
 	}
 
