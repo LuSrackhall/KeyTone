@@ -1936,11 +1936,11 @@
                           >
                             <template v-if="isAnchoringUltimatePerfectionKeySound">
                               <!-- 锚定 -->
-                              <q-icon name="img:锚定.svg"></q-icon>
+                              <q-icon name="svguse:icons.svg#锚定"></q-icon>
                             </template>
                             <template v-else>
                               <!-- 锚定解除 -->
-                              <q-icon name="img:锚定解除.svg"></q-icon>
+                              <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
                             </template>
                             <q-tooltip
                               :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
@@ -2378,11 +2378,11 @@
                                           >
                                             <template v-if="isAnchoringUltimatePerfectionKeySound_singleKey">
                                               <!-- 锚定 -->
-                                              <q-icon name="img:锚定.svg"></q-icon>
+                                              <q-icon name="svguse:icons.svg#锚定"></q-icon>
                                             </template>
                                             <template v-else>
                                               <!-- 锚定解除 -->
-                                              <q-icon name="img:锚定解除.svg"></q-icon>
+                                              <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
                                             </template>
                                             <q-tooltip
                                               :class="[
@@ -2801,11 +2801,11 @@
                                       >
                                         <template v-if="isAnchoringUltimatePerfectionKeySound_singleKey_edit">
                                           <!-- 锚定 [声效编辑]-->
-                                          <q-icon name="img:锚定.svg"></q-icon>
+                                          <q-icon name="svguse:icons.svg#锚定"></q-icon>
                                         </template>
                                         <template v-else>
                                           <!-- 锚定解除 [声效编辑]-->
-                                          <q-icon name="img:锚定解除.svg"></q-icon>
+                                          <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
                                         </template>
                                         <q-tooltip
                                           :class="[
