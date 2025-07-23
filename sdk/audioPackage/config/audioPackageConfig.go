@@ -53,7 +53,10 @@ func LoadConfig(configPath string, isCreate bool) {
 	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
 	viperRWMutex.RLock()
 	defer viperRWMutex.RUnlock()
-	Viper = nil
+	if Viper != nil {
+		Viper.StopWatch()
+		Viper = nil
+	}
 	Viper = viper.New()
 
 	// 设置配置文件名称和类型
