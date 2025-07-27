@@ -3325,6 +3325,8 @@ const options = reactive([
 ]);
 
 const album_options_select_label = (item: any): any => {
+  // console.log('item_1212==', item);
+  // console.log('至臻键音列表==', keySoundList.value);
   if (item.type === 'audio_files') {
     return (
       $t(options.find((option) => item.type === option.value)?.label_0 || '') +
@@ -3365,16 +3367,12 @@ const album_options_select_label = (item: any): any => {
   }
   if (item.type === 'key_sounds') {
     // Check if item.value is valid before accessing its properties
-    if (item.value && item.value.keySoundValue) {
-      return (
-        $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') +
-        ' § ' +
-        (item.value.keySoundValue.name || '[Unnamed]')
-      );
-    } else {
-      // Return a fallback label for deleted or invalid items
-      return $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') + ' § ' + '[Deleted Item]';
-    }
+    return (
+      $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') +
+      ' § ' +
+      // (item.value.keySoundValue.name || '[Unnamed]')
+      keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey)?.keySoundValue?.name
+    );
   }
 };
 
