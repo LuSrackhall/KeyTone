@@ -3371,7 +3371,7 @@ const album_options_select_label = (item: any): any => {
       $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') +
       ' § ' +
       // (item.value.keySoundValue.name || '[Unnamed]')
-      keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey)?.keySoundValue?.name
+      keySoundList.value.find((keySound) => keySound.keySoundKey === item.value?.keySoundKey)?.keySoundValue?.name
     );
   }
 };
