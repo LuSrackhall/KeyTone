@@ -1422,7 +1422,7 @@
                                           return item.value.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
-                                          return item.value.keySoundKey;
+                                          return item.value?.keySoundKey;
                                         }
                                       }
                                     "
@@ -1561,7 +1561,7 @@
                                           return item.value.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
-                                          return item.value.keySoundKey;
+                                          return item.value?.keySoundKey;
                                         }
                                       }
                                     "
