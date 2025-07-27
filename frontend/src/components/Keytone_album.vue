@@ -1865,7 +1865,7 @@
                                     return item.value.soundKey
                                   }
                                   if(item.type === 'key_sounds'){
-                                    return item.value.keySoundKey
+                                    return item.value?.keySoundKey
                                   }
                                 }"
                             :label="$t('KeyToneAlbum.linkageEffects.global.setKeyDownSound')"
@@ -1905,7 +1905,7 @@
                                     return item.value.soundKey
                                   }
                                   if(item.type === 'key_sounds'){
-                                    return item.value.keySoundKey
+                                    return item.value?.keySoundKey
                                   }
                                 }"
                             :label="$t('KeyToneAlbum.linkageEffects.global.setKeyUpSound')"
@@ -3364,9 +3364,17 @@ const album_options_select_label = (item: any): any => {
     }
   }
   if (item.type === 'key_sounds') {
-    return (
-      $t(options.find((option) => item.type === option.value)?.label_0 || '') + ' § ' + item.value.keySoundValue?.name
-    );
+    // Check if item.value is valid before accessing its properties
+    if (item.value && item.value.keySoundValue) {
+      return (
+        $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') +
+        ' § ' +
+        (item.value.keySoundValue.name || '[Unnamed]')
+      );
+    } else {
+      // Return a fallback label for deleted or invalid items
+      return $t(options.find((option) => item.type === option.value)?.label_0 || 'Error') + ' § ' + '[Deleted Item]';
+    }
   }
 };
 
