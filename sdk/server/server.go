@@ -805,7 +805,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		// fmt.Println("audio_files."+arg.Sha256+".name=", audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name"))
 
 		// 每次删除后, 都需要判断是否需要删除音频文件(此处的判断, 依赖前一行对name的nil设置, 否则可能会获得内存中与实际文件中不一致的值, 参考上方tips)
-		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name") == nil {
+		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name."+arg.NameID) == nil {
 
 			audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
 			if !ok {
