@@ -1416,7 +1416,7 @@
                                          * {key:'key_sounds', value:string} // 此处value, 是keySoundKey
                                          */
                                         if (item.type === 'audio_files') {
-                                          return item.value.sha256 + item.value.name_id;
+                                          return item.value?.sha256 + item.value?.name_id;
                                         }
                                         if (item.type === 'sounds') {
                                           return item.value?.soundKey;
@@ -1555,7 +1555,7 @@
                                        */
                                       (item) => {
                                         if (item.type === 'audio_files') {
-                                          return item.value.sha256 + item.value.name_id;
+                                          return item.value?.sha256 + item.value?.name_id;
                                         }
                                         if (item.type === 'sounds') {
                                           return item.value?.soundKey;
@@ -1859,7 +1859,7 @@
                             :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
-                                    return item.value.sha256 + item.value.name_id
+                                    return item.value?.sha256 + item.value?.name_id
                                   }
                                   if(item.type === 'sounds'){
                                     return item.value?.soundKey
@@ -1899,7 +1899,7 @@
                             :option-value="(item: any) => {
                                   // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                   if (item.type === 'audio_files'){
-                                    return item.value.sha256 + item.value.name_id
+                                    return item.value?.sha256 + item.value?.name_id
                                   }
                                   if(item.type === 'sounds'){
                                     return item.value?.soundKey
@@ -2711,7 +2711,7 @@
                                         :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
-                                                return item.value.sha256 + item.value.name_id
+                                                return item.value?.sha256 + item.value?.name_id
                                               }
                                               if(item.type === 'sounds'){
                                                 return item.value?.soundKey
@@ -2756,7 +2756,7 @@
                                         :option-value="(item: any) => {
                                               // 直接设置uuid, 使组件可轻松精确的区分每个选项。
                                               if (item.type === 'audio_files'){
-                                                return item.value.sha256 + item.value.name_id
+                                                return item.value?.sha256 + item.value?.name_id
                                               }
                                               if(item.type === 'sounds'){
                                                 return item.value?.soundKey
@@ -3332,10 +3332,10 @@ const album_options_select_label = (item: any): any => {
       $t(options.find((option) => item.type === option.value)?.label_0 || '') +
       ' § ' +
       soundFileList.value.find(
-        (soundFile: any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        (soundFile: any) => soundFile.sha256 === item.value?.sha256 && soundFile.name_id === item.value?.name_id
       )?.name +
       soundFileList.value.find(
-        (soundFile: any) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        (soundFile: any) => soundFile.sha256 === item.value?.sha256 && soundFile.name_id === item.value?.name_id
       )?.type
     );
   }
