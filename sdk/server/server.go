@@ -783,12 +783,23 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		tempName := audioPackageConfig.GetValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
+
 		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
 
 		// TIPS: 每次删除操作后, 都清除内存中的name字段, 并依赖viper提供的实时更新特性与实际文件保持一致。
 		// 			 * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
 		//         > 比如使用Get时, 获得的可能是name= map[0:<nil> 1:<nil>]
 		audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
+		// TIPS: 增加三组延时与相同的Set的作用是, 尽最大可能防止内存刷新失败的现象。
+		//       * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
+		//         > 比如使用Get时, 获得的可能是name= map[0:<nil> 1:<nil>]
+		time.Sleep(time.Millisecond * 6) // TIPS: 发现这个延时越少效果越好, 但无论如何, 均做不到100%删除成功的水准。
+		audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
+		// time.Sleep(time.Millisecond * 10)
+		// audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
+		// time.Sleep(time.Millisecond * 10)
+		// audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
 
 		// 查看name在内存中的值, 是否可配置文件一致(已检测一致)
 		// fmt.Println("audio_files."+arg.Sha256+".name=", audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name"))
@@ -807,6 +818,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			// 删除音频源文件
 			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
 			if err != nil {
+				audioPackageConfig.SetValue("audio_files."+arg.Sha256+".name."+arg.NameID, tempName)
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"message": "error: 删除音频文件失败:" + err.Error(),
 				})
