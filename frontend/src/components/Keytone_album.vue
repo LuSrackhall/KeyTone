@@ -1419,7 +1419,7 @@
                                           return item.value.sha256 + item.value.name_id;
                                         }
                                         if (item.type === 'sounds') {
-                                          return item.value.soundKey;
+                                          return item.value?.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
                                           return item.value?.keySoundKey;
@@ -1558,7 +1558,7 @@
                                           return item.value.sha256 + item.value.name_id;
                                         }
                                         if (item.type === 'sounds') {
-                                          return item.value.soundKey;
+                                          return item.value?.soundKey;
                                         }
                                         if (item.type === 'key_sounds') {
                                           return item.value?.keySoundKey;
@@ -1862,7 +1862,7 @@
                                     return item.value.sha256 + item.value.name_id
                                   }
                                   if(item.type === 'sounds'){
-                                    return item.value.soundKey
+                                    return item.value?.soundKey
                                   }
                                   if(item.type === 'key_sounds'){
                                     return item.value?.keySoundKey
@@ -1902,7 +1902,7 @@
                                     return item.value.sha256 + item.value.name_id
                                   }
                                   if(item.type === 'sounds'){
-                                    return item.value.soundKey
+                                    return item.value?.soundKey
                                   }
                                   if(item.type === 'key_sounds'){
                                     return item.value?.keySoundKey
@@ -2714,10 +2714,10 @@
                                                 return item.value.sha256 + item.value.name_id
                                               }
                                               if(item.type === 'sounds'){
-                                                return item.value.soundKey
+                                                return item.value?.soundKey
                                               }
                                               if(item.type === 'key_sounds'){
-                                                return item.value.keySoundKey
+                                                return item.value?.keySoundKey
                                               }
                                             }"
                                         :label="`${$t(
@@ -2759,10 +2759,10 @@
                                                 return item.value.sha256 + item.value.name_id
                                               }
                                               if(item.type === 'sounds'){
-                                                return item.value.soundKey
+                                                return item.value?.soundKey
                                               }
                                               if(item.type === 'key_sounds'){
-                                                return item.value.keySoundKey
+                                                return item.value?.keySoundKey
                                               }
                                             }"
                                         :label="`${$t(
@@ -3341,11 +3341,11 @@ const album_options_select_label = (item: any): any => {
   }
   if (item.type === 'sounds') {
     // 此处的item可以是any , 但其soundList的源类型, 必须是指定准确, 否则此处会发生意外报错, 且无法定位
-    if (item.value.soundValue?.name !== '' && item.value.soundValue?.name !== undefined) {
+    if (item.value?.soundValue?.name !== '' && item.value?.soundValue?.name !== undefined) {
       return (
         $t(options.find((option) => item.type === option.value)?.label_0 || '') +
         ' § ' +
-        soundList.value.find((sound) => sound.soundKey === item.value.soundKey)?.soundValue.name
+        soundList.value.find((sound) => sound.soundKey === item.value?.soundKey)?.soundValue.name
       );
     } else {
       return (
@@ -3353,14 +3353,14 @@ const album_options_select_label = (item: any): any => {
         ' § ' +
         (soundFileList.value.find(
           (soundFile: any) =>
-            soundFile.sha256 === item.value.soundValue?.source_file_for_sound?.sha256 &&
-            soundFile.name_id === item.value.soundValue?.source_file_for_sound?.name_id
+            soundFile.sha256 === item.value?.soundValue?.source_file_for_sound?.sha256 &&
+            soundFile.name_id === item.value?.soundValue?.source_file_for_sound?.name_id
         )?.name +
           '     - ' +
           ' [' +
-          item.value.soundValue?.cut?.start_time +
+          item.value?.soundValue?.cut?.start_time +
           ' ~ ' +
-          item.value.soundValue?.cut?.end_time +
+          item.value?.soundValue?.cut?.end_time +
           ']')
       );
     }
