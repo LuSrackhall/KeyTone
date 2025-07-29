@@ -783,55 +783,52 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		tempName := audioPackageConfig.GetValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
+		audioPackageConfig.SetValue("audio_files."+arg.Sha256+".name", nil)
+		temp := audioPackageConfig.GetValue("audio_files." + arg.Sha256 + ".name")
+		if m, ok := temp.(map[string]any); ok {
+			if len(m) <= 1 {
+				// 删除音频文件, 因为此时音频文件的存在毫无意义
+				audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+				if !ok {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"message": "error: 获取音频包UUID失败",
+					})
+					return
+				}
 
-		audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
+				// 删除音频源文件
+				err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
+				if err != nil {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"message": "error: 删除音频文件失败:" + err.Error(),
+					})
+					logger.Error("message", "error: 删除音频文件失败:"+err.Error())
+					return
+				}
 
-		// TIPS: 每次删除操作后, 都清除内存中的name字段, 并依赖viper提供的实时更新特性与实际文件保持一致。
-		// 			 * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
-		//         > 比如使用Get时, 获得的可能是name= map[0:<nil> 1:<nil>]
-		audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
-		// TIPS: 增加三组延时与相同的Set的作用是, 尽最大可能防止内存刷新失败的现象。
-		//       * 这样可以防止出现 当配置文件中的name真的为nil时, 从内存中Get到的确实不是nil的情况。
-		//         > 比如使用Get时, 获得的可能是name= map[0:<nil> 1:<nil>]
-		time.Sleep(time.Millisecond * 6) // TIPS: 发现这个延时越少效果越好, 但无论如何, 均做不到100%删除成功的水准。
-		audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
-		// time.Sleep(time.Millisecond * 10)
-		// audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
-		// time.Sleep(time.Millisecond * 10)
-		// audioPackageConfig.Viper.Set("audio_files."+arg.Sha256+".name", nil)
+				// 音频源文件删除成功后，删除配置项中的音频文件配置项(此时不需要管具体的NameID的删除, 因为我们已经从父级删除了)
+				audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
 
-		// 查看name在内存中的值, 是否可配置文件一致(已检测一致)
-		// fmt.Println("audio_files."+arg.Sha256+".name=", audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name"))
-
-		// 每次删除后, 都需要判断是否需要删除音频文件(此处的判断, 依赖前一行对name的nil设置, 否则可能会获得内存中与实际文件中不一致的值, 参考上方tips)
-		if audioPackageConfig.GetValue("audio_files."+arg.Sha256+".name") == nil {
-
-			audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
-			if !ok {
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"message": "error: 获取音频包UUID失败",
+				ctx.JSON(200, gin.H{
+					"message": "ok",
 				})
-				return
-			}
 
-			// 删除音频源文件
-			err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
-			if err != nil {
-				audioPackageConfig.SetValue("audio_files."+arg.Sha256+".name."+arg.NameID, tempName)
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"message": "error: 删除音频文件失败:" + err.Error(),
+			} else {
+				// 仅删除对应的NameID, 因为还有其它的NameID需要依赖相关的音频文件。
+				audioPackageConfig.DeleteValue("audio_files." + arg.Sha256 + ".name." + arg.NameID)
+				ctx.JSON(200, gin.H{
+					"message": "ok",
 				})
-				logger.Error("message", "error: 删除音频文件失败:"+err.Error())
-				return
+
 			}
-			// 音频源文件删除成功后，删除配置项中的音频文件配置项
-			audioPackageConfig.DeleteValue("audio_files." + arg.Sha256)
+		} else {
+			// 类型断言失败，说明 temp 不是 map[string]interface{} 类型
+			// 可以处理错误或忽略
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 删除音频文件失败——断言失败",
+			})
 		}
 
-		ctx.JSON(200, gin.H{
-			"message": "ok",
-		})
 	})
 
 	keytonePkgRouters.POST("/play_sound", func(ctx *gin.Context) {
