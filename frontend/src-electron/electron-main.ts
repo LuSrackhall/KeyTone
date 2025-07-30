@@ -127,6 +127,8 @@ function runChildProcess(command: string, parameter: Array<string>) {
   const sdkProcess = cp.spawn(command, parameter, {
     detached: false,
     stdio: ['pipe', 'pipe', 'pipe'],
+    // 使用 { ...process.env, 新变量: '值' } 确保子进程继承父进程的所有环境变量，并添加或覆盖特定变量。
+    env: { ...process.env, SDK_MODE: 'debug' },
   });
   // 监听子进程的 stdout
   sdkProcess.stdout.on('data', (data) => {
