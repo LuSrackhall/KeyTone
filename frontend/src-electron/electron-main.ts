@@ -120,7 +120,13 @@ if (!fs.existsSync(logsDir)) {
 
 import cp from 'child_process';
 
-function runChildProcess(command: string, parameter: Array<string>) {
+function runChildProcess(
+  command: string,
+  parameter: Array<string>,
+  customEnvVar?: {
+    [key: string]: string | undefined;
+  }
+) {
   // inherit: 子进程将继承父进程的标准输入、输出和错误流。这意味着子进程的输出会直接显示在父进程的终端中。这种方式不会对子进程的执行产生其他影响，只是改变了输出的显示方式。
   // pipe: 子进程的标准输入、输出和错误流会被重定向到父进程中。你可以通过监听这些流来捕获子进程的输出。这种方式也不会对子进程的执行产生其他影响，但需要你在父进程中处理这些流
   // ignore: 忽略子进程的标准输入。
@@ -128,7 +134,7 @@ function runChildProcess(command: string, parameter: Array<string>) {
     detached: false,
     stdio: ['pipe', 'pipe', 'pipe'],
     // 使用 { ...process.env, 新变量: '值' } 确保子进程继承父进程的所有环境变量，并添加或覆盖特定变量。
-    env: { ...process.env, SDK_MODE: 'debug' },
+    env: { ...process.env, ...customEnvVar },
   });
   // 监听子进程的 stdout
   sdkProcess.stdout.on('data', (data) => {
@@ -234,7 +240,7 @@ if (process.env.DEBUGGING) {
         '-logPathAndName=' + './src-electron/sdk-debug/KeyToneSdkLog.jsonl', //必须给到日志的文件名称
       ];
 
-      runChildProcess('./src-electron/sdk-debug/KeyTone.exe', sdkProcessParameter);
+      runChildProcess('./src-electron/sdk-debug/KeyTone.exe', sdkProcessParameter, { SDK_MODE: 'debug' }); // 调试模式需手动向子进程传递环境变量 SDK_MODE: 'debug'
     } else {
       console.error(`Debug script exited with code ${code}`);
       // Handle the error case here
