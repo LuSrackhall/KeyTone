@@ -113,6 +113,7 @@ func PrintSyncMapDetailed(m *sync.Map) {
 // key 是指向 managedStream 的指针 (*managedStream)，它本身就是唯一的内存地址。
 // value 是一个空结构体 struct{}{}, 不占用任何额外内存。
 var activeStreams sync.Map
+var activeStreamsAllDeleteFlag bool = false
 
 // managedStream 包装了 beep.StreamSeekCloser 以便管理其生命周期。
 // 它不需要 id 字段。
@@ -175,6 +176,9 @@ func CloseStream(stream beep.StreamCloser) bool {
 
 // CloseAllStreams 会关闭当前所有正在管理的音频流。
 func CloseAllStreams() {
+	activeStreamsAllDeleteFlag = true
+	// time.Sleep(10 * time.Millisecond) // 等待所有将会触发的音频流进入activeStreams的管理范畴, 以保证100%全部关闭。
+	time.Sleep(30 * time.Millisecond) // 虽然经上万次测试验证, 10ms的延时已足够, 但为防万一, 将此时间提高三倍。
 	activeStreams.Range(func(key, value interface{}) bool {
 		// 在这个设计中，key 就是我们要操作的流对象。
 		if stream, ok := key.(beep.StreamCloser); ok {
@@ -185,6 +189,7 @@ func CloseAllStreams() {
 		// 返回 true 以继续遍历并关闭所有流。
 		return true
 	})
+	activeStreamsAllDeleteFlag = false
 }
 
 //endregion 设置管理所有正在播放的流的一系列变量及方法
@@ -211,6 +216,10 @@ type Cut struct {
 // Returns:
 //   - void
 func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, isPreviewMode ...bool) {
+	// 保证在删除全部活动流期间, 不新增任何播放项
+	if activeStreamsAllDeleteFlag {
+		return
+	}
 
 	if audioFilePath == nil {
 		return

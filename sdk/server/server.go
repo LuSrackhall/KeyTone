@@ -1118,6 +1118,10 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// * 在正式删除音频源文件之前, 需要先释放所有流的文件句柄, 因为在Win系统中, 不释放的话是没办法成功关闭的。
+		keySound.CloseAllStreams()
+
+		// * 正式删除现有目录
 		err = os.RemoveAll(arg.AlbumPath)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
