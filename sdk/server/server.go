@@ -798,9 +798,9 @@ func keytonePkgRouters(r *gin.Engine) {
 
 				// 在正式删除音频源文件之前, 需要先释放所有流的文件句柄, 因为在Win系统中, 不释放的话是没办法成功关闭的。
 				keySound.CloseAllStreams()
-				time.Sleep(10 * time.Millisecond)
-				// 需要调用两次的原因是 -> 前端在单击ui中的删除按钮时的行为本身, 会增加一个额外的正在播放的声音流, 而由于sync.map天然的锁机制, 它并不会包含在上述的关闭流程中。
-				keySound.CloseAllStreams()
+				// time.Sleep(10 * time.Millisecond)
+				// // 需要调用两次的原因是 -> 前端在单击ui中的删除按钮时的行为本身, 会增加一个额外的正在播放的声音流, 而由于sync.map天然的锁机制, 它并不会包含在上述的关闭流程中。
+				// keySound.CloseAllStreams() // 由于CloseAllStreams()函数内部已通过升级变得足够可靠, 因此无需再进行二次调用。
 
 				// 删除音频源文件
 				err := os.Remove(filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", arg.Sha256+arg.Type))
@@ -1492,9 +1492,10 @@ func keytonePkgRouters(r *gin.Engine) {
 			// 覆盖模式：删除现有目录
 			// * 在正式删除音频源文件之前, 需要先释放所有流的文件句柄, 因为在Win系统中, 不释放的话是没办法成功关闭的。
 			keySound.CloseAllStreams()
-			time.Sleep(10 * time.Millisecond)
-			// * 需要调用两次的原因是 -> 前端在单击ui中的删除按钮时的行为本身, 会增加一个额外的正在播放的声音流, 而由于sync.map天然的锁机制, 它并不会包含在上述的关闭流程中。
-			keySound.CloseAllStreams()
+			// time.Sleep(10 * time.Millisecond)
+			// // * 需要调用两次的原因是 -> 前端在单击ui中的删除按钮时的行为本身, 会增加一个额外的正在播放的声音流, 而由于sync.map天然的锁机制, 它并不会包含在上述的关闭流程中。
+			// keySound.CloseAllStreams() // 由于CloseAllStreams()函数内部已通过升级变得足够可靠, 因此无需再进行二次调用。
+
 			// * 正式删除现有目录
 			if err := os.RemoveAll(targetPath); err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
