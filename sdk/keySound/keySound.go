@@ -30,6 +30,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	audioPackageConfig "KeyTone/audioPackage/config"
@@ -74,7 +75,119 @@ func init() {
 	// 使用新的随机数生成器
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	// 仅开发环境下启用对 activeStreams 的监控打印功能
+	if os.Getenv("SDK_MODE") == "debug" {
+		go func() {
+			for true {
+				time.Sleep(3999 * time.Millisecond)
+				PrintSyncMapDetailed(&activeStreams)
+			}
+		}()
+	}
 }
+
+// 一个通用的可打印sync.Map内所有值的函数, 并在末尾统计总条目的数量(即打印共有多少个元素), Debug模式下使用。
+func PrintSyncMapDetailed(m *sync.Map) {
+	fmt.Println("===== sync.Map Detailed Contents =====")
+	count := 0
+
+	m.Range(func(key, value interface{}) bool {
+		keyType := fmt.Sprintf("%T", key)
+		valueType := fmt.Sprintf("%T", value)
+
+		fmt.Printf("Key <%s>: %v\n", keyType, key)
+		fmt.Printf("Value <%s>: %v\n", valueType, value)
+		fmt.Println("---------------------------------")
+
+		count++
+		return true
+	})
+
+	fmt.Printf("Total entries: %d\n", count)
+	fmt.Println("=====================================")
+}
+
+//region 设置管理所有正在播放的流的一系列变量及方法
+
+// activeStreams 使用 sync.Map 来并发安全地存储当前所有正在播放的音频流。
+// key 是指向 managedStream 的指针 (*managedStream)，它本身就是唯一的内存地址。
+// value 是一个空结构体 struct{}{}, 不占用任何额外内存。
+var activeStreams sync.Map
+
+// managedStream 包装了 beep.StreamSeekCloser 以便管理其生命周期。
+// 它不需要 id 字段。
+type managedStream struct {
+	beep.StreamSeekCloser
+}
+
+// Stream 重写了内嵌的 Streamer 的 Stream 方法。
+// 当流自然播放完毕时，它会用自身的指针作为键，将自己从 activeStreams 中删除。
+func (ms *managedStream) Stream(samples [][2]float64) (n int, ok bool) {
+	n, ok = ms.StreamSeekCloser.Stream(samples)
+	if !ok {
+		// 使用 ms (自身的指针)作为 key 来删除。
+		activeStreams.Delete(ms)
+	}
+	return n, ok
+}
+
+// Close 重写了内嵌的 Closer 的 Close 方法。
+// 它确保在关闭原始流之前，先将自己从 activeStreams 中删除。
+func (ms *managedStream) Close() error {
+	// 同样，使用 ms (自身的指针)作为 key 来删除。
+	activeStreams.Delete(ms)
+	return ms.StreamSeekCloser.Close()
+}
+
+// JoinManage 接收一个原始流，将其包装后进行管理。
+// 它直接返回被包装后的流对象。
+// 调用者使用返回的这个对象来进行播放和后续的控制。
+//
+// @param streamer: 原始的音频流。
+// @return beep.StreamSeekCloser: 已被包装、可供播放和控制的流。
+func JoinManage(streamer beep.StreamSeekCloser) beep.StreamSeekCloser {
+	managed := &managedStream{
+		StreamSeekCloser: streamer,
+	}
+
+	// 使用 managed 这个指针作为 key 存储，value 为空结构体。
+	activeStreams.Store(managed, struct{}{})
+
+	return managed
+}
+
+// CloseStream 根据传入的流对象引用来关闭它。
+//
+// @param stream: JoinManage 函数返回的那个流对象。
+// @return bool: 如果成功找到并关闭了流，则返回 true；否则返回 false。
+func CloseStream(stream beep.StreamCloser) bool {
+	// key 就是 stream 对象本身。
+	// 我们使用 Load 来检查它是否存在于 map 中。
+	if _, ok := activeStreams.Load(stream); ok {
+		// 存在，则调用它的 Close 方法。
+		// 这将触发我们重写的 Close()，它会负责从 map 中删除。
+		stream.Close()
+		return true
+	}
+	// 如果流已经自然结束并从 map 中移除，Load 会失败，这里返回 false。
+	return false
+}
+
+// CloseAllStreams 会关闭当前所有正在管理的音频流。
+func CloseAllStreams() {
+	activeStreams.Range(func(key, value interface{}) bool {
+		// 在这个设计中，key 就是我们要操作的流对象。
+		if stream, ok := key.(beep.StreamCloser); ok {
+			// 调用 Close 会触发包装器的 Close 方法，
+			// 该方法会从 map 中安全地删除这个条目。
+			stream.Close()
+		}
+		// 返回 true 以继续遍历并关闭所有流。
+		return true
+	})
+}
+
+//endregion 设置管理所有正在播放的流的一系列变量及方法
 
 type AudioFilePath struct {
 	SS     string // 优先级最低
@@ -129,6 +242,7 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, isPreviewMode ...bool)
 		logger.Error("message", fmt.Sprintf("error: failed to decode audio file: %v", err))
 		return
 	}
+	audioStreamer = JoinManage(audioStreamer)
 	defer audioStreamer.Close()
 
 	fmt.Println("format.SampleRate", format.SampleRate)
