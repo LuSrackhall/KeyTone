@@ -1,3 +1,40 @@
+#  (2025-07-31)
+
+
+### Bug Fixes
+
+* 修复win平台下单键录制偶尔发生的无法录入的问题。 ([56a8f2a](https://github.com/LuSrackhall/KeyTone/commit/56a8f2a277ee830c6951a04fc8dc96ab91af1da7)), closes [#74](https://github.com/LuSrackhall/KeyTone/issues/74)
+* 修复win平台下单键录制偶尔发生无法录入的问题。(比前一种修复方式更高效, 不会带来任何性能问题) ([92f0336](https://github.com/LuSrackhall/KeyTone/commit/92f0336d8457183ec8dcb61c093bfe82cdac069a)), closes [#74](https://github.com/LuSrackhall/KeyTone/issues/74)
+* **electron-ui | win:** 修复了通过任务栏关闭(准确说是隐藏)最小化窗口时, 需要两次关闭才行, 且重新打开时窗口尺寸缩小的bug。 ([64de54d](https://github.com/LuSrackhall/KeyTone/commit/64de54d2436b2bf5ba916024d52f786347135df7)), closes [#73](https://github.com/LuSrackhall/KeyTone/issues/73)
+* **frontend:** 通过重构 按键绑定声效 步骤中, 各个选择器对于 至臻键音 的名称显示的逻辑, 修复了已被删除的至臻键音仍然显示名称而不是实际上所预期的 undefined 的bug。 ([b4be125](https://github.com/LuSrackhall/KeyTone/commit/b4be125d3e38206623f3be53771c9e1fcf076cd3)), closes [#53](https://github.com/LuSrackhall/KeyTone/issues/53)
+* **frontend:** 修复 声音 被删除后, 所可能引发的一系列的ui崩溃的bug。顺便修复了个至臻键音 被删除后, 所漏修的一个bug。 ([967eff5](https://github.com/LuSrackhall/KeyTone/commit/967eff56902af65924af5ae9f3837aa610a80a9c)), closes [#52](https://github.com/LuSrackhall/KeyTone/issues/52)
+* **frontend:** 修复 音频源文件 被删除后, 所可能引发的一系列的ui崩溃的bug。 ([97d1a85](https://github.com/LuSrackhall/KeyTone/commit/97d1a8519af466333325ccc7e44f7a67e09a6f0f)), closes [#51](https://github.com/LuSrackhall/KeyTone/issues/51)
+* **frontend:** 修复了 全键/单键 已选择的被删除相关至臻键音 的选择框页面无法打开的bug, 以及打开后无法展开选择框选项栏的bug。 ([e1334ce](https://github.com/LuSrackhall/KeyTone/commit/e1334ce557b566b24ba677a9330f547a03378795)), closes [#53](https://github.com/LuSrackhall/KeyTone/issues/53)
+* **frontend:** 修复至臻键音修改编辑过程中, 某个依赖已被删除至臻键音的 至臻键音 的 配置按下/抬起声音 的功能无法正常打开相应对话框界面的bug。 ([f22e33f](https://github.com/LuSrackhall/KeyTone/commit/f22e33fdd8592188c632e0d3cc4e0465795b3e63)), closes [#53](https://github.com/LuSrackhall/KeyTone/issues/53)
+* **frontend:** 修复至臻键音修改编辑过程中, 某个依赖已被删除至臻键音的 至臻键音 的 配置按下/抬起声音 界面内的选择器组件无法打开选择框的bug。 ([0dd9192](https://github.com/LuSrackhall/KeyTone/commit/0dd9192365ea564885080d8e06d425a7d352855a)), closes [#53](https://github.com/LuSrackhall/KeyTone/issues/53)
+* **mouse-support:** 修复单键录制时, 鼠标左键无法通过chip项的删除按钮, 删掉录制上的鼠标左键的bug。 ([0812eb8](https://github.com/LuSrackhall/KeyTone/commit/0812eb84e5a71f912dbab8a731938b6078fe66be)), closes [#72](https://github.com/LuSrackhall/KeyTone/issues/72) [#78](https://github.com/LuSrackhall/KeyTone/issues/78)
+* **mouse-support:** 修复新建键音包后, 全新键音包的测试音中不包含鼠标测试音的bug。 ([5b0e086](https://github.com/LuSrackhall/KeyTone/commit/5b0e086d0be3fde15376c2265513a2b18ef7895a)), closes [#72](https://github.com/LuSrackhall/KeyTone/issues/72)
+* **mouse-support:** 修复引入鼠标支持后, 单键自动录制功能在开启瞬间会造成鼠标左键被自动记录的问题。 ([bae06dd](https://github.com/LuSrackhall/KeyTone/commit/bae06dde0fd7fb73ef02068dc954b5b7ae4644b0)), closes [#72](https://github.com/LuSrackhall/KeyTone/issues/72) [#77](https://github.com/LuSrackhall/KeyTone/issues/77)
+* **sdk | log:** 优化log的存储逻辑, 添加基于文件大小的日志轮转机制, 以及基于日志保留天数的历史日志清理逻辑。避免日志文件过大, 以及无效日志文件影响存储空间。 ([a46a108](https://github.com/LuSrackhall/KeyTone/commit/a46a108880f34d3d1763c2285376d6327f4faeb1)), closes [#86](https://github.com/LuSrackhall/KeyTone/issues/86)
+* **sdk:** 彻底解决音频源文件删除成功的判断无法达到100%与json一致的问题。本次修复直接更改了原有的删除功能函数的核心逻辑, 使用了更可靠更正常的逻辑。 ([096deba](https://github.com/LuSrackhall/KeyTone/commit/096debaf36dc217b5a1a0fffd78990796d457acb)), closes [#88](https://github.com/LuSrackhall/KeyTone/issues/88) [#89](https://github.com/LuSrackhall/KeyTone/issues/89)
+* **sdk:** 修复测试按键音实时性能不佳的问题, 提升了测试键音的触发速度, 使其更具实时性。 ([d6d3efd](https://github.com/LuSrackhall/KeyTone/commit/d6d3efd147737f7b6460618e84be5309c2f4dfdf)), closes [#80](https://github.com/LuSrackhall/KeyTone/issues/80)
+* **sdk:** 修复对于质量较差的失真音频源文件, 会造成裁剪播放时的panic的bug。并取消了播放时的锁, 以避免死锁可能性并进一步提升性能。 ([bd88227](https://github.com/LuSrackhall/KeyTone/commit/bd882276356e1161f0b77beb748b2c6c6f571370)), closes [#82](https://github.com/LuSrackhall/KeyTone/issues/82)
+* **sdk:** 修复键音专辑制作编辑过程中小机率出现的核心sdk崩溃的问题, 增强软件整体的稳定性。 ([4736e87](https://github.com/LuSrackhall/KeyTone/commit/4736e87bda9f03769d379ecf72dbfab715f12869)), closes [#71](https://github.com/LuSrackhall/KeyTone/issues/71)
+* **sdk:** 修复删除某项配置时在配置文件中仍有残留的小机率现象。或者说提升了viper相关的删除功能的准确度 ([3ae76c5](https://github.com/LuSrackhall/KeyTone/commit/3ae76c56e1071e6f07e25106e18517ed760b1e69))
+* **sdk:** 修复sdk核心因viper包而引发的内存泄漏问题。 ([bd454e0](https://github.com/LuSrackhall/KeyTone/commit/bd454e0bd744cf41c45c08b7be0164f8bc33ba30)), closes [#84](https://github.com/LuSrackhall/KeyTone/issues/84)
+* **sdk:** 修复win平台下, 导入键音专辑的按钮使用时(覆盖式导入的情况下), 存在 音频源文件的音频流占用 而造成的 无法删除/替换现有 键音专辑的bug (主要还是因为内部的音频源文件无法处理)。 ([b9e57e9](https://github.com/LuSrackhall/KeyTone/commit/b9e57e9db13af077b09e48c2f813af8812331837)), closes [#88](https://github.com/LuSrackhall/KeyTone/issues/88) [#91](https://github.com/LuSrackhall/KeyTone/issues/91)
+* **sdk:** 修复win系统下正在播放使用的音频源文件永远无法被删除的bug。因此实现了一个 终止所有正在播放的音频流的 全局可用的函数方法。 ([d0c42b7](https://github.com/LuSrackhall/KeyTone/commit/d0c42b754ef754580af66463e9c810eb77ff7553)), closes [#88](https://github.com/LuSrackhall/KeyTone/issues/88) [#90](https://github.com/LuSrackhall/KeyTone/issues/90)
+* **sdk:** 修复win系统中删除键音专辑的按钮使用时, 存在 音频源文件的音频流占用 而造成的 无法删除现有 键音专辑的bug (主要还是因为内部的音频源文件无法处理)。 另外, 本次修复增强了关闭当前所有正在管理的音频流函数的可靠性。 ([addd713](https://github.com/LuSrackhall/KeyTone/commit/addd713940978440938c77d9c046ee00018b6ffc)), closes [#88](https://github.com/LuSrackhall/KeyTone/issues/88) [#93](https://github.com/LuSrackhall/KeyTone/issues/93)
+* **sdk:** win平台下, 修复json内数据 与实际删除成功与否不一致的bug。 ([4984b89](https://github.com/LuSrackhall/KeyTone/commit/4984b89c99b366fb2396a8c1b42f77ffb279fef5)), closes [#88](https://github.com/LuSrackhall/KeyTone/issues/88) [#89](https://github.com/LuSrackhall/KeyTone/issues/89)
+
+
+### Features
+
+* **mouse-support:** 增加了自制的鼠标测试音, 以在键音专辑的制作功能中正式支持鼠标按键的按键音自定义。 ([b5be958](https://github.com/LuSrackhall/KeyTone/commit/b5be95828a17c7a3a9942f3f23625cb3165f0f24)), closes [#72](https://github.com/LuSrackhall/KeyTone/issues/72) [#81](https://github.com/LuSrackhall/KeyTone/issues/81)
+* **ui:** 更改导入专辑的功能按钮图标, 新增社区按钮用于引导用户进入itch平台上的KeyTone社区 ([22dcd88](https://github.com/LuSrackhall/KeyTone/commit/22dcd88810bf8ad08f5d69a21f86114d10a4706e))
+
+
+
 #  (2025-06-05)
 
 
