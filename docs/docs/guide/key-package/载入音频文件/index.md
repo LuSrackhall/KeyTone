@@ -17,6 +17,24 @@ You don’t need to worry about loading the same audio source file multiple time
 
 Thanks to this clever storage design, even though they rely on the same underlying file, identical audio files added through multiple load operations will still be displayed as separate, independent entries in the management list. This independence extends beyond display; each entry is treated as a fully isolated file entry in KeyTone’s usage. This design maximizes flexibility and clarity during configuration without sacrificing storage efficiency.
 
+## **How to Obtain "Audio Source Files" Resources?**
+
+Audio source files, which are the prerequisite for everything, are not provided in this project and will not be provided in the future.
+
+   <blockquote>
+   <details>
+
+   <summary>You can obtain audio source files through self-recording, searching open-source communities, free audio resource sharing websites, AI generation, etc.</summary>
+
+   >
+   > `Generally, you are free to use these audio resources locally; however, if you need to share them further, please be sure to review their specific license agreements.`
+   >
+   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — This repository, provided by [Nigh](https://github.com/Nigh), contains **self-recorded** and edited mechanical keyboard switch sounds, along with related usage instructions.
+   > * [Pixabay](https://pixabay.com/sound-effects/search/keyboard/), [Freesound](https://freesound.org/search/?q=keyboard), and other websites claiming to share free audio resources. (*Note: Third-party website resources have not been verified for content, please validate them yourself.*)
+   > * **With the rapid development and continuous advancement of artificial intelligence, it may be possible in the future to use AI audio generation technology to create customized keyboard sound effects through prompts; or even inform it of the KeyTone sound album format to generate sound albums directly importable for use.**
+   </details>
+   </blockquote>
+
 ## **Next Steps**
 
 After loading audio files:
