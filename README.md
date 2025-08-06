@@ -56,19 +56,18 @@ With KeyTone, you can:
 * Combine multiple sounds into a single ***advanced sound*** and bind it to a single key, setting these sounds to play randomly or in sequence each time the key is pressed (playing one sound at a time).
 * Allow these ***advanced sounds*** to be combined, inherited, and nested with each other, helping you create rich, varied sound effects and unlocking endless possibilities for keystroke sounds.
 * **Participate in the production and sharing of Keytone albums. The main sharing community is the [Keytone community on itch](https://lusrackhall.itch.io/keytone/community). Welcome to contribute topics or join discussions on existing topics!**
-* Of course, as a prerequisite, the sound files (or audio files) are not provided in this project and will not be provided in the future.
+* Audio source files, which are the prerequisite for everything, are not provided in this project and will not be provided in the future.
    <blockquote>
    <details>
-   <summary>The open-source community and some free audio sharing websites provide rich resources:</summary>
+
+   <summary>You can obtain audio source files through self-recording, searching open-source communities, free audio resource sharing websites, AI generation, etc.</summary>
 
    >
-   > `You can freely use these audio resources locally; but if you need to share them further, be sure to check their specific license agreements.`
+   > `Generally, you are free to use these audio resources locally; however, if you need to share them further, please be sure to review their specific license agreements.`
    >
-   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — This repository is provided by [Nigh](https://github.com/Nigh), containing high-quality switch sounds that they have personally recorded and edited, along with related usage instructions.
-   > * [Pixabay](https://pixabay.com/sound-effects/search/keyboard/) — Pixabay is a vibrant community of authors, artists and creators sharing royalty-free images, video, audio and other media.
-   > * [Freesound](https://freesound.org/search/?q=keyboard) — This website offers some sounds under the CC license.
-   >
-   > Of course, everyone can also record their own sounds to permanently capture the sound of each key on their cherished keyboard and use KeyTone to create a key sound album for preservation.
+   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — This repository, provided by [Nigh](https://github.com/Nigh), contains **self-recorded** and edited mechanical keyboard switch sounds, along with related usage instructions.
+   > * [Pixabay](https://pixabay.com/sound-effects/search/keyboard/), [Freesound](https://freesound.org/search/?q=keyboard), and other websites claiming to share free audio resources. (*Note: Third-party website resources have not been verified for content, please validate them yourself.*)
+   > * **With the rapid development and continuous advancement of artificial intelligence, it may be possible in the future to use AI audio generation technology to create customized keyboard sound effects through prompts; or even inform it of the KeyTone sound album format to generate key sound albums directly importable for use.**
    </details>
    </blockquote>
 

@@ -56,25 +56,22 @@ KeyTone 不提供任何音频文件——这是设计的初衷！
 * 将多个声音组合成一个***高级声音*** 然后绑定到单个按键上, 并设置这些声音在按键触发时 随机播放 或 顺序循环 播放(当然每次播放一个)。
 * 允许这些***高级声音*** 进行 相互的组合、继承 与 嵌套, 助力用户创造出层次丰富、变化无穷的音效组合，解锁按键声音的无限可能性。
 * **参与键音专辑的制作与分享, 键音专辑的[主要分享社区](https://lusrackhall.itch.io/keytone/community)位于 itch 平台, 欢迎贡献话题或加入已有话题的讨论！**
-* 当然, 作为一切前提的声音文件(或者说音频文件), 本项目中并不提供, 未来也不会提供。
+* 当然, 作为一切前提的音频源文件, 本项目中并不提供, 未来也不会提供。
 
    <blockquote>
    <details>
 
-   <summary>开源社区及一些免费音频共享网站提供了丰富的资源:</summary>
+   <summary>您可通过自行录制、开源社区寻找、免费音频资源的分享网站、Ai生成...等方式得到音频源文件。</summary>
 
    >
    > `通常情况下, 大家可自由在本地使用这些音频资源; 但若需进一步分享，请务必查阅其具体许可协议。`
    >
-   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — 此仓库由[Nigh](https://github.com/Nigh)提供, 仓库内有其亲自录制并裁剪好的单独轴体键音, 及相关的使用介绍。
-   >   >  感谢 **Nigh** 的用心和投入。 同时, 还要感谢[小众软件社区](https://meta.appinn.net/)提供的分享交流渠道。
-   > * [Pixabay](https://pixabay.com/zh/sound-effects/search/键盘/) — Pixabay是一个充满活力的社区，汇聚了作者、艺术家和创作者，分享免版税的图片、视频、音频和其他媒体内容。
-   > * [Freesound](https://freesound.org/search/?q=keyboard) — 此网站提供了一些cc协议的声音, 但在使用时可能需要您自行裁剪。
-   >   > 感谢**小众软件**用户[feeshy](https://meta.appinn.net/t/topic/72445/4#:~:text=12%20%E5%A4%A9-,%E5%8F%AF%E4%BB%A5%E5%86%85%E7%BD%AE%E4%B8%80%E4%BA%9BCC%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%BD%95%E9%9F%B3,-freesound.org)向大家推荐此网站。
-   >
-   > 当然, 大家也可以自行录制, 以永久记录下自己珍视键盘的每一个按键音, 并利用KeyTone制作成键音专辑保存起来。
+   > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — 此仓库由[Nigh](https://github.com/Nigh)提供, 仓库内有其**自行录制**并裁剪的机械键盘轴体键音, 及相关的使用介绍。
+   > * [Pixabay](https://pixabay.com/zh/sound-effects/search/键盘/)、 [Freesound](https://freesound.org/search/?q=keyboard), 以及其它声称分享免费音频资源的网站。(*注：第三方网站资源未经内容核实，请自行验证*)
+   > * **随着人工智能的爆发与不断升级, 或许未来可利用AI音频生成技术, 通过提示词生成定制化键盘音效; 甚至是向其告知KeyTone键音专辑的格式, 来使其生成直接可导入使用的键音专辑。**
    </details>
    </blockquote>
+
 
 KeyTone 赋予你自由创作的舞台，让每一次按键敲击都成为独一无二的声音艺术。
 
