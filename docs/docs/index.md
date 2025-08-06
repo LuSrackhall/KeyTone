@@ -10,7 +10,7 @@ hero:
     alt: Logo 
 features:
   - title: Ready to use out of the box
-    details: Can simulate the sound of keystrokes in real time.
+    details: Real-time simulation of mouse/keyboard key press sounds, adding unique charm to key presses.
   - title:  Attention to detail
     details: The pressing and releasing of keyboard keys have independent sound effects, perfectly matching scenarios where keys are held down for a long time.
   - title: Powerful Functionality 
