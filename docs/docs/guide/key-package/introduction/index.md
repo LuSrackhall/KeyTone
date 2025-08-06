@@ -17,12 +17,14 @@ In the following documentation, we will provide detailed explanations of the ope
 
 ## **Community and Simple Examples**
 
-To help you quickly experience the charm of KeyTone, we’ve prepared some basic example key sound albums that you can download and import into the software for a hands-on experience:
-> Thanks to [mechvibes](https://github.com/hainguyents13/mechvibes) for providing **audio source files** support for these examples.
+We have created a community on the itch platform for sharing and discussing topics related to key sound albums. Everyone can share and discuss key sound album-related topics there, and also obtain key sound albums shared by others.
 
-<iframe frameborder="0" src="https://itch.io/embed/3523882" width="552" height="167"><a href="https://lusrackhall.itch.io/keytone-custom-album-example">Keytone-Custom-Album-Example by LuSrackhall</a></iframe>
+[KeyTone community - itch.io](https://lusrackhall.itch.io/keytone/community)
 
-The basic examples shared above are published on the itch community, where everyone can share their own created key sound albums.
+To help you quickly experience the charm of KeyTone, we have prepared some completed key sound albums in the above community.
+> These key sound albums are basic examples. Although they do not utilize all the advanced features KeyTone provides for key sound albums, viewing their content through the key sound album page can still help everyone quickly understand the basic production process of key sound albums to some extent.
+
+Of course, you can also share your own key sound albums with everyone through the itch platform or other channels.
 
 ## **Next Steps**
 

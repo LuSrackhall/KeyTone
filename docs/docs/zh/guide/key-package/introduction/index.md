@@ -17,12 +17,14 @@
 
 ## **社区与简单示例**
 
-为了让您快速体验 KeyTone 的魅力，我们准备了一些键音专辑的基础示例，您可下载并导入到软件中进行体验：
-> 感谢[mechvibes](https://github.com/hainguyents13/mechvibes)为这些示例提供**音频源文件**支持。
+我们在itch平台, 创建了一个关于键音专辑分享的社区, 大家可以在其中分享讨论有关键音专辑的话题, 也可以在其中获取他人分享的键音专辑。
 
-<iframe frameborder="0" src="https://itch.io/embed/3523882" width="552" height="167"><a href="https://lusrackhall.itch.io/keytone-custom-album-example">Keytone-Custom-Album-Example by LuSrackhall</a></iframe>
+[KeyTone community - itch.io](https://lusrackhall.itch.io/keytone/community)
 
-以上分享中的基础示例是发布在itch社区的, 大家可以在其中分享自己所创建的键音专辑。
+为了让您快速体验 KeyTone 的魅力，我们在上述社区中准备了一些已经完成的键音专辑。
+> 这些键音专辑基础示例, 虽然未用到KeyTone为键音专辑提供的所有高级功能, 但通过键音专辑页面来查看其内容, 也可在一定程度上帮助大家快速了解键音专辑的基本制作流程。
+
+当然, 您也可以通过itch平台或其它途径, 向大家分享自己制作的键音专辑。
 
 ## **下一步**
 
