@@ -31,7 +31,7 @@ Audio source files, which are the prerequisite for everything, are not provided 
    >
    > * [Nigh/OpenKeySound](https://github.com/Nigh/OpenKeySound) — This repository, provided by [Nigh](https://github.com/Nigh), contains **self-recorded** and edited mechanical keyboard switch sounds, along with related usage instructions.
    > * [Pixabay](https://pixabay.com/sound-effects/search/keyboard/), [Freesound](https://freesound.org/search/?q=keyboard), and other websites claiming to share free audio resources. (*Note: Third-party website resources have not been verified for content, please validate them yourself.*)
-   > * **With the rapid development and continuous advancement of artificial intelligence, it may be possible in the future to use AI audio generation technology to create customized keyboard sound effects through prompts; or even inform it of the KeyTone sound album format to generate sound albums directly importable for use.**
+   > * **With the rapid development and continuous advancement of artificial intelligence, it may be possible in the future to use AI audio generation technology to create customized keyboard sound effects through prompts; or even inform it of the KeyTone sound album format to generate key sound albums directly importable for use.**
    </details>
    </blockquote>
 
