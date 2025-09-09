@@ -1092,6 +1092,25 @@
                                 "
                                 ref="downSoundSelectDom"
                                 @update:model-value="downSoundSelectDom?.hidePopup()"
+                              >
+                                <!-- 添加选项模板以显示警告图标 -->
+                                <template v-slot:option="{ itemProps, opt }">
+                                  <q-item v-bind="itemProps">
+                                    <q-item-section>
+                                      <q-item-label>
+                                        {{ album_options_select_label(opt) }}
+                                        <DependencyWarning 
+                                          v-if="getOptionDependencyIssue(opt)"
+                                          :issue="getOptionDependencyIssue(opt)"
+                                          :show-text="false"
+                                          :show-tooltip="true"
+                                          icon-size="16px"
+                                          class="ml-1"
+                                        />
+                                      </q-item-label>
+                                    </q-item-section>
+                                  </q-item>
+                                </template>
                               />
                               <div class="h-10">
                                 <q-option-group
@@ -1239,6 +1258,25 @@
                                 "
                                 ref="upSoundSelectDom"
                                 @update:model-value="upSoundSelectDom?.hidePopup()"
+                              >
+                                <!-- 添加选项模板以显示警告图标 -->
+                                <template v-slot:option="{ itemProps, opt }">
+                                  <q-item v-bind="itemProps">
+                                    <q-item-section>
+                                      <q-item-label>
+                                        {{ album_options_select_label(opt) }}
+                                        <DependencyWarning 
+                                          v-if="getOptionDependencyIssue(opt)"
+                                          :issue="getOptionDependencyIssue(opt)"
+                                          :show-text="false"
+                                          :show-tooltip="true"
+                                          icon-size="16px"
+                                          class="ml-1"
+                                        />
+                                      </q-item-label>
+                                    </q-item-section>
+                                  </q-item>
+                                </template>
                               />
                               <div class="h-10">
                                 <q-option-group
@@ -1491,6 +1529,25 @@
                                     "
                                     ref="edit_downSoundSelectDom"
                                     @update:model-value="edit_downSoundSelectDom?.hidePopup()"
+                                  >
+                                    <!-- 添加选项模板以显示警告图标 -->
+                                    <template v-slot:option="{ itemProps, opt }">
+                                      <q-item v-bind="itemProps">
+                                        <q-item-section>
+                                          <q-item-label>
+                                            {{ album_options_select_label(opt) }}
+                                            <DependencyWarning 
+                                              v-if="getOptionDependencyIssue(opt)"
+                                              :issue="getOptionDependencyIssue(opt)"
+                                              :show-text="false"
+                                              :show-tooltip="true"
+                                              icon-size="16px"
+                                              class="ml-1"
+                                            />
+                                          </q-item-label>
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
                                   />
                                   <div class="h-10">
                                     <q-option-group
@@ -1630,6 +1687,25 @@
                                     "
                                     ref="edit_upSoundSelectDom"
                                     @update:model-value="edit_upSoundSelectDom?.hidePopup()"
+                                  >
+                                    <!-- 添加选项模板以显示警告图标 -->
+                                    <template v-slot:option="{ itemProps, opt }">
+                                      <q-item v-bind="itemProps">
+                                        <q-item-section>
+                                          <q-item-label>
+                                            {{ album_options_select_label(opt) }}
+                                            <DependencyWarning 
+                                              v-if="getOptionDependencyIssue(opt)"
+                                              :issue="getOptionDependencyIssue(opt)"
+                                              :show-text="false"
+                                              :show-tooltip="true"
+                                              icon-size="16px"
+                                              class="ml-1"
+                                            />
+                                          </q-item-label>
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
                                   />
                                   <div class="h-10">
                                     <q-option-group
@@ -2023,6 +2099,45 @@
                               }
                             "
                             class="max-w-full"
+                          >
+                            <!-- 添加选项模板以显示警告图标 -->
+                            <template v-slot:option="{ itemProps, opt }">
+                              <q-item v-bind="itemProps">
+                                <q-item-section>
+                                  <q-item-label>
+                                    {{ album_options_select_label(opt) }}
+                                    <DependencyWarning 
+                                      v-if="getOptionDependencyIssue(opt)"
+                                      :issue="getOptionDependencyIssue(opt)"
+                                      :show-text="false"
+                                      :show-tooltip="true"
+                                      icon-size="16px"
+                                      class="ml-1"
+                                    />
+                                  </q-item-label>
+                                </q-item-section>
+                              </q-item>
+                            </template>
+                            <!-- 添加选中项显示模板以显示警告图标 -->
+                            <template v-slot:selected-item="{ opt }">
+                              <q-chip
+                                :removable="true"
+                                dense
+                                color="primary"
+                                text-color="white"
+                                class="q-ma-none"
+                              >
+                                {{ album_options_select_label(opt) }}
+                                <DependencyWarning 
+                                  v-if="getOptionDependencyIssue(opt)"
+                                  :issue="getOptionDependencyIssue(opt)"
+                                  :show-text="false"
+                                  :show-tooltip="true"
+                                  icon-size="14px"
+                                  class="ml-1"
+                                />
+                              </q-chip>
+                            </template>
                           />
                         </div>
                         <div class="flex justify-end -m-l-2">
@@ -2747,7 +2862,10 @@
                           :key="item[0]"
                           dense
                           square
-                          class="p-t-3.25 p-b-3.25 p-x-2.5 bg-gradient-to-b from-gray-50 to-gray-200 border-2 border-gray-300 rounded-[0.18rem] shadow-[1px_2px_1px_3px_rgba(0,0,0,0.2),inset_1px_1px_1px_rgba(255,255,255,0.6)] inset_1px_1px_1px_rgba(255,255,255,0.6)]"
+                          :class="[
+                            'p-t-3.25 p-b-3.25 p-x-2.5 bg-gradient-to-b from-gray-50 to-gray-200 border-2 border-gray-300 rounded-[0.18rem] shadow-[1px_2px_1px_3px_rgba(0,0,0,0.2),inset_1px_1px_1px_rgba(255,255,255,0.6)] inset_1px_1px_1px_rgba(255,255,255,0.6)]',
+                            hasSingleKeyBindingDependencyIssue(item[0]) ? 'border-yellow-400' : ''
+                          ]"
                           clickable
                           @click="
                             () => {
@@ -2770,6 +2888,14 @@
                           "
                         >
                           {{ keyEvent_store.dikCodeToName.get(Number(item[0])) || 'Dik-{' + item[0] + '}' }}
+                          <DependencyWarning 
+                            v-if="hasSingleKeyBindingDependencyIssue(item[0])"
+                            :issue="getDependencyIssue('singleKeyBinding', item[0])"
+                            :show-text="false"
+                            :show-tooltip="true"
+                            icon-size="14px"
+                            class="ml-1"
+                          />
                         </q-chip>
                         <q-dialog
                           :style="{ '--i18n_fontSize': i18n_fontSize }"
@@ -2786,6 +2912,14 @@
                                   ]
                                 </div>
                                 - {{ $t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect') }}
+                              </div>
+                              
+                              <!-- 单键绑定依赖警告 -->
+                              <div v-if="hasSingleKeyBindingDependencyIssue(String(currentEditingKey))" class="mt-2">
+                                <DependencyWarning 
+                                  :issue="getDependencyIssue('singleKeyBinding', String(currentEditingKey))"
+                                  :show-text="true"
+                                />
                               </div>
                             </q-card-section>
 
@@ -2840,6 +2974,25 @@
                                           }
                                         "
                                         class="max-w-full"
+                                      >
+                                        <!-- 添加选项模板以显示警告图标 -->
+                                        <template v-slot:option="{ itemProps, opt }">
+                                          <q-item v-bind="itemProps">
+                                            <q-item-section>
+                                              <q-item-label>
+                                                {{ album_options_select_label(opt) }}
+                                                <DependencyWarning 
+                                                  v-if="getOptionDependencyIssue(opt)"
+                                                  :issue="getOptionDependencyIssue(opt)"
+                                                  :show-text="false"
+                                                  :show-tooltip="true"
+                                                  icon-size="16px"
+                                                  class="ml-1"
+                                                />
+                                              </q-item-label>
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
                                       />
                                       <!-- 选择单键抬起声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
@@ -2885,6 +3038,25 @@
                                           }
                                         "
                                         class="max-w-full"
+                                      >
+                                        <!-- 添加选项模板以显示警告图标 -->
+                                        <template v-slot:option="{ itemProps, opt }">
+                                          <q-item v-bind="itemProps">
+                                            <q-item-section>
+                                              <q-item-label>
+                                                {{ album_options_select_label(opt) }}
+                                                <DependencyWarning 
+                                                  v-if="getOptionDependencyIssue(opt)"
+                                                  :issue="getOptionDependencyIssue(opt)"
+                                                  :show-text="false"
+                                                  :show-tooltip="true"
+                                                  icon-size="16px"
+                                                  class="ml-1"
+                                                />
+                                              </q-item-label>
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
                                       />
                                     </div>
                                     <div class="flex justify-end -m-l-2">
