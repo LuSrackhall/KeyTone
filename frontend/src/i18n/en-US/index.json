@@ -120,7 +120,13 @@
       "singleKeySoundEffectConfigFailed": "Per-key {key} SFX config failed",
       "singleKeySoundEffectConfigError": "Error during per-key {key} SFX config",
       "partialSingleKeySoundEffectConfigSuccess": "Only some per-key SFX config succeeded",
-      "configFileReadFailed": "Sound album loading failed"
+      "configFileReadFailed": "Sound album loading failed",
+      "dependencyWarning": "Related dependencies have been deleted",
+      "missingAudioFile": "Referenced audio file has been deleted",
+      "missingSound": "Referenced sound clip has been deleted", 
+      "missingKeySound": "Referenced key sound has been deleted",
+      "dependencyIssuesDetected": "Detected {count} dependency issues",
+      "fixDependencyIssues": "Please fix dependency issues to ensure proper functionality"
     },
     "loadAudioFile": {
       "title": "Load Audio Files",

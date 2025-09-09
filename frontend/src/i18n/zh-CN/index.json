@@ -120,7 +120,13 @@
       "singleKeySoundEffectConfigFailed": "单键 {key} 声效配置失败",
       "singleKeySoundEffectConfigError": "单键 {key} 声效配置时发生错误",
       "partialSingleKeySoundEffectConfigSuccess": "仅部分单键声效配置成功",
-      "configFileReadFailed": "键音专辑配置文件读取失败"
+      "configFileReadFailed": "键音专辑配置文件读取失败",
+      "dependencyWarning": "相关依赖已被删除",
+      "missingAudioFile": "引用的音频文件已被删除",
+      "missingSound": "引用的声音片段已被删除",
+      "missingKeySound": "引用的至臻键音已被删除",
+      "dependencyIssuesDetected": "检测到 {count} 个依赖问题",
+      "fixDependencyIssues": "请修复依赖问题以确保正常使用"
     },
     "loadAudioFile": {
       "title": "载入音频文件",

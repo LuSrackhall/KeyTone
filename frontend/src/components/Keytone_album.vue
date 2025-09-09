@@ -52,6 +52,23 @@
           >
             {{ pkgName }}
           </div>
+          
+          <!-- 依赖问题警告摘要 -->
+          <div v-if="hasDependencyIssues" class="dependency-summary-warning">
+            <div class="warning-banner">
+              <q-icon name="warning" size="18px" class="warning-icon" />
+              <span class="warning-text">
+                {{
+                  $t('KeyToneAlbum.notify.dependencyIssuesDetected', {
+                    count: dependencyIssuesCount,
+                  })
+                }}
+              </span>
+            </div>
+            <div class="warning-message">
+              {{ $t('KeyToneAlbum.notify.fixDependencyIssues') }}
+            </div>
+          </div>
           <q-step
             :name="1"
             :title="$t('KeyToneAlbum.loadAudioFile.title')"
@@ -646,15 +663,23 @@
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                         :options="soundList"
                         :option-label="(item: any) => {
+                          let labelText = '';
                           if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
-                            return item.soundValue.name
+                            labelText = item.soundValue.name;
                           } else {
-                            return soundFileList.find(
+                            labelText = soundFileList.find(
                               (soundFile) =>
                                 soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
                                 soundFile.name_id === item.soundValue.source_file_for_sound.name_id
-                            )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
+                            )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']';
                           }
+                          
+                          // 如果有依赖问题，添加警告标识
+                          if (hasSoundDependencyIssue(item.soundKey)) {
+                            labelText = '⚠️ ' + labelText;
+                          }
+                          
+                          return labelText;
                         }"
                         :option-value="(item:any) =>{
                           // 直接设置uuid, 使组件可轻松精确的区分每个选项。
@@ -721,6 +746,14 @@
                               </q-icon>
                             </template>
                           </q-input>
+                          
+                          <!-- 依赖警告 -->
+                          <div v-if="selectedSound && hasSoundDependencyIssue(selectedSound.soundKey)" class="mt-2">
+                            <DependencyWarning 
+                              :issue="getDependencyIssue('sound', selectedSound.soundKey)"
+                              :show-text="true"
+                            />
+                          </div>
                         </q-card-section>
                         <q-card-section :class="['p-b-1 w-68']">
                           <q-select
@@ -1347,7 +1380,14 @@
                         v-model="selectedKeySound"
                         :options="keySoundList"
                         :label="$t('KeyToneAlbum.craftKeySounds.selectKeySoundToEdit')"
-                        :option-label="(item) => item.keySoundValue.name"
+                        :option-label="(item) => {
+                          let labelText = item.keySoundValue.name;
+                          // 如果有依赖问题，添加警告标识
+                          if (hasKeySoundDependencyIssue(item.keySoundKey)) {
+                            labelText = '⚠️ ' + labelText;
+                          }
+                          return labelText;
+                        }"
                         :option-value="(item) => item.keySoundKey"
                         dense
                       />
@@ -1367,6 +1407,15 @@
                             :label="$t('KeyToneAlbum.craftKeySounds.keySoundName')"
                             :placeholder="$t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder')"
                           />
+                          
+                          <!-- 依赖警告 -->
+                          <div v-if="selectedKeySound && hasKeySoundDependencyIssue(selectedKeySound.keySoundKey)" class="mt-2">
+                            <DependencyWarning 
+                              :issue="getDependencyIssue('keySound', selectedKeySound.keySoundKey)"
+                              :show-text="true"
+                            />
+                          </div>
+                          
                           <div class="flex flex-col mt-1">
                             <q-btn
                               :class="['bg-zinc-300 my-7 w-88% self-center']"
@@ -3095,6 +3144,8 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useDependencyValidation } from 'src/composables/useDependencyValidation';
+import DependencyWarning from 'src/components/DependencyWarning.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -3508,6 +3559,16 @@ const edit_upSoundList = computed(() => {
 });
 const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
+
+// 依赖验证
+const {
+  dependencyIssues,
+  hasDependencyIssues,
+  dependencyIssuesCount,
+  hasSoundDependencyIssue,
+  hasKeySoundDependencyIssue,
+  getDependencyIssue,
+} = useDependencyValidation(soundFileList, soundList, keySoundList);
 
 // 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
 watch(selectedKeySound, () => {
@@ -4727,5 +4788,39 @@ const step_introduce_fontSize = computed(() => {
 }
 :deep(.q-field__label) {
   @apply overflow-visible -ml-1.5 text-[0.8rem];
+}
+
+// 依赖警告摘要样式
+.dependency-summary-warning {
+  margin: 12px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  
+  .warning-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    
+    .warning-icon {
+      color: #f59e0b;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+    
+    .warning-text {
+      color: #f59e0b;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+  }
+  
+  .warning-message {
+    color: #92400e;
+    font-size: 0.75rem;
+    margin-left: 26px;
+    opacity: 0.9;
+  }
 }
 </style>
