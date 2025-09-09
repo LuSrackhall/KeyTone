@@ -3,8 +3,8 @@
     <!-- 简单警告图标 -->
     <q-icon 
       v-if="showIcon" 
-      name="warning" 
-      class="warning-icon"
+      :name="getWarningIcon()" 
+      :class="getWarningIconClass()"
       :size="iconSize"
     />
     
@@ -14,11 +14,11 @@
         anchor="bottom middle" 
         self="top middle" 
         :offset="[0, 8]"
-        class="dependency-tooltip"
+        :class="getTooltipClass()"
       >
         <div class="tooltip-content">
           <div class="tooltip-title">
-            {{ $t('KeyToneAlbum.notify.dependencyWarning') }}
+            {{ getWarningTitle() }}
           </div>
           <div class="missing-items">
             <div 
@@ -29,9 +29,12 @@
               <q-icon 
                 :name="getDependencyIcon(dep.type)" 
                 size="14px" 
-                class="dep-icon"
+                :class="['dep-icon', getDependencyIconClass(dep)]"
               />
-              <span>{{ getDependencyTypeText(dep.type) }}: {{ dep.name || dep.id }}</span>
+              <span :class="getDependencyTextClass(dep)">
+                {{ getDependencyTypeText(dep.type) }}: {{ dep.name || dep.id }}
+                <span v-if="!dep.direct" class="indirect-indicator">（间接问题）</span>
+              </span>
             </div>
           </div>
         </div>
@@ -39,8 +42,8 @@
     </div>
     
     <!-- 警告文本 -->
-    <span v-if="showText" class="warning-text">
-      {{ $t('KeyToneAlbum.notify.dependencyWarning') }}
+    <span v-if="showText" :class="getWarningTextClass()">
+      {{ getWarningTitle() }}
     </span>
   </div>
 </template>
@@ -68,6 +71,43 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const { t } = useI18n();
+
+const getWarningIcon = (): string => {
+  return props.issue?.severity === 'error' ? 'error' : 'warning';
+};
+
+const getWarningIconClass = (): string => {
+  const baseClass = 'warning-icon';
+  return props.issue?.severity === 'error' 
+    ? `${baseClass} error-icon` 
+    : `${baseClass} warning-icon-yellow`;
+};
+
+const getWarningTitle = (): string => {
+  return props.issue?.severity === 'error' 
+    ? t('KeyToneAlbum.notify.dependencyDeleted')
+    : t('KeyToneAlbum.notify.dependencyIssues');
+};
+
+const getWarningTextClass = (): string => {
+  return props.issue?.severity === 'error' 
+    ? 'warning-text error-text' 
+    : 'warning-text warning-text-yellow';
+};
+
+const getTooltipClass = (): string => {
+  return props.issue?.severity === 'error' 
+    ? 'dependency-tooltip error-tooltip' 
+    : 'dependency-tooltip warning-tooltip';
+};
+
+const getDependencyIconClass = (dep: any): string => {
+  return dep.direct ? 'dep-icon-direct' : 'dep-icon-indirect';
+};
+
+const getDependencyTextClass = (dep: any): string => {
+  return dep.direct ? 'dep-text-direct' : 'dep-text-indirect';
+};
 
 const getDependencyIcon = (type: string): string => {
   switch (type) {
@@ -103,19 +143,40 @@ const getDependencyTypeText = (type: string): string => {
   gap: 4px;
 }
 
-.warning-icon {
+.warning-icon-yellow {
   color: #f59e0b; /* yellow-500 */
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
-.warning-text {
+.error-icon {
+  color: #ef4444; /* red-500 */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.warning-text-yellow {
   color: #f59e0b;
   font-size: 0.75rem;
   font-weight: 500;
 }
 
-:deep(.dependency-tooltip) {
+.error-text {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+:deep(.warning-tooltip) {
   background: rgba(245, 158, 11, 0.95) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 0.75rem !important;
+  max-width: 280px;
+  word-wrap: break-word;
+}
+
+:deep(.error-tooltip) {
+  background: rgba(239, 68, 68, 0.95) !important;
   color: white !important;
   border-radius: 8px !important;
   padding: 8px 12px !important;
@@ -143,9 +204,27 @@ const getDependencyTypeText = (type: string): string => {
         margin-bottom: 0;
       }
       
-      .dep-icon {
+      .dep-icon-direct {
         color: rgba(255, 255, 255, 0.9);
         flex-shrink: 0;
+      }
+
+      .dep-icon-indirect {
+        color: rgba(255, 255, 255, 0.7);
+        flex-shrink: 0;
+      }
+
+      .dep-text-direct {
+        color: white;
+      }
+
+      .dep-text-indirect {
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .indirect-indicator {
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
       }
     }
   }

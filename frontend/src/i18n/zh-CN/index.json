@@ -122,6 +122,8 @@
       "partialSingleKeySoundEffectConfigSuccess": "仅部分单键声效配置成功",
       "configFileReadFailed": "键音专辑配置文件读取失败",
       "dependencyWarning": "相关依赖已被删除",
+      "dependencyDeleted": "相关依赖已被删除",
+      "dependencyIssues": "相关依赖可能存在问题",
       "missingAudioFile": "引用的音频文件已被删除",
       "missingSound": "引用的声音片段已被删除",
       "missingKeySound": "引用的至臻键音已被删除",

@@ -1935,6 +1935,54 @@
                               }
                             "
                             class="max-w-full"
+                          >
+                            <!-- 添加选项模板以显示警告图标 -->
+                            <template v-slot:option="{ itemProps, opt }">
+                              <q-item v-bind="itemProps">
+                                <q-item-section>
+                                  <q-item-label>
+                                    {{ album_options_select_label(opt) }}
+                                    <DependencyWarning 
+                                      v-if="getOptionDependencyIssue(opt)"
+                                      :issue="getOptionDependencyIssue(opt)"
+                                      :show-text="false"
+                                      :show-tooltip="true"
+                                      icon-size="16px"
+                                      class="ml-1"
+                                    />
+                                  </q-item-label>
+                                </q-item-section>
+                              </q-item>
+                            </template>
+                            <!-- 添加选中项显示模板以显示警告图标 -->
+                            <template v-slot:selected-item="{ opt }">
+                              <q-chip
+                                :removable="true"
+                                dense
+                                color="primary"
+                                text-color="white"
+                                class="q-ma-none"
+                              >
+                                {{ album_options_select_label(opt) }}
+                                <DependencyWarning 
+                                  v-if="getOptionDependencyIssue(opt)"
+                                  :issue="getOptionDependencyIssue(opt)"
+                                  :show-text="false"
+                                  :show-tooltip="true"
+                                  icon-size="14px"
+                                  class="ml-1"
+                                />
+                              </q-chip>
+                            </template>
+                          />
+                          <!-- 全局绑定警告 -->
+                          <DependencyWarning 
+                            v-if="hasGlobalBindingDependencyIssue()"
+                            :issue="getDependencyIssue('globalBinding', 'global')"
+                            :show-icon="true"
+                            :show-text="true"
+                            :show-tooltip="true"
+                            class="mt-2"
                           />
                           <!-- 选择全键抬起声效的选项, 仅支持单选 -->
                           <q-select
@@ -3561,16 +3609,49 @@ const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
 // 依赖验证
+const globalBinding = computed(() => {
+  if (!keyDownUnifiedSoundEffectSelect.value && !keyUpUnifiedSoundEffectSelect.value) {
+    return undefined;
+  }
+  return {
+    down: keyDownUnifiedSoundEffectSelect.value,
+    up: keyUpUnifiedSoundEffectSelect.value,
+  };
+});
+
 const {
   dependencyIssues,
   hasDependencyIssues,
   dependencyIssuesCount,
+  errorIssuesCount,
+  warningIssuesCount,
   hasSoundDependencyIssue,
   hasKeySoundDependencyIssue,
+  hasGlobalBindingDependencyIssue,
+  hasSingleKeyBindingDependencyIssue,
   getDependencyIssue,
-} = useDependencyValidation(soundFileList, soundList, keySoundList);
+} = useDependencyValidation(soundFileList, soundList, keySoundList, globalBinding, keysWithSoundEffect);
 
-// 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
+// 获取选项的依赖问题
+function getOptionDependencyIssue(option: any): any {
+  if (!option || !option.type) {
+    return null;
+  }
+
+  if (option.type === 'sounds' && option.value?.soundKey) {
+    return hasSoundDependencyIssue(option.value.soundKey) 
+      ? getDependencyIssue('sound', option.value.soundKey)
+      : null;
+  }
+
+  if (option.type === 'key_sounds' && option.value?.keySoundKey) {
+    return hasKeySoundDependencyIssue(option.value.keySoundKey) 
+      ? getDependencyIssue('keySound', option.value.keySoundKey)
+      : null;
+  }
+
+  return null;
+}
 watch(selectedKeySound, () => {
   if (!selectedKeySound.value) {
     return;
