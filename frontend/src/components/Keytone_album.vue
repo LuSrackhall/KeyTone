@@ -1065,24 +1065,6 @@
                                 :max-values="maxSelectionForDown"
                                 counter
                                 :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                :注释="
-                                  () => {
-                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
-                                    /* :error = '()=>{
-                                          return true
-                                        }'
-                                    */
-                                    // 你需要手动调用它(像下方这样)
-                                    /* :error = '(()=>{
-                                          return true
-                                        })()'
-                                    */
-                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
-                                    // 因此, 想要用函数的方式并且响应式生效
-                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
-                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
-                                  }
-                                "
                                 :error="
                                   playModeForDown === 'single'
                                     ? selectedSoundsForDown.length > 1
@@ -1111,7 +1093,7 @@
                                     </q-item-section>
                                   </q-item>
                                 </template>
-                              />
+                              </q-select>
                               <div class="h-10">
                                 <q-option-group
                                   dense
@@ -1235,24 +1217,6 @@
                                 :max-values="maxSelectionForUp"
                                 counter
                                 :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                :注释="
-                                  () => {
-                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
-                                    /* :error = '()=>{
-                                          return true
-                                        }'
-                                    */
-                                    // 你需要手动调用它(像下方这样)
-                                    /* :error = '(()=>{
-                                          return true
-                                        })()'
-                                    */
-                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
-                                    // 因此, 想要用函数的方式并且响应式生效
-                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
-                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
-                                  }
-                                "
                                 :error="
                                   playModeForUp === 'single' ? (selectedSoundsForUp.length > 1 ? true : false) : false
                                 "
@@ -1277,7 +1241,7 @@
                                     </q-item-section>
                                   </q-item>
                                 </template>
-                              />
+                              </q-select>
                               <div class="h-10">
                                 <q-option-group
                                   dense
