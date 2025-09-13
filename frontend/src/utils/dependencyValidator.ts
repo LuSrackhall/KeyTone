@@ -216,19 +216,23 @@ export class DependencyValidator {
             });
           }
         } else if (dep.type === 'sounds' && dep.value) {
-          if (!this.soundExists(dep.value)) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+          if (soundKey && !this.soundExists(soundKey)) {
             missingDeps.push({
               type: 'sounds',
-              id: dep.value,
-              name: this.getSoundName(dep.value)
+              id: soundKey,
+              name: this.getSoundName(soundKey)
             });
           }
         } else if (dep.type === 'key_sounds' && dep.value) {
-          if (!this.keySoundExists(dep.value)) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+          if (keySoundKey && !this.keySoundExists(keySoundKey)) {
             missingDeps.push({
               type: 'key_sounds',
-              id: dep.value,
-              name: this.getKeySoundName(dep.value)
+              id: keySoundKey,
+              name: this.getKeySoundName(keySoundKey)
             });
           }
         }
@@ -245,19 +249,23 @@ export class DependencyValidator {
             });
           }
         } else if (dep.type === 'sounds' && dep.value) {
-          if (!this.soundExists(dep.value)) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+          if (soundKey && !this.soundExists(soundKey)) {
             missingDeps.push({
               type: 'sounds',
-              id: dep.value,
-              name: this.getSoundName(dep.value)
+              id: soundKey,
+              name: this.getSoundName(soundKey)
             });
           }
         } else if (dep.type === 'key_sounds' && dep.value) {
-          if (!this.keySoundExists(dep.value)) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+          if (keySoundKey && !this.keySoundExists(keySoundKey)) {
             missingDeps.push({
               type: 'key_sounds',
-              id: dep.value,
-              name: this.getKeySoundName(dep.value)
+              id: keySoundKey,
+              name: this.getKeySoundName(keySoundKey)
             });
           }
         }
@@ -298,8 +306,9 @@ export class DependencyValidator {
           });
         }
       } else if (binding.down.type === 'sounds') {
-        const soundValue = binding.down.value as string;
-        if (!this.soundExists(soundValue)) {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).soundKey;
+        if (soundValue && !this.soundExists(soundValue)) {
           missingDeps.push({
             type: 'sounds',
             id: soundValue,
@@ -307,8 +316,9 @@ export class DependencyValidator {
           });
         }
       } else if (binding.down.type === 'key_sounds') {
-        const keySoundValue = binding.down.value as string;
-        if (!this.keySoundExists(keySoundValue)) {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).keySoundKey;
+        if (keySoundValue && !this.keySoundExists(keySoundValue)) {
           missingDeps.push({
             type: 'key_sounds',
             id: keySoundValue,
@@ -330,8 +340,9 @@ export class DependencyValidator {
           });
         }
       } else if (binding.up.type === 'sounds') {
-        const soundValue = binding.up.value as string;
-        if (!this.soundExists(soundValue)) {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).soundKey;
+        if (soundValue && !this.soundExists(soundValue)) {
           missingDeps.push({
             type: 'sounds',
             id: soundValue,
@@ -339,8 +350,9 @@ export class DependencyValidator {
           });
         }
       } else if (binding.up.type === 'key_sounds') {
-        const keySoundValue = binding.up.value as string;
-        if (!this.keySoundExists(keySoundValue)) {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).keySoundKey;
+        if (keySoundValue && !this.keySoundExists(keySoundValue)) {
           missingDeps.push({
             type: 'key_sounds',
             id: keySoundValue,
@@ -393,14 +405,22 @@ export class DependencyValidator {
     const allDeps = [...keySound.keySoundValue.down.value, ...keySound.keySoundValue.up.value];
     
     for (const dep of allDeps) {
-      if (dep.type === 'sounds' && dep.value && this.soundHasIndirectIssues(dep.value)) {
-        hasIssues = true;
-        maxDepth = Math.max(maxDepth, depth + 1);
-      } else if (dep.type === 'key_sounds' && dep.value) {
-        const result = this.keySoundHasIndirectIssues(dep.value, new Set(visited), depth + 1);
-        if (result.hasIssues) {
+      if (dep.type === 'sounds' && dep.value) {
+        // Handle both string and object formats (UI may transform strings to objects)
+        const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+        if (soundKey && this.soundHasIndirectIssues(soundKey)) {
           hasIssues = true;
-          maxDepth = Math.max(maxDepth, result.maxDepth);
+          maxDepth = Math.max(maxDepth, depth + 1);
+        }
+      } else if (dep.type === 'key_sounds' && dep.value) {
+        // Handle both string and object formats (UI may transform strings to objects)
+        const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+        if (keySoundKey) {
+          const result = this.keySoundHasIndirectIssues(keySoundKey, new Set(visited), depth + 1);
+          if (result.hasIssues) {
+            hasIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
         }
       }
     }
@@ -460,17 +480,21 @@ export class DependencyValidator {
     // Check down binding for indirect issues
     if (binding.down && binding.down.value) {
       if (binding.down.type === 'sounds') {
-        const soundValue = binding.down.value as string;
-        if (this.soundHasIndirectIssues(soundValue)) {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).soundKey;
+        if (soundValue && this.soundHasIndirectIssues(soundValue)) {
           hasIndirectIssues = true;
           maxDepth = Math.max(maxDepth, 1);
         }
       } else if (binding.down.type === 'key_sounds') {
-        const keySoundValue = binding.down.value as string;
-        const result = this.keySoundHasIndirectIssues(keySoundValue);
-        if (result.hasIssues) {
-          hasIndirectIssues = true;
-          maxDepth = Math.max(maxDepth, result.maxDepth);
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).keySoundKey;
+        if (keySoundValue) {
+          const result = this.keySoundHasIndirectIssues(keySoundValue);
+          if (result.hasIssues) {
+            hasIndirectIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
         }
       }
     }
@@ -478,17 +502,21 @@ export class DependencyValidator {
     // Check up binding for indirect issues
     if (binding.up && binding.up.value) {
       if (binding.up.type === 'sounds') {
-        const soundValue = binding.up.value as string;
-        if (this.soundHasIndirectIssues(soundValue)) {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).soundKey;
+        if (soundValue && this.soundHasIndirectIssues(soundValue)) {
           hasIndirectIssues = true;
           maxDepth = Math.max(maxDepth, 1);
         }
       } else if (binding.up.type === 'key_sounds') {
-        const keySoundValue = binding.up.value as string;
-        const result = this.keySoundHasIndirectIssues(keySoundValue);
-        if (result.hasIssues) {
-          hasIndirectIssues = true;
-          maxDepth = Math.max(maxDepth, result.maxDepth);
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).keySoundKey;
+        if (keySoundValue) {
+          const result = this.keySoundHasIndirectIssues(keySoundValue);
+          if (result.hasIssues) {
+            hasIndirectIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
         }
       }
     }
