@@ -4561,26 +4561,25 @@ const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sou
 };
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
-    const foundFile = soundFileList.value.find(
-      (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-    );
     return {
       type: 'audio_files',
-      value: foundFile || null,
+      value: soundFileList.value.find(
+        (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+      ),
     };
   }
   if (item.type === 'sounds') {
-    const foundSound = soundList.value.find((sound) => sound.soundKey === item.value);
     return {
       type: 'sounds',
-      value: foundSound ? foundSound.soundKey : null,
+      // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
+      value: soundList.value.find((sound) => sound.soundKey === item.value),
     };
   }
   if (item.type === 'key_sounds') {
-    const foundKeySound = keySoundList.value.find((keySound) => keySound.keySoundKey === item.value);
     return {
       type: 'key_sounds',
-      value: foundKeySound ? foundKeySound.keySoundKey : null,
+      // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
+      value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
     };
   }
   return null;
