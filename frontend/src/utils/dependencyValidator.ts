@@ -114,6 +114,11 @@ export class DependencyValidator {
    * Get sound name by soundKey
    */
   private getSoundName(soundKey: string): string {
+    // Ensure soundKey is a string
+    if (typeof soundKey !== 'string') {
+      return 'Unknown';
+    }
+    
     const sound = this.sounds.find(s => s.soundKey === soundKey);
     if (sound && sound.soundValue.name) {
       return sound.soundValue.name;
@@ -130,6 +135,11 @@ export class DependencyValidator {
    * Get key sound name by keySoundKey
    */
   private getKeySoundName(keySoundKey: string): string {
+    // Ensure keySoundKey is a string
+    if (typeof keySoundKey !== 'string') {
+      return 'Unknown';
+    }
+    
     const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
     return keySound ? keySound.keySoundValue.name : keySoundKey.substring(0, 8) + '...';
   }
