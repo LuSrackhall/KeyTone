@@ -122,6 +122,18 @@
       "partialSingleKeySoundEffectConfigSuccess": "仅部分单键声效配置成功",
       "configFileReadFailed": "键音专辑配置文件读取失败"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "相关依赖已被删除",
+      "indirectDependencyIssue": "相关依赖可能存在问题",
+      "audioFileMissing": "音频源文件缺失",
+      "soundMissing": "裁剪定义的声音缺失",
+      "keySoundMissing": "键音缺失",
+      "dependencyChainBroken": "依赖链路存在间接问题",
+      "tooltip": {
+        "critical": "此项的直接依赖已被删除",
+        "info": "此项的依赖链路中存在间接问题"
+      }
+    },
     "loadAudioFile": {
       "title": "载入音频文件",
       "description": "为当前专辑载入原始的音频文件以供后续步骤使用",

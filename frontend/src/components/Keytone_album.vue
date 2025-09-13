@@ -662,6 +662,32 @@
                         }"
                         :label="$t('KeyToneAlbum.defineSounds.selectSoundToManage')"
                         dense
+                      >
+                        <template v-slot:option="scope">
+                          <q-item v-bind="scope.itemProps">
+                            <q-item-section>
+                              <q-item-label>
+                                {{
+                                  scope.opt.soundValue.name !== '' && scope.opt.soundValue.name !== undefined
+                                    ? scope.opt.soundValue.name
+                                    : soundFileList.find(
+                                        (soundFile) =>
+                                          soundFile.sha256 === scope.opt.soundValue.source_file_for_sound.sha256 &&
+                                          soundFile.name_id === scope.opt.soundValue.source_file_for_sound.name_id
+                                      )?.name + '     - ' + ' [' + scope.opt.soundValue.cut.start_time + ' ~ ' + scope.opt.soundValue.cut.end_time + ']'
+                                }}
+                              </q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                              <DependencyWarning
+                                :issues="dependencyIssues"
+                                item-type="sounds"
+                                :item-id="scope.opt.soundKey"
+                                :show-details="false"
+                              />
+                            </q-item-section>
+                          </q-item>
+                        </template>
                       />
                     </q-card-section>
                     <!-- 以卡片形式展示选择的声音 -->
@@ -1059,7 +1085,31 @@
                                 "
                                 ref="downSoundSelectDom"
                                 @update:model-value="downSoundSelectDom?.hidePopup()"
-                              />
+                              >
+                                <template v-slot:option="scope">
+                                  <q-item v-bind="scope.itemProps">
+                                    <q-item-section>
+                                      <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                    </q-item-section>
+                                    <q-item-section side>
+                                      <DependencyWarning
+                                        v-if="scope.opt.type === 'sounds'"
+                                        :issues="dependencyIssues"
+                                        item-type="sounds"
+                                        :item-id="scope.opt.value.soundKey"
+                                        :show-details="false"
+                                      />
+                                      <DependencyWarning
+                                        v-else-if="scope.opt.type === 'key_sounds'"
+                                        :issues="dependencyIssues"
+                                        item-type="key_sounds"
+                                        :item-id="scope.opt.value.keySoundKey"
+                                        :show-details="false"
+                                      />
+                                    </q-item-section>
+                                  </q-item>
+                                </template>
+                              </q-select>
                               <div class="h-10">
                                 <q-option-group
                                   dense
@@ -1350,6 +1400,22 @@
                         :option-label="(item) => item.keySoundValue.name"
                         :option-value="(item) => item.keySoundKey"
                         dense
+                      >
+                        <template v-slot:option="scope">
+                          <q-item v-bind="scope.itemProps">
+                            <q-item-section>
+                              <q-item-label>{{ scope.opt.keySoundValue.name }}</q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                              <DependencyWarning
+                                :issues="dependencyIssues"
+                                item-type="key_sounds"
+                                :item-id="scope.opt.keySoundKey"
+                                :show-details="false"
+                              />
+                            </q-item-section>
+                          </q-item>
+                        </template>
                       />
                     </q-card-section>
                     <!-- 以卡片的形式, 展示选择的按键音 -->
@@ -3095,6 +3161,15 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { 
+  createDependencyValidator, 
+  hasItemDependencyIssues,
+  type DependencyIssue,
+  type AudioFile,
+  type Sound,
+  type KeySound 
+} from 'src/utils/dependencyValidator';
+import DependencyWarning from 'src/components/DependencyWarning.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -4174,6 +4249,61 @@ watch(
     console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
   }
 );
+
+// Dependency validation logic
+const dependencyIssues = ref<DependencyIssue[]>([]);
+
+// Computed property to get all dependency issues
+const allDependencyIssues = computed(() => {
+  const audioFiles = soundFileList.value as AudioFile[];
+  const sounds = soundList.value as Sound[];
+  const keySounds = keySoundList.value as KeySound[];
+  
+  if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
+    return [];
+  }
+
+  const validator = createDependencyValidator(audioFiles, sounds, keySounds);
+  
+  // Get global binding if it exists
+  const globalBinding = keyDownUnifiedSoundEffectSelect.value || keyUpUnifiedSoundEffectSelect.value 
+    ? {
+        down: keyDownUnifiedSoundEffectSelect.value ? {
+          type: keyDownUnifiedSoundEffectSelect.value.type,
+          value: keyDownUnifiedSoundEffectSelect.value.type === 'audio_files' 
+            ? keyDownUnifiedSoundEffectSelect.value.value
+            : keyDownUnifiedSoundEffectSelect.value.type === 'sounds'
+            ? keyDownUnifiedSoundEffectSelect.value.value.soundKey
+            : keyDownUnifiedSoundEffectSelect.value.value.keySoundKey
+        } : null,
+        up: keyUpUnifiedSoundEffectSelect.value ? {
+          type: keyUpUnifiedSoundEffectSelect.value.type,
+          value: keyUpUnifiedSoundEffectSelect.value.type === 'audio_files'
+            ? keyUpUnifiedSoundEffectSelect.value.value
+            : keyUpUnifiedSoundEffectSelect.value.type === 'sounds'
+            ? keyUpUnifiedSoundEffectSelect.value.value.soundKey
+            : keyUpUnifiedSoundEffectSelect.value.value.keySoundKey
+        } : null
+      }
+    : undefined;
+
+  // Convert keysWithSoundEffect Map to the format expected by validator
+  const singleKeyBindings = keysWithSoundEffect.value.size > 0 
+    ? keysWithSoundEffect.value 
+    : undefined;
+
+  return validator.validateAllDependencies(globalBinding, singleKeyBindings);
+});
+
+// Update dependency issues when data changes
+watch([soundFileList, soundList, keySoundList, keyDownUnifiedSoundEffectSelect, keyUpUnifiedSoundEffectSelect, keysWithSoundEffect], () => {
+  dependencyIssues.value = allDependencyIssues.value;
+}, { deep: true });
+
+// Helper function to check if an item has dependency issues
+const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sounds', itemId: string) => {
+  return hasItemDependencyIssues(itemType, itemId, dependencyIssues.value);
+};
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
     return {
