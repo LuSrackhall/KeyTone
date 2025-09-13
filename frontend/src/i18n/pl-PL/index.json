@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Tylko część efektów dźwiękowych dla klawiszy została skonfigurowana pomyślnie",
       "configFileReadFailed": "Nie udało się odczytać pliku konfiguracyjnego albumu dźwięków klawiszy"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Powiązane zależności zostały usunięte",
+      "indirectDependencyIssue": "Powiązane zależności mogą mieć problemy",
+      "audioFileMissing": "Brakuje pliku audio źródłowego",
+      "soundMissing": "Brakuje przyciętego dźwięku",
+      "keySoundMissing": "Brakuje dźwięku klawisza",
+      "dependencyChainBroken": "Łańcuch zależności ma problemy pośrednie",
+      "tooltip": {
+        "critical": "Bezpośrednie zależności tego elementu zostały usunięte",
+        "info": "Łańcuch zależności tego elementu zawiera problemy pośrednie (1 warstwa)",
+        "low": "Łańcuch zależności tego elementu zawiera problemy pośrednie (wielowarstwowe)"
+      }
+    },
     "loadAudioFile": {
       "title": "Załaduj plik audio",
       "description": "Załaduj oryginalny plik audio dla bieżącego albumu do dalszego użycia",

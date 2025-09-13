@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "僅部分單鍵聲效設定成功",
       "configFileReadFailed": "鍵音專輯設定檔案讀取失敗"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "相關依賴已被刪除",
+      "indirectDependencyIssue": "相關依賴可能存在問題",
+      "audioFileMissing": "音頻源文件缺失",
+      "soundMissing": "裁剪定義的聲音缺失",
+      "keySoundMissing": "鍵音缺失",
+      "dependencyChainBroken": "依賴鏈路存在間接問題",
+      "tooltip": {
+        "critical": "此項的直接依賴已被刪除",
+        "info": "此項的依賴鏈路中存在間接問題（一層）",
+        "low": "此項的依賴鏈路中存在間接問題（多層）"
+      }
+    },
     "loadAudioFile": {
       "title": "載入音訊檔案",
       "description": "為當前專輯載入原始的音訊檔案以供後續步驟使用",

@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "일부 단일 키 사운드 이펙트만 설정 성공",
       "configFileReadFailed": "키톤 앨범 설정 파일 읽기 실패"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "관련 종속성이 삭제되었습니다",
+      "indirectDependencyIssue": "관련 종속성에 문제가 있을 수 있습니다",
+      "audioFileMissing": "오디오 소스 파일이 누락되었습니다",
+      "soundMissing": "트리밍된 사운드가 누락되었습니다",
+      "keySoundMissing": "키 사운드가 누락되었습니다",
+      "dependencyChainBroken": "종속성 체인에 간접적인 문제가 있습니다",
+      "tooltip": {
+        "critical": "이 항목의 직접 종속성이 삭제되었습니다",
+        "info": "이 항목의 종속성 체인에 간접적인 문제가 있습니다 (1계층)",
+        "low": "이 항목의 종속성 체인에 간접적인 문제가 있습니다 (다중 계층)"
+      }
+    },
     "loadAudioFile": {
       "title": "오디오 파일 로드",
       "description": "현재 앨범에 원본 오디오 파일을 로드하여 후속 단계에서 사용합니다",

@@ -662,7 +662,33 @@
                         }"
                         :label="$t('KeyToneAlbum.defineSounds.selectSoundToManage')"
                         dense
-                      />
+                      >
+                        <template v-slot:option="scope">
+                          <q-item v-bind="scope.itemProps">
+                            <q-item-section>
+                              <q-item-label>
+                                {{
+                                  scope.opt.soundValue.name !== '' && scope.opt.soundValue.name !== undefined
+                                    ? scope.opt.soundValue.name
+                                    : soundFileList.find(
+                                        (soundFile) =>
+                                          soundFile.sha256 === scope.opt.soundValue.source_file_for_sound.sha256 &&
+                                          soundFile.name_id === scope.opt.soundValue.source_file_for_sound.name_id
+                                      )?.name + '     - ' + ' [' + scope.opt.soundValue.cut.start_time + ' ~ ' + scope.opt.soundValue.cut.end_time + ']'
+                                }}
+                              </q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                              <DependencyWarning
+                                :issues="dependencyIssues"
+                                item-type="sounds"
+                                :item-id="scope.opt.soundKey"
+                                :show-details="false"
+                              />
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
                     </q-card-section>
                     <!-- 以卡片形式展示选择的声音 -->
                     <q-card-section
@@ -1059,7 +1085,31 @@
                                 "
                                 ref="downSoundSelectDom"
                                 @update:model-value="downSoundSelectDom?.hidePopup()"
-                              />
+                              >
+                                <template v-slot:option="scope">
+                                  <q-item v-bind="scope.itemProps">
+                                    <q-item-section>
+                                      <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                    </q-item-section>
+                                    <q-item-section side>
+                                      <DependencyWarning
+                                        v-if="scope.opt.type === 'sounds'"
+                                        :issues="dependencyIssues"
+                                        item-type="sounds"
+                                        :item-id="scope.opt.value.soundKey"
+                                        :show-details="false"
+                                      />
+                                      <DependencyWarning
+                                        v-else-if="scope.opt.type === 'key_sounds'"
+                                        :issues="dependencyIssues"
+                                        item-type="key_sounds"
+                                        :item-id="scope.opt.value.keySoundKey"
+                                        :show-details="false"
+                                      />
+                                    </q-item-section>
+                                  </q-item>
+                                </template>
+                              </q-select>
                               <div class="h-10">
                                 <q-option-group
                                   dense
@@ -1350,7 +1400,23 @@
                         :option-label="(item) => item.keySoundValue.name"
                         :option-value="(item) => item.keySoundKey"
                         dense
-                      />
+                      >
+                        <template v-slot:option="scope">
+                          <q-item v-bind="scope.itemProps">
+                            <q-item-section>
+                              <q-item-label>{{ scope.opt.keySoundValue.name }}</q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                              <DependencyWarning
+                                :issues="dependencyIssues"
+                                item-type="key_sounds"
+                                :item-id="scope.opt.keySoundKey"
+                                :show-details="false"
+                              />
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
                     </q-card-section>
                     <!-- 以卡片的形式, 展示选择的按键音 -->
                     <q-card-section
@@ -1442,7 +1508,23 @@
                                     "
                                     ref="edit_downSoundSelectDom"
                                     @update:model-value="edit_downSoundSelectDom?.hidePopup()"
-                                  />
+                                  >
+                                    <template v-slot:option="scope">
+                                      <q-item v-bind="scope.itemProps">
+                                        <q-item-section>
+                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                          <DependencyWarning
+                                            :issues="dependencyIssues"
+                                            :item-type="scope.opt.type"
+                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                                            :show-details="false"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
+                                  </q-select>
                                   <div class="h-10">
                                     <q-option-group
                                       dense
@@ -1581,7 +1663,23 @@
                                     "
                                     ref="edit_upSoundSelectDom"
                                     @update:model-value="edit_upSoundSelectDom?.hidePopup()"
-                                  />
+                                  >
+                                    <template v-slot:option="scope">
+                                      <q-item v-bind="scope.itemProps">
+                                        <q-item-section>
+                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                          <DependencyWarning
+                                            :issues="dependencyIssues"
+                                            :item-type="scope.opt.type"
+                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                                            :show-details="false"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
+                                  </q-select>
                                   <div class="h-10">
                                     <q-option-group
                                       dense
@@ -1886,7 +1984,38 @@
                               }
                             "
                             class="max-w-full"
-                          />
+                          >
+                            <template v-slot:option="scope">
+                              <q-item v-bind="scope.itemProps">
+                                <q-item-section>
+                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side>
+                                  <DependencyWarning
+                                    v-if="scope.opt.type === 'audio_files'"
+                                    :issues="dependencyIssues"
+                                    item-type="audio_files"
+                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                    :show-details="false"
+                                  />
+                                  <DependencyWarning
+                                    v-else-if="scope.opt.type === 'sounds'"
+                                    :issues="dependencyIssues"
+                                    item-type="sounds"
+                                    :item-id="scope.opt.value?.soundKey"
+                                    :show-details="false"
+                                  />
+                                  <DependencyWarning
+                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                    :issues="dependencyIssues"
+                                    item-type="key_sounds"
+                                    :item-id="scope.opt.value?.keySoundKey"
+                                    :show-details="false"
+                                  />
+                                </q-item-section>
+                              </q-item>
+                            </template>
+                          </q-select>
                           <!-- 选择全键抬起声效的选项, 仅支持单选 -->
                           <q-select
                             outlined
@@ -1926,7 +2055,38 @@
                               }
                             "
                             class="max-w-full"
-                          />
+                          >
+                            <template v-slot:option="scope">
+                              <q-item v-bind="scope.itemProps">
+                                <q-item-section>
+                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                </q-item-section>
+                                <q-item-section side>
+                                  <DependencyWarning
+                                    v-if="scope.opt.type === 'audio_files'"
+                                    :issues="dependencyIssues"
+                                    item-type="audio_files"
+                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                    :show-details="false"
+                                  />
+                                  <DependencyWarning
+                                    v-else-if="scope.opt.type === 'sounds'"
+                                    :issues="dependencyIssues"
+                                    item-type="sounds"
+                                    :item-id="scope.opt.value?.soundKey"
+                                    :show-details="false"
+                                  />
+                                  <DependencyWarning
+                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                    :issues="dependencyIssues"
+                                    item-type="key_sounds"
+                                    :item-id="scope.opt.value?.keySoundKey"
+                                    :show-details="false"
+                                  />
+                                </q-item-section>
+                              </q-item>
+                            </template>
+                          </q-select>
                         </div>
                         <div class="flex justify-end -m-l-2">
                           <q-icon
@@ -2321,7 +2481,38 @@
                                               }
                                             "
                                             class="max-w-full"
-                                          />
+                                          >
+                                            <template v-slot:option="scope">
+                                              <q-item v-bind="scope.itemProps">
+                                                <q-item-section>
+                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                                </q-item-section>
+                                                <q-item-section side>
+                                                  <DependencyWarning
+                                                    v-if="scope.opt.type === 'audio_files'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="audio_files"
+                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="sounds"
+                                                    :item-id="scope.opt.value?.soundKey"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="key_sounds"
+                                                    :item-id="scope.opt.value?.keySoundKey"
+                                                    :show-details="false"
+                                                  />
+                                                </q-item-section>
+                                              </q-item>
+                                            </template>
+                                          </q-select>
                                           <!-- 选择单键抬起声效的选项, 仅支持单选 -->
                                           <q-select
                                             v-show="isUpSoundEffectSelectEnabled"
@@ -2362,7 +2553,38 @@
                                               }
                                             "
                                             class="max-w-full"
-                                          />
+                                          >
+                                            <template v-slot:option="scope">
+                                              <q-item v-bind="scope.itemProps">
+                                                <q-item-section>
+                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                                </q-item-section>
+                                                <q-item-section side>
+                                                  <DependencyWarning
+                                                    v-if="scope.opt.type === 'audio_files'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="audio_files"
+                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="sounds"
+                                                    :item-id="scope.opt.value?.soundKey"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="key_sounds"
+                                                    :item-id="scope.opt.value?.keySoundKey"
+                                                    :show-details="false"
+                                                  />
+                                                </q-item-section>
+                                              </q-item>
+                                            </template>
+                                          </q-select>
                                         </div>
                                         <div
                                           v-show="isDownSoundEffectSelectEnabled && isUpSoundEffectSelectEnabled"
@@ -2743,7 +2965,38 @@
                                           }
                                         "
                                         class="max-w-full"
-                                      />
+                                      >
+                                        <template v-slot:option="scope">
+                                          <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                            </q-item-section>
+                                            <q-item-section side>
+                                              <DependencyWarning
+                                                v-if="scope.opt.type === 'audio_files'"
+                                                :issues="dependencyIssues"
+                                                item-type="audio_files"
+                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="sounds"
+                                                :item-id="scope.opt.value?.soundKey"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'key_sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="key_sounds"
+                                                :item-id="scope.opt.value?.keySoundKey"
+                                                :show-details="false"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
+                                      </q-select>
                                       <!-- 选择单键抬起声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
                                         outlined
@@ -2788,7 +3041,38 @@
                                           }
                                         "
                                         class="max-w-full"
-                                      />
+                                      >
+                                        <template v-slot:option="scope">
+                                          <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                            </q-item-section>
+                                            <q-item-section side>
+                                              <DependencyWarning
+                                                v-if="scope.opt.type === 'audio_files'"
+                                                :issues="dependencyIssues"
+                                                item-type="audio_files"
+                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="sounds"
+                                                :item-id="scope.opt.value?.soundKey"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'key_sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="key_sounds"
+                                                :item-id="scope.opt.value?.keySoundKey"
+                                                :show-details="false"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
+                                      </q-select>
                                     </div>
                                     <div class="flex justify-end -m-l-2">
                                       <q-icon
@@ -3095,6 +3379,15 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { 
+  createDependencyValidator, 
+  hasItemDependencyIssues,
+  type DependencyIssue,
+  type AudioFile,
+  type Sound,
+  type KeySound 
+} from 'src/utils/dependencyValidator';
+import DependencyWarning from 'src/components/DependencyWarning.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -3510,73 +3803,85 @@ const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
 // 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
-watch(selectedKeySound, () => {
-  if (!selectedKeySound.value) {
+// 使用深拷贝避免修改原始数据，确保依赖验证准确性
+watch(selectedKeySound, (newVal, oldVal) => {
+  if (!newVal) {
     return;
   }
-  console.debug('观察selectedKeySound=', selectedKeySound.value);
-  selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
-    /**
-     * json中的存储格式分别是
-     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-     *  {key:'sounds', value:string} // 此处value, 是soundKey
-     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-     */
-    if (item.type === 'audio_files') {
-      return {
-        type: 'audio_files',
-        value: soundFileList.value.find(
-          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-        ),
-      };
-    }
-    if (item.type === 'sounds') {
-      return {
-        type: 'sounds',
-        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
-        value: soundList.value.find((sound) => sound.soundKey === item.value),
-      };
-    }
-    if (item.type === 'key_sounds') {
-      return {
-        type: 'key_sounds',
-        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
-        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
-      };
-    }
-    return item;
-  });
-  selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
-    /**
-     * json中的存储格式分别是
-     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-     *  {key:'sounds', value:string} // 此处value, 是soundKey
-     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-     */
-    if (item.type === 'audio_files') {
-      return {
-        type: 'audio_files',
-        value: soundFileList.value.find(
-          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-        ),
-      };
-    }
-    if (item.type === 'sounds') {
-      return {
-        type: 'sounds',
-        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
-        value: soundList.value.find((sound) => sound.soundKey === item.value),
-      };
-    }
-    if (item.type === 'key_sounds') {
-      return {
-        type: 'key_sounds',
-        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
-        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
-      };
-    }
-    return item;
-  });
+  
+  // 检查是否是新选择的KeySound（避免重复处理已转换的数据）
+  if (oldVal && newVal.keySoundKey === oldVal.keySoundKey) {
+    return;
+  }
+  
+  console.debug('观察selectedKeySound=', newVal);
+  
+  // 创建深拷贝避免修改keySoundList中的原始数据
+  const originalKeySound = keySoundList.value.find(ks => ks.keySoundKey === newVal.keySoundKey);
+  if (originalKeySound) {
+    selectedKeySound.value = JSON.parse(JSON.stringify(originalKeySound));
+    
+    // 对拷贝的数据进行UI格式转换
+    selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
+      /**
+       * json中的存储格式分别是
+       *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+       *  {key:'sounds', value:string} // 此处value, 是soundKey
+       *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+       */
+      if (item.type === 'audio_files') {
+        return {
+          type: 'audio_files',
+          value: soundFileList.value.find(
+            (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          ),
+        };
+      }
+      if (item.type === 'sounds') {
+        return {
+          type: 'sounds',
+          value: soundList.value.find((sound) => sound.soundKey === item.value),
+        };
+      }
+      if (item.type === 'key_sounds') {
+        return {
+          type: 'key_sounds',
+          value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+        };
+      }
+      return item;
+    });
+    
+    selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
+      /**
+       * json中的存储格式分别是
+       *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+       *  {key:'sounds', value:string} // 此处value, 是soundKey
+       *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+       */
+      if (item.type === 'audio_files') {
+        return {
+          type: 'audio_files',
+          value: soundFileList.value.find(
+            (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          ),
+        };
+      }
+      if (item.type === 'sounds') {
+        return {
+          type: 'sounds',
+          value: soundList.value.find((sound) => sound.soundKey === item.value),
+        };
+      }
+      if (item.type === 'key_sounds') {
+        return {
+          type: 'key_sounds',
+          value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+        };
+      }
+      return item;
+    });
+  }
 });
 
 // 按键音api
@@ -4174,6 +4479,86 @@ watch(
     console.debug('观察keysWithSoundEffect=', keysWithSoundEffect.value);
   }
 );
+
+// Dependency validation logic
+const dependencyIssues = ref<DependencyIssue[]>([]);
+
+// Computed property to get all dependency issues
+const allDependencyIssues = computed(() => {
+  const audioFiles = soundFileList.value as AudioFile[];
+  const sounds = soundList.value as Sound[];
+  
+  // Create a copy of keySoundList with original string format for validation
+  const keySounds = keySoundList.value.map(keySound => {
+    // Create a deep copy to avoid modifying the original
+    const keySoundCopy = JSON.parse(JSON.stringify(keySound));
+    
+    // Restore original string format for dependency validation
+    keySoundCopy.keySoundValue.down.value = keySoundCopy.keySoundValue.down.value.map((item: any) => {
+      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
+        return {
+          type: 'sounds',
+          value: item.value.soundKey
+        };
+      }
+      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
+        return {
+          type: 'key_sounds',
+          value: item.value.keySoundKey
+        };
+      }
+      return item;
+    });
+    
+    keySoundCopy.keySoundValue.up.value = keySoundCopy.keySoundValue.up.value.map((item: any) => {
+      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
+        return {
+          type: 'sounds',
+          value: item.value.soundKey
+        };
+      }
+      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
+        return {
+          type: 'key_sounds',
+          value: item.value.keySoundKey
+        };
+      }
+      return item;
+    });
+    
+    return keySoundCopy;
+  }) as KeySound[];
+  
+  if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
+    return [];
+  }
+
+  const validator = createDependencyValidator(audioFiles, sounds, keySounds);
+  
+  // Only validate actual saved dependencies, not current UI selections
+  // The global binding and single key bindings should come from saved album data, not current UI state
+  
+  // For now, we don't include global binding validation since it represents current UI selections
+  // TODO: If there are actual saved global bindings, they should be included here
+  const globalBinding = undefined;
+
+  // Convert keysWithSoundEffect Map to the format expected by validator
+  const singleKeyBindings = keysWithSoundEffect.value.size > 0 
+    ? keysWithSoundEffect.value 
+    : undefined;
+
+  return validator.validateAllDependencies(globalBinding, singleKeyBindings);
+});
+
+// Update dependency issues when data changes
+watch([soundFileList, soundList, keySoundList, keysWithSoundEffect], () => {
+  dependencyIssues.value = allDependencyIssues.value;
+}, { deep: true });
+
+// Helper function to check if an item has dependency issues
+const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sounds', itemId: string) => {
+  return hasItemDependencyIssues(itemType, itemId, dependencyIssues.value);
+};
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
     return {

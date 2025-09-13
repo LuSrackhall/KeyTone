@@ -1,0 +1,615 @@
+/**
+ * Dependency validation utility for KeyTone album creation
+ * 
+ * This module provides functions to validate dependencies between different components:
+ * - Audio source files (音频源文件)
+ * - Trimmed/defined sounds (裁剪定义的声音) 
+ * - Key sounds (键音/至臻键音/高级键音)
+ * - Global bindings (全局绑定)
+ * - Single key bindings (单键绑定)
+ */
+
+export interface AudioFile {
+  sha256: string;
+  name_id: string;
+  name: string;
+  type: string;
+}
+
+export interface Sound {
+  soundKey: string;
+  soundValue: {
+    source_file_for_sound: {
+      sha256: string;
+      name_id: string;
+      type: string;
+    };
+    name: string;
+    cut: {
+      start_time: number;
+      end_time: number;
+      volume: number;
+    };
+  };
+}
+
+export interface BindingValue {
+  sha256?: string;
+  name_id?: string;
+  type?: string;
+  name?: string;
+  soundKey?: string;
+  keySoundKey?: string;
+}
+
+export interface KeySound {
+  keySoundKey: string;
+  keySoundValue: {
+    name: string;
+    down: {
+      mode: string;
+      value: Array<{
+        type: 'audio_files' | 'sounds' | 'key_sounds';
+        value: BindingValue;
+      }>;
+    };
+    up: {
+      mode: string;
+      value: Array<{
+        type: 'audio_files' | 'sounds' | 'key_sounds';
+        value: BindingValue;
+      }>;
+    };
+  };
+}
+
+export interface Binding {
+  down?: {
+    mode: string;
+    type?: string;
+    value?: BindingValue | string;
+  };
+  up?: {
+    mode: string;
+    type?: string;
+    value?: BindingValue | string;
+  };
+}
+
+export interface DependencyIssue {
+  type: 'direct' | 'indirect';
+  severity: 'critical' | 'info' | 'low';
+  itemType: 'audio_files' | 'sounds' | 'key_sounds' | 'global_binding' | 'single_key_binding';
+  itemId: string;
+  itemName: string;
+  indirectDepth?: number; // For indirect dependencies: 1 = one layer, 2+ = multiple layers
+  missingDependencies: Array<{
+    type: 'audio_files' | 'sounds' | 'key_sounds';
+    id: string;
+    name?: string;
+  }>;
+  message: string;
+}
+
+export class DependencyValidator {
+  private audioFiles: AudioFile[];
+  private sounds: Sound[];
+  private keySounds: KeySound[];
+
+  constructor(audioFiles: AudioFile[], sounds: Sound[], keySounds: KeySound[]) {
+    this.audioFiles = audioFiles;
+    this.sounds = sounds;
+    this.keySounds = keySounds;
+  }
+
+  /**
+   * Check if an audio file exists by sha256 and name_id
+   */
+  private audioFileExists(sha256: string, name_id: string): boolean {
+    return this.audioFiles.some(file => 
+      file.sha256 === sha256 && file.name_id === name_id
+    );
+  }
+
+  /**
+   * Check if a sound exists by soundKey
+   */
+  private soundExists(soundKey: string): boolean {
+    return this.sounds.some(sound => sound.soundKey === soundKey);
+  }
+
+  /**
+   * Check if a key sound exists by keySoundKey
+   */
+  private keySoundExists(keySoundKey: string): boolean {
+    return this.keySounds.some(keySound => keySound.keySoundKey === keySoundKey);
+  }
+
+  /**
+   * Get audio file name by sha256 and name_id
+   */
+  private getAudioFileName(sha256: string, name_id: string): string {
+    const file = this.audioFiles.find(f => f.sha256 === sha256 && f.name_id === name_id);
+    return file ? `${file.name}${file.type}` : `${sha256.substring(0, 8)}...`;
+  }
+
+  /**
+   * Get sound name by soundKey
+   */
+  private getSoundName(soundKey: string): string {
+    // Ensure soundKey is a string
+    if (typeof soundKey !== 'string') {
+      return 'Unknown';
+    }
+    
+    const sound = this.sounds.find(s => s.soundKey === soundKey);
+    if (sound && sound.soundValue.name) {
+      return sound.soundValue.name;
+    }
+    if (sound) {
+      // Fallback to source file name if sound name is empty
+      const sourceFile = sound.soundValue.source_file_for_sound;
+      return this.getAudioFileName(sourceFile.sha256, sourceFile.name_id);
+    }
+    return soundKey.substring(0, 8) + '...';
+  }
+
+  /**
+   * Get key sound name by keySoundKey
+   */
+  private getKeySoundName(keySoundKey: string): string {
+    // Ensure keySoundKey is a string
+    if (typeof keySoundKey !== 'string') {
+      return 'Unknown';
+    }
+    
+    const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
+    return keySound ? keySound.keySoundValue.name : keySoundKey.substring(0, 8) + '...';
+  }
+
+  /**
+   * Validate direct dependencies for sounds (sounds depend on audio files)
+   */
+  validateSoundsDirectDependencies(): DependencyIssue[] {
+    const issues: DependencyIssue[] = [];
+
+    for (const sound of this.sounds) {
+      const sourceFile = sound.soundValue.source_file_for_sound;
+      
+      if (!this.audioFileExists(sourceFile.sha256, sourceFile.name_id)) {
+        issues.push({
+          type: 'direct',
+          severity: 'critical',
+          itemType: 'sounds',
+          itemId: sound.soundKey,
+          itemName: this.getSoundName(sound.soundKey),
+          missingDependencies: [{
+            type: 'audio_files',
+            id: `${sourceFile.sha256}:${sourceFile.name_id}`,
+            name: this.getAudioFileName(sourceFile.sha256, sourceFile.name_id)
+          }],
+          message: '裁剪定义的声音所依赖的音频源文件已被删除'
+        });
+      }
+    }
+
+    return issues;
+  }
+
+  /**
+   * Validate direct dependencies for key sounds
+   */
+  validateKeySoundsDirectDependencies(): DependencyIssue[] {
+    const issues: DependencyIssue[] = [];
+
+    for (const keySound of this.keySounds) {
+      const missingDeps: Array<{type: 'audio_files' | 'sounds' | 'key_sounds'; id: string; name?: string}> = [];
+
+      // Check down dependencies
+      for (const dep of keySound.keySoundValue.down.value) {
+        if (dep.type === 'audio_files' && dep.value) {
+          if (dep.value.sha256 && dep.value.name_id && !this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
+            missingDeps.push({
+              type: 'audio_files',
+              id: `${dep.value.sha256}:${dep.value.name_id}`,
+              name: this.getAudioFileName(dep.value.sha256, dep.value.name_id)
+            });
+          }
+        } else if (dep.type === 'sounds' && dep.value) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+          if (soundKey && !this.soundExists(soundKey)) {
+            missingDeps.push({
+              type: 'sounds',
+              id: soundKey,
+              name: this.getSoundName(soundKey)
+            });
+          }
+        } else if (dep.type === 'key_sounds' && dep.value) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+          if (keySoundKey && !this.keySoundExists(keySoundKey)) {
+            missingDeps.push({
+              type: 'key_sounds',
+              id: keySoundKey,
+              name: this.getKeySoundName(keySoundKey)
+            });
+          }
+        }
+      }
+
+      // Check up dependencies
+      for (const dep of keySound.keySoundValue.up.value) {
+        if (dep.type === 'audio_files' && dep.value) {
+          if (dep.value.sha256 && dep.value.name_id && !this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
+            missingDeps.push({
+              type: 'audio_files',
+              id: `${dep.value.sha256}:${dep.value.name_id}`,
+              name: this.getAudioFileName(dep.value.sha256, dep.value.name_id)
+            });
+          }
+        } else if (dep.type === 'sounds' && dep.value) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+          if (soundKey && !this.soundExists(soundKey)) {
+            missingDeps.push({
+              type: 'sounds',
+              id: soundKey,
+              name: this.getSoundName(soundKey)
+            });
+          }
+        } else if (dep.type === 'key_sounds' && dep.value) {
+          // Handle both string and object formats (UI may transform strings to objects)
+          const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+          if (keySoundKey && !this.keySoundExists(keySoundKey)) {
+            missingDeps.push({
+              type: 'key_sounds',
+              id: keySoundKey,
+              name: this.getKeySoundName(keySoundKey)
+            });
+          }
+        }
+      }
+
+      if (missingDeps.length > 0) {
+        issues.push({
+          type: 'direct',
+          severity: 'critical',
+          itemType: 'key_sounds',
+          itemId: keySound.keySoundKey,
+          itemName: keySound.keySoundValue.name,
+          missingDependencies: missingDeps,
+          message: '键音所直接依赖的依赖项已被删除'
+        });
+      }
+    }
+
+    return issues;
+  }
+
+  /**
+   * Validate binding dependencies (global or single key bindings)
+   */
+  validateBindingDirectDependencies(binding: Binding, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
+    const issues: DependencyIssue[] = [];
+    const missingDeps: Array<{type: 'audio_files' | 'sounds' | 'key_sounds'; id: string; name?: string}> = [];
+
+    // Check down binding
+    if (binding.down && binding.down.value) {
+      if (binding.down.type === 'audio_files') {
+        const audioValue = binding.down.value as BindingValue;
+        if (audioValue.sha256 && audioValue.name_id && !this.audioFileExists(audioValue.sha256, audioValue.name_id)) {
+          missingDeps.push({
+            type: 'audio_files',
+            id: `${audioValue.sha256}:${audioValue.name_id}`,
+            name: this.getAudioFileName(audioValue.sha256, audioValue.name_id)
+          });
+        }
+      } else if (binding.down.type === 'sounds') {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).soundKey;
+        if (soundValue && !this.soundExists(soundValue)) {
+          missingDeps.push({
+            type: 'sounds',
+            id: soundValue,
+            name: this.getSoundName(soundValue)
+          });
+        }
+      } else if (binding.down.type === 'key_sounds') {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).keySoundKey;
+        if (keySoundValue && !this.keySoundExists(keySoundValue)) {
+          missingDeps.push({
+            type: 'key_sounds',
+            id: keySoundValue,
+            name: this.getKeySoundName(keySoundValue)
+          });
+        }
+      }
+    }
+
+    // Check up binding
+    if (binding.up && binding.up.value) {
+      if (binding.up.type === 'audio_files') {
+        const audioValue = binding.up.value as BindingValue;
+        if (audioValue.sha256 && audioValue.name_id && !this.audioFileExists(audioValue.sha256, audioValue.name_id)) {
+          missingDeps.push({
+            type: 'audio_files',
+            id: `${audioValue.sha256}:${audioValue.name_id}`,
+            name: this.getAudioFileName(audioValue.sha256, audioValue.name_id)
+          });
+        }
+      } else if (binding.up.type === 'sounds') {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).soundKey;
+        if (soundValue && !this.soundExists(soundValue)) {
+          missingDeps.push({
+            type: 'sounds',
+            id: soundValue,
+            name: this.getSoundName(soundValue)
+          });
+        }
+      } else if (binding.up.type === 'key_sounds') {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).keySoundKey;
+        if (keySoundValue && !this.keySoundExists(keySoundValue)) {
+          missingDeps.push({
+            type: 'key_sounds',
+            id: keySoundValue,
+            name: this.getKeySoundName(keySoundValue)
+          });
+        }
+      }
+    }
+
+    if (missingDeps.length > 0) {
+      issues.push({
+        type: 'direct',
+        severity: 'critical',
+        itemType: bindingType,
+        itemId: bindingId,
+        itemName: bindingType === 'global_binding' ? '全局绑定' : `单键绑定(${bindingId})`,
+        missingDependencies: missingDeps,
+        message: bindingType === 'global_binding' ? '全局绑定所直接依赖的依赖项已被删除' : '单键绑定所直接依赖的依赖项已被删除'
+      });
+    }
+
+    return issues;
+  }
+
+  /**
+   * Check if a sound has indirect dependency issues (its audio file is missing)
+   */
+  private soundHasIndirectIssues(soundKey: string): boolean {
+    const sound = this.sounds.find(s => s.soundKey === soundKey);
+    if (!sound) return false;
+    
+    const sourceFile = sound.soundValue.source_file_for_sound;
+    return !this.audioFileExists(sourceFile.sha256, sourceFile.name_id);
+  }
+
+  /**
+   * Check if a key sound has indirect dependency issues and calculate depth
+   */
+  private keySoundHasIndirectIssues(keySoundKey: string, visited: Set<string> = new Set(), depth = 0): { hasIssues: boolean; maxDepth: number } {
+    const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
+    if (!keySound || visited.has(keySoundKey)) {
+      return { hasIssues: false, maxDepth: depth };
+    }
+
+    visited.add(keySoundKey);
+    let hasIssues = false;
+    let maxDepth = depth;
+
+    // Check all dependencies for indirect issues
+    const allDeps = [...keySound.keySoundValue.down.value, ...keySound.keySoundValue.up.value];
+    
+    for (const dep of allDeps) {
+      if (dep.type === 'sounds' && dep.value) {
+        // Handle both string and object formats (UI may transform strings to objects)
+        const soundKey = typeof dep.value === 'string' ? dep.value : dep.value.soundKey;
+        if (soundKey && this.soundHasIndirectIssues(soundKey)) {
+          hasIssues = true;
+          maxDepth = Math.max(maxDepth, depth + 1);
+        }
+      } else if (dep.type === 'key_sounds' && dep.value) {
+        // Handle both string and object formats (UI may transform strings to objects)
+        const keySoundKey = typeof dep.value === 'string' ? dep.value : dep.value.keySoundKey;
+        if (keySoundKey) {
+          const result = this.keySoundHasIndirectIssues(keySoundKey, new Set(visited), depth + 1);
+          if (result.hasIssues) {
+            hasIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
+        }
+      }
+    }
+    
+    visited.delete(keySoundKey);
+    return { hasIssues, maxDepth };
+  }
+
+  /**
+   * Validate indirect dependencies for key sounds
+   */
+  validateKeySoundsIndirectDependencies(): DependencyIssue[] {
+    const issues: DependencyIssue[] = [];
+
+    for (const keySound of this.keySounds) {
+      // Skip if there are direct dependency issues
+      const directIssues = this.validateKeySoundsDirectDependencies()
+        .filter(issue => issue.itemId === keySound.keySoundKey);
+      if (directIssues.length > 0) continue;
+
+      const indirectResult = this.keySoundHasIndirectIssues(keySound.keySoundKey);
+      if (indirectResult.hasIssues) {
+        // Determine severity based on dependency depth
+        const severity = indirectResult.maxDepth === 1 ? 'info' : 'low';
+        
+        issues.push({
+          type: 'indirect',
+          severity: severity,
+          itemType: 'key_sounds',
+          itemId: keySound.keySoundKey,
+          itemName: keySound.keySoundValue.name,
+          indirectDepth: indirectResult.maxDepth,
+          missingDependencies: [], // Could be expanded to list specific indirect issues
+          message: indirectResult.maxDepth === 1 
+            ? '键音的依赖链路中存在一层间接删除的情况'
+            : '键音的依赖链路中存在多层间接删除的情况'
+        });
+      }
+    }
+
+    return issues;
+  }
+
+  /**
+   * Validate indirect dependencies for bindings
+   */
+  validateBindingIndirectDependencies(binding: Binding, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
+    const issues: DependencyIssue[] = [];
+
+    // Skip if there are direct dependency issues
+    const directIssues = this.validateBindingDirectDependencies(binding, bindingType, bindingId);
+    if (directIssues.length > 0) return issues;
+
+    let hasIndirectIssues = false;
+    let maxDepth = 0;
+
+    // Check down binding for indirect issues
+    if (binding.down && binding.down.value) {
+      if (binding.down.type === 'sounds') {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).soundKey;
+        if (soundValue && this.soundHasIndirectIssues(soundValue)) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, 1);
+        }
+      } else if (binding.down.type === 'key_sounds') {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.down.value === 'string' ? binding.down.value : (binding.down.value as BindingValue).keySoundKey;
+        if (keySoundValue) {
+          const result = this.keySoundHasIndirectIssues(keySoundValue);
+          if (result.hasIssues) {
+            hasIndirectIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
+        }
+      }
+    }
+
+    // Check up binding for indirect issues
+    if (binding.up && binding.up.value) {
+      if (binding.up.type === 'sounds') {
+        // Handle both string and BindingValue formats
+        const soundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).soundKey;
+        if (soundValue && this.soundHasIndirectIssues(soundValue)) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, 1);
+        }
+      } else if (binding.up.type === 'key_sounds') {
+        // Handle both string and BindingValue formats
+        const keySoundValue = typeof binding.up.value === 'string' ? binding.up.value : (binding.up.value as BindingValue).keySoundKey;
+        if (keySoundValue) {
+          const result = this.keySoundHasIndirectIssues(keySoundValue);
+          if (result.hasIssues) {
+            hasIndirectIssues = true;
+            maxDepth = Math.max(maxDepth, result.maxDepth);
+          }
+        }
+      }
+    }
+
+    if (hasIndirectIssues) {
+      // Determine severity based on dependency depth
+      const severity = maxDepth === 1 ? 'info' : 'low';
+      
+      issues.push({
+        type: 'indirect',
+        severity: severity,
+        itemType: bindingType,
+        itemId: bindingId,
+        itemName: bindingType === 'global_binding' ? '全局绑定' : `单键绑定(${bindingId})`,
+        indirectDepth: maxDepth,
+        missingDependencies: [], // Could be expanded to list specific indirect issues
+        message: bindingType === 'global_binding' 
+          ? (maxDepth === 1 ? '全局绑定的依赖链路中存在一层间接删除的情况' : '全局绑定的依赖链路中存在多层间接删除的情况')
+          : (maxDepth === 1 ? '单键绑定的依赖链路中存在一层间接删除的情况' : '单键绑定的依赖链路中存在多层间接删除的情况')
+      });
+    }
+
+    return issues;
+  }
+
+  /**
+   * Validate all dependencies and return all issues
+   */
+  validateAllDependencies(globalBinding?: Binding, singleKeyBindings?: Map<string, Binding>): DependencyIssue[] {
+    const allIssues: DependencyIssue[] = [];
+
+    // Direct dependency validation
+    allIssues.push(...this.validateSoundsDirectDependencies());
+    allIssues.push(...this.validateKeySoundsDirectDependencies());
+
+    if (globalBinding) {
+      allIssues.push(...this.validateBindingDirectDependencies(globalBinding, 'global_binding', 'global'));
+    }
+
+    if (singleKeyBindings) {
+      singleKeyBindings.forEach((binding, keyId) => {
+        allIssues.push(...this.validateBindingDirectDependencies(binding, 'single_key_binding', keyId));
+      });
+    }
+
+    // Indirect dependency validation
+    allIssues.push(...this.validateKeySoundsIndirectDependencies());
+
+    if (globalBinding) {
+      allIssues.push(...this.validateBindingIndirectDependencies(globalBinding, 'global_binding', 'global'));
+    }
+
+    if (singleKeyBindings) {
+      singleKeyBindings.forEach((binding, keyId) => {
+        allIssues.push(...this.validateBindingIndirectDependencies(binding, 'single_key_binding', keyId));
+      });
+    }
+
+    return allIssues;
+  }
+}
+
+/**
+ * Helper function to create a dependency validator instance
+ */
+export function createDependencyValidator(
+  audioFiles: AudioFile[],
+  sounds: Sound[],
+  keySounds: KeySound[]
+): DependencyValidator {
+  return new DependencyValidator(audioFiles, sounds, keySounds);
+}
+
+/**
+ * Helper function to check if an item has dependency issues
+ */
+export function hasItemDependencyIssues(
+  itemType: 'audio_files' | 'sounds' | 'key_sounds',
+  itemId: string,
+  issues: DependencyIssue[]
+): { hasIssues: boolean; criticalCount: number; infoCount: number; lowCount: number } {
+  const itemIssues = issues.filter(issue => 
+    issue.itemType === itemType && issue.itemId === itemId
+  );
+
+  const criticalCount = itemIssues.filter(issue => issue.severity === 'critical').length;
+  const infoCount = itemIssues.filter(issue => issue.severity === 'info').length;
+  const lowCount = itemIssues.filter(issue => issue.severity === 'low').length;
+
+  return {
+    hasIssues: itemIssues.length > 0,
+    criticalCount,
+    infoCount,
+    lowCount
+  };
+}

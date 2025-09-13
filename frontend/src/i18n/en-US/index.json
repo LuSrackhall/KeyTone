@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Only some per-key SFX config succeeded",
       "configFileReadFailed": "Sound album loading failed"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Related dependencies have been deleted",
+      "indirectDependencyIssue": "Related dependencies may have issues",
+      "audioFileMissing": "Audio source file missing",
+      "soundMissing": "Trimmed sound missing",
+      "keySoundMissing": "Key sound missing",
+      "dependencyChainBroken": "Dependency chain has indirect issues",
+      "tooltip": {
+        "critical": "This item's direct dependencies have been deleted",
+        "info": "This item's dependency chain contains indirect issues (1-layer)",
+        "low": "This item's dependency chain contains indirect issues (multi-layer)"
+      }
+    },
     "loadAudioFile": {
       "title": "Load Audio Files",
       "description": "Load original audio files for subsequent steps",
