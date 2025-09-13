@@ -1508,7 +1508,23 @@
                                     "
                                     ref="edit_downSoundSelectDom"
                                     @update:model-value="edit_downSoundSelectDom?.hidePopup()"
-                                  />
+                                  >
+                                    <template v-slot:option="scope">
+                                      <q-item v-bind="scope.itemProps">
+                                        <q-item-section>
+                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                          <DependencyWarning
+                                            :issues="dependencyIssues"
+                                            :item-type="scope.opt.type"
+                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                                            :show-details="false"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
+                                  </q-select>
                                   <div class="h-10">
                                     <q-option-group
                                       dense
@@ -1647,7 +1663,23 @@
                                     "
                                     ref="edit_upSoundSelectDom"
                                     @update:model-value="edit_upSoundSelectDom?.hidePopup()"
-                                  />
+                                  >
+                                    <template v-slot:option="scope">
+                                      <q-item v-bind="scope.itemProps">
+                                        <q-item-section>
+                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                        </q-item-section>
+                                        <q-item-section side>
+                                          <DependencyWarning
+                                            :issues="dependencyIssues"
+                                            :item-type="scope.opt.type"
+                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                                            :show-details="false"
+                                          />
+                                        </q-item-section>
+                                      </q-item>
+                                    </template>
+                                  </q-select>
                                   <div class="h-10">
                                     <q-option-group
                                       dense
@@ -3771,73 +3803,85 @@ const keySoundList = ref<Array<any>>([]);
 const selectedKeySound = ref<any>();
 
 // 改变selectedKeySound.value.keySoundValue.down.value和selectedKeySound.value.keySoundValue.up.value的类型结构, 使其符合选择输入框组件的使用需求
-watch(selectedKeySound, () => {
-  if (!selectedKeySound.value) {
+// 使用深拷贝避免修改原始数据，确保依赖验证准确性
+watch(selectedKeySound, (newVal, oldVal) => {
+  if (!newVal) {
     return;
   }
-  console.debug('观察selectedKeySound=', selectedKeySound.value);
-  selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
-    /**
-     * json中的存储格式分别是
-     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-     *  {key:'sounds', value:string} // 此处value, 是soundKey
-     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-     */
-    if (item.type === 'audio_files') {
-      return {
-        type: 'audio_files',
-        value: soundFileList.value.find(
-          (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-        ),
-      };
-    }
-    if (item.type === 'sounds') {
-      return {
-        type: 'sounds',
-        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
-        value: soundList.value.find((sound) => sound.soundKey === item.value),
-      };
-    }
-    if (item.type === 'key_sounds') {
-      return {
-        type: 'key_sounds',
-        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
-        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
-      };
-    }
-    return item;
-  });
-  selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
-    /**
-     * json中的存储格式分别是
-     *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-     *  {key:'sounds', value:string} // 此处value, 是soundKey
-     *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-     */
-    if (item.type === 'audio_files') {
-      return {
-        type: 'audio_files',
-        value: soundFileList.value.find(
-          (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-        ),
-      };
-    }
-    if (item.type === 'sounds') {
-      return {
-        type: 'sounds',
-        // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
-        value: soundList.value.find((sound) => sound.soundKey === item.value),
-      };
-    }
-    if (item.type === 'key_sounds') {
-      return {
-        type: 'key_sounds',
-        // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
-        value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
-      };
-    }
-    return item;
-  });
+  
+  // 检查是否是新选择的KeySound（避免重复处理已转换的数据）
+  if (oldVal && newVal.keySoundKey === oldVal.keySoundKey) {
+    return;
+  }
+  
+  console.debug('观察selectedKeySound=', newVal);
+  
+  // 创建深拷贝避免修改keySoundList中的原始数据
+  const originalKeySound = keySoundList.value.find(ks => ks.keySoundKey === newVal.keySoundKey);
+  if (originalKeySound) {
+    selectedKeySound.value = JSON.parse(JSON.stringify(originalKeySound));
+    
+    // 对拷贝的数据进行UI格式转换
+    selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
+      /**
+       * json中的存储格式分别是
+       *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+       *  {key:'sounds', value:string} // 此处value, 是soundKey
+       *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+       */
+      if (item.type === 'audio_files') {
+        return {
+          type: 'audio_files',
+          value: soundFileList.value.find(
+            (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          ),
+        };
+      }
+      if (item.type === 'sounds') {
+        return {
+          type: 'sounds',
+          value: soundList.value.find((sound) => sound.soundKey === item.value),
+        };
+      }
+      if (item.type === 'key_sounds') {
+        return {
+          type: 'key_sounds',
+          value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+        };
+      }
+      return item;
+    });
+    
+    selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
+      /**
+       * json中的存储格式分别是
+       *  {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
+       *  {key:'sounds', value:string} // 此处value, 是soundKey
+       *  {key:'key_sounds', value:string} // 此处value, 是keySoundKey
+       */
+      if (item.type === 'audio_files') {
+        return {
+          type: 'audio_files',
+          value: soundFileList.value.find(
+            (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          ),
+        };
+      }
+      if (item.type === 'sounds') {
+        return {
+          type: 'sounds',
+          value: soundList.value.find((sound) => sound.soundKey === item.value),
+        };
+      }
+      if (item.type === 'key_sounds') {
+        return {
+          type: 'key_sounds',
+          value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+        };
+      }
+      return item;
+    });
+  }
 });
 
 // 按键音api
