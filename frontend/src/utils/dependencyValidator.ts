@@ -207,15 +207,15 @@ export class DependencyValidator {
 
       // Check down dependencies
       for (const dep of keySound.keySoundValue.down.value) {
-        if (dep.type === 'audio_files') {
-          if (!this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
+        if (dep.type === 'audio_files' && dep.value) {
+          if (dep.value.sha256 && dep.value.name_id && !this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
             missingDeps.push({
               type: 'audio_files',
               id: `${dep.value.sha256}:${dep.value.name_id}`,
               name: this.getAudioFileName(dep.value.sha256, dep.value.name_id)
             });
           }
-        } else if (dep.type === 'sounds') {
+        } else if (dep.type === 'sounds' && dep.value) {
           if (!this.soundExists(dep.value)) {
             missingDeps.push({
               type: 'sounds',
@@ -223,7 +223,7 @@ export class DependencyValidator {
               name: this.getSoundName(dep.value)
             });
           }
-        } else if (dep.type === 'key_sounds') {
+        } else if (dep.type === 'key_sounds' && dep.value) {
           if (!this.keySoundExists(dep.value)) {
             missingDeps.push({
               type: 'key_sounds',
@@ -236,15 +236,15 @@ export class DependencyValidator {
 
       // Check up dependencies
       for (const dep of keySound.keySoundValue.up.value) {
-        if (dep.type === 'audio_files') {
-          if (!this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
+        if (dep.type === 'audio_files' && dep.value) {
+          if (dep.value.sha256 && dep.value.name_id && !this.audioFileExists(dep.value.sha256, dep.value.name_id)) {
             missingDeps.push({
               type: 'audio_files',
               id: `${dep.value.sha256}:${dep.value.name_id}`,
               name: this.getAudioFileName(dep.value.sha256, dep.value.name_id)
             });
           }
-        } else if (dep.type === 'sounds') {
+        } else if (dep.type === 'sounds' && dep.value) {
           if (!this.soundExists(dep.value)) {
             missingDeps.push({
               type: 'sounds',
@@ -252,7 +252,7 @@ export class DependencyValidator {
               name: this.getSoundName(dep.value)
             });
           }
-        } else if (dep.type === 'key_sounds') {
+        } else if (dep.type === 'key_sounds' && dep.value) {
           if (!this.keySoundExists(dep.value)) {
             missingDeps.push({
               type: 'key_sounds',
@@ -393,10 +393,10 @@ export class DependencyValidator {
     const allDeps = [...keySound.keySoundValue.down.value, ...keySound.keySoundValue.up.value];
     
     for (const dep of allDeps) {
-      if (dep.type === 'sounds' && this.soundHasIndirectIssues(dep.value)) {
+      if (dep.type === 'sounds' && dep.value && this.soundHasIndirectIssues(dep.value)) {
         hasIssues = true;
         maxDepth = Math.max(maxDepth, depth + 1);
-      } else if (dep.type === 'key_sounds') {
+      } else if (dep.type === 'key_sounds' && dep.value) {
         const result = this.keySoundHasIndirectIssues(dep.value, new Set(visited), depth + 1);
         if (result.hasIssues) {
           hasIssues = true;

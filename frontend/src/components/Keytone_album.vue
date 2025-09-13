@@ -4451,27 +4451,12 @@ const allDependencyIssues = computed(() => {
 
   const validator = createDependencyValidator(audioFiles, sounds, keySounds);
   
-  // Get global binding if it exists
-  const globalBinding = keyDownUnifiedSoundEffectSelect.value || keyUpUnifiedSoundEffectSelect.value 
-    ? {
-        down: keyDownUnifiedSoundEffectSelect.value ? {
-          type: keyDownUnifiedSoundEffectSelect.value.type,
-          value: keyDownUnifiedSoundEffectSelect.value.type === 'audio_files' 
-            ? keyDownUnifiedSoundEffectSelect.value.value
-            : keyDownUnifiedSoundEffectSelect.value.type === 'sounds'
-            ? keyDownUnifiedSoundEffectSelect.value.value.soundKey
-            : keyDownUnifiedSoundEffectSelect.value.value.keySoundKey
-        } : null,
-        up: keyUpUnifiedSoundEffectSelect.value ? {
-          type: keyUpUnifiedSoundEffectSelect.value.type,
-          value: keyUpUnifiedSoundEffectSelect.value.type === 'audio_files'
-            ? keyUpUnifiedSoundEffectSelect.value.value
-            : keyUpUnifiedSoundEffectSelect.value.type === 'sounds'
-            ? keyUpUnifiedSoundEffectSelect.value.value.soundKey
-            : keyUpUnifiedSoundEffectSelect.value.value.keySoundKey
-        } : null
-      }
-    : undefined;
+  // Only validate actual saved dependencies, not current UI selections
+  // The global binding and single key bindings should come from saved album data, not current UI state
+  
+  // For now, we don't include global binding validation since it represents current UI selections
+  // TODO: If there are actual saved global bindings, they should be included here
+  const globalBinding = undefined;
 
   // Convert keysWithSoundEffect Map to the format expected by validator
   const singleKeyBindings = keysWithSoundEffect.value.size > 0 
@@ -4482,7 +4467,7 @@ const allDependencyIssues = computed(() => {
 });
 
 // Update dependency issues when data changes
-watch([soundFileList, soundList, keySoundList, keyDownUnifiedSoundEffectSelect, keyUpUnifiedSoundEffectSelect, keysWithSoundEffect], () => {
+watch([soundFileList, soundList, keySoundList, keysWithSoundEffect], () => {
   dependencyIssues.value = allDependencyIssues.value;
 }, { deep: true });
 
@@ -4492,25 +4477,26 @@ const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sou
 };
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
+    const foundFile = soundFileList.value.find(
+      (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+    );
     return {
       type: 'audio_files',
-      value: soundFileList.value.find(
-        (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
-      ),
+      value: foundFile || null,
     };
   }
   if (item.type === 'sounds') {
+    const foundSound = soundList.value.find((sound) => sound.soundKey === item.value);
     return {
       type: 'sounds',
-      // value: soundList.value.find((sound) => sound.soundKey === item.value.soundKey),
-      value: soundList.value.find((sound) => sound.soundKey === item.value),
+      value: foundSound ? foundSound.soundKey : null,
     };
   }
   if (item.type === 'key_sounds') {
+    const foundKeySound = keySoundList.value.find((keySound) => keySound.keySoundKey === item.value);
     return {
       type: 'key_sounds',
-      // value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value.keySoundKey),
-      value: keySoundList.value.find((keySound) => keySound.keySoundKey === item.value),
+      value: foundKeySound ? foundKeySound.keySoundKey : null,
     };
   }
   return null;
