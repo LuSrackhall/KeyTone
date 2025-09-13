@@ -33,6 +33,15 @@ export interface Sound {
   };
 }
 
+export interface BindingValue {
+  sha256?: string;
+  name_id?: string;
+  type?: string;
+  name?: string;
+  soundKey?: string;
+  keySoundKey?: string;
+}
+
 export interface KeySound {
   keySoundKey: string;
   keySoundValue: {
@@ -41,16 +50,29 @@ export interface KeySound {
       mode: string;
       value: Array<{
         type: 'audio_files' | 'sounds' | 'key_sounds';
-        value: any;
+        value: BindingValue;
       }>;
     };
     up: {
       mode: string;
       value: Array<{
         type: 'audio_files' | 'sounds' | 'key_sounds';
-        value: any;
+        value: BindingValue;
       }>;
     };
+  };
+}
+
+export interface Binding {
+  down?: {
+    mode: string;
+    type?: string;
+    value?: BindingValue | string;
+  };
+  up?: {
+    mode: string;
+    type?: string;
+    value?: BindingValue | string;
   };
 }
 
@@ -260,63 +282,69 @@ export class DependencyValidator {
   /**
    * Validate binding dependencies (global or single key bindings)
    */
-  validateBindingDirectDependencies(binding: any, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
+  validateBindingDirectDependencies(binding: Binding, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
     const issues: DependencyIssue[] = [];
     const missingDeps: Array<{type: 'audio_files' | 'sounds' | 'key_sounds'; id: string; name?: string}> = [];
 
     // Check down binding
-    if (binding.down) {
+    if (binding.down && binding.down.value) {
       if (binding.down.type === 'audio_files') {
-        if (!this.audioFileExists(binding.down.value.sha256, binding.down.value.name_id)) {
+        const audioValue = binding.down.value as BindingValue;
+        if (audioValue.sha256 && audioValue.name_id && !this.audioFileExists(audioValue.sha256, audioValue.name_id)) {
           missingDeps.push({
             type: 'audio_files',
-            id: `${binding.down.value.sha256}:${binding.down.value.name_id}`,
-            name: this.getAudioFileName(binding.down.value.sha256, binding.down.value.name_id)
+            id: `${audioValue.sha256}:${audioValue.name_id}`,
+            name: this.getAudioFileName(audioValue.sha256, audioValue.name_id)
           });
         }
       } else if (binding.down.type === 'sounds') {
-        if (!this.soundExists(binding.down.value)) {
+        const soundValue = binding.down.value as string;
+        if (!this.soundExists(soundValue)) {
           missingDeps.push({
             type: 'sounds',
-            id: binding.down.value,
-            name: this.getSoundName(binding.down.value)
+            id: soundValue,
+            name: this.getSoundName(soundValue)
           });
         }
       } else if (binding.down.type === 'key_sounds') {
-        if (!this.keySoundExists(binding.down.value)) {
+        const keySoundValue = binding.down.value as string;
+        if (!this.keySoundExists(keySoundValue)) {
           missingDeps.push({
             type: 'key_sounds',
-            id: binding.down.value,
-            name: this.getKeySoundName(binding.down.value)
+            id: keySoundValue,
+            name: this.getKeySoundName(keySoundValue)
           });
         }
       }
     }
 
     // Check up binding
-    if (binding.up) {
+    if (binding.up && binding.up.value) {
       if (binding.up.type === 'audio_files') {
-        if (!this.audioFileExists(binding.up.value.sha256, binding.up.value.name_id)) {
+        const audioValue = binding.up.value as BindingValue;
+        if (audioValue.sha256 && audioValue.name_id && !this.audioFileExists(audioValue.sha256, audioValue.name_id)) {
           missingDeps.push({
             type: 'audio_files',
-            id: `${binding.up.value.sha256}:${binding.up.value.name_id}`,
-            name: this.getAudioFileName(binding.up.value.sha256, binding.up.value.name_id)
+            id: `${audioValue.sha256}:${audioValue.name_id}`,
+            name: this.getAudioFileName(audioValue.sha256, audioValue.name_id)
           });
         }
       } else if (binding.up.type === 'sounds') {
-        if (!this.soundExists(binding.up.value)) {
+        const soundValue = binding.up.value as string;
+        if (!this.soundExists(soundValue)) {
           missingDeps.push({
             type: 'sounds',
-            id: binding.up.value,
-            name: this.getSoundName(binding.up.value)
+            id: soundValue,
+            name: this.getSoundName(soundValue)
           });
         }
       } else if (binding.up.type === 'key_sounds') {
-        if (!this.keySoundExists(binding.up.value)) {
+        const keySoundValue = binding.up.value as string;
+        if (!this.keySoundExists(keySoundValue)) {
           missingDeps.push({
             type: 'key_sounds',
-            id: binding.up.value,
-            name: this.getKeySoundName(binding.up.value)
+            id: keySoundValue,
+            name: this.getKeySoundName(keySoundValue)
           });
         }
       }
@@ -351,7 +379,7 @@ export class DependencyValidator {
   /**
    * Check if a key sound has indirect dependency issues and calculate depth
    */
-  private keySoundHasIndirectIssues(keySoundKey: string, visited: Set<string> = new Set(), depth: number = 0): { hasIssues: boolean; maxDepth: number } {
+  private keySoundHasIndirectIssues(keySoundKey: string, visited: Set<string> = new Set(), depth = 0): { hasIssues: boolean; maxDepth: number } {
     const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
     if (!keySound || visited.has(keySoundKey)) {
       return { hasIssues: false, maxDepth: depth };
@@ -419,7 +447,7 @@ export class DependencyValidator {
   /**
    * Validate indirect dependencies for bindings
    */
-  validateBindingIndirectDependencies(binding: any, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
+  validateBindingIndirectDependencies(binding: Binding, bindingType: 'global_binding' | 'single_key_binding', bindingId: string): DependencyIssue[] {
     const issues: DependencyIssue[] = [];
 
     // Skip if there are direct dependency issues
@@ -430,12 +458,16 @@ export class DependencyValidator {
     let maxDepth = 0;
 
     // Check down binding for indirect issues
-    if (binding.down) {
-      if (binding.down.type === 'sounds' && this.soundHasIndirectIssues(binding.down.value)) {
-        hasIndirectIssues = true;
-        maxDepth = Math.max(maxDepth, 1);
+    if (binding.down && binding.down.value) {
+      if (binding.down.type === 'sounds') {
+        const soundValue = binding.down.value as string;
+        if (this.soundHasIndirectIssues(soundValue)) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, 1);
+        }
       } else if (binding.down.type === 'key_sounds') {
-        const result = this.keySoundHasIndirectIssues(binding.down.value);
+        const keySoundValue = binding.down.value as string;
+        const result = this.keySoundHasIndirectIssues(keySoundValue);
         if (result.hasIssues) {
           hasIndirectIssues = true;
           maxDepth = Math.max(maxDepth, result.maxDepth);
@@ -444,12 +476,16 @@ export class DependencyValidator {
     }
 
     // Check up binding for indirect issues
-    if (binding.up) {
-      if (binding.up.type === 'sounds' && this.soundHasIndirectIssues(binding.up.value)) {
-        hasIndirectIssues = true;
-        maxDepth = Math.max(maxDepth, 1);
+    if (binding.up && binding.up.value) {
+      if (binding.up.type === 'sounds') {
+        const soundValue = binding.up.value as string;
+        if (this.soundHasIndirectIssues(soundValue)) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, 1);
+        }
       } else if (binding.up.type === 'key_sounds') {
-        const result = this.keySoundHasIndirectIssues(binding.up.value);
+        const keySoundValue = binding.up.value as string;
+        const result = this.keySoundHasIndirectIssues(keySoundValue);
         if (result.hasIssues) {
           hasIndirectIssues = true;
           maxDepth = Math.max(maxDepth, result.maxDepth);
@@ -481,7 +517,7 @@ export class DependencyValidator {
   /**
    * Validate all dependencies and return all issues
    */
-  validateAllDependencies(globalBinding?: any, singleKeyBindings?: Map<string, any>): DependencyIssue[] {
+  validateAllDependencies(globalBinding?: Binding, singleKeyBindings?: Map<string, Binding>): DependencyIssue[] {
     const allIssues: DependencyIssue[] = [];
 
     // Direct dependency validation
