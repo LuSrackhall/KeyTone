@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Chỉ cấu hình thành công một phần hiệu ứng âm thanh cho phím",
       "configFileReadFailed": "Đọc file cấu hình album âm thanh phím thất bại"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Các phụ thuộc liên quan đã bị xóa",
+      "indirectDependencyIssue": "Các phụ thuộc liên quan có thể có vấn đề",
+      "audioFileMissing": "Thiếu tệp âm thanh nguồn",
+      "soundMissing": "Thiếu âm thanh đã cắt",
+      "keySoundMissing": "Thiếu âm thanh phím",
+      "dependencyChainBroken": "Chuỗi phụ thuộc có vấn đề gián tiếp",
+      "tooltip": {
+        "critical": "Các phụ thuộc trực tiếp của mục này đã bị xóa",
+        "info": "Chuỗi phụ thuộc của mục này chứa vấn đề gián tiếp (1 lớp)",
+        "low": "Chuỗi phụ thuộc của mục này chứa vấn đề gián tiếp (nhiều lớp)"
+      }
+    },
     "loadAudioFile": {
       "title": "tệp âm thanh gốc",
       "description": "Tải file âm thanh gốc cho album hiện tại để sử dụng trong các bước tiếp theo",

@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Sadece bazı tek tuş ses efektleri başarıyla yapılandırıldı",
       "configFileReadFailed": "Tuş sesi albümü yapılandırma dosyası okunamadı"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "İlgili bağımlılıklar silindi",
+      "indirectDependencyIssue": "İlgili bağımlılıklarda sorunlar olabilir",
+      "audioFileMissing": "Kaynak ses dosyası eksik",
+      "soundMissing": "Kırpılmış ses eksik",
+      "keySoundMissing": "Tuş sesi eksik",
+      "dependencyChainBroken": "Bağımlılık zincirinde dolaylı sorunlar var",
+      "tooltip": {
+        "critical": "Bu öğenin doğrudan bağımlılıkları silindi",
+        "info": "Bu öğenin bağımlılık zincirinde dolaylı sorunlar var (1 katman)",
+        "low": "Bu öğenin bağımlılık zincirinde dolaylı sorunlar var (çok katmanlı)"
+      }
+    },
     "loadAudioFile": {
       "title": "Ses Dosyası Yükle",
       "description": "Sonraki adımlar için mevcut albüme orijinal ses dosyalarını yükleyin",

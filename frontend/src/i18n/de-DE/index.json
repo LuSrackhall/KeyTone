@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Nur einige Tasten-SFX erfolgreich",
       "configFileReadFailed": "Tastensound-Album laden fehlgeschlagen"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Verwandte Abhängigkeiten wurden gelöscht",
+      "indirectDependencyIssue": "Verwandte Abhängigkeiten könnten Probleme haben",
+      "audioFileMissing": "Audio-Quelldatei fehlt",
+      "soundMissing": "Zugeschnittener Sound fehlt",
+      "keySoundMissing": "Tastensound fehlt",
+      "dependencyChainBroken": "Abhängigkeitskette hat indirekte Probleme",
+      "tooltip": {
+        "critical": "Die direkten Abhängigkeiten dieses Elements wurden gelöscht",
+        "info": "Die Abhängigkeitskette dieses Elements enthält indirekte Probleme (1-Schicht)",
+        "low": "Die Abhängigkeitskette dieses Elements enthält indirekte Probleme (mehrschichtig)"
+      }
+    },
     "loadAudioFile": {
       "title": "Audiodateien laden",
       "description": "Originale Audiodateien für spätere Schritte laden",

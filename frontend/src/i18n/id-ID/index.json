@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Hanya sebagian konfigurasi efek suara tombol tunggal yang berhasil",
       "configFileReadFailed": "Gagal membaca file konfigurasi album KeyTone"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Dependensi terkait telah dihapus",
+      "indirectDependencyIssue": "Dependensi terkait mungkin bermasalah",
+      "audioFileMissing": "File audio sumber hilang",
+      "soundMissing": "Suara terpotong hilang",
+      "keySoundMissing": "Suara tombol hilang",
+      "dependencyChainBroken": "Rantai dependensi memiliki masalah tidak langsung",
+      "tooltip": {
+        "critical": "Dependensi langsung item ini telah dihapus",
+        "info": "Rantai dependensi item ini berisi masalah tidak langsung (1 lapisan)",
+        "low": "Rantai dependensi item ini berisi masalah tidak langsung (multi-lapisan)"
+      }
+    },
     "loadAudioFile": {
       "title": "Muat File Audio",
       "description": "Muat file audio asli untuk album saat ini untuk digunakan dalam langkah selanjutnya",

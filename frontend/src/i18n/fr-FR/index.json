@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Seule une partie des configurations d'effets sonores a réussi",
       "configFileReadFailed": "Échec de lecture du fichier de configuration de l'album sonore"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Les dépendances liées ont été supprimées",
+      "indirectDependencyIssue": "Les dépendances liées peuvent avoir des problèmes",
+      "audioFileMissing": "Fichier audio source manquant",
+      "soundMissing": "Son découpé manquant",
+      "keySoundMissing": "Son de touche manquant",
+      "dependencyChainBroken": "La chaîne de dépendances a des problèmes indirects",
+      "tooltip": {
+        "critical": "Les dépendances directes de cet élément ont été supprimées",
+        "info": "La chaîne de dépendances de cet élément contient des problèmes indirects (1 couche)",
+        "low": "La chaîne de dépendances de cet élément contient des problèmes indirects (multi-couches)"
+      }
+    },
     "loadAudioFile": {
       "title": "Charger des fichiers audio",
       "description": "Chargez des fichiers audio originaux pour l'album actuel à utiliser dans les étapes suivantes",

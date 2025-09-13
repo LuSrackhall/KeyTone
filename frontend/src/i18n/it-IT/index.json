@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Solo parte della configurazione effetti sonori per singoli tasti completata con successo",
       "configFileReadFailed": "Lettura file di configurazione album fallita"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Le dipendenze correlate sono state eliminate",
+      "indirectDependencyIssue": "Le dipendenze correlate potrebbero avere problemi",
+      "audioFileMissing": "File audio sorgente mancante",
+      "soundMissing": "Suono ritagliato mancante",
+      "keySoundMissing": "Suono tasto mancante",
+      "dependencyChainBroken": "La catena di dipendenze ha problemi indiretti",
+      "tooltip": {
+        "critical": "Le dipendenze dirette di questo elemento sono state eliminate",
+        "info": "La catena di dipendenze di questo elemento contiene problemi indiretti (1 strato)",
+        "low": "La catena di dipendenze di questo elemento contiene problemi indiretti (multi-strato)"
+      }
+    },
     "loadAudioFile": {
       "title": "Carica file audio",
       "description": "Carica file audio originali per l'album corrente da utilizzare nei passaggi successivi",

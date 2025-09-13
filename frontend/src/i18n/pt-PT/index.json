@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "Apenas configurações parciais de efeitos sonoros de teclas individuais foram bem-sucedidas",
       "configFileReadFailed": "Falha ao ler o ficheiro de configuração do álbum de sons de teclas"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "Dependências relacionadas foram eliminadas",
+      "indirectDependencyIssue": "Dependências relacionadas podem ter problemas",
+      "audioFileMissing": "Ficheiro de áudio fonte em falta",
+      "soundMissing": "Som cortado em falta",
+      "keySoundMissing": "Som de tecla em falta",
+      "dependencyChainBroken": "Cadeia de dependências tem problemas indirectos",
+      "tooltip": {
+        "critical": "As dependências directas deste item foram eliminadas",
+        "info": "A cadeia de dependências deste item contém problemas indirectos (1 camada)",
+        "low": "A cadeia de dependências deste item contém problemas indirectos (múltiplas camadas)"
+      }
+    },
     "loadAudioFile": {
       "title": "Carregar Ficheiro Áudio",
       "description": "Carregue ficheiros áudio originais para o álbum atual para utilização em passos posteriores",

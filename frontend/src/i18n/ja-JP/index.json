@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "一部のキーのサウンドエフェクト設定のみ成功しました",
       "configFileReadFailed": "キーサウンドアルバム設定ファイルの読み込みに失敗しました"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "関連する依存関係が削除されました",
+      "indirectDependencyIssue": "関連する依存関係に問題がある可能性があります",
+      "audioFileMissing": "オーディオソースファイルが見つかりません",
+      "soundMissing": "トリミングされたサウンドが見つかりません",
+      "keySoundMissing": "キーサウンドが見つかりません",
+      "dependencyChainBroken": "依存関係チェーンに間接的な問題があります",
+      "tooltip": {
+        "critical": "この項目の直接的な依存関係が削除されました",
+        "info": "この項目の依存関係チェーンに間接的な問題があります（1層）",
+        "low": "この項目の依存関係チェーンに間接的な問題があります（多層）"
+      }
+    },
     "loadAudioFile": {
       "title": "オーディオファイルの読み込み",
       "description": "現在のアルバムに元のオーディオファイルを読み込み、後続のステップで使用します",

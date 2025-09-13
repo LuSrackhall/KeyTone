@@ -122,6 +122,19 @@
       "partialSingleKeySoundEffectConfigSuccess": "نجح تكوين جزء فقط من المؤثرات الصوتية للمفاتيح",
       "configFileReadFailed": "فشل قراءة ملف إعدادات ألبوم نغمات المفاتيح"
     },
+    "dependencyWarning": {
+      "criticalDependencyMissing": "تم حذف التبعيات ذات الصلة",
+      "indirectDependencyIssue": "قد تواجه التبعيات ذات الصلة مشاكل",
+      "audioFileMissing": "ملف الصوت المصدر مفقود",
+      "soundMissing": "الصوت المقطوع مفقود",
+      "keySoundMissing": "صوت المفتاح مفقود",
+      "dependencyChainBroken": "سلسلة التبعيات تحتوي على مشاكل غير مباشرة",
+      "tooltip": {
+        "critical": "تم حذف التبعيات المباشرة لهذا العنصر",
+        "info": "تحتوي سلسلة تبعيات هذا العنصر على مشاكل غير مباشرة (طبقة واحدة)",
+        "low": "تحتوي سلسلة تبعيات هذا العنصر على مشاكل غير مباشرة (متعددة الطبقات)"
+      }
+    },
     "loadAudioFile": {
       "title": "تحميل ملفات صوتية",
       "description": "تحميل ملفات صوتية أصلية للألبوم الحالي للاستخدام في الخطوات التالية",
