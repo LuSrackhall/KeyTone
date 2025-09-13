@@ -45,6 +45,29 @@
         </div>
       </q-tooltip>
     </q-icon>
+
+    <!-- Low dependency warning -->
+    <q-icon
+      v-else-if="lowCount > 0"
+      name="info"
+      color="grey-6"
+      size="16px"
+      class="dependency-warning-icon low"
+    >
+      <q-tooltip
+        anchor="center right"
+        self="center left"
+        :offset="[8, 0]"
+        class="bg-grey-6 text-white rounded-lg text-xs px-2 py-1"
+      >
+        {{ $t('KeyToneAlbum.dependencyWarning.tooltip.low') }}
+        <div v-if="showDetails && issues.length > 0" class="mt-2 text-xs">
+          <div v-for="issue in lowIssues" :key="issue.itemId" class="mb-1">
+            {{ issue.message }}
+          </div>
+        </div>
+      </q-tooltip>
+    </q-icon>
   </div>
 </template>
 
@@ -81,8 +104,13 @@ const infoIssues = computed(() =>
   itemIssues.value.filter(issue => issue.severity === 'info')
 );
 
+const lowIssues = computed(() => 
+  itemIssues.value.filter(issue => issue.severity === 'low')
+);
+
 const criticalCount = computed(() => criticalIssues.value.length);
 const infoCount = computed(() => infoIssues.value.length);
+const lowCount = computed(() => lowIssues.value.length);
 </script>
 
 <style lang="scss" scoped>
@@ -102,6 +130,10 @@ const infoCount = computed(() => infoIssues.value.length);
   &.info {
     animation: pulse-warning 3s infinite;
   }
+  
+  &.low {
+    animation: pulse-low 4s infinite;
+  }
 }
 
 @keyframes pulse-error {
@@ -119,6 +151,15 @@ const infoCount = computed(() => infoIssues.value.length);
   }
   50% {
     opacity: 0.7;
+  }
+}
+
+@keyframes pulse-low {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 </style>

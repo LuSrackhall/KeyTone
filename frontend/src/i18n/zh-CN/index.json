@@ -131,7 +131,8 @@
       "dependencyChainBroken": "依赖链路存在间接问题",
       "tooltip": {
         "critical": "此项的直接依赖已被删除",
-        "info": "此项的依赖链路中存在间接问题"
+        "info": "此项的依赖链路中存在间接问题（一层）",
+        "low": "此项的依赖链路中存在间接问题（多层）"
       }
     },
     "loadAudioFile": {

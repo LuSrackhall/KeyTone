@@ -2449,7 +2449,38 @@
                                               }
                                             "
                                             class="max-w-full"
-                                          />
+                                          >
+                                            <template v-slot:option="scope">
+                                              <q-item v-bind="scope.itemProps">
+                                                <q-item-section>
+                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                                </q-item-section>
+                                                <q-item-section side>
+                                                  <DependencyWarning
+                                                    v-if="scope.opt.type === 'audio_files'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="audio_files"
+                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="sounds"
+                                                    :item-id="scope.opt.value?.soundKey"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="key_sounds"
+                                                    :item-id="scope.opt.value?.keySoundKey"
+                                                    :show-details="false"
+                                                  />
+                                                </q-item-section>
+                                              </q-item>
+                                            </template>
+                                          </q-select>
                                           <!-- 选择单键抬起声效的选项, 仅支持单选 -->
                                           <q-select
                                             v-show="isUpSoundEffectSelectEnabled"
@@ -2490,7 +2521,38 @@
                                               }
                                             "
                                             class="max-w-full"
-                                          />
+                                          >
+                                            <template v-slot:option="scope">
+                                              <q-item v-bind="scope.itemProps">
+                                                <q-item-section>
+                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                                </q-item-section>
+                                                <q-item-section side>
+                                                  <DependencyWarning
+                                                    v-if="scope.opt.type === 'audio_files'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="audio_files"
+                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="sounds"
+                                                    :item-id="scope.opt.value?.soundKey"
+                                                    :show-details="false"
+                                                  />
+                                                  <DependencyWarning
+                                                    v-else-if="scope.opt.type === 'key_sounds'"
+                                                    :issues="dependencyIssues"
+                                                    item-type="key_sounds"
+                                                    :item-id="scope.opt.value?.keySoundKey"
+                                                    :show-details="false"
+                                                  />
+                                                </q-item-section>
+                                              </q-item>
+                                            </template>
+                                          </q-select>
                                         </div>
                                         <div
                                           v-show="isDownSoundEffectSelectEnabled && isUpSoundEffectSelectEnabled"
@@ -2871,7 +2933,38 @@
                                           }
                                         "
                                         class="max-w-full"
-                                      />
+                                      >
+                                        <template v-slot:option="scope">
+                                          <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                            </q-item-section>
+                                            <q-item-section side>
+                                              <DependencyWarning
+                                                v-if="scope.opt.type === 'audio_files'"
+                                                :issues="dependencyIssues"
+                                                item-type="audio_files"
+                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="sounds"
+                                                :item-id="scope.opt.value?.soundKey"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'key_sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="key_sounds"
+                                                :item-id="scope.opt.value?.keySoundKey"
+                                                :show-details="false"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
+                                      </q-select>
                                       <!-- 选择单键抬起声效的选项, 仅支持单选 [声效编辑]-->
                                       <q-select
                                         outlined
@@ -2916,7 +3009,38 @@
                                           }
                                         "
                                         class="max-w-full"
-                                      />
+                                      >
+                                        <template v-slot:option="scope">
+                                          <q-item v-bind="scope.itemProps">
+                                            <q-item-section>
+                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
+                                            </q-item-section>
+                                            <q-item-section side>
+                                              <DependencyWarning
+                                                v-if="scope.opt.type === 'audio_files'"
+                                                :issues="dependencyIssues"
+                                                item-type="audio_files"
+                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="sounds"
+                                                :item-id="scope.opt.value?.soundKey"
+                                                :show-details="false"
+                                              />
+                                              <DependencyWarning
+                                                v-else-if="scope.opt.type === 'key_sounds'"
+                                                :issues="dependencyIssues"
+                                                item-type="key_sounds"
+                                                :item-id="scope.opt.value?.keySoundKey"
+                                                :show-details="false"
+                                              />
+                                            </q-item-section>
+                                          </q-item>
+                                        </template>
+                                      </q-select>
                                     </div>
                                     <div class="flex justify-end -m-l-2">
                                       <q-icon
@@ -3663,7 +3787,7 @@ watch(selectedKeySound, () => {
       return {
         type: 'audio_files',
         value: soundFileList.value.find(
-          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
         ),
       };
     }
@@ -3694,7 +3818,7 @@ watch(selectedKeySound, () => {
       return {
         type: 'audio_files',
         value: soundFileList.value.find(
-          (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+          (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
         ),
       };
     }
@@ -4371,7 +4495,7 @@ function convertValue(item: any) {
     return {
       type: 'audio_files',
       value: soundFileList.value.find(
-        (soundFile) => soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
+        (soundFile) => item.value && soundFile.sha256 === item.value.sha256 && soundFile.name_id === item.value.name_id
       ),
     };
   }

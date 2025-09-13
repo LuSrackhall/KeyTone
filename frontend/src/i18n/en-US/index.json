@@ -131,7 +131,8 @@
       "dependencyChainBroken": "Dependency chain has indirect issues",
       "tooltip": {
         "critical": "This item's direct dependencies have been deleted",
-        "info": "This item's dependency chain contains indirect issues"
+        "info": "This item's dependency chain contains indirect issues (1-layer)",
+        "low": "This item's dependency chain contains indirect issues (multi-layer)"
       }
     },
     "loadAudioFile": {

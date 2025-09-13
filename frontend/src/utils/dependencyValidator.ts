@@ -56,10 +56,11 @@ export interface KeySound {
 
 export interface DependencyIssue {
   type: 'direct' | 'indirect';
-  severity: 'critical' | 'info';
+  severity: 'critical' | 'info' | 'low';
   itemType: 'audio_files' | 'sounds' | 'key_sounds' | 'global_binding' | 'single_key_binding';
   itemId: string;
   itemName: string;
+  indirectDepth?: number; // For indirect dependencies: 1 = one layer, 2+ = multiple layers
   missingDependencies: Array<{
     type: 'audio_files' | 'sounds' | 'key_sounds';
     id: string;
@@ -348,24 +349,36 @@ export class DependencyValidator {
   }
 
   /**
-   * Check if a key sound has indirect dependency issues
+   * Check if a key sound has indirect dependency issues and calculate depth
    */
-  private keySoundHasIndirectIssues(keySoundKey: string): boolean {
+  private keySoundHasIndirectIssues(keySoundKey: string, visited: Set<string> = new Set(), depth: number = 0): { hasIssues: boolean; maxDepth: number } {
     const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
-    if (!keySound) return false;
+    if (!keySound || visited.has(keySoundKey)) {
+      return { hasIssues: false, maxDepth: depth };
+    }
+
+    visited.add(keySoundKey);
+    let hasIssues = false;
+    let maxDepth = depth;
 
     // Check all dependencies for indirect issues
     const allDeps = [...keySound.keySoundValue.down.value, ...keySound.keySoundValue.up.value];
     
     for (const dep of allDeps) {
       if (dep.type === 'sounds' && this.soundHasIndirectIssues(dep.value)) {
-        return true;
-      } else if (dep.type === 'key_sounds' && this.keySoundHasIndirectIssues(dep.value)) {
-        return true;
+        hasIssues = true;
+        maxDepth = Math.max(maxDepth, depth + 1);
+      } else if (dep.type === 'key_sounds') {
+        const result = this.keySoundHasIndirectIssues(dep.value, new Set(visited), depth + 1);
+        if (result.hasIssues) {
+          hasIssues = true;
+          maxDepth = Math.max(maxDepth, result.maxDepth);
+        }
       }
     }
     
-    return false;
+    visited.delete(keySoundKey);
+    return { hasIssues, maxDepth };
   }
 
   /**
@@ -380,15 +393,22 @@ export class DependencyValidator {
         .filter(issue => issue.itemId === keySound.keySoundKey);
       if (directIssues.length > 0) continue;
 
-      if (this.keySoundHasIndirectIssues(keySound.keySoundKey)) {
+      const indirectResult = this.keySoundHasIndirectIssues(keySound.keySoundKey);
+      if (indirectResult.hasIssues) {
+        // Determine severity based on dependency depth
+        const severity = indirectResult.maxDepth === 1 ? 'info' : 'low';
+        
         issues.push({
           type: 'indirect',
-          severity: 'info',
+          severity: severity,
           itemType: 'key_sounds',
           itemId: keySound.keySoundKey,
           itemName: keySound.keySoundValue.name,
+          indirectDepth: indirectResult.maxDepth,
           missingDependencies: [], // Could be expanded to list specific indirect issues
-          message: '键音的依赖链路中存在间接删除的情况'
+          message: indirectResult.maxDepth === 1 
+            ? '键音的依赖链路中存在一层间接删除的情况'
+            : '键音的依赖链路中存在多层间接删除的情况'
         });
       }
     }
@@ -407,13 +427,19 @@ export class DependencyValidator {
     if (directIssues.length > 0) return issues;
 
     let hasIndirectIssues = false;
+    let maxDepth = 0;
 
     // Check down binding for indirect issues
     if (binding.down) {
       if (binding.down.type === 'sounds' && this.soundHasIndirectIssues(binding.down.value)) {
         hasIndirectIssues = true;
-      } else if (binding.down.type === 'key_sounds' && this.keySoundHasIndirectIssues(binding.down.value)) {
-        hasIndirectIssues = true;
+        maxDepth = Math.max(maxDepth, 1);
+      } else if (binding.down.type === 'key_sounds') {
+        const result = this.keySoundHasIndirectIssues(binding.down.value);
+        if (result.hasIssues) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, result.maxDepth);
+        }
       }
     }
 
@@ -421,20 +447,31 @@ export class DependencyValidator {
     if (binding.up) {
       if (binding.up.type === 'sounds' && this.soundHasIndirectIssues(binding.up.value)) {
         hasIndirectIssues = true;
-      } else if (binding.up.type === 'key_sounds' && this.keySoundHasIndirectIssues(binding.up.value)) {
-        hasIndirectIssues = true;
+        maxDepth = Math.max(maxDepth, 1);
+      } else if (binding.up.type === 'key_sounds') {
+        const result = this.keySoundHasIndirectIssues(binding.up.value);
+        if (result.hasIssues) {
+          hasIndirectIssues = true;
+          maxDepth = Math.max(maxDepth, result.maxDepth);
+        }
       }
     }
 
     if (hasIndirectIssues) {
+      // Determine severity based on dependency depth
+      const severity = maxDepth === 1 ? 'info' : 'low';
+      
       issues.push({
         type: 'indirect',
-        severity: 'info',
+        severity: severity,
         itemType: bindingType,
         itemId: bindingId,
         itemName: bindingType === 'global_binding' ? '全局绑定' : `单键绑定(${bindingId})`,
+        indirectDepth: maxDepth,
         missingDependencies: [], // Could be expanded to list specific indirect issues
-        message: bindingType === 'global_binding' ? '全局绑定的依赖链路中存在间接删除的情况' : '单键绑定的依赖链路中存在间接删除的情况'
+        message: bindingType === 'global_binding' 
+          ? (maxDepth === 1 ? '全局绑定的依赖链路中存在一层间接删除的情况' : '全局绑定的依赖链路中存在多层间接删除的情况')
+          : (maxDepth === 1 ? '单键绑定的依赖链路中存在一层间接删除的情况' : '单键绑定的依赖链路中存在多层间接删除的情况')
       });
     }
 
@@ -496,17 +533,19 @@ export function hasItemDependencyIssues(
   itemType: 'audio_files' | 'sounds' | 'key_sounds',
   itemId: string,
   issues: DependencyIssue[]
-): { hasIssues: boolean; criticalCount: number; infoCount: number } {
+): { hasIssues: boolean; criticalCount: number; infoCount: number; lowCount: number } {
   const itemIssues = issues.filter(issue => 
     issue.itemType === itemType && issue.itemId === itemId
   );
 
   const criticalCount = itemIssues.filter(issue => issue.severity === 'critical').length;
   const infoCount = itemIssues.filter(issue => issue.severity === 'info').length;
+  const lowCount = itemIssues.filter(issue => issue.severity === 'low').length;
 
   return {
     hasIssues: itemIssues.length > 0,
     criticalCount,
-    infoCount
+    infoCount,
+    lowCount
   };
 }
