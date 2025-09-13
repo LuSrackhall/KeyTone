@@ -4443,7 +4443,47 @@ const dependencyIssues = ref<DependencyIssue[]>([]);
 const allDependencyIssues = computed(() => {
   const audioFiles = soundFileList.value as AudioFile[];
   const sounds = soundList.value as Sound[];
-  const keySounds = keySoundList.value as KeySound[];
+  
+  // Create a copy of keySoundList with original string format for validation
+  const keySounds = keySoundList.value.map(keySound => {
+    // Create a deep copy to avoid modifying the original
+    const keySoundCopy = JSON.parse(JSON.stringify(keySound));
+    
+    // Restore original string format for dependency validation
+    keySoundCopy.keySoundValue.down.value = keySoundCopy.keySoundValue.down.value.map((item: any) => {
+      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
+        return {
+          type: 'sounds',
+          value: item.value.soundKey
+        };
+      }
+      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
+        return {
+          type: 'key_sounds',
+          value: item.value.keySoundKey
+        };
+      }
+      return item;
+    });
+    
+    keySoundCopy.keySoundValue.up.value = keySoundCopy.keySoundValue.up.value.map((item: any) => {
+      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
+        return {
+          type: 'sounds',
+          value: item.value.soundKey
+        };
+      }
+      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
+        return {
+          type: 'key_sounds',
+          value: item.value.keySoundKey
+        };
+      }
+      return item;
+    });
+    
+    return keySoundCopy;
+  }) as KeySound[];
   
   if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
     return [];
