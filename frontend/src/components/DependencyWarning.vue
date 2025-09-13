@@ -4,7 +4,7 @@
     <q-icon
       v-if="criticalCount > 0"
       name="error"
-      color="negative"
+      color="warning"
       size="16px"
       class="dependency-warning-icon critical"
     >
@@ -12,7 +12,7 @@
         anchor="center right"
         self="center left"
         :offset="[8, 0]"
-        class="bg-negative text-white rounded-lg text-xs px-2 py-1"
+        class="bg-warning text-black rounded-lg text-xs px-2 py-1"
       >
         {{ $t('KeyToneAlbum.dependencyWarning.tooltip.critical') }}
         <div v-if="showDetails && issues.length > 0" class="mt-2 text-xs">
@@ -27,7 +27,7 @@
     <q-icon
       v-else-if="infoCount > 0"
       name="warning"
-      color="warning"
+      color="info"
       size="16px"
       class="dependency-warning-icon info"
     >
@@ -35,7 +35,7 @@
         anchor="center right"
         self="center left"
         :offset="[8, 0]"
-        class="bg-warning text-black rounded-lg text-xs px-2 py-1"
+        class="bg-info text-white rounded-lg text-xs px-2 py-1"
       >
         {{ $t('KeyToneAlbum.dependencyWarning.tooltip.info') }}
         <div v-if="showDetails && issues.length > 0" class="mt-2 text-xs">

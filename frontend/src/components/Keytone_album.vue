@@ -688,7 +688,7 @@
                             </q-item-section>
                           </q-item>
                         </template>
-                      />
+                      </q-select>
                     </q-card-section>
                     <!-- 以卡片形式展示选择的声音 -->
                     <q-card-section
@@ -1416,7 +1416,7 @@
                             </q-item-section>
                           </q-item>
                         </template>
-                      />
+                      </q-select>
                     </q-card-section>
                     <!-- 以卡片的形式, 展示选择的按键音 -->
                     <q-card-section
