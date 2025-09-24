@@ -1,13 +1,13 @@
 <template>
   <q-dialog v-model="dialogVisible" persistent>
-    <q-card class="export-dialog" style="width: 90%; max-width: 350px; max-height: 80vh">
+    <q-card class="export-dialog" style="width: 90%; max-width: 350px; max-height: 85vh; overflow-y: auto;">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{ $t('exportDialog.title') || '导出版权信息' }}</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
-      <q-card-section style="max-height: 60vh; overflow-y: auto;">
+      <q-card-section>
         <div class="q-gutter-md">
           <!-- 作者名称 -->
           <q-input
@@ -85,7 +85,7 @@
               :disable="!hasAuthorInfo"
             />
             <div class="text-caption text-grey-6 q-mt-xs">
-              {{ $t('exportDialog.reExportHint') || '只有填写名称或联系方式的创作者可以取消勾选' }}
+              {{ $t('exportDialog.reExportHint') || '只有同时填写名称和联系方式的创作者可以取消勾选' }}
             </div>
           </div>
 
@@ -167,7 +167,9 @@ const loading = ref(false);
 
 // Computed properties
 const hasAuthorInfo = computed(() => {
-  return form.value.authorName.trim() !== '' || form.value.authorContact.trim() !== '';
+  const hasName = form.value.authorName.trim() !== '';
+  const hasContact = form.value.authorContact.trim() !== '' || contactImageFile.value !== null;
+  return hasName && hasContact; // 需要同时有名称和联系方式
 });
 
 const isFormValid = computed(() => {

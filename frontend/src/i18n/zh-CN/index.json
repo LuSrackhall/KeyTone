@@ -68,7 +68,7 @@
     "historyAuthors": "历史创作者",
     "historyHint": "点击选择优先展示的创作者名称",
     "allowReExport": "允许二次导出",
-    "reExportHint": "只有填写名称或联系方式的创作者可以取消勾选",
+    "reExportHint": "只有同时填写名称和联系方式的创作者可以取消勾选",
     "password": "导出密码 (9位以上)",
     "passwordHint": "密码将以SHA512形式存储，用于后续校验",
     "forbiddenWords": "不能包含 KeyTone 或 LuSrackhall 字段",
