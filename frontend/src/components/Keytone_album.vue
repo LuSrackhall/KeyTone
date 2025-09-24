@@ -31,6 +31,55 @@
           :label="$t('KeyToneAlbum.new.name.name')"
           :placeholder="$t('KeyToneAlbum.new.name.defaultValue')"
         />
+
+        <!-- 创作者信息展示 -->
+        <div v-if="albumMeta" class="creator-info bg-grey-1 rounded p-4">
+          <div class="text-subtitle2 text-grey-8 mb-2">
+            {{ $t('KeyToneAlbum.creatorInfo.title') || '创作者信息' }}
+          </div>
+          
+          <div v-if="albumMeta.authorName" class="mb-2">
+            <div class="text-caption text-grey-6">{{ $t('KeyToneAlbum.creatorInfo.author') || '创作者' }}</div>
+            <div class="text-body2">{{ albumMeta.authorName }}</div>
+          </div>
+
+          <div v-if="albumMeta.authorContact" class="mb-2">
+            <div class="text-caption text-grey-6">{{ $t('KeyToneAlbum.creatorInfo.contact') || '联系方式' }}</div>
+            <div class="text-body2">{{ albumMeta.authorContact }}</div>
+          </div>
+
+          <div v-if="albumMeta.historyAuthors && albumMeta.historyAuthors.length > 0" class="mb-2">
+            <div class="text-caption text-grey-6">{{ $t('KeyToneAlbum.creatorInfo.history') || '历史创作者' }}</div>
+            <div class="row q-gutter-xs">
+              <q-chip
+                v-for="(author, index) in albumMeta.historyAuthors"
+                :key="index"
+                size="sm"
+                color="grey-3"
+                text-color="grey-8"
+              >
+                {{ author }}
+              </q-chip>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-caption text-grey-6">{{ $t('KeyToneAlbum.creatorInfo.reExport') || '二次导出' }}</div>
+              <div :class="['text-body2', albumMeta.allowReExport !== false ? 'text-positive' : 'text-negative']">
+                {{ albumMeta.allowReExport !== false 
+                  ? ($t('KeyToneAlbum.creatorInfo.allowed') || '✓ 支持') 
+                  : ($t('KeyToneAlbum.creatorInfo.restricted') || '✗ 受限') 
+                }}
+              </div>
+            </div>
+            
+            <div v-if="albumMeta.allowReExport === false" class="text-caption text-grey-6">
+              {{ $t('KeyToneAlbum.creatorInfo.contactAuthor') || '可联系创作者获取权限' }}
+            </div>
+          </div>
+        </div>
+
         <!-- <div>原始声音文件编辑</div>
         <div>键音</div>
         <div>键音列表, 编辑键音</div>
@@ -3372,6 +3421,7 @@ import {
   SoundFileDelete,
   PlaySound,
   ConfigDelete,
+  type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
 import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
@@ -3399,11 +3449,17 @@ const setting_store = useSettingStore();
 export interface Props {
   pkgPath: string;
   isCreate: boolean;
+  albumMeta?: AlbumMeta | null;
 }
-const props = withDefaults(defineProps<Props>(), {});
+const props = withDefaults(defineProps<Props>(), {
+  albumMeta: null,
+});
 
 // 防止空字符串触发不能为空的提示, 虽然初始化时只有一瞬间, 但也不希望看到
 const pkgName = ref<string>($t('KeyToneAlbum.new.name.defaultValue'));
+
+// 专辑元数据信息，用于显示创作者信息
+const albumMeta = ref<AlbumMeta | null>(props.albumMeta);
 
 const step = ref(99);
 // watch(step, () => {

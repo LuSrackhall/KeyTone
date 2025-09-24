@@ -244,6 +244,7 @@
               "
               :pkgPath="keytoneAlbum_PathOrUUID"
               :isCreate="keytoneAlbum_store.isCreateNewKeytoneAlbum"
+              :albumMeta="displayAlbumMeta"
               ref="keytoneAlbumRef"
             />
             <div
@@ -335,6 +336,51 @@ const showExportDialog = ref(false);
 const showPasswordDialog = ref(false);
 const currentAlbumMeta = ref<AlbumMeta | null>(null);
 const pendingExportData = ref<ExportWithAuthorData | null>(null);
+
+// 当前专辑的元数据（用于传递给Keytone_album组件显示）
+const displayAlbumMeta = ref<AlbumMeta | null>(null);
+
+// 专辑元数据管理
+const albumMetadataStore = ref<Map<string, AlbumMeta>>(new Map());
+
+// 从localStorage加载专辑元数据
+const loadAlbumMetadata = () => {
+  try {
+    const stored = localStorage.getItem('keytone-albums-metadata');
+    if (stored) {
+      const data = JSON.parse(stored);
+      albumMetadataStore.value = new Map(Object.entries(data));
+    }
+  } catch (error) {
+    console.error('Failed to load album metadata:', error);
+  }
+};
+
+// 保存专辑元数据到localStorage
+const saveAlbumMetadata = () => {
+  try {
+    const data = Object.fromEntries(albumMetadataStore.value);
+    localStorage.setItem('keytone-albums-metadata', JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save album metadata:', error);
+  }
+};
+
+// 获取专辑UUID
+const getAlbumUUID = (albumPath: string): string => {
+  return albumPath.split(q.platform.is.win ? '\\' : '/').pop() || '';
+};
+
+// 更新当前显示的专辑元数据
+const updateDisplayMetadata = () => {
+  if (!setting_store.mainHome.selectedKeyTonePkg) {
+    displayAlbumMeta.value = null;
+    return;
+  }
+  
+  const albumUUID = getAlbumUUID(setting_store.mainHome.selectedKeyTonePkg);
+  displayAlbumMeta.value = albumMetadataStore.value.get(albumUUID) || null;
+};
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -445,9 +491,10 @@ const exportAlbum = async () => {
       throw new Error('获取专辑名称失败');
     }
 
-    // 尝试获取已有的专辑元数据（如果是导入的专辑）
-    // 这里我们先显示对话框，实际的元数据获取在导入时处理
-    currentAlbumMeta.value = null; // 新建专辑默认无元数据
+    // 获取当前专辑的元数据（如果有的话）
+    const albumUUID = getAlbumUUID(setting_store.mainHome.selectedKeyTonePkg);
+    currentAlbumMeta.value = albumMetadataStore.value.get(albumUUID) || null;
+    
     showExportDialog.value = true;
   } catch (error) {
     console.error('准备导出对话框失败:', error);
@@ -467,6 +514,16 @@ const handleExportConfirm = async (data: ExportWithAuthorData) => {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
+
+    // 更新历史创作者信息
+    let historyAuthors = [...(currentAlbumMeta.value?.historyAuthors || [])];
+    if (data.authorName && !historyAuthors.includes(data.authorName)) {
+      // 如果当前作者不在历史中，添加到历史
+      if (currentAlbumMeta.value?.authorName && currentAlbumMeta.value.authorName !== data.authorName) {
+        historyAuthors.push(currentAlbumMeta.value.authorName);
+      }
+    }
+    data.historyAuthors = historyAuthors;
 
     // 检查是否需要验证密码（如果是有密码保护的专辑的二次导出）
     if (currentAlbumMeta.value?.exportPassword && !currentAlbumMeta.value.allowReExport) {
@@ -666,6 +723,13 @@ watch(
 
 onMounted(() => {
   setupScrollListeners();
+  loadAlbumMetadata();
+  updateDisplayMetadata();
+});
+
+// 监听选中的专辑变化，更新显示的元数据
+watch(() => setting_store.mainHome.selectedKeyTonePkg, () => {
+  updateDisplayMetadata();
 });
 
 onUnmounted(() => {
@@ -697,14 +761,36 @@ const importAlbum = async () => {
     }
 
     try {
+      // 首先获取专辑元数据
+      const meta = await GetAlbumMeta(file);
+      
       const result = await ImportAlbum(file);
       if (result) {
+        // 存储专辑元数据
+        if (meta && meta.albumUUID) {
+          albumMetadataStore.value.set(meta.albumUUID, meta);
+          saveAlbumMetadata();
+        }
+        
         q.notify({
           type: 'positive',
           message: $t('keyToneAlbumPage.notify.importSuccess'),
         });
+        
+        // 如果导入的专辑有作者信息，在通知中显示
+        if (meta.authorName) {
+          q.notify({
+            type: 'info',
+            message: `创作者: ${meta.authorName}`,
+            timeout: 3000,
+          });
+        }
+        
         // 刷新专辑列表
         await main_store.GetKeyToneAlbumList();
+        
+        // 更新显示的元数据
+        updateDisplayMetadata();
       }
     } catch (error) {
       // 处理专辑已存在的情况
