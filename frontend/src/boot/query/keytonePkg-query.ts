@@ -482,6 +482,13 @@ export interface AlbumMeta {
   exportTime: string;
   albumUUID: string;
   albumName: string;
+  // 新增作者相关字段
+  authorName?: string;       // 作者名称
+  authorContact?: string;    // 联系方式文本
+  authorContactImg?: string; // 联系方式图片(MD5文件名)
+  historyAuthors?: string[]; // 历史创作者列表
+  allowReExport?: boolean;   // 是否允许二次导出
+  exportPassword?: string;   // 导出密码(SHA512)
 }
 
 export async function GetAlbumMeta(file: File): Promise<AlbumMeta> {
@@ -672,4 +679,70 @@ export async function ImportAlbumAsNew(file: File, newAlbumId: string): Promise<
       console.groupEnd();
       return false;
     });
+}
+
+// 导出包含作者信息的专辑
+export interface ExportWithAuthorData {
+  albumPath: string;
+  authorName?: string;
+  authorContact?: string;
+  authorContactImg?: string;
+  historyAuthors?: string[];
+  allowReExport: boolean;
+  exportPassword?: string;
+}
+
+export async function ExportAlbumWithAuthor(data: ExportWithAuthorData): Promise<Blob> {
+  return await api
+    .post('/keytone_pkg/export_album_with_author', data, { responseType: 'blob' })
+    .then((response) => {
+      console.debug('status=', response.status, '->ExportAlbumWithAuthor 请求已成功执行并返回');
+      if (response.status === 200) {
+        return new Blob([response.data], { type: 'application/zip' });
+      }
+      throw new Error('导出失败');
+    })
+    .catch((error) => {
+      console.group('ExportAlbumWithAuthor 请求执行失败');
+      console.error('导出专辑失败:', error);
+      console.groupEnd();
+      throw error;
+    });
+}
+
+// 验证导出密码
+export async function ValidateExportPassword(password: string, hashedPassword: string): Promise<boolean> {
+  try {
+    const response = await api.post('/keytone_pkg/validate_export_password', {
+      password,
+      hashedPassword,
+    });
+
+    if (response.data.message === 'ok') {
+      return response.data.valid;
+    }
+    throw new Error(response.data.message);
+  } catch (err: any) {
+    console.group('ValidateExportPassword 请求执行失败');
+    const error = err as {
+      response?: { status: number; data: any };
+      request?: any;
+      message?: string;
+      config?: any;
+    };
+    if (error.response) {
+      console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+      console.error('Error status:', error.response.status);
+      console.error('Error data:', error.response.data);
+    } else if (error.request) {
+      console.error('Error:', '请求已经发出，但是没有收到响应');
+      console.error('Error request:', error.request);
+    } else {
+      console.error('Error:', '请求未正常发出');
+      console.error('Error message:', error.message);
+    }
+    console.error('Error config:', error.config);
+    console.groupEnd();
+    throw error;
+  }
 }

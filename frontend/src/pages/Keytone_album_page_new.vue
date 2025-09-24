@@ -260,6 +260,20 @@
       </div>
     </div>
   </div>
+
+  <!-- 导出作者信息对话框 -->
+  <ExportAuthorDialog
+    v-model="showExportDialog"
+    :album-path="setting_store.mainHome.selectedKeyTonePkg"
+    :history-authors="currentAlbumMeta?.historyAuthors"
+    @export="handleExportConfirm"
+  />
+
+  <!-- 密码验证对话框 -->
+  <PasswordDialog
+    v-model="showPasswordDialog"
+    @confirm="handlePasswordConfirm"
+  />
 </template>
 
 <script setup lang="ts">
@@ -275,13 +289,18 @@ import {
   DeleteAlbum,
   GetAudioPackageName,
   ExportAlbum,
+  ExportAlbumWithAuthor,
+  ValidateExportPassword,
   ImportAlbum,
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
   LoadConfig,
   GetAlbumMeta,
   type AlbumMeta,
+  type ExportWithAuthorData,
 } from 'src/boot/query/keytonePkg-query';
+import ExportAuthorDialog from 'src/components/ExportAuthorDialog.vue';
+import PasswordDialog from 'src/components/PasswordDialog.vue';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -310,6 +329,12 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+// 导出对话框相关状态
+const showExportDialog = ref(false);
+const showPasswordDialog = ref(false);
+const currentAlbumMeta = ref<AlbumMeta | null>(null);
+const pendingExportData = ref<ExportWithAuthorData | null>(null);
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -409,24 +434,105 @@ const exportAlbumLegacy = async () => {
   }
 };
 
-// 导出键音专辑 - 使用 File System Access API
+// 导出键音专辑 - 显示作者信息对话框
 const exportAlbum = async () => {
-  // 检查 API 是否可用
-  if (typeof window.showSaveFilePicker !== 'function') {
-    console.log('Browser does not support File System Access API, falling back to legacy export');
-    return exportAlbumLegacy();
-  }
+  if (!setting_store.mainHome.selectedKeyTonePkg) return;
 
   try {
-    // 获取专辑名称
+    // 首先检查专辑是否存在且获取其元数据
     const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    if (!albumNameResponse || albumNameResponse.message !== 'ok') {
+      throw new Error('获取专辑名称失败');
+    }
+
+    // 尝试获取已有的专辑元数据（如果是导入的专辑）
+    // 这里我们先显示对话框，实际的元数据获取在导入时处理
+    currentAlbumMeta.value = null; // 新建专辑默认无元数据
+    showExportDialog.value = true;
+  } catch (error) {
+    console.error('准备导出对话框失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '获取专辑信息失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 处理导出对话框确认
+const handleExportConfirm = async (data: ExportWithAuthorData) => {
+  try {
+    // 获取专辑名称用于文件命名
+    const albumNameResponse = await GetAudioPackageName(data.albumPath);
     if (!albumNameResponse || albumNameResponse.message !== 'ok') {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
 
+    // 检查是否需要验证密码（如果是有密码保护的专辑的二次导出）
+    if (currentAlbumMeta.value?.exportPassword && !currentAlbumMeta.value.allowReExport) {
+      // 需要先验证密码
+      pendingExportData.value = data;
+      showExportDialog.value = false;
+      showPasswordDialog.value = true;
+      return;
+    }
+
+    // 直接导出
+    await performExport(data, albumName);
+    showExportDialog.value = false;
+  } catch (error) {
+    console.error('导出确认失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '导出失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 处理密码验证
+const handlePasswordConfirm = async (password: string) => {
+  if (!pendingExportData.value || !currentAlbumMeta.value?.exportPassword) return;
+
+  try {
+    const isValid = await ValidateExportPassword(password, currentAlbumMeta.value.exportPassword);
+    
+    if (isValid) {
+      // 密码正确，执行导出
+      const albumNameResponse = await GetAudioPackageName(pendingExportData.value.albumPath);
+      if (!albumNameResponse || albumNameResponse.message !== 'ok') {
+        throw new Error('获取专辑名称失败');
+      }
+      
+      await performExport(pendingExportData.value, albumNameResponse.name);
+      showPasswordDialog.value = false;
+      pendingExportData.value = null;
+    } else {
+      // 密码错误
+      q.notify({
+        type: 'negative',
+        message: '密码错误，请重试',
+      });
+    }
+  } catch (error) {
+    console.error('密码验证失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '密码验证失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 执行实际的导出操作
+const performExport = async (data: ExportWithAuthorData, albumName: string) => {
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, falling back to legacy export');
+    return performExportLegacy(data, albumName);
+  }
+
+  try {
     // 获取导出数据
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    const blob = await ExportAlbumWithAuthor(data);
 
     try {
       // 打开系统的保存文件对话框
@@ -457,6 +563,35 @@ const exportAlbum = async () => {
       }
       throw err;
     }
+  } catch (error) {
+    console.error('导出专辑失败:', error);
+    q.notify({
+      type: 'negative',
+      message:
+        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 降级导出方法（用于不支持File System Access API的浏览器）
+const performExportLegacy = async (data: ExportWithAuthorData, albumName: string) => {
+  try {
+    const blob = await ExportAlbumWithAuthor(data);
+    
+    // 创建下载链接
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${albumName}.ktalbum`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    q.notify({
+      type: 'positive',
+      message: $t('keyToneAlbumPage.notify.exportSuccess'),
+    });
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({

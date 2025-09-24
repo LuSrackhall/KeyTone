@@ -30,7 +30,9 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -56,11 +58,18 @@ const (
 
 // KeytoneAlbumMeta 用于存储专辑元数据
 type KeytoneAlbumMeta struct {
-	MagicNumber string    `json:"magicNumber"`
-	Version     string    `json:"version"`
-	ExportTime  time.Time `json:"exportTime"`
-	AlbumUUID   string    `json:"albumUUID"`
-	AlbumName   string    `json:"albumName"`
+	MagicNumber      string    `json:"magicNumber"`
+	Version          string    `json:"version"`
+	ExportTime       time.Time `json:"exportTime"`
+	AlbumUUID        string    `json:"albumUUID"`
+	AlbumName        string    `json:"albumName"`
+	// 新增作者相关字段
+	AuthorName       string    `json:"authorName,omitempty"`       // 作者名称
+	AuthorContact    string    `json:"authorContact,omitempty"`    // 联系方式文本
+	AuthorContactImg string    `json:"authorContactImg,omitempty"` // 联系方式图片(MD5文件名)
+	HistoryAuthors   []string  `json:"historyAuthors,omitempty"`   // 历史创作者列表
+	AllowReExport    bool      `json:"allowReExport"`              // 是否允许二次导出，默认true
+	ExportPassword   string    `json:"exportPassword,omitempty"`   // 导出密码(SHA512)
 }
 
 type KeyStateMessage struct {
@@ -978,11 +987,12 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		meta := KeytoneAlbumMeta{
-			MagicNumber: KeytoneMagicNumber,
-			Version:     KeytoneVersion,
-			ExportTime:  time.Now(),
-			AlbumUUID:   filepath.Base(arg.AlbumPath),
-			AlbumName:   albumName,
+			MagicNumber:    KeytoneMagicNumber,
+			Version:        KeytoneVersion,
+			ExportTime:     time.Now(),
+			AlbumUUID:      filepath.Base(arg.AlbumPath),
+			AlbumName:      albumName,
+			AllowReExport:  true, // 默认允许二次导出
 		}
 
 		metaJson, err := json.Marshal(meta)
@@ -1097,6 +1107,207 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 			return
 		}
+		finalBuffer.Write(encryptedData)
+
+		// 设置响应头并发送数据
+		ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s.ktalbum", filepath.Base(arg.AlbumPath)))
+		ctx.Data(http.StatusOK, "application/octet-stream", finalBuffer.Bytes())
+	})
+
+	// 带作者信息的导出专辑接口
+	keytonePkgRouters.POST("/export_album_with_author", func(ctx *gin.Context) {
+		type Arg struct {
+			AlbumPath        string   `json:"albumPath"`
+			AuthorName       string   `json:"authorName"`
+			AuthorContact    string   `json:"authorContact"`
+			AuthorContactImg string   `json:"authorContactImg"`
+			HistoryAuthors   []string `json:"historyAuthors"`
+			AllowReExport    bool     `json:"allowReExport"`
+			ExportPassword   string   `json:"exportPassword"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.AlbumPath == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		// 验证作者信息不包含禁止的字段
+		if strings.Contains(strings.ToLower(arg.AuthorName), "keytone") || strings.Contains(strings.ToLower(arg.AuthorName), "lusrackhall") ||
+			strings.Contains(strings.ToLower(arg.AuthorContact), "keytone") || strings.Contains(strings.ToLower(arg.AuthorContact), "lusrackhall") {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 作者信息不能包含 KeyTone 或 LuSrackhall 字段",
+			})
+			return
+		}
+
+		// 检查源文件夹是否存在且可访问
+		srcInfo, err := os.Stat(arg.AlbumPath)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 源专辑文件夹不存在或无法访问:" + err.Error(),
+			})
+			return
+		}
+		if !srcInfo.IsDir() {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 源路径不是一个文件夹",
+			})
+			return
+		}
+
+		// 创建 zip buffer
+		buffer := new(bytes.Buffer)
+		zipWriter := zip.NewWriter(buffer)
+
+		// 创建并写入元数据文件
+		metaWriter, err := zipWriter.Create(".keytone-album")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建元数据文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		albumName, ok := audioPackageList.GetAudioPackageName(arg.AlbumPath).(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取专辑名称失败: 类型转换错误",
+			})
+			return
+		}
+
+		// 处理密码加密
+		var hashedPassword string
+		if arg.ExportPassword != "" {
+			hash := sha512.Sum512([]byte(arg.ExportPassword))
+			hashedPassword = hex.EncodeToString(hash[:])
+		}
+
+		meta := KeytoneAlbumMeta{
+			MagicNumber:      KeytoneMagicNumber,
+			Version:          KeytoneVersion,
+			ExportTime:       time.Now(),
+			AlbumUUID:        filepath.Base(arg.AlbumPath),
+			AlbumName:        albumName,
+			AuthorName:       arg.AuthorName,
+			AuthorContact:    arg.AuthorContact,
+			AuthorContactImg: arg.AuthorContactImg,
+			HistoryAuthors:   arg.HistoryAuthors,
+			AllowReExport:    arg.AllowReExport,
+			ExportPassword:   hashedPassword,
+		}
+
+		metaJson, err := json.Marshal(meta)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 生成元数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		_, err = metaWriter.Write(metaJson)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入元数据失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 遍历键音专辑文件夹并添加到zip
+		err = filepath.Walk(arg.AlbumPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return fmt.Errorf("遍历文件夹失败: %v", err)
+			}
+
+			// 获取相对路径
+			relPath, err := filepath.Rel(filepath.Dir(arg.AlbumPath), path)
+			if err != nil {
+				return fmt.Errorf("计算相对路径失败: %v", err)
+			}
+
+			// 统一使用正斜杠，确保跨平台兼容性
+			relPath = filepath.ToSlash(relPath)
+
+			// 创建zip文件头信息
+			header, err := zip.FileInfoHeader(info)
+			if err != nil {
+				return fmt.Errorf("创建文件头信息失败: %v", err)
+			}
+
+			// 使用标准化的路径
+			header.Name = relPath
+
+			if info.IsDir() {
+				header.Name += "/" // 确保目录以/结尾
+			} else {
+				header.Method = zip.Deflate // 使用压缩
+			}
+
+			writer, err := zipWriter.CreateHeader(header)
+			if err != nil {
+				return fmt.Errorf("创建zip条目失败: %v", err)
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			// 以只读方式打开源文件
+			file, err := os.OpenFile(path, os.O_RDONLY, 0)
+			if err != nil {
+				return fmt.Errorf("打开源文件失败: %v", err)
+			}
+			defer file.Close()
+
+			// 复制文件内容到zip
+			_, err = io.Copy(writer, file)
+			if err != nil {
+				return fmt.Errorf("写入zip文件失败: %v", err)
+			}
+
+			return nil
+		})
+
+		// 检查是否有压缩错误
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 压缩文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 关闭zip writer
+		if err = zipWriter.Close(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 关闭zip writer失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 获取 zip 数据
+		zipData := buffer.Bytes()
+
+		// 计算校验和
+		checksum := sha256.Sum256(zipData)
+
+		// 加密 zip 数据
+		encryptedData := xorCrypt(zipData, KeytoneEncryptKey)
+
+		// 创建文件头
+		header := KeytoneFileHeader{
+			Version:  KeytoneFileVersion,
+			DataSize: uint64(len(encryptedData)),
+			Checksum: checksum,
+		}
+		copy(header.Signature[:], KeytoneFileSignature)
+
+		// 写入最终文件
+		finalBuffer := new(bytes.Buffer)
+		binary.Write(finalBuffer, binary.LittleEndian, header)
 		finalBuffer.Write(encryptedData)
 
 		// 设置响应头并发送数据
@@ -1653,6 +1864,40 @@ func keytonePkgRouters(r *gin.Engine) {
 			"message": "ok",
 			"meta":    meta,
 		})
+	})
+
+	// 验证导出密码接口
+	keytonePkgRouters.POST("/validate_export_password", func(ctx *gin.Context) {
+		type Arg struct {
+			Password       string `json:"password"`
+			HashedPassword string `json:"hashedPassword"`
+		}
+
+		var arg Arg
+		err := ctx.ShouldBind(&arg)
+		if err != nil || arg.Password == "" || arg.HashedPassword == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收错误",
+			})
+			return
+		}
+
+		// 计算输入密码的SHA512哈希
+		hash := sha512.Sum512([]byte(arg.Password))
+		inputHash := hex.EncodeToString(hash[:])
+
+		// 比较哈希值
+		if inputHash == arg.HashedPassword {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "ok",
+				"valid":   true,
+			})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"message": "ok",
+				"valid":   false,
+			})
+		}
 	})
 
 }
