@@ -57,6 +57,27 @@
       "confirm": "确认"
     }
   },
+  "copyrightDialog": {
+    "title": "专辑著作权信息",
+    "subtitle": "为你的专辑添加署名信息，让创作得到应有的认可",
+    "authorName": "作者名称",
+    "authorNamePlaceholder": "请输入作者姓名",
+    "authorNameRequired": "作者名称为必填项",
+    "protectionCode": "著作权保护码",
+    "protectionCodePlaceholder": "请输入保护码（至少6位字符）",
+    "protectionCodeError": "保护码必须至少6位字符",
+    "textContact": "联系方式（文本）",
+    "textContactPlaceholder": "请输入联系方式，如邮箱、社交媒体等",
+    "imageContact": "联系方式（图片）",
+    "removeImage": "移除图片",
+    "cancel": "取消",
+    "skipAndExport": "放弃署名并导出",
+    "confirmAndExport": "确认署名并导出",
+    "skipWarning": "此专辑已有著作权信息，不建议跳过署名",
+    "skipConfirmTitle": "确认放弃署名",
+    "skipConfirmMessage": "你确定要在不添加署名信息的情况下导出专辑吗？这将无法追溯专辑的创作者信息。",
+    "confirmSkip": "确认放弃"
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "制作新的键音专辑",

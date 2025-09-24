@@ -260,6 +260,16 @@
       </div>
     </div>
   </div>
+
+  <!-- Copyright Dialog -->
+  <CopyrightDialog
+    v-model="showCopyrightDialog"
+    :has-existing-copyright="hasExistingCopyright"
+    :i18n-font-size="setting_store.theme.i18nFontSize"
+    @confirm="handleCopyrightConfirm"
+    @skip="handleCopyrightSkip"
+    @cancel="handleCopyrightCancel"
+  />
 </template>
 
 <script setup lang="ts">
@@ -269,6 +279,7 @@ import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
 import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
+import CopyrightDialog from 'src/components/CopyrightDialog.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -280,6 +291,8 @@ import {
   ImportAlbumAsNew,
   LoadConfig,
   GetAlbumMeta,
+  ConfigGet,
+  ConfigSet,
   type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
 
@@ -310,6 +323,95 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+// Copyright dialog state
+const showCopyrightDialog = ref(false);
+const hasExistingCopyright = ref(false);
+const pendingExportData = ref<{albumName: string, blob: Blob} | null>(null);
+
+// Simple XOR encryption for obfuscation (matching backend approach)
+const KEYTONE_ENCRYPT_KEY = "KeyTone2024";
+
+// Helper functions for copyright management
+const xorEncrypt = (data: string, key: string): string => {
+  let result = '';
+  for (let i = 0; i < data.length; i++) {
+    result += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return btoa(result); // Base64 encode
+};
+
+const xorDecrypt = (data: string, key: string): string => {
+  try {
+    const decoded = atob(data); // Base64 decode
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return result;
+  } catch {
+    return '';
+  }
+};
+
+// Generate SHA512 hash using Web Crypto API
+const generateSHA512 = async (input: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+// Check if album has existing copyright information
+const checkExistingCopyright = async (): Promise<boolean> => {
+  try {
+    const copyrightData = await ConfigGet('copyright');
+    return copyrightData && typeof copyrightData === 'object' && Object.keys(copyrightData).length > 0;
+  } catch {
+    return false;
+  }
+};
+
+// Generate copyright key from password and name
+const generateCopyrightKey = async (protectionCode: string, authorName: string): Promise<string> => {
+  const combined = protectionCode + authorName;
+  const hash = await generateSHA512(combined);
+  return xorEncrypt(hash, KEYTONE_ENCRYPT_KEY);
+};
+
+// Save copyright information
+const saveCopyrightInfo = async (copyrightData: any) => {
+  const key = await generateCopyrightKey(copyrightData.protectionCode, copyrightData.authorName);
+  
+  try {
+    // Get existing copyright data
+    let existingCopyright = await ConfigGet('copyright') || {};
+    
+    // Check if this key already exists
+    if (existingCopyright[key]) {
+      // Update existing entry - add new export time
+      existingCopyright[key].ExportTime.push(Math.floor(Date.now() / 1000));
+      existingCopyright[key].TextContactInformation = copyrightData.textContact || '';
+      existingCopyright[key].ImageContactInformation = copyrightData.imageContactPath || '';
+    } else {
+      // Create new entry
+      existingCopyright[key] = {
+        Author: copyrightData.authorName,
+        TextContactInformation: copyrightData.textContact || '',
+        ImageContactInformation: copyrightData.imageContactPath || '',
+        ExportTime: [Math.floor(Date.now() / 1000)]
+      };
+    }
+    
+    // Save updated copyright data
+    await ConfigSet('copyright', existingCopyright);
+    return true;
+  } catch (error) {
+    console.error('Failed to save copyright information:', error);
+    return false;
+  }
+};
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -382,25 +484,20 @@ const exportAlbumLegacy = async () => {
     }
     const albumName = albumNameResponse.name;
 
+    // 检查是否存在现有著作权信息
+    hasExistingCopyright.value = await checkExistingCopyright();
+
     // 调用导出函数获取zip文件blob
     const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${albumName}.ktalbum`; // 改为 .ktalbum
-    document.body.appendChild(link);
-    link.click();
-
-    // 清理
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(link);
-
-    q.notify({
-      type: 'positive',
-      message: $t('keyToneAlbumPage.notify.exportSuccess'),
-    });
+    
+    // 存储待导出数据
+    pendingExportData.value = { albumName, blob };
+    
+    // 显示著作权对话框
+    showCopyrightDialog.value = true;
+    
   } catch (error) {
-    console.error('导出专辑失败:', error);
+    console.error('准备导出专辑失败:', error);
     q.notify({
       type: 'negative',
       message:
@@ -408,15 +505,119 @@ const exportAlbumLegacy = async () => {
     });
   }
 };
+// Handle copyright dialog confirmation
+const handleCopyrightConfirm = async (copyrightData: any) => {
+  if (!pendingExportData.value) return;
+  
+  try {
+    // Save copyright information
+    const saved = await saveCopyrightInfo(copyrightData);
+    if (!saved) {
+      throw new Error('保存著作权信息失败');
+    }
+    
+    // Proceed with export
+    await performActualExport(pendingExportData.value.albumName, pendingExportData.value.blob);
+    
+  } catch (error) {
+    console.error('保存著作权信息失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '保存著作权信息失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  } finally {
+    showCopyrightDialog.value = false;
+    pendingExportData.value = null;
+  }
+};
+
+// Handle copyright dialog skip
+const handleCopyrightSkip = async () => {
+  if (!pendingExportData.value) return;
+  
+  try {
+    // Proceed with export without saving copyright info
+    await performActualExport(pendingExportData.value.albumName, pendingExportData.value.blob);
+    
+  } catch (error) {
+    console.error('导出专辑失败:', error);
+    q.notify({
+      type: 'negative',
+      message:
+        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+    });
+  } finally {
+    showCopyrightDialog.value = false;
+    pendingExportData.value = null;
+  }
+};
+
+// Handle copyright dialog cancel
+const handleCopyrightCancel = () => {
+  showCopyrightDialog.value = false;
+  pendingExportData.value = null;
+};
+
+// Perform the actual export operation
+const performActualExport = async (albumName: string, blob: Blob) => {
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, using legacy export');
+    return performLegacyExport(albumName, blob);
+  }
+
+  try {
+    // 打开系统的保存文件对话框
+    const handle = await window.showSaveFilePicker({
+      suggestedName: `${albumName}.ktalbum`,
+      types: [
+        {
+          description: $t('keyToneAlbumPage.notify.fileDescription'),
+          accept: { 'application/octet-stream': ['.ktalbum'] },
+        },
+      ],
+    });
+
+    // 写入文件
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    // 文件成功保存后再通知
+    q.notify({
+      type: 'positive',
+      message: $t('keyToneAlbumPage.notify.exportSuccess'),
+    });
+  } catch (err) {
+    // 用户取消选择文件时不显示错误
+    if (err instanceof Error && err.name === 'AbortError') {
+      return;
+    }
+    throw err;
+  }
+};
+
+// Perform legacy export (direct download)
+const performLegacyExport = async (albumName: string, blob: Blob) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${albumName}.ktalbum`;
+  document.body.appendChild(link);
+  link.click();
+
+  // 清理
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+
+  q.notify({
+    type: 'positive',
+    message: $t('keyToneAlbumPage.notify.exportSuccess'),
+  });
+};
 
 // 导出键音专辑 - 使用 File System Access API
 const exportAlbum = async () => {
-  // 检查 API 是否可用
-  if (typeof window.showSaveFilePicker !== 'function') {
-    console.log('Browser does not support File System Access API, falling back to legacy export');
-    return exportAlbumLegacy();
-  }
-
   try {
     // 获取专辑名称
     const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
@@ -425,40 +626,19 @@ const exportAlbum = async () => {
     }
     const albumName = albumNameResponse.name;
 
+    // 检查是否存在现有著作权信息
+    hasExistingCopyright.value = await checkExistingCopyright();
+    
     // 获取导出数据
     const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-
-    try {
-      // 打开系统的保存文件对话框
-      const handle = await window.showSaveFilePicker({
-        suggestedName: `${albumName}.ktalbum`,
-        types: [
-          {
-            description: $t('keyToneAlbumPage.notify.fileDescription'),
-            accept: { 'application/octet-stream': ['.ktalbum'] },
-          },
-        ],
-      });
-
-      // 写入文件
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-
-      // 文件成功保存后再通知
-      q.notify({
-        type: 'positive',
-        message: $t('keyToneAlbumPage.notify.exportSuccess'),
-      });
-    } catch (err) {
-      // 用户取消选择文件时不显示错误
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      throw err;
-    }
+    
+    // 存储待导出数据
+    pendingExportData.value = { albumName, blob };
+    
+    // 显示著作权对话框
+    showCopyrightDialog.value = true;
   } catch (error) {
-    console.error('导出专辑失败:', error);
+    console.error('准备导出专辑失败:', error);
     q.notify({
       type: 'negative',
       message:

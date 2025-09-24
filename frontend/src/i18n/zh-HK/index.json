@@ -57,6 +57,27 @@
       "confirm": "確認"
     }
   },
+  "copyrightDialog": {
+    "title": "專輯著作權資訊",
+    "subtitle": "為你的專輯添加署名資訊，讓創作得到應有的認可",
+    "authorName": "作者名稱",
+    "authorNamePlaceholder": "請輸入作者姓名",
+    "authorNameRequired": "作者名稱為必填項",
+    "protectionCode": "著作權保護碼",
+    "protectionCodePlaceholder": "請輸入保護碼（至少6位字元）",
+    "protectionCodeError": "保護碼必須至少6位字元",
+    "textContact": "聯絡方式（文字）",
+    "textContactPlaceholder": "請輸入聯絡方式，如電子郵件、社交媒體等",
+    "imageContact": "聯絡方式（圖片）",
+    "removeImage": "移除圖片",
+    "cancel": "取消",
+    "skipAndExport": "放棄署名並匯出",
+    "confirmAndExport": "確認署名並匯出",
+    "skipWarning": "此專輯已有著作權資訊，不建議跳過署名",
+    "skipConfirmTitle": "確認放棄署名",
+    "skipConfirmMessage": "你確定要在不添加署名資訊的情況下匯出專輯嗎？這將無法追溯專輯的創作者資訊。",
+    "confirmSkip": "確認放棄"
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "製作新的鍵音專輯",

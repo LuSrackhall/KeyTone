@@ -57,6 +57,27 @@
       "confirm": "OK"
     }
   },
+  "copyrightDialog": {
+    "title": "Album Copyright Information",
+    "subtitle": "Add attribution information to your album for proper recognition",
+    "authorName": "Author Name",
+    "authorNamePlaceholder": "Enter author name",
+    "authorNameRequired": "Author name is required",
+    "protectionCode": "Copyright Protection Code",
+    "protectionCodePlaceholder": "Enter protection code (at least 6 characters)",
+    "protectionCodeError": "Protection code must be at least 6 characters",
+    "textContact": "Contact Information (Text)",
+    "textContactPlaceholder": "Enter contact info, e.g., email, social media",
+    "imageContact": "Contact Information (Image)",
+    "removeImage": "Remove Image",
+    "cancel": "Cancel",
+    "skipAndExport": "Skip Attribution and Export",
+    "confirmAndExport": "Confirm Attribution and Export",
+    "skipWarning": "This album already has copyright information, skipping attribution is not recommended",
+    "skipConfirmTitle": "Confirm Skip Attribution",
+    "skipConfirmMessage": "Are you sure you want to export the album without adding attribution information? This will make it impossible to trace the album's creator.",
+    "confirmSkip": "Confirm Skip"
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "Create new key sound album",
