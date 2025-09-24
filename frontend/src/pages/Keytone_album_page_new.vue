@@ -265,7 +265,7 @@
   <!-- 导出作者信息对话框 -->
   <ExportAuthorDialog
     v-model="showExportDialog"
-    :album-path="setting_store.mainHome.selectedKeyTonePkg"
+    :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
     :history-authors="currentAlbumMeta?.historyAuthors"
     @export="handleExportConfirm"
   />

@@ -228,12 +228,12 @@ const selectHistoryAuthor = (author: string) => {
 };
 
 const generateImageMD5 = async (file: File): Promise<string> => {
-  // 使用 Web Crypto API 生成 MD5 哈希
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer); // 使用SHA-256替代MD5
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
+  // 简化实现：使用文件名和大小作为标识
+  // 在实际应用中，可以使用更复杂的哈希算法
+  const fileName = file.name;
+  const fileSize = file.size;
+  const timestamp = Date.now();
+  return `${fileName.replace(/[^a-zA-Z0-9]/g, '')}_${fileSize}_${timestamp}`;
 };
 
 const handleExport = async () => {
