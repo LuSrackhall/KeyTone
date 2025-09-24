@@ -1,13 +1,13 @@
 <template>
   <q-dialog v-model="dialogVisible" persistent>
-    <q-card class="export-dialog" style="min-width: 500px; max-width: 700px">
+    <q-card class="export-dialog" style="width: 90%; max-width: 350px; max-height: 80vh">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{ $t('exportDialog.title') || '导出版权信息' }}</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
-      <q-card-section>
+      <q-card-section style="max-height: 60vh; overflow-y: auto;">
         <div class="q-gutter-md">
           <!-- 作者名称 -->
           <q-input
@@ -16,17 +16,17 @@
             outlined
             dense
             :rules="[validateAuthorField]"
-            :hint="$t('exportDialog.authorNameHint') || '留空时显示为&quot;未提供&quot;'"
+            hint="留空时显示为未提供"
           />
 
           <!-- 联系方式文本 -->
           <q-input
             v-model="form.authorContact"
-            :label="$t('exportDialog.authorContact') || '联系方式'"
+            :label="$t('exportDialog.authorContact') || '联系方式 (可选)'"
             outlined
             dense
             type="textarea"
-            rows="3"
+            rows="2"
             :rules="[validateAuthorField]"
             :hint="$t('exportDialog.contactHint') || '可填写邮箱、社交媒体等联系方式'"
           />
@@ -49,7 +49,7 @@
             
             <!-- 图片预览 -->
             <div v-if="imagePreview" class="q-mt-sm">
-              <img :src="imagePreview" alt="Contact Image" style="max-width: 200px; max-height: 150px; border-radius: 4px;" />
+              <img :src="imagePreview" alt="Contact Image" style="max-width: 100%; max-height: 80px; border-radius: 4px;" />
             </div>
           </div>
 
@@ -64,6 +64,7 @@
                 :color="selectedHistoryAuthor === author ? 'primary' : undefined"
                 :text-color="selectedHistoryAuthor === author ? 'white' : undefined"
                 clickable
+                size="sm"
                 @click="selectHistoryAuthor(author)"
               >
                 {{ author }}

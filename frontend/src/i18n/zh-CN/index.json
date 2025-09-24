@@ -61,7 +61,7 @@
     "title": "导出版权信息",
     "authorName": "创作者名称 (可选)",
     "authorNameHint": "留空时显示为\"未提供\"",
-    "authorContact": "联系方式",
+    "authorContact": "联系方式 (可选)",
     "contactHint": "可填写邮箱、社交媒体等联系方式",
     "contactImage": "联系方式图片 (可选)",
     "imageHint": "可上传二维码等联系图片",
