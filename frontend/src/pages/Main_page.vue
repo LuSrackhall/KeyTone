@@ -52,7 +52,7 @@
           :class="['w-[216px]', 'select-component-label-show']"
           v-model="setting_store.mainHome.selectedKeyTonePkg"
           :options="main_store.keyTonePkgOptions"
-          :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+          :option-label="main_store.getAlbumDisplayLabel"
           :label="$t('mainHome.selectedKeySoundAlbum')"
           :virtual-scroll-slice-size="999999"
           outlined

@@ -147,7 +147,7 @@
             <q-select
               v-model="setting_store.mainHome.selectedKeyTonePkg"
               :options="main_store.keyTonePkgOptions"
-              :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+              :option-label="main_store.getAlbumDisplayLabel"
               :label="$t('keyToneAlbumPage.label')"
               :virtual-scroll-slice-size="999999"
               outlined
@@ -516,6 +516,9 @@ const handleCopyrightConfirm = async (copyrightData: any) => {
     if (!saved) {
       throw new Error('保存著作权信息失败');
     }
+    
+    // Refresh album list to show updated copyright info
+    main_store.GetKeyToneAlbumList();
     
     // Proceed with export
     await performActualExport(pendingExportData.value.albumName, pendingExportData.value.blob);
