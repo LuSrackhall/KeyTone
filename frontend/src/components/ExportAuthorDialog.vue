@@ -16,7 +16,7 @@
             outlined
             dense
             :rules="[validateAuthorField]"
-            :hint="$t('exportDialog.authorNameHint') || '留空时显示为\"未提供\"'"
+            :hint="$t('exportDialog.authorNameHint') || '留空时显示为&quot;未提供&quot;'"
           />
 
           <!-- 联系方式文本 -->
