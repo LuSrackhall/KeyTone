@@ -70,6 +70,8 @@
     "textContactPlaceholder": "請輸入聯絡方式，如電子郵件、社交媒體等",
     "imageContact": "聯絡方式（圖片）",
     "removeImage": "移除圖片",
+    "uploading": "上載中...",
+    "uploaded": "已上載",
     "cancel": "取消",
     "skipAndExport": "放棄署名並匯出",
     "confirmAndExport": "確認署名並匯出",

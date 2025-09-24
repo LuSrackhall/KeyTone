@@ -82,6 +82,7 @@
             outlined
             dense
             accept="image/*"
+            :loading="isUploading"
             @update:model-value="handleImageSelect"
           >
             <template v-slot:prepend>
@@ -97,17 +98,26 @@
               style="max-width: 200px; max-height: 150px"
               fit="contain"
             />
-            <q-btn
-              flat
-              dense
-              icon="close"
-              color="negative"
-              size="sm"
-              class="q-mt-xs"
-              @click="removeImage"
-            >
-              {{ $t('copyrightDialog.removeImage') }}
-            </q-btn>
+            <div class="flex items-center q-mt-xs">
+              <q-btn
+                flat
+                dense
+                icon="close"
+                color="negative"
+                size="sm"
+                @click="removeImage"
+              >
+                {{ $t('copyrightDialog.removeImage') }}
+              </q-btn>
+              <div v-if="isUploading" class="q-ml-sm">
+                <q-spinner color="primary" size="sm" />
+                <span class="q-ml-xs text-caption">{{ $t('copyrightDialog.uploading') }}</span>
+              </div>
+              <div v-else-if="imageContactPath" class="q-ml-sm text-positive text-caption">
+                <q-icon name="check_circle" size="sm" />
+                {{ $t('copyrightDialog.uploaded') }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -170,6 +180,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { UploadCopyrightImage } from 'src/boot/query/keytonePkg-query';
 
 interface CopyrightData {
   authorName: string;
@@ -214,6 +225,8 @@ const protectionCode = ref('');
 const textContact = ref('');
 const imageContactFile = ref<File | null>(null);
 const imageContactPreview = ref<string | null>(null);
+const imageContactPath = ref<string>(''); // Store the uploaded image path
+const isUploading = ref(false);
 
 // Form validation
 const authorNameError = ref(false);
@@ -233,12 +246,33 @@ const validateForm = () => {
   protectionCodeError.value = protectionCode.value.length < 6;
 };
 
-const handleImageSelect = (file: File | null) => {
+const handleImageSelect = async (file: File | null) => {
   if (file) {
+    // Set preview immediately
     const url = URL.createObjectURL(file);
     imageContactPreview.value = url;
+    
+    // Upload the file
+    isUploading.value = true;
+    try {
+      const result = await UploadCopyrightImage(file);
+      if (result.success) {
+        imageContactPath.value = result.path;
+        console.log('Image uploaded successfully:', result.path);
+      } else {
+        console.error('Image upload failed:', result.error);
+        // Still keep the preview but clear the path
+        imageContactPath.value = '';
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      imageContactPath.value = '';
+    } finally {
+      isUploading.value = false;
+    }
   } else {
     imageContactPreview.value = null;
+    imageContactPath.value = '';
   }
 };
 
@@ -248,6 +282,7 @@ const removeImage = () => {
   }
   imageContactFile.value = null;
   imageContactPreview.value = null;
+  imageContactPath.value = '';
 };
 
 const resetForm = () => {
@@ -291,10 +326,8 @@ const confirmAndExport = () => {
     protectionCode: protectionCode.value,
   };
 
-  if (imageContactFile.value) {
-    // TODO: Handle image file upload similar to audio files
-    // For now, we'll pass the file name
-    data.imageContactPath = imageContactFile.value.name;
+  if (imageContactPath.value) {
+    data.imageContactPath = imageContactPath.value;
   }
 
   resetForm();

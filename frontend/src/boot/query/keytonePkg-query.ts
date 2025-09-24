@@ -673,3 +673,43 @@ export async function ImportAlbumAsNew(file: File, newAlbumId: string): Promise<
       return false;
     });
 }
+export async function UploadCopyrightImage(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return await api
+    .post('/keytone_pkg/upload_copyright_image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->UploadCopyrightImage 请求已成功执行并返回->', req.data);
+      if (req.data.message === 'ok') {
+        return {
+          success: true,
+          fileName: req.data.fileName,
+          path: req.data.path,
+        };
+      } else {
+        return { success: false, error: req.data.message };
+      }
+    })
+    .catch((error) => {
+      console.group('UploadCopyrightImage 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return { success: false, error: error.message };
+    });
+}

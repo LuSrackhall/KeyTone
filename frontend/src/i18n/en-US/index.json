@@ -70,6 +70,8 @@
     "textContactPlaceholder": "Enter contact info, e.g., email, social media",
     "imageContact": "Contact Information (Image)",
     "removeImage": "Remove Image",
+    "uploading": "Uploading...",
+    "uploaded": "Uploaded",
     "cancel": "Cancel",
     "skipAndExport": "Skip Attribution and Export",
     "confirmAndExport": "Confirm Attribution and Export",

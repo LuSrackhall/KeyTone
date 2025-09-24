@@ -674,6 +674,103 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 上传著作权联系方式图片
+	keytonePkgRouters.POST("/upload_copyright_image", func(ctx *gin.Context) {
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 图片上传失败, 传输问题:" + err.Error(),
+			})
+			return
+		}
+
+		// 验证文件类型是否为图片
+		ext := strings.ToLower(filepath.Ext(file.Filename))
+		validExts := []string{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
+		isValidImage := false
+		for _, validExt := range validExts {
+			if ext == validExt {
+				isValidImage = true
+				break
+			}
+		}
+		if !isValidImage {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 仅支持图片格式: jpg, jpeg, png, gif, bmp, webp",
+			})
+			return
+		}
+
+		// 打开上传的文件
+		src, err := file.Open()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 无法打开上传的文件:" + err.Error(),
+			})
+			return
+		}
+		defer src.Close()
+
+		// 计算文件的SHA256哈希值
+		hash := crypto.SHA256.New()
+		if _, err := io.Copy(hash, src); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 计算文件哈希值失败:" + err.Error(),
+			})
+			return
+		}
+		hashSum := hash.Sum(nil)
+		hashString := fmt.Sprintf("%x", hashSum)
+
+		// 使用哈希值+扩展名作为文件名
+		newFileName := hashString + ext
+
+		// 获取音频包UUID
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包UUID失败",
+			})
+			return
+		}
+
+		// 创建copyrightImages目录（如果不存在）
+		copyrightDir := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "copyrightImages")
+		if err := os.MkdirAll(copyrightDir, 0755); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 创建著作权图片目录失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 保存文件
+		destPath := filepath.Join(copyrightDir, newFileName)
+		
+		// 检查文件是否已存在，如果存在则不重复保存
+		if _, err := os.Stat(destPath); err == nil {
+			ctx.JSON(200, gin.H{
+				"message":  "ok",
+				"fileName": newFileName,
+				"path":     "copyrightImages/" + newFileName,
+			})
+			return
+		}
+
+		if err := ctx.SaveUploadedFile(file, destPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 图片保存失败:" + err.Error(),
+			})
+			return
+		}
+
+		// 返回成功响应
+		ctx.JSON(200, gin.H{
+			"message":  "ok",
+			"fileName": newFileName,
+			"path":     "copyrightImages/" + newFileName,
+		})
+	})
+
 	keytonePkgRouters.GET("/get", func(ctx *gin.Context) {
 
 		// key := ctx.Query("key")

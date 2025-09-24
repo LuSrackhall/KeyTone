@@ -293,6 +293,7 @@ import {
   GetAlbumMeta,
   ConfigGet,
   ConfigSet,
+  UploadCopyrightImage,
   type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
 
