@@ -58,8 +58,8 @@
     }
   },
   "copyrightDialog": {
-    "title": "Album Attribution Information",
-    "subtitle": "Add attribution information to your album for proper recognition",
+    "title": "Album Copyright Information",
+    "subtitle": "Add copyright information to your album for proper recognition",
     "authorName": "Author Name",
     "authorNamePlaceholder": "Enter author name",
     "authorNameRequired": "Author name is required",

@@ -27,19 +27,11 @@
     :style="{ '--i18n_fontSize': i18n_fontSize }"
   >
     <q-card class="copyright-dialog-card">
-      <!-- Fixed Header with Glass Background (overlays content) -->
-      <div class="copyright-dialog-header">
-        <q-card-section class="row items-center q-pb-none text-h6 q-py-sm">
-          {{ $t('copyrightDialog.title') }}
-        </q-card-section>
-        
-        <q-card-section class="text-subtitle2 text-grey-7 q-pt-none q-pb-sm">
-          {{ $t('copyrightDialog.subtitle') }}
-        </q-card-section>
-      </div>
-
-      <!-- Full Content Area (includes all content with padding for fixed header/footer) -->
+      <!-- Scrollable Content (everything scrolls, including header space) -->
       <q-card-section class="copyright-dialog-content">
+        <!-- Spacer for fixed header -->
+        <div class="header-spacer"></div>
+        
         <!-- Author Name (Required) -->
         <q-input
           v-model="authorName"
@@ -137,15 +129,25 @@
         >
           {{ $t('copyrightDialog.skipWarning') }}
         </q-banner>
+
+        <!-- Spacer for fixed footer -->
+        <div class="footer-spacer"></div>
       </q-card-section>
+
+      <!-- Fixed Header with Glass Background (overlays content) -->
+      <div class="copyright-dialog-header">
+        <div class="text-h6 text-weight-medium q-pa-sm">{{ $t('copyrightDialog.title') }}</div>
+        <div class="text-caption text-grey-6 q-px-sm q-pb-sm">{{ $t('copyrightDialog.subtitle') }}</div>
+      </div>
 
       <!-- Fixed Footer with Glass Background (overlays content) -->
       <div class="copyright-dialog-footer">
-        <q-card-actions align="right" class="q-pa-md">
+        <q-card-actions align="right" class="q-pa-sm">
           <q-btn
             flat
             :label="$t('copyrightDialog.cancel')"
             color="grey"
+            size="sm"
             @click="cancel"
           />
           
@@ -154,12 +156,14 @@
             flat
             :label="$t('copyrightDialog.skipAndExport')"
             color="orange"
+            size="sm"
             @click="skipAndExport"
           />
           
           <q-btn
             :label="$t('copyrightDialog.confirmAndExport')"
             color="primary"
+            size="sm"
             :disable="!isFormValid"
             @click="confirmAndExport"
           />
@@ -366,25 +370,11 @@ watch(showDialog, (newValue) => {
   overflow: hidden;
 }
 
-/* Fixed Header with Glass Background that overlays content */
-.copyright-dialog-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-/* Content area with proper padding for fixed header and footer */
+/* Content area - scrolls normally */
 .copyright-dialog-content {
   max-height: 80vh;
   overflow-y: auto;
-  padding-top: 100px; /* Space for fixed header */
-  padding-bottom: 80px; /* Space for fixed footer */
+  padding: 0 16px; /* Only horizontal padding */
   /* Custom scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -407,17 +397,41 @@ watch(showDialog, (newValue) => {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* Fixed Footer with Glass Background that overlays content */
+/* Spacers to create space for fixed elements */
+.header-spacer {
+  height: 60px; /* Minimal space for compact header */
+}
+
+.footer-spacer {
+  height: 60px; /* Space for footer buttons */
+}
+
+/* Fixed Header with Glass Background - positioned relative to dialog */
+.copyright-dialog-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Fixed Footer with Glass Background - positioned relative to dialog */
 .copyright-dialog-footer {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Compact spacing for inputs */
@@ -433,9 +447,12 @@ watch(showDialog, (newValue) => {
     max-height: 85vh;
   }
   
-  .copyright-dialog-content {
-    padding-top: 110px; /* Slightly more space on mobile */
-    padding-bottom: 90px;
+  .header-spacer {
+    height: 70px; /* Slightly more space on mobile */
+  }
+  
+  .footer-spacer {
+    height: 70px;
   }
 }
 </style>
