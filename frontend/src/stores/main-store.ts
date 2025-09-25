@@ -40,60 +40,6 @@ export const useMainStore = defineStore('main', () => {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const keyTonePkgOptions = ref([]);
   const keyTonePkgOptionsName = ref(new Map());
-  const keyTonePkgOptionsCopyright = ref(new Map()); // Store copyright info for each album
-
-  // Helper function to format copyright information for display
-  const formatCopyrightInfo = (copyrightData: any): string => {
-    if (!copyrightData || typeof copyrightData !== 'object') {
-      return '';
-    }
-
-    const authors: Array<{name: string, lastExportTime: number}> = [];
-    
-    // Process each copyright entry
-    Object.values(copyrightData).forEach((entry: any) => {
-      if (entry && entry.Author && entry.ExportTime && Array.isArray(entry.ExportTime)) {
-        const lastExportTime = Math.max(...entry.ExportTime);
-        authors.push({
-          name: entry.Author,
-          lastExportTime: lastExportTime
-        });
-      }
-    });
-
-    if (authors.length === 0) {
-      return '';
-    }
-
-    // Sort by last export time (newest first)
-    authors.sort((a, b) => b.lastExportTime - a.lastExportTime);
-
-    // Get first author (most recent) and optionally show additional authors count
-    const firstAuthor = authors[0].name;
-    if (authors.length === 1) {
-      return ` - ${firstAuthor}`;
-    } else {
-      return ` - ${firstAuthor} +${authors.length - 1}`;
-    }
-  };
-
-  // Get copyright information for all albums
-  const loadAlbumCopyrightInfo = async () => {
-    keyTonePkgOptionsCopyright.value.clear();
-    
-    for (const albumPath of keyTonePkgOptions.value) {
-      try {
-        // Load the album config to get copyright data
-        await LoadConfig(albumPath, false);
-        const copyrightData = await ConfigGet('copyright');
-        const formattedInfo = formatCopyrightInfo(copyrightData);
-        keyTonePkgOptionsCopyright.value.set(albumPath, formattedInfo);
-      } catch (error) {
-        console.error(`Failed to load copyright info for ${albumPath}:`, error);
-        keyTonePkgOptionsCopyright.value.set(albumPath, '');
-      }
-    }
-  };
 
   /**
    * 获取键音包列表
@@ -101,37 +47,22 @@ export const useMainStore = defineStore('main', () => {
    */
   function GetKeyToneAlbumList() {
     // 获取键音包列表的初始化逻辑, 没必要在main_store中进行, 而是应该在其所相关的对应逻辑中进行(比如在App.vue或是boot中)。
-    GetAudioPackageList().then(async (res) => {
+    GetAudioPackageList().then((res) => {
       if (res.list) {
         keyTonePkgOptions.value = res.list;
         console.log('keyTonePkgOptions', keyTonePkgOptions.value);
         keyTonePkgOptionsName.value.clear();
-        
-        // Load album names
-        for (const item of keyTonePkgOptions.value) {
-          try {
-            const nameRes = await GetAudioPackageName(item);
-            keyTonePkgOptionsName.value.set(item, nameRes.name);
-          } catch (error) {
-            console.error(`Failed to get name for ${item}:`, error);
-            keyTonePkgOptionsName.value.set(item, 'Unknown Album');
-          }
-        }
-        
-        // Load copyright information
-        await loadAlbumCopyrightInfo();
+        keyTonePkgOptions.value.forEach((item: any) => {
+          GetAudioPackageName(item).then((res) => {
+            // console.log('res', res);
+            keyTonePkgOptionsName.value.set(item, res.name);
+          });
+        });
       } else {
         keyTonePkgOptions.value = [];
       }
     });
   }
-
-  // Function to generate the display label for album selector
-  const getAlbumDisplayLabel = (albumPath: string): string => {
-    const albumName = keyTonePkgOptionsName.value.get(albumPath) || 'Unknown Album';
-    const copyrightInfo = keyTonePkgOptionsCopyright.value.get(albumPath) || '';
-    return albumName + copyrightInfo;
-  };
 
   const setting_store = useSettingStore();
   const q = useQuasar();
@@ -193,11 +124,7 @@ export const useMainStore = defineStore('main', () => {
     volumeNormalReduceScope,
     keyTonePkgOptions,
     keyTonePkgOptionsName,
-    keyTonePkgOptionsCopyright,
     GetKeyToneAlbumList,
     LoadSelectedKeyTonePkg,
-    getAlbumDisplayLabel,
-    formatCopyrightInfo,
-    loadAlbumCopyrightInfo,
   };
 });
