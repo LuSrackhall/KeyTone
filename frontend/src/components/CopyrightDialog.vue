@@ -269,7 +269,7 @@ const authorName = ref('');
 const protectionCode = ref('');
 const textContact = ref('');
 const imageContactFile = ref<File | null>(null);
-const imageContactPreview = ref<string | null>(null);
+const imageContactPreview = ref<string | undefined>(undefined);
 const imageContactPath = ref<string>(''); // Store the uploaded image path
 const isUploading = ref(false);
 
@@ -303,11 +303,11 @@ const handleImageSelect = async (file: File | null) => {
     isUploading.value = true;
     try {
       const result = await UploadCopyrightImage(file);
-      if (result.success) {
+      if (result.success && 'path' in result) {
         imageContactPath.value = result.path;
         console.log('Image uploaded successfully:', result.path);
       } else {
-        console.error('Image upload failed:', result.error);
+        console.error('Image upload failed:', 'error' in result ? result.error : 'Unknown error');
         // Still keep the preview but clear the path
         imageContactPath.value = '';
       }
@@ -318,7 +318,7 @@ const handleImageSelect = async (file: File | null) => {
       isUploading.value = false;
     }
   } else {
-    imageContactPreview.value = null;
+    imageContactPreview.value = undefined;
     imageContactPath.value = '';
   }
 };
@@ -328,7 +328,7 @@ const removeImage = () => {
     URL.revokeObjectURL(imageContactPreview.value);
   }
   imageContactFile.value = null;
-  imageContactPreview.value = null;
+  imageContactPreview.value = undefined;
   imageContactPath.value = '';
 };
 
@@ -391,7 +391,7 @@ watch(showDialog, (newValue) => {
     // Clean up any blob URLs when dialog is closed
     if (imageContactPreview.value) {
       URL.revokeObjectURL(imageContactPreview.value);
-      imageContactPreview.value = null;
+      imageContactPreview.value = undefined;
     }
   }
 });
