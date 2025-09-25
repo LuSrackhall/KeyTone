@@ -96,33 +96,76 @@
               </template>
             </q-file>
             
-            <!-- Image Preview -->
-            <div v-if="imageContactPreview" class="q-mt-sm">
-              <q-img
-                :src="imageContactPreview"
-                class="rounded-borders"
-                style="max-width: 200px; max-height: 150px"
-                fit="contain"
-              />
-              <div class="flex items-center q-mt-xs">
-                <q-btn
-                  flat
-                  dense
-                  icon="close"
-                  color="negative"
-                  size="sm"
-                  @click="removeImage"
-                >
-                  {{ $t('copyrightDialog.removeImage') }}
-                </q-btn>
-                <div v-if="isUploading" class="q-ml-sm">
-                  <q-spinner color="primary" size="sm" />
-                  <span class="q-ml-xs text-caption">{{ $t('copyrightDialog.uploading') }}</span>
-                </div>
-                <div v-else-if="imageContactPath" class="q-ml-sm text-positive">
-                  <q-icon name="check_circle" size="sm" />
-                </div>
-              </div>
+            <!-- Enhanced Image Preview -->
+            <div v-if="imageContactPreview" class="image-preview-container q-mt-sm">
+              <q-card class="image-preview-card">
+                <q-card-section class="q-pa-sm">
+                  <div class="image-preview-wrapper">
+                    <q-img
+                      :src="imageContactPreview"
+                      class="rounded-borders image-preview"
+                      fit="contain"
+                      loading="lazy"
+                    >
+                      <template v-slot:loading>
+                        <q-inner-loading showing>
+                          <q-spinner-gears size="50px" color="primary" />
+                        </q-inner-loading>
+                      </template>
+                      <template v-slot:error>
+                        <div class="absolute-full flex flex-center bg-negative text-white">
+                          <q-icon name="broken_image" size="24px" />
+                        </div>
+                      </template>
+                    </q-img>
+                    
+                    <!-- Status Overlay -->
+                    <div class="image-status-overlay">
+                      <div v-if="isUploading" class="status-indicator uploading">
+                        <q-spinner color="white" size="16px" />
+                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.uploading') }}</span>
+                      </div>
+                      <div v-else-if="imageContactPath" class="status-indicator success">
+                        <q-icon name="check_circle" color="white" size="16px" />
+                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.loaded') }}</span>
+                      </div>
+                      <div v-else class="status-indicator error">
+                        <q-icon name="error" color="white" size="16px" />
+                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.uploadFailed') }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </q-card-section>
+                
+                <!-- Image Actions -->
+                <q-card-actions align="between" class="q-pa-sm">
+                  <div class="text-caption text-grey-6">
+                    {{ imageContactFile?.name }}
+                  </div>
+                  <div>
+                    <q-btn
+                      flat
+                      dense
+                      icon="visibility"
+                      color="blue"
+                      size="sm"
+                      @click="previewImage"
+                    >
+                      <q-tooltip>{{ $t('copyrightDialog.previewImage') }}</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      flat
+                      dense
+                      icon="close"
+                      color="negative"
+                      size="sm"
+                      @click="removeImage"
+                    >
+                      <q-tooltip>{{ $t('copyrightDialog.removeImage') }}</q-tooltip>
+                    </q-btn>
+                  </div>
+                </q-card-actions>
+              </q-card>
             </div>
           </div>
 
@@ -166,6 +209,28 @@
           </q-card-actions>
         </div>
       </q-card-section>
+    </q-card>
+  </q-dialog>
+
+  <!-- Full-size Image Preview Dialog -->
+  <q-dialog v-model="showImagePreview" @hide="showImagePreview = false">
+    <q-card class="image-preview-fullscreen">
+      <q-card-section class="q-pa-none">
+        <q-img
+          :src="imageContactPreview"
+          fit="contain"
+          class="fullscreen-image"
+        >
+          <template v-slot:loading>
+            <q-inner-loading showing>
+              <q-spinner-gears size="50px" color="primary" />
+            </q-inner-loading>
+          </template>
+        </q-img>
+      </q-card-section>
+      <q-card-actions align="right" class="bg-black/50 text-white q-pa-sm">
+        <q-btn flat icon="close" color="white" @click="showImagePreview = false" />
+      </q-card-actions>
     </q-card>
   </q-dialog>
 
@@ -230,6 +295,7 @@ const showDialog = computed({
 
 const showSkipConfirmation = ref(false);
 const showSkipWarning = ref(false);
+const showImagePreview = ref(false);
 
 // Form data
 const authorName = ref('');
@@ -295,6 +361,10 @@ const removeImage = () => {
   imageContactFile.value = null;
   imageContactPreview.value = null;
   imageContactPath.value = '';
+};
+
+const previewImage = () => {
+  showImagePreview.value = true;
 };
 
 const resetForm = () => {
@@ -372,6 +442,8 @@ watch(showDialog, (newValue) => {
   max-height: 80vh;
   overflow-y: auto;
   padding: 0; /* No padding, let content flow naturally */
+  display: flex;
+  flex-direction: column;
   /* Custom scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -409,6 +481,7 @@ watch(showDialog, (newValue) => {
 /* Content wrapper for proper spacing */
 .content-wrapper {
   padding: 16px;
+  flex: 1; /* Allow content to expand and push footer to bottom */
 }
 
 /* Sticky Footer with Glass Background - 70% transparency */
@@ -421,6 +494,72 @@ watch(showDialog, (newValue) => {
   -webkit-backdrop-filter: blur(15px);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: auto; /* Push footer to bottom */
+}
+
+/* Enhanced Image Preview Styles */
+.image-preview-container {
+  width: 100%;
+}
+
+.image-preview-card {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.image-status-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.status-indicator.uploading {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.status-indicator.success {
+  background: rgba(76, 175, 80, 0.9);
+}
+
+.status-indicator.error {
+  background: rgba(244, 67, 54, 0.9);
+}
+
+/* Full-screen Image Preview */
+.image-preview-fullscreen {
+  width: 90vw;
+  height: 90vh;
+  max-width: none;
+  max-height: none;
+}
+
+.fullscreen-image {
+  width: 100%;
+  height: calc(90vh - 60px); /* Account for action bar */
 }
 
 /* Compact spacing for inputs */
