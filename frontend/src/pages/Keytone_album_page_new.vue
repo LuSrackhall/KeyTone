@@ -265,7 +265,7 @@
   <CopyrightDialog
     v-model="showCopyrightDialog"
     :has-existing-copyright="hasExistingCopyright"
-    :i18n-font-size="setting_store.theme.i18nFontSize"
+    :i18n-font-size="i18n_fontSize"
     @confirm="handleCopyrightConfirm"
     @skip="handleCopyrightSkip"
     @cancel="handleCopyrightCancel"
