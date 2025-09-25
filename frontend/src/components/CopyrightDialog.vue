@@ -20,12 +20,7 @@
 -->
 
 <template>
-  <q-dialog
-    v-model="showDialog"
-    backdrop-filter="invert(70%)"
-    persistent
-    :style="{ '--i18n_fontSize': i18n_fontSize }"
-  >
+  <q-dialog v-model="showDialog" backdrop-filter="invert(70%)" persistent :style="{ '--i18n_fontSize': i18n_fontSize }">
     <q-card class="copyright-dialog-card">
       <!-- Single scrollable content area with sticky elements -->
       <div class="copyright-dialog-content">
@@ -34,7 +29,7 @@
           <div class="text-h6 text-weight-medium q-pa-sm">{{ $t('copyrightDialog.title') }}</div>
           <div class="text-caption text-grey-6 q-px-sm q-pb-sm">{{ $t('copyrightDialog.subtitle') }}</div>
         </div>
-        
+
         <!-- Content -->
         <div class="content-wrapper">
           <!-- Author Name (Required) -->
@@ -95,7 +90,7 @@
                 <q-icon name="attach_file" />
               </template>
             </q-file>
-            
+
             <!-- Enhanced Image Preview -->
             <div v-if="imageContactPreview" class="image-preview-container q-mt-sm">
               <q-card class="image-preview-card">
@@ -118,7 +113,7 @@
                         </div>
                       </template>
                     </q-img>
-                    
+
                     <!-- Status Overlay -->
                     <div class="image-status-overlay">
                       <div v-if="isUploading" class="status-indicator uploading">
@@ -136,31 +131,17 @@
                     </div>
                   </div>
                 </q-card-section>
-                
+
                 <!-- Image Actions -->
                 <q-card-actions align="between" class="q-pa-sm">
                   <div class="text-caption text-grey-6">
                     {{ imageContactFile?.name }}
                   </div>
                   <div>
-                    <q-btn
-                      flat
-                      dense
-                      icon="visibility"
-                      color="blue"
-                      size="sm"
-                      @click="previewImage"
-                    >
+                    <q-btn flat dense icon="visibility" color="blue" size="sm" @click="previewImage">
                       <q-tooltip>{{ $t('copyrightDialog.previewImage') }}</q-tooltip>
                     </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      icon="close"
-                      color="negative"
-                      size="sm"
-                      @click="removeImage"
-                    >
+                    <q-btn flat dense icon="close" color="negative" size="sm" @click="removeImage">
                       <q-tooltip>{{ $t('copyrightDialog.removeImage') }}</q-tooltip>
                     </q-btn>
                   </div>
@@ -170,11 +151,7 @@
           </div>
 
           <!-- Warning for skip option -->
-          <q-banner
-            v-if="hasExistingCopyright && showSkipWarning"
-            class="bg-orange-1 text-orange-8"
-            icon="warning"
-          >
+          <q-banner v-if="hasExistingCopyright && showSkipWarning" class="bg-orange-1 text-orange-8" icon="warning">
             {{ $t('copyrightDialog.skipWarning') }}
           </q-banner>
         </div>
@@ -182,14 +159,8 @@
         <!-- Sticky Footer with Glass Background -->
         <div class="copyright-dialog-footer">
           <q-card-actions align="right" class="q-pa-sm">
-            <q-btn
-              flat
-              :label="$t('copyrightDialog.cancel')"
-              color="grey"
-              size="sm"
-              @click="cancel"
-            />
-            
+            <q-btn flat :label="$t('copyrightDialog.cancel')" color="grey" size="sm" @click="cancel" />
+
             <q-btn
               v-if="!hasExistingCopyright"
               flat
@@ -198,7 +169,7 @@
               size="sm"
               @click="skipAndExport"
             />
-            
+
             <q-btn
               :label="$t('copyrightDialog.confirmAndExport')"
               color="primary"
@@ -216,11 +187,7 @@
   <q-dialog v-model="showImagePreview" @hide="showImagePreview = false">
     <q-card class="image-preview-fullscreen">
       <q-card-section class="q-pa-none">
-        <q-img
-          :src="imageContactPreview"
-          fit="contain"
-          class="fullscreen-image"
-        >
+        <q-img :src="imageContactPreview" fit="contain" class="fullscreen-image">
           <template v-slot:loading>
             <q-inner-loading showing>
               <q-spinner-gears size="50px" color="primary" />
@@ -313,10 +280,12 @@ const protectionCodeError = ref(false);
 const i18n_fontSize = computed(() => props.i18nFontSize);
 
 const isFormValid = computed(() => {
-  return authorName.value.trim().length > 0 && 
-         protectionCode.value.length >= 6 && 
-         !authorNameError.value && 
-         !protectionCodeError.value;
+  return (
+    authorName.value.trim().length > 0 &&
+    protectionCode.value.length >= 6 &&
+    !authorNameError.value &&
+    !protectionCodeError.value
+  );
 });
 
 const validateForm = () => {
@@ -329,7 +298,7 @@ const handleImageSelect = async (file: File | null) => {
     // Set preview immediately
     const url = URL.createObjectURL(file);
     imageContactPreview.value = url;
-    
+
     // Upload the file
     isUploading.value = true;
     try {
@@ -432,7 +401,7 @@ watch(showDialog, (newValue) => {
 .copyright-dialog-card {
   width: 90vw;
   max-width: 500px;
-  height: 80vh; /* Set explicit height */
+  height: 78vh; /* Set explicit height */
   position: relative;
   overflow: hidden;
   display: flex;
