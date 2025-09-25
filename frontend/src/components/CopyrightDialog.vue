@@ -28,7 +28,7 @@
   >
     <q-card class="copyright-dialog-card">
       <!-- Single scrollable content area with sticky elements -->
-      <q-card-section class="copyright-dialog-content">
+      <div class="copyright-dialog-content">
         <!-- Sticky Header with Glass Background -->
         <div class="copyright-dialog-header">
           <div class="text-h6 text-weight-medium q-pa-sm">{{ $t('copyrightDialog.title') }}</div>
@@ -208,7 +208,7 @@
             />
           </q-card-actions>
         </div>
-      </q-card-section>
+      </div>
     </q-card>
   </q-dialog>
 
@@ -432,14 +432,16 @@ watch(showDialog, (newValue) => {
 .copyright-dialog-card {
   width: 90vw;
   max-width: 500px;
-  max-height: 80vh;
+  height: 80vh; /* Set explicit height */
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Content area - scrolls normally with sticky elements */
 .copyright-dialog-content {
-  max-height: 80vh;
+  height: 80vh; /* Set explicit height instead of max-height */
   overflow-y: auto;
   padding: 0; /* No padding, let content flow naturally */
   display: flex;
@@ -476,6 +478,7 @@ watch(showDialog, (newValue) => {
   -webkit-backdrop-filter: blur(15px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 /* Content wrapper for proper spacing */
@@ -494,6 +497,7 @@ watch(showDialog, (newValue) => {
   -webkit-backdrop-filter: blur(15px);
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* Prevent footer from shrinking */
   margin-top: auto; /* Push footer to bottom */
 }
 
