@@ -58,12 +58,12 @@
     }
   },
   "copyrightDialog": {
-    "title": "Album Copyright Information",
+    "title": "Album Attribution Information",
     "subtitle": "Add attribution information to your album for proper recognition",
     "authorName": "Author Name",
     "authorNamePlaceholder": "Enter author name",
     "authorNameRequired": "Author name is required",
-    "protectionCode": "Copyright Protection Code",
+    "protectionCode": "Attribution Protection Code",
     "protectionCodePlaceholder": "Enter protection code (at least 6 characters)",
     "protectionCodeError": "Protection code must be at least 6 characters",
     "textContact": "Contact Information (Text)",
