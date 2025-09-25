@@ -26,7 +26,7 @@
     persistent
     :style="{ '--i18n_fontSize': i18n_fontSize }"
   >
-    <q-card class="min-w-[600px] max-w-[90vw]">
+    <q-card class="copyright-dialog-card">
       <q-card-section class="row items-center q-pb-none text-h6">
         {{ $t('copyrightDialog.title') }}
       </q-card-section>
@@ -42,6 +42,7 @@
           :label="$t('copyrightDialog.authorName')"
           :placeholder="$t('copyrightDialog.authorNamePlaceholder')"
           outlined
+          stack-label
           dense
           :error="authorNameError"
           :error-message="$t('copyrightDialog.authorNameRequired')"
@@ -54,6 +55,7 @@
           :label="$t('copyrightDialog.protectionCode')"
           :placeholder="$t('copyrightDialog.protectionCodePlaceholder')"
           outlined
+          stack-label
           dense
           type="password"
           class="q-mt-md"
@@ -68,6 +70,7 @@
           :label="$t('copyrightDialog.textContact')"
           :placeholder="$t('copyrightDialog.textContactPlaceholder')"
           outlined
+          stack-label
           dense
           type="textarea"
           rows="3"
@@ -80,6 +83,7 @@
             v-model="imageContactFile"
             :label="$t('copyrightDialog.imageContact')"
             outlined
+            stack-label
             dense
             accept="image/*"
             :loading="isUploading"
@@ -345,3 +349,20 @@ watch(showDialog, (newValue) => {
   }
 });
 </script>
+
+<style scoped>
+.copyright-dialog-card {
+  width: 90vw;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Ensure inputs work properly on smaller screens */
+@media (max-width: 600px) {
+  .copyright-dialog-card {
+    width: 95vw;
+    max-width: none;
+  }
+}
+</style>
