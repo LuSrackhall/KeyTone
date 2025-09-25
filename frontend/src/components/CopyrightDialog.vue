@@ -27,137 +27,146 @@
     :style="{ '--i18n_fontSize': i18n_fontSize }"
   >
     <q-card class="copyright-dialog-card">
-      <q-card-section class="row items-center q-pb-none text-h6">
-        {{ $t('copyrightDialog.title') }}
-      </q-card-section>
-      
-      <q-card-section class="text-subtitle2 text-grey-7">
-        {{ $t('copyrightDialog.subtitle') }}
-      </q-card-section>
+      <!-- Fixed Header with Glass Background -->
+      <div class="copyright-dialog-header">
+        <q-card-section class="row items-center q-pb-none text-h6">
+          {{ $t('copyrightDialog.title') }}
+        </q-card-section>
+        
+        <q-card-section class="text-subtitle2 text-grey-7 q-pt-sm q-pb-md">
+          {{ $t('copyrightDialog.subtitle') }}
+        </q-card-section>
+      </div>
 
-      <q-card-section>
-        <!-- Author Name (Required) -->
-        <q-input
-          v-model="authorName"
-          :label="$t('copyrightDialog.authorName')"
-          :placeholder="$t('copyrightDialog.authorNamePlaceholder')"
-          outlined
-          stack-label
-          dense
-          :error="authorNameError"
-          :error-message="$t('copyrightDialog.authorNameRequired')"
-          @update:model-value="validateForm"
-        />
-
-        <!-- Copyright Protection Code (Required) -->
-        <q-input
-          v-model="protectionCode"
-          :label="$t('copyrightDialog.protectionCode')"
-          :placeholder="$t('copyrightDialog.protectionCodePlaceholder')"
-          outlined
-          stack-label
-          dense
-          type="password"
-          class="q-mt-md"
-          :error="protectionCodeError"
-          :error-message="$t('copyrightDialog.protectionCodeError')"
-          @update:model-value="validateForm"
-        />
-
-        <!-- Text Contact Information (Optional) -->
-        <q-input
-          v-model="textContact"
-          :label="$t('copyrightDialog.textContact')"
-          :placeholder="$t('copyrightDialog.textContactPlaceholder')"
-          outlined
-          stack-label
-          dense
-          type="textarea"
-          rows="3"
-          class="q-mt-md"
-        />
-
-        <!-- Image Contact Information (Optional) -->
-        <div class="q-mt-md">
-          <q-file
-            v-model="imageContactFile"
-            :label="$t('copyrightDialog.imageContact')"
+      <!-- Scrollable Content -->
+      <div class="copyright-dialog-content">
+        <q-card-section class="q-py-sm">
+          <!-- Author Name (Required) -->
+          <q-input
+            v-model="authorName"
+            :label="$t('copyrightDialog.authorName')"
+            :placeholder="$t('copyrightDialog.authorNamePlaceholder')"
             outlined
             stack-label
             dense
-            accept="image/*"
-            :loading="isUploading"
-            @update:model-value="handleImageSelect"
-          >
-            <template v-slot:prepend>
-              <q-icon name="attach_file" />
-            </template>
-          </q-file>
-          
-          <!-- Image Preview -->
-          <div v-if="imageContactPreview" class="q-mt-sm">
-            <q-img
-              :src="imageContactPreview"
-              class="rounded-borders"
-              style="max-width: 200px; max-height: 150px"
-              fit="contain"
-            />
-            <div class="flex items-center q-mt-xs">
-              <q-btn
-                flat
-                dense
-                icon="close"
-                color="negative"
-                size="sm"
-                @click="removeImage"
-              >
-                {{ $t('copyrightDialog.removeImage') }}
-              </q-btn>
-              <div v-if="isUploading" class="q-ml-sm">
-                <q-spinner color="primary" size="sm" />
-                <span class="q-ml-xs text-caption">{{ $t('copyrightDialog.uploading') }}</span>
-              </div>
-              <div v-else-if="imageContactPath" class="q-ml-sm text-positive text-caption">
-                <q-icon name="check_circle" size="sm" />
-                {{ $t('copyrightDialog.uploaded') }}
+            :error="authorNameError"
+            :error-message="$t('copyrightDialog.authorNameRequired')"
+            @update:model-value="validateForm"
+            class="q-mb-sm"
+          />
+
+          <!-- Copyright Protection Code (Required) -->
+          <q-input
+            v-model="protectionCode"
+            :label="$t('copyrightDialog.protectionCode')"
+            :placeholder="$t('copyrightDialog.protectionCodePlaceholder')"
+            outlined
+            stack-label
+            dense
+            type="password"
+            :error="protectionCodeError"
+            :error-message="$t('copyrightDialog.protectionCodeError')"
+            @update:model-value="validateForm"
+            class="q-mb-sm"
+          />
+
+          <!-- Text Contact Information (Optional) -->
+          <q-input
+            v-model="textContact"
+            :label="$t('copyrightDialog.textContact')"
+            :placeholder="$t('copyrightDialog.textContactPlaceholder')"
+            outlined
+            stack-label
+            dense
+            type="textarea"
+            rows="3"
+            class="q-mb-sm"
+          />
+
+          <!-- Image Contact Information (Optional) -->
+          <div class="q-mb-sm">
+            <q-file
+              v-model="imageContactFile"
+              :label="$t('copyrightDialog.imageContact')"
+              outlined
+              stack-label
+              dense
+              accept="image/*"
+              :loading="isUploading"
+              @update:model-value="handleImageSelect"
+            >
+              <template v-slot:prepend>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+            
+            <!-- Image Preview -->
+            <div v-if="imageContactPreview" class="q-mt-sm">
+              <q-img
+                :src="imageContactPreview"
+                class="rounded-borders"
+                style="max-width: 200px; max-height: 150px"
+                fit="contain"
+              />
+              <div class="flex items-center q-mt-xs">
+                <q-btn
+                  flat
+                  dense
+                  icon="close"
+                  color="negative"
+                  size="sm"
+                  @click="removeImage"
+                >
+                  {{ $t('copyrightDialog.removeImage') }}
+                </q-btn>
+                <div v-if="isUploading" class="q-ml-sm">
+                  <q-spinner color="primary" size="sm" />
+                  <span class="q-ml-xs text-caption">{{ $t('copyrightDialog.uploading') }}</span>
+                </div>
+                <div v-else-if="imageContactPath" class="q-ml-sm text-positive">
+                  <q-icon name="check_circle" size="sm" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Warning for skip option -->
-        <q-banner
-          v-if="hasExistingCopyright && showSkipWarning"
-          class="q-mt-md bg-orange-1 text-orange-8"
-          icon="warning"
-        >
-          {{ $t('copyrightDialog.skipWarning') }}
-        </q-banner>
-      </q-card-section>
+          <!-- Warning for skip option -->
+          <q-banner
+            v-if="hasExistingCopyright && showSkipWarning"
+            class="bg-orange-1 text-orange-8"
+            icon="warning"
+          >
+            {{ $t('copyrightDialog.skipWarning') }}
+          </q-banner>
+        </q-card-section>
+      </div>
 
-      <q-card-actions align="right" class="q-pa-md">
-        <q-btn
-          flat
-          :label="$t('copyrightDialog.cancel')"
-          color="grey"
-          @click="cancel"
-        />
-        
-        <q-btn
-          v-if="!hasExistingCopyright"
-          flat
-          :label="$t('copyrightDialog.skipAndExport')"
-          color="orange"
-          @click="skipAndExport"
-        />
-        
-        <q-btn
-          :label="$t('copyrightDialog.confirmAndExport')"
-          color="primary"
-          :disable="!isFormValid"
-          @click="confirmAndExport"
-        />
-      </q-card-actions>
+      <!-- Fixed Footer with Glass Background -->
+      <div class="copyright-dialog-footer">
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn
+            flat
+            :label="$t('copyrightDialog.cancel')"
+            color="grey"
+            @click="cancel"
+          />
+          
+          <q-btn
+            v-if="!hasExistingCopyright"
+            flat
+            :label="$t('copyrightDialog.skipAndExport')"
+            color="orange"
+            @click="skipAndExport"
+          />
+          
+          <q-btn
+            :label="$t('copyrightDialog.confirmAndExport')"
+            color="primary"
+            :disable="!isFormValid"
+            @click="confirmAndExport"
+          />
+        </q-card-actions>
+      </div>
     </q-card>
   </q-dialog>
 
@@ -355,7 +364,62 @@ watch(showDialog, (newValue) => {
   width: 90vw;
   max-width: 500px;
   max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Fixed Header with Glass Background */
+.copyright-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollable Content Area */
+.copyright-dialog-content {
+  flex: 1;
   overflow-y: auto;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.copyright-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.copyright-dialog-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.copyright-dialog-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.copyright-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Fixed Footer with Glass Background */
+.copyright-dialog-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Compact spacing for inputs */
+.copyright-dialog-content .q-field {
+  margin-bottom: 8px;
 }
 
 /* Ensure inputs work properly on smaller screens */
@@ -363,6 +427,7 @@ watch(showDialog, (newValue) => {
   .copyright-dialog-card {
     width: 95vw;
     max-width: none;
+    max-height: 85vh;
   }
 }
 </style>
