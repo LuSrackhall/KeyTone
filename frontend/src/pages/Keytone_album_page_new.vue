@@ -328,7 +328,7 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 // Copyright dialog state
 const showCopyrightDialog = ref(false);
 const hasExistingCopyright = ref(false);
-const pendingExportData = ref<{albumName: string, blob: Blob} | null>(null);
+const pendingExportData = ref<{albumName: string, blob: Blob | null} | null>(null);
 
 // Simple XOR encryption for obfuscation (matching backend approach)
 const KEYTONE_ENCRYPT_KEY = "KeyTone2024";
@@ -487,12 +487,9 @@ const exportAlbumLegacy = async () => {
 
     // 检查是否存在现有著作权信息
     hasExistingCopyright.value = await checkExistingCopyright();
-
-    // 调用导出函数获取zip文件blob
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
     
-    // 存储待导出数据
-    pendingExportData.value = { albumName, blob };
+    // 存储待导出数据（不包含blob，因为需要在版权处理后重新生成）
+    pendingExportData.value = { albumName, blob: null as any };
     
     // 显示著作权对话框
     showCopyrightDialog.value = true;
@@ -511,14 +508,17 @@ const handleCopyrightConfirm = async (copyrightData: any) => {
   if (!pendingExportData.value) return;
   
   try {
-    // Save copyright information
+    // Save copyright information first
     const saved = await saveCopyrightInfo(copyrightData);
     if (!saved) {
       throw new Error('保存著作权信息失败');
     }
     
-    // Proceed with export
-    await performActualExport(pendingExportData.value.albumName, pendingExportData.value.blob);
+    // Regenerate export blob with updated copyright information
+    const updatedBlob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    
+    // Proceed with export using the updated blob
+    await performActualExport(pendingExportData.value.albumName, updatedBlob);
     
   } catch (error) {
     console.error('保存著作权信息失败:', error);
@@ -537,8 +537,11 @@ const handleCopyrightSkip = async () => {
   if (!pendingExportData.value) return;
   
   try {
+    // Generate export blob without copyright information
+    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    
     // Proceed with export without saving copyright info
-    await performActualExport(pendingExportData.value.albumName, pendingExportData.value.blob);
+    await performActualExport(pendingExportData.value.albumName, blob);
     
   } catch (error) {
     console.error('导出专辑失败:', error);
@@ -630,11 +633,8 @@ const exportAlbum = async () => {
     // 检查是否存在现有著作权信息
     hasExistingCopyright.value = await checkExistingCopyright();
     
-    // 获取导出数据
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-    
-    // 存储待导出数据
-    pendingExportData.value = { albumName, blob };
+    // 存储待导出数据（不包含blob，因为需要在保存版权信息后重新生成）
+    pendingExportData.value = { albumName, blob: null as any };
     
     // 显示著作权对话框
     showCopyrightDialog.value = true;
