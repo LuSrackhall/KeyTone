@@ -244,11 +244,31 @@
                         :virtual-scroll-slice-size="999999"
                         stack-label
                         v-model="selectedSoundFile"
-                        :options="soundFileList"
+                        :options="filteredSoundFileList"
                         :option-label="(item) => item.name + item.type"
                         :label="$t('KeyToneAlbum.loadAudioFile.selectFileToManage')"
                         dense
+                        use-input
+                        hide-selected
+                        fill-input
+                        input-debounce="0"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                        @filter="(inputValue, doneFn) => {
+                          if (inputValue === '') {
+                            doneFn(() => {
+                              filteredSoundFileList.value = soundFileList.value;
+                            });
+                            return;
+                          }
+                          
+                          doneFn(() => {
+                            const inputValueLowerCase = inputValue.toLowerCase();
+                            filteredSoundFileList.value = soundFileList.value.filter((item) => {
+                              const fileName = (item.name + item.type).toLowerCase();
+                              return fileName.indexOf(inputValueLowerCase) > -1;
+                            });
+                          });
+                        }"
                       >
                         <!-- 添加清除按钮 -->
                         <template
@@ -473,11 +493,31 @@
                         stack-label
                         :virtual-scroll-slice-size="999999"
                         v-model="sourceFileForSound"
-                        :options="soundFileList"
+                        :options="filteredSourceFileList"
                         :option-label="(item) => item.name + item.type"
                         :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
                         dense
+                        use-input
+                        hide-selected
+                        fill-input
+                        input-debounce="0"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                        @filter="(inputValue, doneFn) => {
+                          if (inputValue === '') {
+                            doneFn(() => {
+                              filteredSourceFileList.value = soundFileList.value;
+                            });
+                            return;
+                          }
+                          
+                          doneFn(() => {
+                            const inputValueLowerCase = inputValue.toLowerCase();
+                            filteredSourceFileList.value = soundFileList.value.filter((item) => {
+                              const fileName = (item.name + item.type).toLowerCase();
+                              return fileName.indexOf(inputValueLowerCase) > -1;
+                            });
+                          });
+                        }"
                       />
                     </q-card-section>
 
@@ -3427,6 +3467,11 @@ const selectedSoundFile = ref<{ sha256: string; name_id: string; name: string; t
   name: '',
   type: '',
 });
+// 用于搜索过滤声音文件选项
+const filteredSoundFileList = ref<Array<{ sha256: string; name_id: string; name: string; type: string }>>([]);
+
+// 用于创建新声音时搜索过滤源文件选项
+const filteredSourceFileList = ref<Array<{ sha256: string; name_id: string; name: string; type: string }>>([]);
 
 // 声音制作(制作新的声音)
 const createNewSound = ref(false);
@@ -4885,6 +4930,9 @@ onBeforeMount(async () => {
     // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
     watch(soundFileList, (newVal) => {
       console.debug('观察soundFileList=', soundFileList.value);
+      // 同步更新过滤选项
+      filteredSoundFileList.value = [...soundFileList.value];
+      filteredSourceFileList.value = [...soundFileList.value];
     });
 
     //  - completed(已完成)   TODO:
