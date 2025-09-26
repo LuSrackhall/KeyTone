@@ -43,7 +43,7 @@
             :error="authorNameError"
             :error-message="$t('copyrightDialog.authorNameRequired')"
             @update:model-value="validateForm"
-            class="q-mb-sm"
+            class="q-mb-sm zzz"
           />
 
           <!-- Copyright Protection Code (Required) -->
@@ -58,7 +58,7 @@
             :error="protectionCodeError"
             :error-message="$t('copyrightDialog.protectionCodeError')"
             @update:model-value="validateForm"
-            class="q-mb-sm"
+            class="q-mb-sm zzz"
           />
 
           <!-- Text Contact Information (Optional) -->
@@ -397,7 +397,7 @@ watch(showDialog, (newValue) => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .copyright-dialog-card {
   width: 90vw;
   max-width: 500px;
@@ -546,6 +546,12 @@ watch(showDialog, (newValue) => {
     width: 95vw;
     max-width: none;
     max-height: 85vh;
+  }
+}
+
+.zzz {
+  :deep(.q-field__native) {
+    @apply h-auto;
   }
 }
 </style>
