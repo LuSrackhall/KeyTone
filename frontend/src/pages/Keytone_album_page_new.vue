@@ -514,11 +514,8 @@ const handleCopyrightConfirm = async (copyrightData: any) => {
       throw new Error('保存著作权信息失败');
     }
     
-    // Regenerate export blob with updated copyright information
-    const updatedBlob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-    
-    // Proceed with export using the updated blob
-    await performActualExport(pendingExportData.value.albumName, updatedBlob);
+    // Proceed with standard export flow - backend will include updated copyright info
+    await continueWithExport();
     
   } catch (error) {
     console.error('保存著作权信息失败:', error);
@@ -537,11 +534,8 @@ const handleCopyrightSkip = async () => {
   if (!pendingExportData.value) return;
   
   try {
-    // Generate export blob without copyright information
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-    
-    // Proceed with export without saving copyright info
-    await performActualExport(pendingExportData.value.albumName, blob);
+    // Proceed with standard export flow without saving copyright info
+    await continueWithExport();
     
   } catch (error) {
     console.error('导出专辑失败:', error);
