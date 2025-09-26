@@ -3617,6 +3617,36 @@ const options = reactive([
   { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds', label_0: 'KeyToneAlbum.options.keySound_0' },
 ]);
 
+// 排序工具函数：支持字母和数字的自然排序
+const naturalSort = (a: string, b: string): number => {
+  // 将字符串按数字和字母分段处理
+  const segmentize = (str: string) => {
+    return str.match(/\d+|\D+/g) || [];
+  };
+  
+  const aSegments = segmentize(a.toLowerCase());
+  const bSegments = segmentize(b.toLowerCase());
+  
+  const maxLength = Math.max(aSegments.length, bSegments.length);
+  
+  for (let i = 0; i < maxLength; i++) {
+    const aSegment = aSegments[i] || '';
+    const bSegment = bSegments[i] || '';
+    
+    // 如果两个段都是数字，按数值比较
+    if (/^\d+$/.test(aSegment) && /^\d+$/.test(bSegment)) {
+      const diff = parseInt(aSegment, 10) - parseInt(bSegment, 10);
+      if (diff !== 0) return diff;
+    } else {
+      // 否则按字符串比较
+      if (aSegment < bSegment) return -1;
+      if (aSegment > bSegment) return 1;
+    }
+  }
+  
+  return 0;
+};
+
 const album_options_select_label = (item: any): any => {
   // console.log('item_1212==', item);
   // console.log('至臻键音列表==', keySoundList.value);
@@ -3712,6 +3742,12 @@ const downSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('downSoundList=', List);
   return List;
 });
@@ -3743,6 +3779,12 @@ const upSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('upSoundList=', List);
   return List;
 });
@@ -3776,6 +3818,12 @@ const edit_downSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('edit_downSoundList=', List);
   return List;
 });
@@ -3796,6 +3844,12 @@ const edit_upSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('edit_upSoundList=', List);
   return List;
 });
@@ -4026,6 +4080,12 @@ const keyUnifiedSoundEffectOptions = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('观察keyUnifiedSoundEffectOptions=', List);
   return List;
 });
@@ -4309,6 +4369,12 @@ const keySingleKeySoundEffectOptions = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('观察keyUnifiedSoundEffectOptions=', List);
   return List;
 });
@@ -4625,6 +4691,12 @@ const keySingleKeySoundEffectOptions_edit = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
+  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  List.sort((a, b) => {
+    const aLabel = album_options_select_label(a);
+    const bLabel = album_options_select_label(b);
+    return naturalSort(aLabel, bLabel);
+  });
   console.debug('观察keyUnifiedSoundEffectOptions=', List);
   return List;
 });
@@ -4735,6 +4807,8 @@ onBeforeMount(async () => {
             });
           }
         });
+        // 应用自然排序
+        tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
         soundFileList.value = tempSoundFileList;
       }
 
@@ -4744,6 +4818,12 @@ onBeforeMount(async () => {
           soundKey: key,
           soundValue: value,
         }));
+        // 应用自然排序，基于声音名称或源文件名称排序
+        sounds.sort((a, b) => {
+          const aName = a.soundValue.name || a.soundKey;
+          const bName = b.soundValue.name || b.soundKey;
+          return naturalSort(aName, bName);
+        });
         soundList.value = sounds as Array<{
           soundKey: string;
           soundValue: {
@@ -4797,6 +4877,8 @@ onBeforeMount(async () => {
           });
         }
       });
+      // 应用自然排序
+      tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
       soundFileList.value = tempSoundFileList;
     });
 
@@ -4886,6 +4968,12 @@ onBeforeMount(async () => {
         soundKey: key,
         soundValue: value,
       }));
+      // 应用自然排序，基于声音名称或源文件名称排序
+      sounds.sort((a, b) => {
+        const aName = a.soundValue.name || a.soundKey;
+        const bName = b.soundValue.name || b.soundKey;
+        return naturalSort(aName, bName);
+      });
       soundList.value = sounds as Array<{
         soundKey: string;
         soundValue: {
@@ -4900,10 +4988,17 @@ onBeforeMount(async () => {
 
     // 映射配置文件中的key_sounds到ui中的keySoundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
     if (keyTonePkgData.key_sounds !== undefined) {
-      keySoundList.value = Object.entries(keyTonePkgData.key_sounds).map(([key, value]) => ({
+      const keySounds = Object.entries(keyTonePkgData.key_sounds).map(([key, value]) => ({
         keySoundKey: key,
         keySoundValue: value,
       }));
+      // 应用自然排序，基于键音名称排序
+      keySounds.sort((a, b) => {
+        const aName = a.keySoundValue.name || a.keySoundKey;
+        const bName = b.keySoundValue.name || b.keySoundKey;
+        return naturalSort(aName, bName);
+      });
+      keySoundList.value = keySounds;
     } else {
       keySoundList.value = [];
     }
