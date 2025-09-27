@@ -256,14 +256,14 @@
                         @filter="(inputValue, doneFn) => {
                           if (inputValue === '') {
                             doneFn(() => {
-                              filteredSoundFileList.value = soundFileList.value;
+                              filteredSoundFileList.value = [...soundFileList.value];
                             });
                             return;
                           }
                           
                           doneFn(() => {
                             const inputValueLowerCase = inputValue.toLowerCase();
-                            filteredSoundFileList.value = soundFileList.value.filter((item) => {
+                            filteredSoundFileList.value = soundFileList.value.filter((item: { sha256: string; name_id: string; name: string; type: string }) => {
                               const fileName = (item.name + item.type).toLowerCase();
                               return fileName.indexOf(inputValueLowerCase) > -1;
                             });
@@ -505,14 +505,14 @@
                         @filter="(inputValue, doneFn) => {
                           if (inputValue === '') {
                             doneFn(() => {
-                              filteredSourceFileList.value = soundFileList.value;
+                              filteredSourceFileList.value = [...soundFileList.value];
                             });
                             return;
                           }
                           
                           doneFn(() => {
                             const inputValueLowerCase = inputValue.toLowerCase();
-                            filteredSourceFileList.value = soundFileList.value.filter((item) => {
+                            filteredSourceFileList.value = soundFileList.value.filter((item: { sha256: string; name_id: string; name: string; type: string }) => {
                               const fileName = (item.name + item.type).toLowerCase();
                               return fileName.indexOf(inputValueLowerCase) > -1;
                             });
@@ -4864,9 +4864,9 @@ onBeforeMount(async () => {
           soundValue: value,
         }));
         // 应用自然排序，基于声音名称或源文件名称排序
-        sounds.sort((a, b) => {
-          const aName = a.soundValue.name || a.soundKey;
-          const bName = b.soundValue.name || b.soundKey;
+        sounds.sort((a: any, b: any) => {
+          const aName = (a.soundValue?.name as string) || a.soundKey;
+          const bName = (b.soundValue?.name as string) || b.soundKey;
           return naturalSort(aName, bName);
         });
         soundList.value = sounds as Array<{
@@ -5017,9 +5017,9 @@ onBeforeMount(async () => {
         soundValue: value,
       }));
       // 应用自然排序，基于声音名称或源文件名称排序
-      sounds.sort((a, b) => {
-        const aName = a.soundValue.name || a.soundKey;
-        const bName = b.soundValue.name || b.soundKey;
+      sounds.sort((a: any, b: any) => {
+        const aName = (a.soundValue?.name as string) || a.soundKey;
+        const bName = (b.soundValue?.name as string) || b.soundKey;
         return naturalSort(aName, bName);
       });
       soundList.value = sounds as Array<{
@@ -5041,9 +5041,9 @@ onBeforeMount(async () => {
         keySoundValue: value,
       }));
       // 应用自然排序，基于键音名称排序
-      keySounds.sort((a, b) => {
-        const aName = a.keySoundValue.name || a.keySoundKey;
-        const bName = b.keySoundValue.name || b.keySoundKey;
+      keySounds.sort((a: any, b: any) => {
+        const aName = (a.keySoundValue?.name as string) || a.keySoundKey;
+        const bName = (b.keySoundValue?.name as string) || b.keySoundKey;
         return naturalSort(aName, bName);
       });
       keySoundList.value = keySounds;
