@@ -244,31 +244,11 @@
                         :virtual-scroll-slice-size="999999"
                         stack-label
                         v-model="selectedSoundFile"
-                        :options="filteredSoundFileList"
+                        :options="soundFileList"
                         :option-label="(item) => item.name + item.type"
                         :label="$t('KeyToneAlbum.loadAudioFile.selectFileToManage')"
                         dense
-                        use-input
-                        hide-selected
-                        fill-input
-                        input-debounce="0"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                        @filter="(inputValue, doneFn) => {
-                          if (inputValue === '') {
-                            doneFn(() => {
-                              filteredSoundFileList.value = [...soundFileList.value];
-                            });
-                            return;
-                          }
-                          
-                          doneFn(() => {
-                            const inputValueLowerCase = inputValue.toLowerCase();
-                            filteredSoundFileList.value = soundFileList.value.filter((item: { sha256: string; name_id: string; name: string; type: string }) => {
-                              const fileName = (item.name + item.type).toLowerCase();
-                              return fileName.indexOf(inputValueLowerCase) > -1;
-                            });
-                          });
-                        }"
                       >
                         <!-- 添加清除按钮 -->
                         <template
@@ -493,31 +473,11 @@
                         stack-label
                         :virtual-scroll-slice-size="999999"
                         v-model="sourceFileForSound"
-                        :options="filteredSourceFileList"
+                        :options="soundFileList"
                         :option-label="(item) => item.name + item.type"
                         :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
                         dense
-                        use-input
-                        hide-selected
-                        fill-input
-                        input-debounce="0"
                         popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                        @filter="(inputValue, doneFn) => {
-                          if (inputValue === '') {
-                            doneFn(() => {
-                              filteredSourceFileList.value = [...soundFileList.value];
-                            });
-                            return;
-                          }
-                          
-                          doneFn(() => {
-                            const inputValueLowerCase = inputValue.toLowerCase();
-                            filteredSourceFileList.value = soundFileList.value.filter((item: { sha256: string; name_id: string; name: string; type: string }) => {
-                              const fileName = (item.name + item.type).toLowerCase();
-                              return fileName.indexOf(inputValueLowerCase) > -1;
-                            });
-                          });
-                        }"
                       />
                     </q-card-section>
 
@@ -3467,11 +3427,6 @@ const selectedSoundFile = ref<{ sha256: string; name_id: string; name: string; t
   name: '',
   type: '',
 });
-// 用于搜索过滤声音文件选项
-const filteredSoundFileList = ref<Array<{ sha256: string; name_id: string; name: string; type: string }>>([]);
-
-// 用于创建新声音时搜索过滤源文件选项
-const filteredSourceFileList = ref<Array<{ sha256: string; name_id: string; name: string; type: string }>>([]);
 
 // 声音制作(制作新的声音)
 const createNewSound = ref(false);
@@ -3662,9 +3617,19 @@ const options = reactive([
   { label: 'KeyToneAlbum.options.keySound', value: 'key_sounds', label_0: 'KeyToneAlbum.options.keySound_0' },
 ]);
 
-// 排序工具函数：支持字母和数字的自然排序
+// ============================================================================
+// 自然排序工具函数：解决下拉列表选项乱序问题
+// 
+// 问题：当选项数量很多的时候，列表的排序没有规律，用户难以快速定位所需内容
+// 解决方案：实现字母和数字的自然顺序排序作为默认排序规则
+// 
+// 功能：
+// - 支持字母和数字的混合排序（如：sound1, sound2, sound10 而不是 sound1, sound10, sound2）
+// - 不区分大小写的字母排序
+// - 自动处理中文、英文、数字的混合内容
+// ============================================================================
 const naturalSort = (a: string, b: string): number => {
-  // 将字符串按数字和字母分段处理
+  // 将字符串按数字和字母分段处理，支持混合文本数字内容的智能排序
   const segmentize = (str: string) => {
     return str.match(/\d+|\D+/g) || [];
   };
@@ -3678,12 +3643,12 @@ const naturalSort = (a: string, b: string): number => {
     const aSegment = aSegments[i] || '';
     const bSegment = bSegments[i] || '';
     
-    // 如果两个段都是数字，按数值比较
+    // 如果两个段都是数字，按数值比较（确保 1, 2, 10 的正确顺序）
     if (/^\d+$/.test(aSegment) && /^\d+$/.test(bSegment)) {
       const diff = parseInt(aSegment, 10) - parseInt(bSegment, 10);
       if (diff !== 0) return diff;
     } else {
-      // 否则按字符串比较
+      // 否则按字符串比较（支持中英文混合）
       if (aSegment < bSegment) return -1;
       if (aSegment > bSegment) return 1;
     }
@@ -3787,7 +3752,8 @@ const downSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
@@ -3824,7 +3790,8 @@ const upSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
@@ -3863,7 +3830,8 @@ const edit_downSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
@@ -3889,7 +3857,8 @@ const edit_upSoundList = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
@@ -4125,7 +4094,8 @@ const keyUnifiedSoundEffectOptions = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
@@ -4414,13 +4384,14 @@ const keySingleKeySoundEffectOptions = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
     return naturalSort(aLabel, bLabel);
   });
-  console.debug('观察keyUnifiedSoundEffectOptions=', List);
+  console.debug('观察keySingleKeySoundEffectOptions=', List);
   return List;
 });
 const isShowUltimatePerfectionKeySoundAnchoring_singleKey = computed(() => {
@@ -4736,13 +4707,14 @@ const keySingleKeySoundEffectOptions_edit = computed(() => {
       List.push({ type: 'key_sounds', value: item });
     });
   }
-  // 对混合列表应用排序，使用label函数获取显示名称进行排序
+  // ===== 应用自然排序：解决混合选项列表乱序问题 =====
+  // 对混合类型的选项列表使用显示标签进行自然排序
   List.sort((a, b) => {
     const aLabel = album_options_select_label(a);
     const bLabel = album_options_select_label(b);
     return naturalSort(aLabel, bLabel);
   });
-  console.debug('观察keyUnifiedSoundEffectOptions=', List);
+  console.debug('观察keySingleKeySoundEffectOptions_edit=', List);
   return List;
 });
 const isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit = computed(() => {
@@ -4852,7 +4824,8 @@ onBeforeMount(async () => {
             });
           }
         });
-        // 应用自然排序
+        // ===== 应用自然排序：解决声音文件列表乱序问题 =====
+        // 按文件名+扩展名进行自然排序（初始化时）
         tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
         soundFileList.value = tempSoundFileList;
       }
@@ -4863,7 +4836,8 @@ onBeforeMount(async () => {
           soundKey: key,
           soundValue: value,
         }));
-        // 应用自然排序，基于声音名称或源文件名称排序
+        // ===== 应用自然排序：解决声音列表乱序问题 =====
+        // 基于声音名称或soundKey进行自然排序（初始化时）
         sounds.sort((a: any, b: any) => {
           const aName = (a.soundValue?.name as string) || a.soundKey;
           const bName = (b.soundValue?.name as string) || b.soundKey;
@@ -4922,7 +4896,8 @@ onBeforeMount(async () => {
           });
         }
       });
-      // 应用自然排序
+      // ===== 应用自然排序：解决声音文件列表乱序问题 =====
+      // 按文件名+扩展名进行自然排序，确保 sound1.wav, sound2.wav, sound10.wav 的正确顺序
       tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
       soundFileList.value = tempSoundFileList;
     });
@@ -4930,9 +4905,6 @@ onBeforeMount(async () => {
     // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
     watch(soundFileList, (newVal) => {
       console.debug('观察soundFileList=', soundFileList.value);
-      // 同步更新过滤选项
-      filteredSoundFileList.value = [...soundFileList.value];
-      filteredSourceFileList.value = [...soundFileList.value];
     });
 
     //  - completed(已完成)   TODO:
@@ -5016,7 +4988,8 @@ onBeforeMount(async () => {
         soundKey: key,
         soundValue: value,
       }));
-      // 应用自然排序，基于声音名称或源文件名称排序
+      // ===== 应用自然排序：解决声音列表乱序问题 =====
+      // 基于声音名称或soundKey进行自然排序（EventSource更新时）
       sounds.sort((a: any, b: any) => {
         const aName = (a.soundValue?.name as string) || a.soundKey;
         const bName = (b.soundValue?.name as string) || b.soundKey;
@@ -5040,7 +5013,8 @@ onBeforeMount(async () => {
         keySoundKey: key,
         keySoundValue: value,
       }));
-      // 应用自然排序，基于键音名称排序
+      // ===== 应用自然排序：解决键音列表乱序问题 =====
+      // 基于键音名称或keySoundKey进行自然排序
       keySounds.sort((a: any, b: any) => {
         const aName = (a.keySoundValue?.name as string) || a.keySoundKey;
         const bName = (b.keySoundValue?.name as string) || b.keySoundKey;
