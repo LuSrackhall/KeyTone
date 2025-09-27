@@ -29,6 +29,7 @@
     "import": "导入专辑",
     "export": "导出专辑",
     "delete": "删除专辑",
+    "signatureManagement": "签名管理",
     "help": "帮助",
     "label": "键音专辑",
     "community": "社区",
@@ -46,7 +47,9 @@
       "refreshFailed": "专辑已覆盖，但刷新失败，请手动刷新",
       "importOverwriteSuccess": "专辑覆盖导入成功",
       "importSaveAsNewSuccess": "专辑已保存为新专辑",
-      "fileDescription": "KeyTone 专辑文件"
+      "fileDescription": "KeyTone 专辑文件",
+      "signatureManagerFailed": "打开签名管理器失败",
+      "signatureSaved": "签名保存成功"
     },
     "importDialog": {
       "title": "导入专辑",

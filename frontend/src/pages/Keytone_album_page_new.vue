@@ -83,6 +83,26 @@
               dense
               round
               size="xs"
+              icon="edit"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="openSignatureManager"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                {{ $t('keyToneAlbumPage.signatureManagement') }}
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
               icon="delete"
               color="negative"
               :disable="!setting_store.mainHome.selectedKeyTonePkg"
@@ -261,14 +281,14 @@
     </div>
   </div>
 
-  <!-- Copyright Dialog -->
+  <!-- Signature Management Dialog -->
   <CopyrightDialog
-    v-model="showCopyrightDialog"
-    :has-existing-copyright="hasExistingCopyright"
+    v-model="showSignatureDialog"
+    :has-existing-copyright="hasExistingSignature"
     :i18n-font-size="i18n_fontSize"
-    @confirm="handleCopyrightConfirm"
-    @skip="handleCopyrightSkip"
-    @cancel="handleCopyrightCancel"
+    @confirm="handleSignatureConfirm"
+    @skip="handleSignatureSkip"
+    @cancel="handleSignatureCancel"
   />
 </template>
 
@@ -325,15 +345,14 @@ const isAtTop = ref(true);
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
 
-// Copyright dialog state
-const showCopyrightDialog = ref(false);
-const hasExistingCopyright = ref(false);
-const pendingExportData = ref<{albumName: string, blob: Blob | null} | null>(null);
+// Signature management dialog state
+const showSignatureDialog = ref(false);
+const hasExistingSignature = ref(false);
 
 // Simple XOR encryption for obfuscation (matching backend approach)
 const KEYTONE_ENCRYPT_KEY = "KeyTone2024";
 
-// Helper functions for copyright management
+// Helper functions for signature management
 const xorEncrypt = (data: string, key: string): string => {
   let result = '';
   for (let i = 0; i < data.length; i++) {
@@ -364,54 +383,106 @@ const generateSHA512 = async (input: string): Promise<string> => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-// Check if album has existing copyright information
-const checkExistingCopyright = async (): Promise<boolean> => {
+// Check if album has existing signature information
+const checkExistingSignature = async (): Promise<boolean> => {
   try {
-    const copyrightData = await ConfigGet('copyright');
-    return copyrightData && typeof copyrightData === 'object' && Object.keys(copyrightData).length > 0;
+    const signatureData = await ConfigGet('copyright');
+    return signatureData && typeof signatureData === 'object' && Object.keys(signatureData).length > 0;
   } catch {
     return false;
   }
 };
 
-// Generate copyright key from password and name
-const generateCopyrightKey = async (protectionCode: string, authorName: string): Promise<string> => {
+// Generate signature key from password and name
+const generateSignatureKey = async (protectionCode: string, authorName: string): Promise<string> => {
   const combined = protectionCode + authorName;
   const hash = await generateSHA512(combined);
   return xorEncrypt(hash, KEYTONE_ENCRYPT_KEY);
 };
 
-// Save copyright information
-const saveCopyrightInfo = async (copyrightData: any) => {
-  const key = await generateCopyrightKey(copyrightData.protectionCode, copyrightData.authorName);
+// Save signature information
+const saveSignatureInfo = async (signatureData: any) => {
+  const key = await generateSignatureKey(signatureData.protectionCode, signatureData.authorName);
   
   try {
-    // Get existing copyright data
-    let existingCopyright = await ConfigGet('copyright') || {};
+    // Get existing signature data
+    let existingSignature = await ConfigGet('copyright') || {};
     
     // Check if this key already exists
-    if (existingCopyright[key]) {
-      // Update existing entry - add new export time
-      existingCopyright[key].ExportTime.push(Math.floor(Date.now() / 1000));
-      existingCopyright[key].TextContactInformation = copyrightData.textContact || '';
-      existingCopyright[key].ImageContactInformation = copyrightData.imageContactPath || '';
+    if (existingSignature[key]) {
+      // Update existing entry - add new signature time
+      existingSignature[key].ExportTime.push(Math.floor(Date.now() / 1000));
+      existingSignature[key].TextContactInformation = signatureData.textContact || '';
+      existingSignature[key].ImageContactInformation = signatureData.imageContactPath || '';
     } else {
       // Create new entry
-      existingCopyright[key] = {
-        Author: copyrightData.authorName,
-        TextContactInformation: copyrightData.textContact || '',
-        ImageContactInformation: copyrightData.imageContactPath || '',
+      existingSignature[key] = {
+        Author: signatureData.authorName,
+        TextContactInformation: signatureData.textContact || '',
+        ImageContactInformation: signatureData.imageContactPath || '',
         ExportTime: [Math.floor(Date.now() / 1000)]
       };
     }
     
-    // Save updated copyright data
-    await ConfigSet('copyright', existingCopyright);
+    // Save updated signature data
+    await ConfigSet('copyright', existingSignature);
     return true;
   } catch (error) {
-    console.error('Failed to save copyright information:', error);
+    console.error('Failed to save signature information:', error);
     return false;
   }
+};
+
+// Open signature management dialog
+const openSignatureManager = async () => {
+  try {
+    // Check if there's existing signature information
+    hasExistingSignature.value = await checkExistingSignature();
+    
+    // Show signature management dialog
+    showSignatureDialog.value = true;
+  } catch (error) {
+    console.error('Failed to open signature manager:', error);
+    q.notify({
+      type: 'negative',
+      message: $t('keyToneAlbumPage.notify.signatureManagerFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// Handle signature dialog confirmation
+const handleSignatureConfirm = async (signatureData: any) => {
+  try {
+    // Save signature information
+    const saved = await saveSignatureInfo(signatureData);
+    if (!saved) {
+      throw new Error('保存签名信息失败');
+    }
+    
+    q.notify({
+      type: 'positive',
+      message: $t('keyToneAlbumPage.notify.signatureSaved'),
+    });
+    
+  } catch (error) {
+    console.error('保存签名信息失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '保存签名信息失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  } finally {
+    showSignatureDialog.value = false;
+  }
+};
+
+// Handle signature dialog skip
+const handleSignatureSkip = () => {
+  showSignatureDialog.value = false;
+};
+
+// Handle signature dialog cancel
+const handleSignatureCancel = () => {
+  showSignatureDialog.value = false;
 };
 
 // 实现删除专辑的逻辑
@@ -485,58 +556,23 @@ const exportAlbumLegacy = async () => {
     }
     const albumName = albumNameResponse.name;
 
-    // 检查是否存在现有著作权信息
-    hasExistingCopyright.value = await checkExistingCopyright();
-    
-    // 存储待导出数据（不包含blob，因为需要在版权处理后重新生成）
-    pendingExportData.value = { albumName, blob: null as any };
-    
-    // 显示著作权对话框
-    showCopyrightDialog.value = true;
-    
-  } catch (error) {
-    console.error('准备导出专辑失败:', error);
-    q.notify({
-      type: 'negative',
-      message:
-        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
-    });
-  }
-};
-// Handle copyright dialog confirmation
-const handleCopyrightConfirm = async (copyrightData: any) => {
-  if (!pendingExportData.value) return;
-  
-  try {
-    // Save copyright information first
-    const saved = await saveCopyrightInfo(copyrightData);
-    if (!saved) {
-      throw new Error('保存著作权信息失败');
-    }
-    
-    // Proceed with standard export flow - backend will include updated copyright info
-    await continueWithExport();
-    
-  } catch (error) {
-    console.error('保存著作权信息失败:', error);
-    q.notify({
-      type: 'negative',
-      message: '保存著作权信息失败: ' + (error instanceof Error ? error.message : String(error)),
-    });
-  } finally {
-    showCopyrightDialog.value = false;
-    pendingExportData.value = null;
-  }
-};
+    // 调用导出函数获取zip文件blob
+    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${albumName}.ktalbum`; // 改为 .ktalbum
+    document.body.appendChild(link);
+    link.click();
 
-// Handle copyright dialog skip
-const handleCopyrightSkip = async () => {
-  if (!pendingExportData.value) return;
-  
-  try {
-    // Proceed with standard export flow without saving copyright info
-    await continueWithExport();
-    
+    // 清理
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+
+    q.notify({
+      type: 'positive',
+      message: $t('keyToneAlbumPage.notify.exportSuccess'),
+    });
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({
@@ -544,98 +580,17 @@ const handleCopyrightSkip = async () => {
       message:
         $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
     });
-  } finally {
-    showCopyrightDialog.value = false;
-    pendingExportData.value = null;
   }
-};
-
-// Handle copyright dialog cancel
-const handleCopyrightCancel = () => {
-  showCopyrightDialog.value = false;
-  pendingExportData.value = null;
-};
-
-// Continue with the export process after copyright handling
-const continueWithExport = async () => {
-  if (!pendingExportData.value) {
-    throw new Error('没有待导出的数据');
-  }
-
-  const { albumName } = pendingExportData.value;
-  
-  // Add a small delay to ensure backend config writes are flushed to disk
-  // This addresses the timing issue where copyright info might not be fully written
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Call the backend export API - it will include all files in the directory
-  // including the updated config.json with copyright information and copyrightImages/
-  const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-  
-  // Perform the actual file save operation
-  await performActualExport(albumName, blob);
-};
-
-// Perform the actual export operation
-const performActualExport = async (albumName: string, blob: Blob) => {
-  // 检查 API 是否可用
-  if (typeof window.showSaveFilePicker !== 'function') {
-    console.log('Browser does not support File System Access API, using legacy export');
-    return performLegacyExport(albumName, blob);
-  }
-
-  try {
-    // 打开系统的保存文件对话框
-    const handle = await window.showSaveFilePicker({
-      suggestedName: `${albumName}.ktalbum`,
-      types: [
-        {
-          description: $t('keyToneAlbumPage.notify.fileDescription'),
-          accept: { 'application/octet-stream': ['.ktalbum'] },
-        },
-      ],
-    });
-
-    // 写入文件
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-
-    // 文件成功保存后再通知
-    q.notify({
-      type: 'positive',
-      message: $t('keyToneAlbumPage.notify.exportSuccess'),
-    });
-  } catch (err) {
-    // 用户取消选择文件时不显示错误
-    if (err instanceof Error && err.name === 'AbortError') {
-      return;
-    }
-    throw err;
-  }
-};
-
-// Perform legacy export (direct download)
-const performLegacyExport = async (albumName: string, blob: Blob) => {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${albumName}.ktalbum`;
-  document.body.appendChild(link);
-  link.click();
-
-  // 清理
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(link);
-
-  q.notify({
-    type: 'positive',
-    message: $t('keyToneAlbumPage.notify.exportSuccess'),
-  });
 };
 
 // 导出键音专辑 - 使用 File System Access API
 const exportAlbum = async () => {
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, falling back to legacy export');
+    return exportAlbumLegacy();
+  }
+
   try {
     // 获取专辑名称
     const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
@@ -644,16 +599,40 @@ const exportAlbum = async () => {
     }
     const albumName = albumNameResponse.name;
 
-    // 检查是否存在现有著作权信息
-    hasExistingCopyright.value = await checkExistingCopyright();
-    
-    // 存储待导出数据（不包含blob，因为需要在保存版权信息后重新生成）
-    pendingExportData.value = { albumName, blob: null as any };
-    
-    // 显示著作权对话框
-    showCopyrightDialog.value = true;
+    // 获取导出数据
+    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+
+    try {
+      // 打开系统的保存文件对话框
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${albumName}.ktalbum`,
+        types: [
+          {
+            description: $t('keyToneAlbumPage.notify.fileDescription'),
+            accept: { 'application/octet-stream': ['.ktalbum'] },
+          },
+        ],
+      });
+
+      // 写入文件
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+
+      // 文件成功保存后再通知
+      q.notify({
+        type: 'positive',
+        message: $t('keyToneAlbumPage.notify.exportSuccess'),
+      });
+    } catch (err) {
+      // 用户取消选择文件时不显示错误
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    }
   } catch (error) {
-    console.error('准备导出专辑失败:', error);
+    console.error('导出专辑失败:', error);
     q.notify({
       type: 'negative',
       message:
