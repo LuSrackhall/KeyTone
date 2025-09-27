@@ -556,6 +556,26 @@ const handleCopyrightCancel = () => {
   pendingExportData.value = null;
 };
 
+// Continue with the export process after copyright handling
+const continueWithExport = async () => {
+  if (!pendingExportData.value) {
+    throw new Error('没有待导出的数据');
+  }
+
+  const { albumName } = pendingExportData.value;
+  
+  // Add a small delay to ensure backend config writes are flushed to disk
+  // This addresses the timing issue where copyright info might not be fully written
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Call the backend export API - it will include all files in the directory
+  // including the updated config.json with copyright information and copyrightImages/
+  const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+  
+  // Perform the actual file save operation
+  await performActualExport(albumName, blob);
+};
+
 // Perform the actual export operation
 const performActualExport = async (albumName: string, blob: Blob) => {
   // 检查 API 是否可用
