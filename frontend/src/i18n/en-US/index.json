@@ -29,6 +29,7 @@
     "import": "Import Album",
     "export": "Export Album",
     "delete": "Delete Album",
+    "signatureManagement": "Signature Management",
     "help": "Help",
     "label": "Key Sound Album",
     "community": "Community",
@@ -46,7 +47,9 @@
       "refreshFailed": "Refresh failed, try manually",
       "importOverwriteSuccess": "Overwrite success",
       "importSaveAsNewSuccess": "Saved as new",
-      "fileDescription": "KeyTone Album File"
+      "fileDescription": "KeyTone Album File",
+      "signatureManagerFailed": "Failed to open signature manager",
+      "signatureSaved": "Signature saved successfully"
     },
     "importDialog": {
       "title": "Import Album",
