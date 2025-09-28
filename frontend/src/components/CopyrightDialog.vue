@@ -268,8 +268,6 @@ const props = withDefaults(defineProps<Props>(), {
   i18nFontSize: '1rem',
   mode: 'copyright',
 });
-  i18nFontSize: '1rem',
-});
 
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
