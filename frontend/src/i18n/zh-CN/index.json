@@ -60,6 +60,15 @@
       "confirm": "确认"
     }
   },
+  "signatureManagementDialog": {
+    "title": "签名管理",
+    "subtitle": "管理您的署名信息，确保专辑的作者身份和版权保护",
+    "createSignature": "创建签名",
+    "manageSignature": "管理签名",
+    "createSignatureDesc": "为专辑创建新的署名信息",
+    "manageSignatureDesc": "管理已有的署名信息",
+    "cancel": "取消"
+  },
   "copyrightDialog": {
     "title": "专辑著作权信息",
     "subtitle": "为你的专辑添加署名信息，让创作得到应有的认可",

@@ -281,7 +281,16 @@
     </div>
   </div>
 
-  <!-- Signature Management Dialog -->
+  <!-- Signature Management Dialog (Primary Level) -->
+  <SignatureManagementDialog
+    v-model="showSignatureManagementDialog"
+    :i18n-font-size="i18n_fontSize"
+    @create-signature="handleCreateSignature"
+    @manage-signature="handleManageSignature"
+    @cancel="handleSignatureManagementCancel"
+  />
+
+  <!-- Copyright Dialog (Secondary Level) -->
   <CopyrightDialog
     v-model="showSignatureDialog"
     :has-existing-copyright="hasExistingSignature"
@@ -300,6 +309,7 @@ import { nanoid } from 'nanoid';
 import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import CopyrightDialog from 'src/components/CopyrightDialog.vue';
+import SignatureManagementDialog from 'src/components/SignatureManagementDialog.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -346,7 +356,8 @@ const isAtTop = ref(true);
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
 
 // Signature management dialog state
-const showSignatureDialog = ref(false);
+const showSignatureManagementDialog = ref(false);  // Primary level dialog
+const showSignatureDialog = ref(false);            // Secondary level dialog
 const hasExistingSignature = ref(false);
 
 // Simple XOR encryption for obfuscation (matching backend approach)
@@ -439,8 +450,8 @@ const openSignatureManager = async () => {
     // Check if there's existing signature information
     hasExistingSignature.value = await checkExistingSignature();
     
-    // Show signature management dialog
-    showSignatureDialog.value = true;
+    // Show primary signature management dialog
+    showSignatureManagementDialog.value = true;
   } catch (error) {
     console.error('Failed to open signature manager:', error);
     q.notify({
@@ -483,6 +494,26 @@ const handleSignatureSkip = () => {
 // Handle signature dialog cancel
 const handleSignatureCancel = () => {
   showSignatureDialog.value = false;
+};
+
+// Handle primary signature management dialog actions
+const handleCreateSignature = () => {
+  // Close primary dialog and open secondary dialog (existing CopyrightDialog)
+  showSignatureManagementDialog.value = false;
+  showSignatureDialog.value = true;
+};
+
+const handleManageSignature = () => {
+  // TODO: Implement signature management functionality in future updates
+  showSignatureManagementDialog.value = false;
+  q.notify({
+    type: 'info',
+    message: '签名管理功能即将推出，敬请期待',
+  });
+};
+
+const handleSignatureManagementCancel = () => {
+  showSignatureManagementDialog.value = false;
 };
 
 // 实现删除专辑的逻辑

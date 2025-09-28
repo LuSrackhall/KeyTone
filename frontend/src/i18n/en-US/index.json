@@ -60,6 +60,15 @@
       "confirm": "OK"
     }
   },
+  "signatureManagementDialog": {
+    "title": "Signature Management",
+    "subtitle": "Manage your signature information to ensure album authorship and copyright protection",
+    "createSignature": "Create Signature",
+    "manageSignature": "Manage Signature",
+    "createSignatureDesc": "Create new signature information for the album",
+    "manageSignatureDesc": "Manage existing signature information",
+    "cancel": "Cancel"
+  },
   "copyrightDialog": {
     "title": "Album Copyright Information",
     "subtitle": "Add copyright information to your album for proper recognition",

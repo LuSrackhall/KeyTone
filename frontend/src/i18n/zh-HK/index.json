@@ -57,6 +57,15 @@
       "confirm": "確認"
     }
   },
+  "signatureManagementDialog": {
+    "title": "署名管理",
+    "subtitle": "管理您的署名資訊，確保專輯的作者身份和版權保護",
+    "createSignature": "建立署名",
+    "manageSignature": "管理署名",
+    "createSignatureDesc": "為專輯建立新的署名資訊",
+    "manageSignatureDesc": "管理已有的署名資訊",
+    "cancel": "取消"
+  },
   "copyrightDialog": {
     "title": "專輯著作權資訊",
     "subtitle": "為你的專輯添加署名資訊，讓創作得到應有的認可",
