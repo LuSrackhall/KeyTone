@@ -62,12 +62,29 @@
   },
   "signatureManagementDialog": {
     "title": "签名管理",
-    "subtitle": "管理您的署名信息，确保专辑的作者身份和版权保护",
+    "subtitle": "管理您的署名信息，签名可用于为您所制作并导出的键音专辑添加作者身份标识，可在一定程度上保护您的著作权",
     "createSignature": "创建签名",
     "manageSignature": "管理签名",
     "createSignatureDesc": "为专辑创建新的署名信息",
     "manageSignatureDesc": "管理已有的署名信息",
     "cancel": "取消"
+  },
+  "createSignatureDialog": {
+    "title": "创建签名",
+    "subtitle": "创建署名信息，用于标识您制作的键音专辑的作者身份",
+    "authorName": "署名作者",
+    "authorNamePlaceholder": "请输入署名作者姓名",
+    "authorNameRequired": "署名作者为必填项",
+    "textContact": "联系方式（文本）",
+    "textContactPlaceholder": "请输入联系方式，如邮箱、社交媒体等",
+    "imageContact": "联系方式（图片）",
+    "removeImage": "移除图片",
+    "previewImage": "预览图片",
+    "uploading": "载入中...",
+    "loaded": "已载入",
+    "uploadFailed": "载入失败",
+    "cancel": "取消",
+    "saveSignature": "保存签名"
   },
   "copyrightDialog": {
     "title": "专辑著作权信息",

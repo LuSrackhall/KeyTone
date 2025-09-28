@@ -59,12 +59,29 @@
   },
   "signatureManagementDialog": {
     "title": "署名管理",
-    "subtitle": "管理您的署名資訊，確保專輯的作者身份和版權保護",
+    "subtitle": "管理您的署名資訊，署名可用於為您所製作並匯出的鍵音專輯添加作者身份標識，可在一定程度上保護您的著作權",
     "createSignature": "建立署名",
     "manageSignature": "管理署名",
     "createSignatureDesc": "為專輯建立新的署名資訊",
     "manageSignatureDesc": "管理已有的署名資訊",
     "cancel": "取消"
+  },
+  "createSignatureDialog": {
+    "title": "建立署名",
+    "subtitle": "建立署名資訊，用於標識您製作的鍵音專輯的作者身份",
+    "authorName": "署名作者",
+    "authorNamePlaceholder": "請輸入署名作者姓名",
+    "authorNameRequired": "署名作者為必填項",
+    "textContact": "聯絡方式（文字）",
+    "textContactPlaceholder": "請輸入聯絡方式，如電子郵件、社交媒體等",
+    "imageContact": "聯絡方式（圖片）",
+    "removeImage": "移除圖片",
+    "previewImage": "預覽圖片",
+    "uploading": "載入中...",
+    "loaded": "已載入",
+    "uploadFailed": "載入失敗",
+    "cancel": "取消",
+    "saveSignature": "儲存署名"
   },
   "copyrightDialog": {
     "title": "專輯著作權資訊",

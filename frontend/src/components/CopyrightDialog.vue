@@ -26,8 +26,8 @@
       <div class="copyright-dialog-content">
         <!-- Sticky Header with Glass Background -->
         <div class="copyright-dialog-header">
-          <div class="text-h6 text-weight-medium q-pa-sm">{{ $t('copyrightDialog.title') }}</div>
-          <div class="text-caption text-grey-6 q-px-sm q-pb-sm">{{ $t('copyrightDialog.subtitle') }}</div>
+          <div class="text-h6 text-weight-medium q-pa-sm">{{ $t(dialogTitleKey) }}</div>
+          <div class="text-caption text-grey-6 q-px-sm q-pb-sm">{{ $t(dialogSubtitleKey) }}</div>
         </div>
 
         <!-- Content -->
@@ -35,19 +35,20 @@
           <!-- Author Name (Required) -->
           <q-input
             v-model="authorName"
-            :label="$t('copyrightDialog.authorName')"
-            :placeholder="$t('copyrightDialog.authorNamePlaceholder')"
+            :label="$t(authorNameLabelKey)"
+            :placeholder="$t(authorNamePlaceholderKey)"
             outlined
             stack-label
             dense
             :error="authorNameError"
-            :error-message="$t('copyrightDialog.authorNameRequired')"
+            :error-message="$t(isCreateSignatureMode ? 'createSignatureDialog.authorNameRequired' : 'copyrightDialog.authorNameRequired')"
             @update:model-value="validateForm"
             class="q-mb-sm zzz"
           />
 
-          <!-- Copyright Protection Code (Required) -->
+          <!-- Copyright Protection Code (Required) - Only shown in copyright mode -->
           <q-input
+            v-if="!isCreateSignatureMode"
             v-model="protectionCode"
             :label="$t('copyrightDialog.protectionCode')"
             :placeholder="$t('copyrightDialog.protectionCodePlaceholder')"
@@ -64,8 +65,8 @@
           <!-- Text Contact Information (Optional) -->
           <q-input
             v-model="textContact"
-            :label="$t('copyrightDialog.textContact')"
-            :placeholder="$t('copyrightDialog.textContactPlaceholder')"
+            :label="$t(isCreateSignatureMode ? 'createSignatureDialog.textContact' : 'copyrightDialog.textContact')"
+            :placeholder="$t(isCreateSignatureMode ? 'createSignatureDialog.textContactPlaceholder' : 'copyrightDialog.textContactPlaceholder')"
             outlined
             stack-label
             dense
@@ -78,7 +79,7 @@
           <div class="q-mb-sm">
             <q-file
               v-model="imageContactFile"
-              :label="$t('copyrightDialog.imageContact')"
+              :label="$t(isCreateSignatureMode ? 'createSignatureDialog.imageContact' : 'copyrightDialog.imageContact')"
               outlined
               stack-label
               dense
@@ -118,15 +119,15 @@
                     <div class="image-status-overlay">
                       <div v-if="isUploading" class="status-indicator uploading">
                         <q-spinner color="white" size="16px" />
-                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.uploading') }}</span>
+                        <span class="q-ml-xs text-white text-caption">{{ $t(isCreateSignatureMode ? 'createSignatureDialog.uploading' : 'copyrightDialog.uploading') }}</span>
                       </div>
                       <div v-else-if="imageContactPath" class="status-indicator success">
                         <q-icon name="check_circle" color="white" size="16px" />
-                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.loaded') }}</span>
+                        <span class="q-ml-xs text-white text-caption">{{ $t(isCreateSignatureMode ? 'createSignatureDialog.loaded' : 'copyrightDialog.loaded') }}</span>
                       </div>
                       <div v-else class="status-indicator error">
                         <q-icon name="error" color="white" size="16px" />
-                        <span class="q-ml-xs text-white text-caption">{{ $t('copyrightDialog.uploadFailed') }}</span>
+                        <span class="q-ml-xs text-white text-caption">{{ $t(isCreateSignatureMode ? 'createSignatureDialog.uploadFailed' : 'copyrightDialog.uploadFailed') }}</span>
                       </div>
                     </div>
                   </div>
@@ -139,10 +140,10 @@
                   </div>
                   <div>
                     <q-btn flat dense icon="visibility" color="blue" size="sm" @click="previewImage">
-                      <q-tooltip>{{ $t('copyrightDialog.previewImage') }}</q-tooltip>
+                      <q-tooltip>{{ $t(isCreateSignatureMode ? 'createSignatureDialog.previewImage' : 'copyrightDialog.previewImage') }}</q-tooltip>
                     </q-btn>
                     <q-btn flat dense icon="close" color="negative" size="sm" @click="removeImage">
-                      <q-tooltip>{{ $t('copyrightDialog.removeImage') }}</q-tooltip>
+                      <q-tooltip>{{ $t(isCreateSignatureMode ? 'createSignatureDialog.removeImage' : 'copyrightDialog.removeImage') }}</q-tooltip>
                     </q-btn>
                   </div>
                 </q-card-actions>
@@ -159,23 +160,36 @@
         <!-- Sticky Footer with Glass Background -->
         <div class="copyright-dialog-footer">
           <q-card-actions align="right" class="q-pa-sm">
-            <q-btn flat :label="$t('copyrightDialog.cancel')" color="grey" size="sm" @click="cancel" />
+            <q-btn flat :label="$t(isCreateSignatureMode ? 'createSignatureDialog.cancel' : 'copyrightDialog.cancel')" color="grey" size="sm" @click="cancel" />
 
-            <q-btn
-              v-if="!hasExistingCopyright"
-              flat
-              :label="$t('copyrightDialog.skipAndExport')"
-              color="orange"
-              size="sm"
-              @click="skipAndExport"
-            />
+            <!-- Copyright mode buttons -->
+            <template v-if="!isCreateSignatureMode">
+              <q-btn
+                v-if="!hasExistingCopyright"
+                flat
+                :label="$t('copyrightDialog.skipAndExport')"
+                color="orange"
+                size="sm"
+                @click="skipAndExport"
+              />
 
+              <q-btn
+                :label="$t('copyrightDialog.confirmAndExport')"
+                color="primary"
+                size="sm"
+                :disable="!isFormValid"
+                @click="confirmAndExport"
+              />
+            </template>
+
+            <!-- Create signature mode button -->
             <q-btn
-              :label="$t('copyrightDialog.confirmAndExport')"
+              v-if="isCreateSignatureMode"
+              :label="$t('createSignatureDialog.saveSignature')"
               color="primary"
               size="sm"
               :disable="!isFormValid"
-              @click="confirmAndExport"
+              @click="saveSignature"
             />
           </q-card-actions>
         </div>
@@ -224,6 +238,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { nanoid } from 'nanoid';
 import { UploadCopyrightImage } from 'src/boot/query/keytonePkg-query';
 
 interface CopyrightData {
@@ -237,6 +252,7 @@ interface Props {
   modelValue: boolean;
   hasExistingCopyright?: boolean;
   i18nFontSize?: string;
+  mode?: 'copyright' | 'createSignature';
 }
 
 interface Emits {
@@ -244,10 +260,14 @@ interface Emits {
   (e: 'confirm', data: CopyrightData): void;
   (e: 'skip'): void;
   (e: 'cancel'): void;
+  (e: 'saveSignature', data: CopyrightData): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   hasExistingCopyright: false,
+  i18nFontSize: '1rem',
+  mode: 'copyright',
+});
   i18nFontSize: '1rem',
 });
 
@@ -279,18 +299,41 @@ const protectionCodeError = ref(false);
 
 const i18n_fontSize = computed(() => props.i18nFontSize);
 
+// Dynamic content based on mode
+const isCreateSignatureMode = computed(() => props.mode === 'createSignature');
+const dialogTitleKey = computed(() => 
+  isCreateSignatureMode.value ? 'createSignatureDialog.title' : 'copyrightDialog.title'
+);
+const dialogSubtitleKey = computed(() => 
+  isCreateSignatureMode.value ? 'createSignatureDialog.subtitle' : 'copyrightDialog.subtitle'
+);
+const authorNameLabelKey = computed(() => 
+  isCreateSignatureMode.value ? 'createSignatureDialog.authorName' : 'copyrightDialog.authorName'
+);
+const authorNamePlaceholderKey = computed(() => 
+  isCreateSignatureMode.value ? 'createSignatureDialog.authorNamePlaceholder' : 'copyrightDialog.authorNamePlaceholder'
+);
+
 const isFormValid = computed(() => {
-  return (
-    authorName.value.trim().length > 0 &&
-    protectionCode.value.length >= 6 &&
-    !authorNameError.value &&
-    !protectionCodeError.value
-  );
+  if (isCreateSignatureMode.value) {
+    // For create signature mode, only author name is required
+    return authorName.value.trim().length > 0 && !authorNameError.value;
+  } else {
+    // For copyright mode, both author name and protection code are required
+    return (
+      authorName.value.trim().length > 0 &&
+      protectionCode.value.length >= 6 &&
+      !authorNameError.value &&
+      !protectionCodeError.value
+    );
+  }
 });
 
 const validateForm = () => {
   authorNameError.value = authorName.value.trim().length === 0;
-  protectionCodeError.value = protectionCode.value.length < 6;
+  if (!isCreateSignatureMode.value) {
+    protectionCodeError.value = protectionCode.value.length < 6;
+  }
 };
 
 const handleImageSelect = async (file: File | null) => {
@@ -383,6 +426,29 @@ const confirmAndExport = () => {
 
   resetForm();
   emit('confirm', data);
+};
+
+const saveSignature = () => {
+  if (!isFormValid.value) {
+    validateForm();
+    return;
+  }
+
+  // Generate protection code automatically for signature creation
+  const autoProtectionCode = nanoid(12);
+
+  const data: CopyrightData = {
+    authorName: authorName.value.trim(),
+    textContact: textContact.value.trim(),  
+    protectionCode: autoProtectionCode,
+  };
+
+  if (imageContactPath.value) {
+    data.imageContactPath = imageContactPath.value;
+  }
+
+  resetForm();
+  emit('saveSignature', data);
 };
 
 // Watch for dialog close to cleanup

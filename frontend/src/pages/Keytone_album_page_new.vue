@@ -295,9 +295,11 @@
     v-model="showSignatureDialog"
     :has-existing-copyright="hasExistingSignature"
     :i18n-font-size="i18n_fontSize"
+    :mode="dialogMode"
     @confirm="handleSignatureConfirm"
     @skip="handleSignatureSkip"
     @cancel="handleSignatureCancel"
+    @save-signature="handleSaveSignature"
   />
 </template>
 
@@ -359,6 +361,7 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 const showSignatureManagementDialog = ref(false);  // Primary level dialog
 const showSignatureDialog = ref(false);            // Secondary level dialog
 const hasExistingSignature = ref(false);
+const dialogMode = ref<'copyright' | 'createSignature'>('copyright'); // Track dialog mode
 
 // Simple XOR encryption for obfuscation (matching backend approach)
 const KEYTONE_ENCRYPT_KEY = "KeyTone2024";
@@ -496,10 +499,52 @@ const handleSignatureCancel = () => {
   showSignatureDialog.value = false;
 };
 
+// Handle save signature (for create signature mode)
+const handleSaveSignature = async (signatureData: any) => {
+  try {
+    // Save signature to global configuration instead of album-specific config
+    // Get existing signatures from global config
+    let existingSignatures = await ConfigGet('signatures') || {};
+    
+    // Create a unique key for this signature using author name and timestamp
+    const signatureKey = `${signatureData.name || 'signature'}_${Date.now()}`;
+    
+    // Generate signature key from name and protection code for storage
+    const signatureHash = await generateSHA512(signatureData.authorName + signatureData.protectionCode);
+    
+    // Store the signature data
+    existingSignatures[signatureKey] = {
+      name: signatureData.authorName,
+      textContact: signatureData.textContact || '',
+      imageContactPath: signatureData.imageContactPath || '',
+      signatureHash: signatureHash,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Save to global config
+    await ConfigSet('signatures', existingSignatures);
+    
+    q.notify({
+      type: 'positive',
+      message: '签名创建成功',
+    });
+    
+  } catch (error) {
+    console.error('保存签名失败:', error);
+    q.notify({
+      type: 'negative',
+      message: '保存签名失败: ' + (error instanceof Error ? error.message : String(error)),
+    });
+  } finally {
+    showSignatureDialog.value = false;
+  }
+};
+
 // Handle primary signature management dialog actions
 const handleCreateSignature = () => {
-  // Close primary dialog and open secondary dialog (existing CopyrightDialog)
+  // Close primary dialog and open secondary dialog in create signature mode
   showSignatureManagementDialog.value = false;
+  dialogMode.value = 'createSignature';
   showSignatureDialog.value = true;
 };
 

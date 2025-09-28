@@ -62,12 +62,29 @@
   },
   "signatureManagementDialog": {
     "title": "Signature Management",
-    "subtitle": "Manage your signature information to ensure album authorship and copyright protection",
+    "subtitle": "Manage your signature information. Signatures can be used to add author identity markers to keytone albums you create and export, providing some copyright protection",
     "createSignature": "Create Signature",
     "manageSignature": "Manage Signature",
     "createSignatureDesc": "Create new signature information for the album",
     "manageSignatureDesc": "Manage existing signature information",
     "cancel": "Cancel"
+  },
+  "createSignatureDialog": {
+    "title": "Create Signature",
+    "subtitle": "Create signature information to identify the authorship of keytone albums you produce",
+    "authorName": "Signature Author",
+    "authorNamePlaceholder": "Enter signature author name",
+    "authorNameRequired": "Signature author is required",
+    "textContact": "Contact Information (Text)",
+    "textContactPlaceholder": "Enter contact info, e.g., email, social media",
+    "imageContact": "Contact Information (Image)",
+    "removeImage": "Remove Image",
+    "previewImage": "Preview Image",
+    "uploading": "Loading...",
+    "loaded": "Loaded",
+    "uploadFailed": "Load Failed",
+    "cancel": "Cancel",
+    "saveSignature": "Save Signature"
   },
   "copyrightDialog": {
     "title": "Album Copyright Information",
