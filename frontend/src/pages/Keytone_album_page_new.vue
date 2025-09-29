@@ -328,6 +328,7 @@ import {
   UploadCopyrightImage,
   type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
+import { StoreGet, StoreSet } from 'src/boot/query/store-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -504,10 +505,10 @@ const handleSaveSignature = async (signatureData: any) => {
   try {
     // Save signature to global configuration instead of album-specific config
     // Get existing signatures from global config
-    let existingSignatures = await ConfigGet('signatures') || {};
+    let existingSignatures = await StoreGet('signatures') || {};
     
     // Create a unique key for this signature using author name and timestamp
-    const signatureKey = `${signatureData.name || 'signature'}_${Date.now()}`;
+    const signatureKey = `${signatureData.authorName || 'signature'}_${Date.now()}`;
     
     // Generate signature key from name and protection code for storage
     const signatureHash = await generateSHA512(signatureData.authorName + signatureData.protectionCode);
@@ -522,7 +523,7 @@ const handleSaveSignature = async (signatureData: any) => {
     };
     
     // Save to global config
-    await ConfigSet('signatures', existingSignatures);
+    await StoreSet('signatures', existingSignatures);
     
     q.notify({
       type: 'positive',
