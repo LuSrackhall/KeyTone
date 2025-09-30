@@ -49,32 +49,46 @@
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
+**Constitution Compliance: 测试优先与覆盖率标准 - TDD 强制执行**
 - [ ] T004 [P] Contract test POST /api/users in tests/contract/test_users_post.py
 - [ ] T005 [P] Contract test GET /api/users/{id} in tests/contract/test_users_get.py
 - [ ] T006 [P] Integration test user registration in tests/integration/test_registration.py
 - [ ] T007 [P] Integration test auth flow in tests/integration/test_auth.py
+- [ ] T008 [P] Performance test - response time <20ms for audio operations
+- [ ] T009 [P] Performance test - keyboard event response <10ms
 
 ## Phase 3.3: Core Implementation (ONLY after tests are failing)
-- [ ] T008 [P] User model in src/models/user.py
-- [ ] T009 [P] UserService CRUD in src/services/user_service.py
-- [ ] T010 [P] CLI --create-user in src/cli/user_commands.py
-- [ ] T011 POST /api/users endpoint
-- [ ] T012 GET /api/users/{id} endpoint
-- [ ] T013 Input validation
-- [ ] T014 Error handling and logging
+**Constitution Compliance: 代码质量与架构分离 - 清晰的层次边界**
+- [ ] T010 [P] User model in src/models/user.py
+- [ ] T011 [P] UserService CRUD in src/services/user_service.py  
+- [ ] T012 [P] CLI --create-user in src/cli/user_commands.py
+- [ ] T013 POST /api/users endpoint (backend only, no frontend system calls)
+- [ ] T014 GET /api/users/{id} endpoint (backend only, no frontend system calls)
+- [ ] T015 Input validation with user-friendly error messages (用户体验一致性)
+- [ ] T016 Error handling with i18n support (用户体验一致性)
+- [ ] T017 Cross-platform compatibility checks (跨平台兼容性)
 
 ## Phase 3.4: Integration
-- [ ] T015 Connect UserService to DB
-- [ ] T016 Auth middleware
-- [ ] T017 Request/response logging
-- [ ] T018 CORS and security headers
+**Constitution Compliance: 性能与响应性要求 + 跨平台兼容性**
+- [ ] T018 Connect UserService to DB with connection pooling
+- [ ] T019 Auth middleware with platform-specific secure storage
+- [ ] T020 Structured logging (Go slog or standard log package)
+- [ ] T021 CORS and security headers
+- [ ] T022 Resource usage monitoring (memory <100MB, CPU <5%)
+- [ ] T023 Cross-platform file path handling
 
-## Phase 3.5: Polish
-- [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
-- [ ] T021 [P] Update docs/api.md
-- [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+## Phase 3.5: Polish & Quality Gates
+**Constitution Compliance: All principles verification**
+- [ ] T024 [P] Unit tests for validation in tests/unit/test_validation.py
+- [ ] T025 [P] Code coverage verification (Go: 85%+, Frontend: 80%+)
+- [ ] T026 [P] UI accessibility (ARIA) compliance tests
+- [ ] T027 [P] I18n completeness verification (no missing translation keys)
+- [ ] T028 Performance benchmark tests (<3s startup, resource limits)
+- [ ] T029 Cross-platform integration tests (Windows/macOS/Linux)
+- [ ] T030 [P] Update docs/api.md with architecture diagrams
+- [ ] T031 Code review checklist validation
+- [ ] T032 Remove duplication and architectural violations
+- [ ] T033 Run manual-testing.md across all platforms
 
 ## Dependencies
 - Tests (T004-T007) before implementation (T008-T014)

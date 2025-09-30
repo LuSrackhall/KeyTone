@@ -47,12 +47,41 @@
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**I. 代码质量与架构分离**:
+
+- [ ] Go 后端和前端架构边界明确定义
+- [ ] API 契约清晰且文档化
+- [ ] 无跨层直接系统调用
+
+**II. 测试优先与覆盖率标准**:
+
+- [ ] TDD 方法论已规划（测试先行）
+- [ ] 目标覆盖率已设定（后端 85%+，前端 80%+）
+- [ ] 关键功能集成测试已计划
+
+**III. 用户体验一致性**:
+
+- [ ] UI 设计系统一致性已考虑
+- [ ] 国际化支持已规划
+- [ ] 跨平台行为一致性已设计
+
+**IV. 性能与响应性要求**:
+
+- [ ] 性能指标已定义（10ms 键盘响应，20ms 音频延迟）
+- [ ] 资源使用限制已设定
+- [ ] 性能测试策略已规划
+
+**V. 跨平台兼容性**:
+
+- [ ] 目标平台支持已明确
+- [ ] 平台特定功能抽象已设计
+- [ ] 构建和发布策略已考虑
 
 ## Project Structure
 
 ### Documentation (this feature)
-```
+
+```text
 specs/[###-feature]/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
@@ -192,10 +221,10 @@ directories captured above]
 ## Complexity Tracking
 *Fill ONLY if Constitution Check has violations that must be justified*
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
 
 
 ## Progress Tracking
