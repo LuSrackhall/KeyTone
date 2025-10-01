@@ -1,250 +1,132 @@
-
 # Implementation Plan: 键音专辑签名系统
 
-**Branch**: `002-aaaa-aaaa-aaaa` | **Date**: 2025-09-30 | **Spec**: D:/safe/KeyTone/specs/002-aaaa-aaaa-aaaa/spec.md
+**Branch**: `002-aaaa-aaaa-aaaa` | **Date**: 2025-10-01 | **Spec**: D:/safe/KeyTone/specs/002-aaaa-aaaa-aaaa/spec.md
 **Input**: Feature specification from `/specs/002-aaaa-aaaa-aaaa/spec.md`
 
 ## Execution Flow (/plan command scope)
-```
+
+```text
 1. Load feature spec from Input path
-   → If not found: ERROR "No feature spec at {path}"
+   → DONE
 2. Fill Technical Context (scan for NEEDS CLARIFICATION)
-   → Detect Project Type from file system structure or context (web=frontend+backend, mobile=app+api)
-   → Set Structure Decision based on project type
-3. Fill the Constitution Check section based on the content of the constitution document.
+   → DONE（无 NEEDS CLARIFICATION 标记；关键不确定性在 spec 中已消除）
+3. Fill the Constitution Check section based on the constitution document.
+   → DONE（结合用户提供的 TDD 混合策略，标注差异处理）
 4. Evaluate Constitution Check section below
-   → If violations exist: Document in Complexity Tracking
-   → If no justification possible: ERROR "Simplify approach first"
-   → Update Progress Tracking: Initial Constitution Check
+   → DONE（记录偏离：严格 TDD 覆盖率阈值暂不作为门禁，转为“关键逻辑先测、UI 小量烟测”）
 5. Execute Phase 0 → research.md
-   → If NEEDS CLARIFICATION remain: ERROR "Resolve unknowns"
-6. Execute Phase 1 → contracts, data-model.md, quickstart.md, agent-specific template file (e.g., `CLAUDE.md` for Claude Code, `.github/copilot-instructions.md` for GitHub Copilot, `GEMINI.md` for Gemini CLI, `QWEN.md` for Qwen Code or `AGENTS.md` for opencode).
+   → WILL DO（本命令完成输出 research.md）
+6. Execute Phase 1 → contracts, data-model.md, quickstart.md
+   → WILL DO（本命令完成输出）
 7. Re-evaluate Constitution Check section
-   → If new violations: Refactor design, return to Phase 1
-   → Update Progress Tracking: Post-Design Constitution Check
+   → WILL DO（确保与混合策略一致）
 8. Plan Phase 2 → Describe task generation approach (DO NOT create tasks.md)
 9. STOP - Ready for /tasks command
 ```
 
-**IMPORTANT**: The /plan command STOPS at step 7. Phases 2-4 are executed by other commands:
-- Phase 2: /tasks command creates tasks.md
-- Phase 3-4: Implementation execution (manual or via tools)
-
+ 
 ## Summary
+从用户场景出发，实现“签名管理（创建/导入/导出）+ 专辑导出签名嵌入”的最小可用版本。技术路线采用：
+- 前端：Vue 3 + Quasar（Electron 模式可复用），UI 先原型实现，关键组件/逻辑单测或契约测。
+- 后端：Go（gin）本地 REST 服务，提供 /sdk/signatures 与专辑导出相关端点，契约优先。
+- 测试策略：放弃“全 UI 先行”的严格 TDD，采用混合式：
+  - 合同/数据转换/解析 → 测试优先（契约/单元）
+  - UI → 先手动实现与演示，补充 1-2 条烟雾用例与关键组件边界测试。
+**Language/Version**: Go 1.21+, TypeScript 4.9 + Vue 3
+**Primary Dependencies**: gin（Go）, Quasar/Vue Router/Pinia/Vue I18n、axios（前端）
+**Storage**: 本地 JSON 配置 + 资源目录；专辑导出文件内嵌签名结构
 
-为键音专辑提供“数字签名”能力及本地签名管理：
-- 在“键音专辑”页面顶部（删除按钮右侧）提供“签名管理”入口，以对话框形式进行签名创建/导入/删除/导出
-- 签名由“签名名称、个人介绍、名片图片(可选)”构成；保护码在创建时由系统自动生成且不可编辑
-- 支持签名导出为 .ktsign 文件与从 .ktsign 导入（导入无需输入保护码；保护码仅用于防重复、防篡改与校验）
-- 导出专辑时可选择签名并写入专辑签名信息；第一阶段记录“允许二次导出”偏好但不做强校验
+**Testing**:
+- 后端：Go testing（契约/单元/少量集成）
+- 前端：Playwright（仅烟雾/关键路径），Vitest（可测逻辑/组件）
+**Target Platform**: 桌面（Windows 为主，兼顾 macOS/Linux）
+**Project Type**: web（frontend + backend + electron 外壳）
+**Scale/Scope**: 单机应用；单用户本地签名管理
 
-技术约束（用户显式说明）：
-- 仅签名导入/导出使用浏览器前端能力（文件选择/保存）；除此之外的文件交互全部由 Go SDK 负责
-- 前端与 SDK 的通信遵循项目既有模式
-- 端到端测试使用 Playwright（本地已有相关 MCP 服务器, 可通过`#microsoft/playwright-mcp`来使用此MCP）
+ 
+### Constraints
 
-## Technical Context
+- REST-first：所有能力尽量通过 REST 与 SDK 交互，弱化 Electron 依赖，为未来 Wails 版本迁移降低成本。
+- 动态端口发现：Electron 调试模式下由主进程拉起 SDK 并输出 KEYTONE_PORT（stdout）；渲染进程通过 `window.myWindowAPI.getBackendPort()` 获取并调用 `UpdateApi(port)` 对齐 axios baseURL，避免硬编码端口。
+- 自动化成本控制：端到端仅保留烟雾/关键路径；契约与核心逻辑先测，覆盖率目标为指导性指标而非硬门禁。
 
-**Language/Version**: Go 1.21+ (SDK), TypeScript + Vue 3 + Quasar (frontend), Electron (桌面)
-**Primary Dependencies**: Pinia, Vue Router, Vue I18n, Electron IPC（既有通信模式）、Go SDK（本仓库 sdk/）
-**Storage**: 本地配置文件（全局设置文件）与同级资源目录（名片图片等）
-**Testing**: Go 单元与集成测试；前端单元测试（可补充）；E2E 使用 Playwright
-**Target Platform**: Windows/macOS/Linux（跨平台）
-**Project Type**: Web (frontend + backend/SDK)
-**Performance Goals**: 遵循宪章：键盘响应 <10ms、音频延迟 <20ms、启动 <3s、空闲内存 <100MB、CPU <5%
-**Constraints**:
-- 文件交互：除导入/导出使用浏览器文件选择/保存，其它文件读写统一走 Go SDK
-- 前端与 SDK 通信沿用既有模式（Electron contextBridge/IPC 等）
-- .ktsign 为签名文件扩展名；导入无需输入保护码
-**Scale/Scope**: 面向桌面端单用户场景；签名管理规模通常为个位到两位数
-
+ 
+ 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**I. 代码质量与架构分离**:
+（结合项目宪章与用户策略的务实落地）
 
-- [ ] Go 后端和前端架构边界明确定义
-- [ ] API 契约清晰且文档化
-- [ ] 无跨层直接系统调用
 
-**II. 测试优先与覆盖率标准**:
+**I. 代码质量与架构分离**
+- [x] Go 后端与前端边界通过 REST 契约隔离
+- [x] API 契约文档在 `contracts/` 下维护
+- [x] 前端不直连系统 API，系统交互经后端中转
+- [x] UI 不强制先测：先实现→烟雾/关键路径 E2E→补组件/单测
 
-- [ ] TDD 方法论已规划（测试先行）
-- [ ] 目标覆盖率已设定（后端 85%+，前端 80%+）
-- [ ] 关键功能集成测试已计划
+- [x] 覆盖率目标“指导性而非门禁”：后端>60% 针对新增、前端组件关键路径有测试
+- [x] i18n 现有基础继续复用
 
-**III. 用户体验一致性**:
+- [x] 可视化友好的错误提示（Notify）
+- [x] 资源使用受 Electron/Go 典型约束；后续再基线化
 
-- [ ] UI 设计系统一致性已考虑
-- [ ] 国际化支持已规划
-- [ ] 跨平台行为一致性已设计
 
-**IV. 性能与响应性要求**:
+- [x] 构建与发布沿用现有 Quasar/Electron 与 Go 流程
 
-- [ ] 性能指标已定义（10ms 键盘响应，20ms 音频延迟）
-- [ ] 资源使用限制已设定
-- [ ] 性能测试策略已规划
-
-**V. 跨平台兼容性**:
-
-- [ ] 目标平台支持已明确
-- [ ] 平台特定功能抽象已设计
-- [ ] 构建和发布策略已考虑
-
-## Project Structure
 
 ### Documentation (this feature)
 
-```text
-specs/[###-feature]/
-├── plan.md              # This file (/plan command output)
-├── research.md          # Phase 0 output (/plan command)
-├── data-model.md        # Phase 1 output (/plan command)
-├── quickstart.md        # Phase 1 output (/plan command)
-├── contracts/           # Phase 1 output (/plan command)
-└── tasks.md             # Phase 2 output (/tasks command - NOT created by /plan)
-```
 
+```text
+├── quickstart.md        # Phase 1 输出（本命令生成/更新）
+├── contracts/           # Phase 1 输出（本命令生成/更新）
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+
+
 ```text
-sdk/                         # Go SDK（文件交互、签名存取、校验）
-├── keySound/                # 现有模块（示例）
-├── server/                  # 若有 RPC/IPC 适配层
-└── ...
 
-frontend/                    # Quasar + Vue 3 + Electron
-├── src/
-│  ├── pages/
-│  │  └── AlbumPage.vue      # 键音专辑页面（签名按钮位于删除按钮右侧）
-│  ├── components/
-│  │  └── SignatureDialog.vue# 签名管理对话框（创建/导入/导出/删除）
-│  ├── stores/
-│  │  └── signature.ts       # 前端签名列表状态（从 SDK 拉取/推送）
-│  └── services/
-│     └── sdk-bridge.ts      # 与 SDK 的通信封装（沿用既有模式）
-└── tests/
-   └── e2e/                  # Playwright E2E（导入/导出/签名选择流程）
-
-specs/002-aaaa-aaaa-aaaa/
-├── plan.md
-├── research.md
-├── data-model.md
-├── quickstart.md
-└── contracts/
-   ├── signature-api.md
-   └── album-signing-api.md
+backend: sdk/ (Go, gin)
+frontend/: Vue 3 + Quasar + Electron
+  ├── src/components/
+  ├── src/pages/
+  ├── src/services/ (axios 封装)
+  └── tests/ (E2E 少量烟测 + 组件/逻辑单测)
 ```
 
-**Structure Decision**: 采用 Web（frontend + SDK）结构。前端负责交互与浏览器文件选择/保存；SDK 负责其余文件交互与签名校验、持久化。Electron 负责桥接通信，沿用既有项目模式与目录布局。
+**Structure Decision**: 采用 Web 应用结构（frontend + backend + electron 壳），API 契约放在 specs/ 下，便于跨层对齐。
 
+
+ 
 ## Phase 0: Outline & Research
-1. **Extract unknowns from Technical Context** above:
-   - For each NEEDS CLARIFICATION → research task
-   - For each dependency → best practices task
-   - For each integration → patterns task
 
-2. **Generate and dispatch research agents**:
-   ```
-   For each unknown in Technical Context:
-     Task: "Research {unknown} for {feature context}"
-   For each technology choice:
-     Task: "Find best practices for {tech} in {domain}"
-   ```
+1) Unknowns/Decisions 归档到 research.md：
 
-3. **Consolidate findings** in `research.md` using format:
-   - Decision: [what was chosen]
-   - Rationale: [why chosen]
-   - Alternatives considered: [what else evaluated]
+- .ktsign 文件打包/校验信息（第一阶段范围）
+- 契约字段命名与错误码规范
+- Windows 文件对话/路径与 Electron 安全集成边界
 
-**Output**: research.md with all NEEDS CLARIFICATION resolved（本规划基于用户显式 override，允许在无 Clarifications 节的前提下继续）
+1) Best Practices 收集：
+- gin 的请求验证/错误响应约定
+- 前端 axios 拦截器与错误提示一致性
+- Playwright 在 Electron 开发流中的“最小可接受”烟测清单
 
+2) Consolidate：以“Decision/Rationale/Alternatives”结构落盘。
+
+ 
 ## Phase 1: Design & Contracts
-*Prerequisites: research.md complete*
 
-1. **Extract entities from feature spec** → `data-model.md`:
-   - Entity name, fields, relationships
-   - Validation rules from requirements
-   - State transitions if applicable
+1) `data-model.md`：实体字段与校验规则（签名、签名文件、专辑签名记录）。
+2) `contracts/`：从 FR-006~FR-015 推导端点（/sdk/signatures, 导入/导出, 专辑签名相关）。
+3) 合同测试（最小集）：为每个端点写 1 个契约断言（schema/状态码）。
+4) `quickstart.md`：两条路径——
+   - 手动验证（UI 操作步骤）
+   - 自动验证（少量 Playwright 烟测 + 后端契约测命令）。
+5) 更新 agent context（如模板指引的脚本存在且需要）。
 
-2. **Generate API contracts** from functional requirements:
-   - For each user action → endpoint
-   - Use standard REST/GraphQL patterns
-   - Output OpenAPI/GraphQL schema to `/contracts/`
+ 
+ 
+## Phase 2: Task Planning Approach（描述，不执行）
 
-3. **Generate contract tests** from contracts:
-   - One test file per endpoint
-   - Assert request/response schemas
-   - Tests must fail (no implementation yet)
-
-4. **Extract test scenarios** from user stories:
-   - Each story → integration test scenario
-   - Quickstart test = story validation steps
-
-5. **Update agent file incrementally** (O(1) operation):
-   - 计划执行：`.specify/scripts/powershell/update-agent-context.ps1 -AgentType copilot`
-   - 由于当前默认 shell 为 bash，将在实现阶段通过 PowerShell 终端按原样执行
-   - 仅追加本计划中的新增技术点（Playwright E2E、.ktsign 扩展、SDK 统一文件交互约束）
-
-**Output**: data-model.md, /contracts/*, failing tests, quickstart.md, agent-specific file
-
-## Phase 2: Task Planning Approach
-*This section describes what the /tasks command will do - DO NOT execute during /plan*
-
-**Task Generation Strategy**:
-- Load `.specify/templates/tasks-template.md` as base
-- Generate tasks from Phase 1 design docs (contracts, data model, quickstart)
-- Each contract → contract test task [P]
-- Each entity → model creation task [P] 
-- Each user story → integration test task
-- Implementation tasks to make tests pass
-
-**Ordering Strategy**:
-- TDD order: Tests before implementation 
-- Dependency order: Models before services before UI
-- Mark [P] for parallel execution (independent files)
-
-**Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
-
-**IMPORTANT**: This phase is executed by the /tasks command, NOT by /plan
-
-## Phase 3+: Future Implementation
-*These phases are beyond the scope of the /plan command*
-
-**Phase 3**: Task execution (/tasks command creates tasks.md)  
-**Phase 4**: Implementation (execute tasks.md following constitutional principles)  
-**Phase 5**: Validation (run tests, execute quickstart.md, performance validation)
-
-## Complexity Tracking
-*Fill ONLY if Constitution Check has violations that must be justified*
-
-| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
-| -------------------------- | ------------------ | ------------------------------------ |
-| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
-
-
-## Progress Tracking
-*This checklist is updated during execution flow*
-
-**Phase Status**:
-- [x] Phase 0: Research complete (/plan command)
-- [x] Phase 1: Design complete (/plan command)
-- [ ] Phase 2: Task planning complete (/plan command - describe approach only)
-- [ ] Phase 3: Tasks generated (/tasks command)
-- [ ] Phase 4: Implementation complete
-- [ ] Phase 5: Validation passed
-
-**Gate Status**:
-- [x] Initial Constitution Check: PASS
-- [x] Post-Design Constitution Check: PASS
-- [x] All NEEDS CLARIFICATION resolved（用户提供 override 与技术约束）
-- [ ] Complexity deviations documented
-
----
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+- 从 contracts & data-model 生成任务分解：
+  - 后端：端点实现 + 契约测试驱动
+  - 前端：对话框 UI、导出流程、axios 服务、少量烟测
+- 加注“测试策略标签”：contract-first / ui-smoke / component-unit
