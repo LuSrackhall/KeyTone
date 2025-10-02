@@ -2,25 +2,25 @@
 
 ## List Signatures
 GET /sdk/signatures
-Response: 200 [{ id, name, intro?, cardImagePath?, createdAt }]
+Response: 200 [{ name, intro?, cardImagePath?, createdAt }]
 
 ## Create Signature
 POST /sdk/signatures
 Body: { name, intro?, cardImageBase64? }
-Response: 201 { id }
+Response: 201 { name }
 Errors: 400 (duplicate name)
 
 ## Delete Signature
-DELETE /sdk/signatures/{id}
+DELETE /sdk/signatures/{name}
 Response: 204
 
 ## Export Signature
-POST /sdk/signatures/{id}/export
+POST /sdk/signatures/{name}/export
 Body: { }
 Response: 200 { fileNameSuggested: string, blobBase64: string }
 
 ## Import Signature
 POST /sdk/signatures/import
 Body: { fileName: string, blobBase64: string, overwrite?: boolean }
-Response: 201 { id, overwritten: boolean }
+Response: 201 { name, overwritten: boolean }
 Errors: 409 (exists without overwrite)
