@@ -114,13 +114,29 @@ frontend/: Vue 3 + Quasar + Electron
  
 ## Phase 1: Design & Contracts
 
-1) `data-model.md`：实体字段与校验规则（签名、签名文件、专辑签名记录）。
+1) `data-model.md`：实体字段与校验规则（签名、签名文件、专辑签名记录）+ **存储布局**（全局配置明文 vs. 专辑配置双重加密，对称加密算法 AES-256-GCM + Base64 编码，密钥管理第一阶段应用级固定密钥）。
 2) `contracts/`：从 FR-006~FR-015 推导端点（/sdk/signatures, 导入/导出, 专辑签名相关）。
 3) 合同测试（最小集）：为每个端点写 1 个契约断言（schema/状态码）。
 4) `quickstart.md`：两条路径——
    - 手动验证（UI 操作步骤）
    - 自动验证（少量 Playwright 烟测 + 后端契约测命令）。
 5) 更新 agent context（如模板指引的脚本存在且需要）。
+
+**存储层设计要点**（详见 data-model.md Storage Layout）：
+
+- **签名唯一标识**：无独立 id 字段，name 作为唯一标识；protectCode 用于加密/哈希，不作为业务标识
+- **全局配置**（明文存储）：
+  - key: `encrypt(protectCode)` - 对称加密后的保护码
+  - value: 明文 JSON，包含 name、intro、cardImagePath、createdAt（无 id）
+  - 便于前端快速索引与渲染
+- **专辑配置**（双重加密）：
+  - key: `encrypt(sha256(decrypt(protectCode) + name))` - 先解密保护码，与 name 拼接后计算 SHA-256 哈希，最后加密
+  - value: `encrypt(JSON_payload)` - 对称加密后的完整签名信息
+  - JSON_payload 含 name、intro、cardImagePath、signedAt、authorizationBlock（仅原始作者包含此字段, 其它作者的签名不含此字段）
+  - 双重加密防止泄露签名逻辑与授权结构
+- **AuthorizationBlock**（第二阶段强依赖）：
+  - authCode: 签名授权码（默认为固定写死的 sha256 码, 从变量读取并与配置中对比, 相同即允许二次导出；不匹配 = 需授权码校验）
+  - authorizedList: 资格码列表（存储通过授权的三方签名资格码）
 
  
  
