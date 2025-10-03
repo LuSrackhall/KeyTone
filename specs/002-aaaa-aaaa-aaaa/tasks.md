@@ -1,201 +1,92 @@
-# Tasks: 键音专辑签名系统
+# Tasks: 键音专辑签名系统（最小新端点 + 最大复用）
 
-**Input**: 设计文档来自 `/specs/002-aaaa-aaaa-aaaa/`
-**Prerequisites**: plan.md (required), research.md, data-model.md, contracts/
+**Input**: 来自 `/specs/002-aaaa-aaaa-aaaa/` 的最新 spec 与 plan
+**Prerequisites**: plan.md (required), data-model.md, contracts/, research.md（可选）
 
-## Execution Flow (main)
-```
-1. 从特性目录加载 plan.md
-   → 如未找到: ERROR "未找到实现计划"
-   → 提取: 技术栈、库、结构
-2. 加载可选设计文档:
-   → data-model.md: 提取实体 → 模型任务
-   → contracts/: 每个文件 → 契约测试任务
-   → research.md: 提取决策 → 设置任务
-3. 按类别生成任务:
-   → Setup: 项目初始化、依赖、代码规范
-   → Tests: 契约测试、集成测试
-   → Core: 模型、服务、端点
-   → Integration: 数据库、中间件、日志
-   → Polish: 单元测试、性能、文档
-4. 应用任务规则:
-   → 不同文件 = 标记 [P] 并行执行
-   → 相同文件 = 顺序执行 (无 [P])
-   → 测试优先于实现 (TDD)
-5. 按顺序编号任务 (T001, T002...)
-6. 生成依赖关系图
-7. 创建并行执行示例
-8. 验证任务完整性:
-   → 所有契约都有测试?
-   → 所有实体都有模型?
-   → 所有端点都已实现?
-9. 返回: SUCCESS (任务准备就绪)
-```
+## 执行规则（精简务实版）
+- 以复用为先：签名列表 CRUD 走 `/store/*` 与 `/keytone_pkg/*`；实时更新走 `/stream`。
+- 仅为 .ktsign 导入/导出与导出签名桥新增最小端点，并提供契约与最小测试。
+- 测试策略（与宪章目标一致的务实落地）：优先用测试保护“既有功能”（回归/契约），对“新增最小端点/逻辑”提供必要的契约/单测，允许实现与测试交错推进；以“测试通过”为门槛而非书写时序。
+- 窗口与 i18n 约束严格遵守 spec 的 NFR。
 
 ## Format: `[ID] [P?] 描述`
-- **[P]**: 可并行运行 (不同文件，无依赖)
-- 描述中包含准确的文件路径
+- [P] 表示与其它任务可并行（不同文件、无直接依赖）。
+- 描述尽量包含准确文件路径（相对仓库根）。
 
-## Path Conventions
-- **Web 应用**: `sdk/` (后端 Go), `frontend/src/` (前端 Vue)
-- 后端路径: `sdk/signature/`, `sdk/server/`
-- 前端路径: `frontend/src/components/`, `frontend/src/services/`, `frontend/src/pages/`
-- 测试路径: `sdk/*_test.go` (后端契约测试), `frontend/tests/e2e/` (前端烟雾测试)
+## 路径约定
+- 后端：`sdk/server/`（路由与处理器），`sdk/signature/`（如需最小模型与文件编解码）。
+- 前端：`frontend/src/components/`, `frontend/src/pages/`, `frontend/src/services/`, `frontend/src/stores/`, `frontend/src/i18n/`。
+- 测试：`sdk/*_test.go`, `frontend/tests/e2e/`, `frontend/tests/unit/`。
 
-## Phase 3.1: Setup (设置)
-- [ ] T001 根据实现计划检查项目结构 (sdk/ 和 frontend/ 已存在)
-- [ ] T002 [P] 在 sdk/ 安装/更新 Go 依赖 (gin, nanoid, crypto)
-- [ ] T003 [P] 在 frontend/ 安装/更新前端依赖 (axios, Vue Router, Pinia)
-- [ ] T004 [P] 配置后端路由前缀 /sdk/ 与错误响应中间件 (sdk/server/server.go)
-- [ ] T005 [P] 配置前端 axios baseURL 动态对齐逻辑 (frontend/src/boot/axios.ts 已存在，验证 UpdateApi 功能)
+---
 
-## Phase 3.2: Tests First (TDD) ⚠️ 必须在 3.3 之前完成
-**关键: 这些测试必须先编写且必须失败，然后才能进行任何实现**
-**宪章合规: 测试优先与覆盖率标准 - 契约与核心逻辑 TDD**
+## Phase 3.1: Setup & Audit（建立与审计）
+- [ ] T001 审计后端现有接口：确认存在 `/store/get|set`、`/keytone_pkg/get|set|delete`、`/stream`（sdk/server/server.go）
+- [ ] T002 审计前端 SSE：确认 Electron 主进程与渲染进程已订阅 `message` 与 `messageAudioPackage` 并处理 `get_all_value`（frontend/src-electron/electron-main.ts, frontend/src/App.vue, frontend/src/components/Keytone_album.vue）
+- [ ] T003 校验 axios 动态端口逻辑可用（frontend/src/boot/axios.ts 与主进程桥）
+- [ ] T004 清点并标注需废弃的旧端点或 UI（如存在 /sdk/signatures* 痕迹，先标记不再使用，保留回滚锚点）
 
-### 后端契约测试 (Contract Tests)
-- [ ] T006 契约测试 GET /sdk/signatures (sdk/signature/signature_test.go)
-- [ ] T007 契约测试 POST /sdk/signatures (sdk/signature/signature_test.go)
-- [ ] T008 契约测试 DELETE /sdk/signatures/{name} (sdk/signature/signature_test.go)
-- [ ] T009 契约测试 POST /sdk/signatures/{name}/export (sdk/signature/signature_test.go)
-- [ ] T010 契约测试 POST /sdk/signatures/import (sdk/signature/signature_test.go)
-- [ ] T011 [P] 契约测试 GET /sdk/albums/{albumId}/signatures (sdk/server/album_test.go)
-- [ ] T012 [P] 契约测试 POST /sdk/albums/{albumId}/sign (sdk/server/album_test.go)
-- [ ] T013 [P] 契约测试 POST /sdk/albums/{albumId}/export (sdk/server/album_test.go)
-- [ ] T014 [P] 契约测试 GET /ping (sdk/server/server_test.go)
+## Phase 3.2: Contracts（仅新增最小端点）
 
-### 前端烟雾测试 (Smoke Tests)
-- [ ] T015 [P] Electron 烟雾测试: 应用启动与后端连接 (frontend/tests/e2e/electron-smoke.spec.ts)
-- [ ] T016 [P] Electron 烟雾测试: 签名管理对话框可访问 (frontend/tests/e2e/electron-smoke.spec.ts)
+- [ ] T010 新建契约：POST `/signature/export`（导出 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-export.md`
+- [ ] T011 新建契约：POST `/signature/import`（导入 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-import.md`
+- [ ] T012 新建契约：POST `/export/sign-bridge`（导出流程签名桥） → `specs/002-aaaa-aaaa-aaaa/contracts/export-sign-bridge.md`
+- [ ] T013 契约测试（最小集）：为 T010~T012 各写 1 条 happy path + 1 条错误路径（sdk/server/server_test.go 或相关 *_test.go）
+- [ ] T014 契约补充：在 `export-sign-bridge.md` 明确 `album_signatures` 中“每次导出的时间戳数组”字段结构与合并规则
 
-## Phase 3.3: Core Implementation (核心实现) - 仅在测试失败后
-**宪章合规: 代码质量与架构分离 - 清晰的层次边界**
+## Phase 3.3: Backend（最小实现）
 
-### 后端实现
-- [ ] T017 创建加密工具模块 (sdk/crypto/crypto.go): AES-256-GCM 加密/解密、Base64 编码、SHA-256 哈希
-- [ ] T018 [P] DigitalSignature 数据结构与验证 (sdk/signature/model.go)
-- [ ] T019 [P] SignatureFile 数据结构 (.ktsign 格式) (sdk/signature/file.go)
-- [ ] T020 全局配置签名存储层 (sdk/signature/storage.go): 加密 protectCode 为 key、明文 JSON 为 value
-- [ ] T021 专辑配置签名存储层 (sdk/signature/album_storage.go): 双重加密 (key 和 value)
-- [ ] T022 签名管理服务 (sdk/signature/service.go): CRUD、导入/导出逻辑
-- [ ] T023 GET /sdk/signatures 端点实现 (sdk/server/routes.go)
-- [ ] T024 POST /sdk/signatures 端点实现 (sdk/server/routes.go)
-- [ ] T025 DELETE /sdk/signatures/{id} 端点实现 (sdk/server/routes.go)
-- [ ] T026 POST /sdk/signatures/{id}/export 端点实现 (sdk/server/routes.go)
-- [ ] T027 POST /sdk/signatures/import 端点实现 (sdk/server/routes.go)
-- [ ] T028 专辑签名服务 (sdk/signature/album_service.go): 签名关联与导出逻辑
-- [ ] T029 GET /sdk/albums/{albumId}/signatures 端点实现 (sdk/server/routes.go)
-- [ ] T030 POST /sdk/albums/{albumId}/sign 端点实现 (sdk/server/routes.go)
-- [ ] T031 POST /sdk/albums/{albumId}/export 端点实现 (sdk/server/routes.go)
-- [ ] T032 输入验证与用户友好错误消息 (sdk/server/middleware.go)
+- [ ] T020 `.ktsign` 文件编解码最小实现（sdk/signature/file.go）：包含签名名称、唯一标识、介绍、名片资源引用、完整性校验字段（Stage 1）
+- [ ] T021 导出端点处理器：POST `/signature/export`（sdk/server/signature_handlers.go），从 `/store/get` 读取 `signature_manager`，根据请求选择签名，生成 .ktsign 输出（字节流或保存路径）
+- [ ] T022 导入端点处理器：POST `/signature/import`（sdk/server/signature_handlers.go），解析上传 .ktsign，写回 `/store/set` 的 `signature_manager`，触发全局 SSE 刷新
+- [ ] T023 导出签名桥：POST `/export/sign-bridge`（sdk/server/album_handlers.go 或新建 export_handlers.go），将前端导出流程中选择的签名写入专辑配置 `album_signatures`（经 `/keytone_pkg/set`）并返回导出继续所需数据
+- [ ] T024 错误与边界：空列表、重复签名（覆盖/取消）、坏文件、路径异常、跨平台路径
+- [ ] T025 资源落盘与引用维护：.ktsign 导入/导出时，名片图片等资源复制至资源目录，并在 `signature_manager` 与 `album_signatures` 中维护/修正引用路径（sdk/signature/file.go + 相关 handlers）
+- [ ] T026 导出时间戳合并：在导出签名桥中为对应签名追加导出时间戳，保证为数组并去重/排序（按时间）
 
-### 前端实现
-- [ ] T033 [P] 签名类型定义 (frontend/src/types/signature.ts)
-- [ ] T034 [P] 签名 API 服务封装 (frontend/src/services/signatureApi.ts): axios 调用封装
-- [ ] T035 [P] 专辑签名 API 服务封装 (frontend/src/services/albumSigningApi.ts)
-- [ ] T036 签名管理 Pinia Store (frontend/src/stores/signatureStore.ts): 状态管理与缓存
-- [ ] T037 签名列表组件 (frontend/src/components/SignatureList.vue): 展示、选择、删除、名片占位符处理
-- [ ] T038 签名创建对话框组件 (frontend/src/components/SignatureCreateDialog.vue): 表单与名片图片上传、ARIA 标签
-- [ ] T039 签名导入对话框组件 (frontend/src/components/SignatureImportDialog.vue): 文件选择与覆盖确认、ARIA 标签
-- [ ] T040 签名导出功能 (frontend/src/components/SignatureList.vue): 调用导出 API 与下载（依赖 T037）
-- [ ] T041 签名管理对话框 (frontend/src/components/SignatureManagementDialog.vue): 集成所有签名操作、按钮位于删除按钮右侧、ARIA 标签
-- [ ] T042 专辑签名选择对话框 (frontend/src/components/AlbumSigningDialog.vue): 签名选择、筛选/搜索功能、二次导出设置、ARIA 标签
-- [ ] T043 专辑导出流程集成 (frontend/src/pages/AlbumExportPage.vue): 集成签名选择与导出调用
-- [ ] T044 错误处理与国际化提示 (frontend/src/boot/axios.ts 响应拦截器): 导入失败、网络错误、验证失败、签名冲突等场景
+## Phase 3.4: Frontend（复用读写 + SSE）
 
-## Phase 3.4: Integration (集成)
-**宪章合规: 性能与响应性要求 + 跨平台兼容性**
-- [ ] T045 Electron 主进程端口发现逻辑 (frontend/src-electron/electron-main.ts): 捕获 KEYTONE_PORT 并通过 IPC 暴露
-- [ ] T046 渲染进程端口获取与 axios 同步 (frontend/src/boot/axios.ts): 调用 getBackendPort 与 UpdateApi
-- [ ] T047 [P] 结构化日志集成 (sdk/logger/logger.go): 签名操作审计日志
-- [ ] T048 [P] 跨平台文件路径处理 (sdk/signature/path.go): Windows/macOS/Linux 路径标准化
-- [ ] T049 资源使用监控验证 (自动化或手动基准测试: 空闲内存 <100MB, CPU <5%)
+- [ ] T030 签名管理对话框：首次打开 GET `/store/get` 读取 `signature_manager`；创建/导入/删除后由 SSE 自动刷新（frontend/src/components/SignatureManagementDialog.vue）
+- [ ] T031 创建与删除：通过 `/store/set` 更新 `signature_manager`；保护码由前端创建时自动生成且 UI 不展示（frontend/src/services/ 或 stores/）
+- [ ] T032 导出签名文件（.ktsign）：调用 POST `/signature/export`，并处理保存（前端桥接到系统对话框，遵循 Electron 安全边界）；注意：该操作为“签名文件管理”，不涉及“专辑导出”
+- [ ] T033 导入签名：调用 POST `/signature/import`，成功后列表自动刷新（SSE）
+- [ ] T034 导出流程集成：在专辑导出步骤弹出签名选择，调用 `/export/sign-bridge` 将签名写入 `album_signatures` 并继续导出（frontend/src/pages/ 或组件）
+- [ ] T035 i18n：新增 `signature` 命名空间的中英文 key，覆盖所有用户可见文本（frontend/src/i18n/{zh-CN,en-US}/index.json）
+- [ ] T036 覆盖确认 UI：导入签名遇到“唯一标识相同”的重复时，弹出“覆盖/取消”确认对话框并完成 i18n 覆盖
+- [ ] T037 导出前置校验：当专辑已有签名时，导出流程必须要求再选择签名（否则禁用继续/提示）；与后端桥接响应保持一致的错误提示
 
-## Phase 3.5: Polish & Quality Gates (完善与质量门禁)
-**宪章合规: 所有原则验证**
-- [ ] T050 [P] 签名验证单元测试 (sdk/signature/validation_test.go)
-- [ ] T051 [P] 加密/解密单元测试 (sdk/crypto/crypto_test.go)
-- [ ] T052 [P] 组件单元测试: SignatureList (frontend/tests/unit/SignatureList.spec.ts)
-- [ ] T053 [P] 组件单元测试: SignatureCreateDialog (frontend/tests/unit/SignatureCreateDialog.spec.ts)
-- [ ] T054 [P] 代码覆盖率验证 (后端 ≥85% 符合宪章，前端 ≥80% 符合宪章)
-- [ ] T055 [P] 国际化与无障碍验证 (frontend/src/i18n/: 无缺失 key; 所有交互元素有 ARIA 标签)
-- [ ] T056 [P] 性能基准测试 (签名导入/导出 <1s, 专辑签名 <2s, 应用启动 <3s)
-- [ ] T057 跨平台手动测试 (Windows/macOS/Linux: 执行 quickstart.md 全部 6 个场景验证)
-- [ ] T058 更新 API 文档 (specs/002-aaaa-aaaa-aaaa/contracts/: 补充示例与错误码)
-- [ ] T059 代码审查检查清单验证 (去重、架构分离、REST 边界)
-- [ ] T060 运行 quickstart.md 端到端流程验证
+## Phase 3.5: Tests & Integration（测试与集成）
 
-## Dependencies (依赖关系)
-- Setup (T001-T005) 在所有任务之前
-- 契约测试 (T006-T014) 在后端实现 (T017-T032) 之前
-- 烟雾测试 (T015-T016) 在前端实现 (T033-T044) 之前
-- T017 (加密工具) 阻塞 T020, T021 (存储层)
-- T020, T021 (存储层) 阻塞 T022 (签名服务)
-- T022 (签名服务) 阻塞 T023-T027 (签名端点)
-- T028 (专辑签名服务) 阻塞 T029-T031 (专辑端点)
-- T033 (类型定义) 阻塞 T034-T035 (API 服务)
-- T034-T035 (API 服务) 阻塞 T036 (Store)
-- T036 (Store) 阻塞 T037-T043 (UI 组件)
-- T037 (列表组件) 阻塞 T040 (导出功能，同文件)
-- 核心实现 (T017-T044) 在集成 (T045-T049) 之前
-- 集成 (T045-T049) 在完善 (T050-T060) 之前
+- [ ] T040 Playwright 烟雾：应用可启动；“签名管理”按钮可见；对话框在 360x420 内完整显示
+- [ ] T041 Playwright 烟雾：创建/导入后列表自动刷新（监听 SSE）
+- [ ] T042 后端契约/单测：T010~T012 的 happy path 与错误路径通过
+- [ ] T043 质量检查：UI 文案 i18n 覆盖；窗口尺寸与滚动策略符合 NFR；错误提示一致
+- [ ] T043a i18n 验收 checklist：标题、按钮、表单标签、错误提示、占位文案、工具提示、确认对话
+- [ ] T043b UI 位置断言：确认“签名管理”按钮位于“删除”按钮右侧
+- [ ] T044 Playwright 烟雾：导出流程中“必须选择签名”的校验触发与通过签名选择后可继续导出
 
-## Parallel Example (并行执行示例)
-```bash
-# 同时启动 T006-T014 (后端契约测试):
-Task: "契约测试 GET /sdk/signatures (sdk/signature/signature_test.go)"
-Task: "契约测试 POST /sdk/signatures (sdk/signature/signature_test.go)"
-Task: "契约测试 DELETE /sdk/signatures/{id} (sdk/signature/signature_test.go)"
-Task: "契约测试 POST /sdk/signatures/{id}/export (sdk/signature/signature_test.go)"
-Task: "契约测试 POST /sdk/signatures/import (sdk/signature/signature_test.go)"
-Task: "契约测试 GET /sdk/albums/{albumId}/signatures (sdk/server/album_test.go)"
-Task: "契约测试 POST /sdk/albums/{albumId}/sign (sdk/server/album_test.go)"
-Task: "契约测试 POST /sdk/albums/{albumId}/export (sdk/server/album_test.go)"
-Task: "契约测试 GET /ping (sdk/server/server_test.go)"
+## Phase 3.6: Polish（完善）
 
-# 同时启动 T018-T019 (数据结构):
-Task: "DigitalSignature 数据结构与验证 (sdk/signature/model.go)"
-Task: "SignatureFile 数据结构 (sdk/signature/file.go)"
+- [ ] T050 文档：更新 `quickstart.md` 与 `contracts/` 示例请求/响应
+- [ ] T051 性能：签名导入/导出 <1s；导出签名桥 <1s；列表筛选 <100ms（可用本地基准或手测）
+- [ ] T052 跨平台手测：Windows/macOS 基线验证；Linux 机会性验证
 
-# 同时启动 T033-T035 (前端类型与服务):
-Task: "签名类型定义 (frontend/src/types/signature.ts)"
-Task: "签名 API 服务封装 (frontend/src/services/signatureApi.ts)"
-Task: "专辑签名 API 服务封装 (frontend/src/services/albumSigningApi.ts)"
-```
+---
 
-## Notes (注意事项)
-- [P] 任务 = 不同文件，无依赖
-- 在实现前验证测试失败
-- 每个任务后提交代码
-- 避免: 模糊任务、同一文件冲突
-- 前端 UI 测试采用混合策略: 先实现 → 少量烟雾测试 → 补充关键组件单测
-- 后端遵循契约优先: 测试先行 → 实现 → 覆盖率验证
+## 依赖关系（精简）
 
-## Task Generation Rules (任务生成规则)
-*在 main() 执行期间应用*
+- Setup（T001-T004）先于 Contracts（T010-T014）与 Backend（T020-T026）
+- Contracts（T010-T014）先于 Backend 端点实现（T021-T023）与测试（T042）
+- Backend（T020-T026）与 Frontend（T030-T037）完成后再做集成与烟测（T040-T044）
 
-1. **从 Contracts**:
-   - 每个契约端点 → 契约测试任务 [P]
-   - 每个端点 → 实现任务
-   
-2. **从 Data Model**:
-   - 每个实体 → 模型创建任务 [P]
-   - 存储层 → 加密与持久化任务
-   
-3. **从 User Stories**:
-   - quickstart.md 场景 → 集成测试 [P]
-   - 手动验证步骤 → 自动化验证任务
+## 并行建议
 
-4. **排序**:
-   - Setup → Tests → Models → Services → Endpoints → Integration → Polish
-   - 依赖关系阻止并行执行
+- [P] T001/T002/T003 可并行（不同文件）
+- [P] T020 与 T021-T023 分阶段并行（模型/编解码与处理器不同文件）
+- [P] T030~T035 中 UI 与服务可与后端并行开发，以 mock/假数据推进
 
-## Validation Checklist (验证清单)
-*门禁: 在 main() 返回前检查*
+## 备注
 
-- [x] 所有契约都有对应的测试 (T006-T014)
-- [x] 所有实体都有模型任务 (T018-T019)
-- [x] 所有测试都在实现之前 (T006-T016 在 T017-T044 之前)
-- [x] 并行任务真正独立 (不同文件，无依赖)
-- [x] 每个任务指定准确的文件路径
-- [x] 没有任务修改与另一个 [P] 任务相同的文件
+- 旧的 `/sdk/signatures*` 类端点若存在，后续统一下线或迁移到“兼容层”，不在本阶段范围内复用。
+- 保护码与唯一标识均由系统自动生成；UI 均不展示保护码。
+- 列表“首次 GET + 后续 SSE 自动刷新”是第一阶段必须满足的交互契约。

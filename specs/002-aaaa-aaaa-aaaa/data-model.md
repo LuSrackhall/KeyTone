@@ -7,7 +7,7 @@
 - name: string (1..64, required, unique, immutable, 唯一标识)
 - intro: string? (0..512)
 - cardImagePath: string? (相对全局配置同级资源目录，uuid.png/jpg 等；可选)
-- protectCode: string (nanoid 生成的 uuid, required, immutable, 前端生成)
+- protectCode: string (nanoid 生成的 uuid, required, immutable, 前端生成；在持久化时以对称加密形式作为 key 使用，不在 UI 展示)
 - createdAt: ISO8601 string (required)
 
 校验：
@@ -28,7 +28,7 @@
 - signedAt: ISO8601 string[] (该签名在此专辑的导出时间戳历史)
 - authorization?: AuthorizationBlock (仅原始作者的签名中包含；第二阶段实现)
 
-AuthorizationBlock（第二阶段占位）：
+AuthorizationBlock（第二阶段占位，统一定义）：
 
 - authCode: string (签名授权码；默认为固定 sha256，匹配即允许二次导出；不匹配则需授权码校验)
 - authorizedList: string[] (授权对象资格码列表；每个对应一个三方签名；具体生成/校验规则待第二阶段定义)
@@ -36,9 +36,9 @@ AuthorizationBlock（第二阶段占位）：
 ### SignatureFile (.ktsign)
 
 - version: string (e.g., "1")
-- payload: DigitalSignature（剔除本地绝对路径敏感信息）
-- assets: { cardImage?: string (base64 或相对路径) }
-- integrity: string (预留：第一阶段可为空或弱校验)
+- payload: DigitalSignature（剔除本地绝对路径敏感信息，但必须包含还原所需字段：name、intro、protectCode、createdAt、cardImagePath 文件名）
+- assets: { cardImage?: string (base64 或相对路径；推荐 base64 以便跨设备导入时可还原图片；文件名建议使用前端 nanoid 生成的 uuid，便于覆盖式替换) }
+- integrity: string (预留：第一阶段弱校验或留空；与 Stage 1“结构化完整性”一致)
 
 ### ExportSession (临时)
 
@@ -71,7 +71,7 @@ AuthorizationBlock（第二阶段占位）：
 
 **说明**：
 
-- key: `encrypt(protectCode)` - 对称加密后的保护码
+- key: `encrypt(protectCode)` - 对称加密后的保护码（仅用于键名，不在 UI 暴露）
 - value: 明文 JSON，包含 name、intro、cardImagePath、createdAt 字段（无 id）
 - name 字段作为签名的唯一标识
 - cardImagePath 的文件名使用 nanoid 生成的 uuid，便于覆盖式替换
@@ -107,21 +107,15 @@ AuthorizationBlock（第二阶段占位）：
 }
 ```
 
-**authorization 字段**（第二阶段强依赖）：
+注：`authorization` 字段仅在原始作者签名中包含，其结构见上文 AuthorizationBlock（第二阶段启用；第一阶段可省略或置空）。
 
-- 仅在原始作者签名中包含
-- authCode: 签名授权码（默认为固定 sha256 = 允许二次导出；不匹配 = 需授权码校验）
-- authorizedList: 资格码列表（存储通过授权校验的三方签名资格码）
-- 第一阶段：可省略 authorization 或置空
+加密实现注记（Stage 1）：
 
-### 对称加密规范（占位）
-
-- 算法：AES-GCM（推荐）或其他对称加密算法（待 research.md 确定）
-- 密钥来源：待定（可能为应用级固定密钥、用户密码派生、或其他策略）
-- 编码：Base64（便于 JSON 序列化）
+- 本文档描述“键/值的加密位置与生成规则”，具体算法与密钥来源在 research.md 中确定；建议采用对称加密（如 AES-256-GCM）与 Base64 编码以便存储。
+- 以上约束不改变“持久化接口复用”原则：读写依旧通过 `/store/*` 与 `/keytone_pkg/*` 完成，SSE `/stream` 用于广播最新值。
 
 ## State & Transitions
 
 - 导入：SignatureFile → DigitalSignature（若 name 已存在 → 覆盖 intro/cardImagePath，但 name/protectCode 不变）
 - 导出：DigitalSignature → SignatureFile
-- 专辑签名：选择 DigitalSignature → 写入/追加 AlbumSignatureRecord 到专辑配置（key 和 value 均对称加密）
+- 专辑签名：选择 DigitalSignature → 写入/追加 AlbumSignatureRecord 到专辑配置（key 与 value 按上文规则进行对称加密；`signedAt` 为数组，导出时追加新时间戳并保持顺序/去重）
