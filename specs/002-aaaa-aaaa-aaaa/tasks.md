@@ -42,7 +42,7 @@
 - [x] T023 导出签名桥：POST `/export/sign-bridge`（sdk/server/album_handlers.go 或新建 export_handlers.go），将前端导出流程中选择的签名写入专辑配置 `album_signatures`（经 `/keytone_pkg/set`）并返回导出继续所需数据
 - [ ] T024 错误与边界：空列表、重复签名（覆盖/取消）、坏文件、路径异常、跨平台路径
 - [ ] T025 资源落盘与引用维护：.ktsign 导入/导出时，名片图片等资源复制至资源目录，并在 `signature_manager` 与 `album_signatures` 中维护/修正引用路径（sdk/signature/file.go + 相关 handlers）
-- [ ] T026 导出时间戳合并：在导出签名桥中为对应签名追加导出时间戳，保证为数组并去重/排序（按时间）
+- [x] T026 导出时间戳合并：在导出签名桥中为对应签名追加导出时间戳，保证为数组并去重/排序（按时间）
 
 ## Phase 3.4: Frontend（复用读写 + SSE）
 
@@ -66,7 +66,7 @@
 - [ ] T041 Playwright 烟雾：创建/导入后列表自动刷新（监听 SSE）
 - [ ] T042 后端契约/单测：T010~T012 的 happy path 与错误路径通过
 - [ ] T043 质量检查：UI 文案 i18n 覆盖；窗口尺寸与滚动策略符合 NFR；错误提示一致
-- [ ] T043a i18n 验收 checklist：标题、按钮、表单标签、错误提示、占位文案、工具提示、确认对话
+- [x] T043a i18n 验收 checklist：标题、按钮、表单标签、错误提示、占位文案、工具提示、确认对话
 - [x] T043b UI 位置断言：确认“签名管理”按钮位于“删除”按钮右侧
 - [ ] T044 Playwright 烟雾：导出流程中“必须选择签名”的校验触发与通过签名选择后可继续导出
 
@@ -85,8 +85,8 @@
 
 ### 3.6.x 追加（治理与命名一致性）
 
-- [ ] T053 术语与命名统一：统一为 signatureManagementDialog / signatureSelectDialog / exportSignBridge，并与 i18n `signature` 命名空间对齐（提供名词表）
-- [ ] T054 PR 影响与回归保护说明：为涉及端点/关键流程的 PR 附带“影响范围与回归保护”说明，链接到 quickstart 或 contracts 的契约测试
+- [x] T053 术语与命名统一：统一为 signatureManagementDialog / signatureSelectDialog / exportSignBridge，并与 i18n `signature` 命名空间对齐（提供名词表）
+- [x] T054 PR 影响与回归保护说明：为涉及端点/关键流程的 PR 附带“影响范围与回归保护”说明，链接到 quickstart 或 contracts 的契约测试
 
 ---
 
