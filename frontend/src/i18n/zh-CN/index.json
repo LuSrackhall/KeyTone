@@ -57,6 +57,55 @@
       "confirm": "确认"
     }
   },
+  "signature": {
+    "title": "签名管理",
+    "createSignature": "创建签名",
+    "importSignature": "导入签名",
+    "exportSignature": "导出签名",
+    "deleteSignature": "删除签名",
+    "signatureName": "签名名称",
+    "signatureIntro": "签名简介",
+    "cardImage": "名片图片",
+    "selectImage": "选择图片",
+    "createdAt": "创建时间",
+    "emptyState": {
+      "noSignatures": "暂无签名",
+      "createFirst": "请先创建或导入签名"
+    },
+    "dialog": {
+      "createTitle": "创建新签名",
+      "editTitle": "编辑签名",
+      "importTitle": "导入签名",
+      "exportTitle": "导出签名",
+      "deleteTitle": "删除签名",
+      "overwriteTitle": "覆盖确认",
+      "overwriteMessage": "签名 \"{name}\" 已存在，是否覆盖？",
+      "overwrite": "覆盖",
+      "cancel": "取消",
+      "confirm": "确定",
+      "selectFile": "选择文件",
+      "dragOrClick": "点击选择或拖放 .ktsign 文件"
+    },
+    "notify": {
+      "createSuccess": "签名创建成功",
+      "createFailed": "签名创建失败",
+      "importSuccess": "签名导入成功",
+      "importFailed": "签名导入失败",
+      "exportSuccess": "签名导出成功",
+      "exportFailed": "签名导出失败",
+      "deleteSuccess": "签名删除成功",
+      "deleteFailed": "签名删除失败",
+      "invalidFormat": "请选择 .ktsign 格式的签名文件",
+      "signatureExists": "签名已存在",
+      "nameRequired": "签名名称不能为空",
+      "fileDescription": "KeyTone 签名文件"
+    },
+    "exportFlow": {
+      "selectSignature": "选择签名",
+      "signatureRequired": "专辑已有签名，导出时必须选择签名",
+      "selectPrompt": "请选择用于导出的签名"
+    }
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "制作新的键音专辑",
