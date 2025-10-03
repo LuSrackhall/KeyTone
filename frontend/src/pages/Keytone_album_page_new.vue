@@ -284,6 +284,9 @@
 
   <!-- Signature Management Dialog -->
   <SignatureManagementDialog ref="signatureDialogRef" />
+  
+  <!-- Signature Select Dialog for Export -->
+  <SignatureSelectDialog ref="signatureSelectDialogRef" />
 </template>
 
 <script setup lang="ts">
@@ -294,8 +297,10 @@ import { nanoid } from 'nanoid';
 import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import SignatureManagementDialog from 'src/components/SignatureManagementDialog.vue';
+import SignatureSelectDialog from 'src/components/SignatureSelectDialog.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { api } from 'src/boot/axios';
 import {
   DeleteAlbum,
   GetAudioPackageName,
@@ -325,6 +330,7 @@ const keytoneAlbum_store = useKeytoneAlbumStore();
 const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
 const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
 const signatureDialogRef = ref<InstanceType<typeof SignatureManagementDialog> | null>(null);
+const signatureSelectDialogRef = ref<InstanceType<typeof SignatureSelectDialog> | null>(null);
 const isCollapsed = ref(false);
 let lastScrollTop = 0;
 const isAtTop = ref(true);
@@ -413,6 +419,55 @@ const exportAlbumLegacy = async () => {
     }
     const albumName = albumNameResponse.name;
 
+    // Check if album has signatures - get album config to see if it has signatures
+    let selectedSignature = null;
+    try {
+      const albumConfigResponse = await api.get('/keytone_pkg/get', {
+        params: { 
+          key: 'album_signatures',
+          audioPkgUUID: albumNameResponse.audioPkgUUID || setting_store.mainHome.selectedKeyTonePkg.split(/[\\/]/).pop()
+        }
+      });
+      
+      const hasSignatures = albumConfigResponse.data.value && Object.keys(albumConfigResponse.data.value).length > 0;
+      
+      // Show signature selection dialog
+      try {
+        selectedSignature = await signatureSelectDialogRef.value?.open(hasSignatures);
+      } catch (err) {
+        // User cancelled signature selection
+        return;
+      }
+      
+      // If album has signatures but no signature selected, prevent export
+      if (hasSignatures && !selectedSignature) {
+        q.notify({
+          type: 'warning',
+          message: $t('signature.exportFlow.signatureRequired'),
+        });
+        return;
+      }
+    } catch (error) {
+      console.log('No signatures check or album config not found, proceeding without signature selection');
+    }
+
+    // If signature was selected, call the sign bridge
+    if (selectedSignature) {
+      try {
+        await api.post('/export/sign-bridge', {
+          albumId: albumNameResponse.audioPkgUUID || setting_store.mainHome.selectedKeyTonePkg.split(/[\\/]/).pop(),
+          signatureName: selectedSignature.name
+        });
+      } catch (error) {
+        console.error('Failed to add signature to album:', error);
+        q.notify({
+          type: 'warning',
+          message: $t('signature.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+        });
+        // Continue with export even if signature bridge fails
+      }
+    }
+
     // 调用导出函数获取zip文件blob
     const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
     const url = window.URL.createObjectURL(blob);
@@ -455,6 +510,55 @@ const exportAlbum = async () => {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
+
+    // Check if album has signatures - get album config to see if it has signatures
+    let selectedSignature = null;
+    try {
+      const albumConfigResponse = await api.get('/keytone_pkg/get', {
+        params: { 
+          key: 'album_signatures',
+          audioPkgUUID: albumNameResponse.audioPkgUUID || setting_store.mainHome.selectedKeyTonePkg.split(/[\\/]/).pop()
+        }
+      });
+      
+      const hasSignatures = albumConfigResponse.data.value && Object.keys(albumConfigResponse.data.value).length > 0;
+      
+      // Show signature selection dialog
+      try {
+        selectedSignature = await signatureSelectDialogRef.value?.open(hasSignatures);
+      } catch (err) {
+        // User cancelled signature selection
+        return;
+      }
+      
+      // If album has signatures but no signature selected, prevent export
+      if (hasSignatures && !selectedSignature) {
+        q.notify({
+          type: 'warning',
+          message: $t('signature.exportFlow.signatureRequired'),
+        });
+        return;
+      }
+    } catch (error) {
+      console.log('No signatures check or album config not found, proceeding without signature selection');
+    }
+
+    // If signature was selected, call the sign bridge
+    if (selectedSignature) {
+      try {
+        await api.post('/export/sign-bridge', {
+          albumId: albumNameResponse.audioPkgUUID || setting_store.mainHome.selectedKeyTonePkg.split(/[\\/]/).pop(),
+          signatureName: selectedSignature.name
+        });
+      } catch (error) {
+        console.error('Failed to add signature to album:', error);
+        q.notify({
+          type: 'warning',
+          message: $t('signature.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+        });
+        // Continue with export even if signature bridge fails
+      }
+    }
 
     // 获取导出数据
     const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
