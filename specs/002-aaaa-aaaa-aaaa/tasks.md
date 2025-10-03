@@ -28,11 +28,11 @@
 
 ## Phase 3.2: Contracts（仅新增最小端点）
 
-- [ ] T010 新建契约：POST `/signature/export`（导出 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-export.md`
-- [ ] T011 新建契约：POST `/signature/import`（导入 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-import.md`
-- [ ] T012 新建契约：POST `/export/sign-bridge`（导出流程签名桥） → `specs/002-aaaa-aaaa-aaaa/contracts/export-sign-bridge.md`
-- [ ] T013 契约测试（最小集）：为 T010~T012 各写 1 条 happy path + 1 条错误路径（sdk/server/server_test.go 或相关 *_test.go）
-- [ ] T014 契约补充：在 `export-sign-bridge.md` 明确 `album_signatures` 中“每次导出的时间戳数组”字段结构与合并规则
+- [x] T010 新建契约：POST `/signature/export`（导出 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-export.md`
+- [x] T011 新建契约：POST `/signature/import`（导入 .ktsign） → `specs/002-aaaa-aaaa-aaaa/contracts/signature-import.md`
+- [x] T012 新建契约：POST `/export/sign-bridge`（导出流程签名桥） → `specs/002-aaaa-aaaa-aaaa/contracts/export-sign-bridge.md`
+- [x] T013 契约测试（最小集）：为 T010~T012 各写 1 条 happy path + 1 条错误路径（sdk/server/server_test.go 或相关 *_test.go）
+- [x] T014 契约补充：在 `export-sign-bridge.md` 明确 `album_signatures` 中“每次导出的时间戳数组”字段结构与合并规则
 
 ## Phase 3.3: Backend（最小实现）
 
