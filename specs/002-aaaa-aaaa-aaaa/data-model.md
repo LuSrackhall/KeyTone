@@ -40,6 +40,33 @@ AuthorizationBlock（第二阶段占位，统一定义）：
 - assets: { cardImage?: string (base64 或相对路径；推荐 base64 以便跨设备导入时可还原图片；文件名建议使用前端 nanoid 生成的 uuid，便于覆盖式替换) }
 - integrity: string (预留：第一阶段弱校验或留空；与 Stage 1“结构化完整性”一致)
 
+备注（Stage 1 明确）：
+- .ktsign 的“原始 JSON 内容”与“全局配置的单一签名项”一致，即：
+
+```json
+{
+  "key": "<encrypt(protectCode)>",
+  "value": {
+    "name": "签名名称",
+    "intro": "可选简介",
+    "cardImagePath": "uuid.png",
+    "createdAt": "ISO8601"
+  }
+}
+```
+
+- 上述 JSON 进行对称加密后输出为二进制（.ktsign）。
+
+ 
+#### Import Flow（导入流程）
+
+1) 读取 .ktsign（二进制）
+2) 解密得到原始 JSON（含 key/value 与可选 assets）
+3) 校验 JSON 结构与必填字段
+4) 落盘资源（如名片图片）到全局资源目录并修正引用文件名
+5) 通过 `/store/set` 将 `{ key: encrypt(protectCode), value: 明文 JSON }` 写入全局配置
+6) 触发 SSE 刷新以更新前端列表
+
 ### ExportSession (临时)
 
 - selectedSignatureName: string | null (选中的签名名称)

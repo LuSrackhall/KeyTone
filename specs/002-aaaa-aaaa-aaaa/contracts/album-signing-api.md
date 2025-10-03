@@ -11,6 +11,7 @@
 **端点**: `GET /sdk/albums/{albumId}/signatures`
 
 **响应**: `200 OK`
+
 ```json
 [
   {
@@ -48,6 +49,7 @@
 **端点**: `POST /sdk/albums/{albumId}/sign`
 
 **请求体**:
+
 ```json
 {
   "signatureId": "Zhang San",
@@ -62,6 +64,7 @@
 - `allowReexport`: 是否允许二次导出（默认 true）
 
 **响应**: `201 Created`
+
 ```json
 {
   "updated": true,
@@ -71,6 +74,7 @@
 
 **错误响应**:
 - `400 Bad Request`: 签名不存在
+
   ```json
   {
     "error": "signature_not_found",
@@ -78,6 +82,7 @@
   }
   ```
 - `401 Unauthorized`: 保护码错误
+
   ```json
   {
     "error": "invalid_protect_code",
@@ -95,6 +100,7 @@
 **端点**: `POST /sdk/albums/{albumId}/export`
 
 **请求体**:
+
 ```json
 {
   "signatureId": "Zhang San",
@@ -107,6 +113,7 @@
 - `protectCode`: 签名保护码（如指定 signatureId 则必填）
 
 **响应**: `200 OK`
+
 ```json
 {
   "fileNameSuggested": "My Album.ktalbum",
@@ -122,10 +129,45 @@
 - `401 Unauthorized`: 保护码错误
 - `404 Not Found`: 专辑或签名不存在
 - `403 Forbidden`: 专辑已签名但未指定签名
+  
   ```json
   {
     "error": "signature_required",
     "message": "专辑已签名，导出时必须选择签名"
   }
   ```
+
+---
+
+## Export Sign Bridge（导出签名桥）
+
+**描述**: 在导出流程中，将已选择的签名写入专辑配置的 `album_signatures`（合并/去重/排序 `signedAt`），并返回导出继续所需数据。
+
+**端点**: `POST /export/sign-bridge`
+
+**请求体**:
+
+```json
+{
+  "albumId": "<album-id>",
+  "signatureName": "Zhang San"
+}
+```
+
+**响应**: `200 OK`
+
+```json
+{
+  "ok": true,
+  "signedAtAppended": "2025-10-02T16:45:00Z"
+}
+```
+
+**错误响应**:
+- `404 Not Found`: 专辑不存在或签名不存在
+- `409 Conflict`: 重复签名但未成功合并时间戳（应尽量通过去重合并避免该错误）
+
+**说明**:
+- 仅在“导出流程”中使用；签名管理对话框不提供“签名专辑/导出专辑”的入口（符合 FR-017）。
+- `album_signatures` 中每个签名维护 `signedAt: string[]`；本端点在写入时进行去重并按时间排序。
 

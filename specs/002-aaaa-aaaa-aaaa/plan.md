@@ -160,11 +160,21 @@ frontend/: Vue 3 + Quasar + Electron
 - **专辑配置**（双重加密）：
   - key: `encrypt(sha256(decrypt(protectCode) + name))` - 先解密保护码，与 name 拼接后计算 SHA-256 哈希，最后加密
   - value: `encrypt(JSON_payload)` - 对称加密后的完整签名信息
-  - JSON_payload 含 name、intro、cardImagePath、signedAt、authorizationBlock（仅原始作者包含此字段, 其它作者的签名不含此字段）
+  - JSON_payload 含 name、intro、cardImagePath、exportTimeList、authorizationBlock（仅原始作者包含此字段, 其它作者的签名不含此字段）
   - 双重加密防止泄露签名逻辑与授权结构
-- **AuthorizationBlock**（第二阶段强依赖）：
-  - authCode: 签名授权码（默认为固定写死的 sha256 码, 从变量读取并与配置中对比, 相同即允许二次导出；不匹配 = 需授权码校验）
+- **AuthorizationBlock**：
+  - authCode: 签名授权码（默认为固定写死到代码变量的 sha256 码, 创建是存入配置中, 校验时从配置中读取并与写死的变量做对比, 相同即允许二次导出；不匹配 = 不允许二次导出——想进行二次导出需联系原作者获取授权码方可通过二次导出校验）
   - authorizedList: 资格码列表（存储通过授权的三方签名资格码）
+
+附：.ktsign（二进制）说明（Stage 1 明确）
+- .ktsign 的“原始 JSON 内容”与“全局配置文件中的单一签名项”一致，形如 `{ key: encrypt(protectCode), value: <签名明文JSON> }`（可选携带 assets）。
+- 该原始 JSON 进行对称加密后写入二进制文件（扩展名 .ktsign）。
+- 导入流程：二进制 → 解密 → 解析 JSON（得到 key/value 与可选 assets）→ 写入全局配置（/store/set），并按需落盘资源（名片图片等）。
+- 前端/UI 不暴露 protectCode，导入/导出与“导出签名桥”均仅以签名标识（name）进行交互，保护码校验由后端内部完成。
+
+治理与执行（与宪章一致）
+- 每个 PR 应附“影响与回归保护说明”（可链接至 quickstart 操作清单或 contracts 的契约测试）。
+- 后端新增端点应先补/增契约测试再实现，或与实现交错推进，以“测试通过”作为门禁。
  
  
 ## Phase 2: Task Planning Approach（描述，不执行）
