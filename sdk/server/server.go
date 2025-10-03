@@ -39,6 +39,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -752,15 +753,100 @@ func handleExportSignBridge(ctx *gin.Context) {
 		return
 	}
 
-	// Get album configuration - using keytone_pkg get/set pattern
-	// This would be integrated with existing album configuration logic
-	// For now, we'll return success with timestamp
+	// Generate current timestamp
 	currentTime := time.Now().Format(time.RFC3339)
+
+	// Get album configuration to update album_signatures
+	// Note: In production, albumId should be the actual UUID from the album path
+	albumConfigKey := "album_signatures_" + req.AlbumID
+	
+	// Try to get existing album signatures
+	albumSignaturesRaw := config.GetValue(albumConfigKey)
+	var albumSignatures map[string]interface{}
+	
+	if albumSignaturesRaw == nil {
+		// No signatures yet, create new map
+		albumSignatures = make(map[string]interface{})
+	} else {
+		var ok bool
+		albumSignatures, ok = albumSignaturesRaw.(map[string]interface{})
+		if !ok {
+			albumSignatures = make(map[string]interface{})
+		}
+	}
+
+	// Create or update signature record for this album
+	// Key is based on signature name (simplified for Stage 1)
+	signatureKey := "sig_" + req.SignatureName
+	
+	var signatureRecord map[string]interface{}
+	if existingRecord, exists := albumSignatures[signatureKey]; exists {
+		if recordMap, ok := existingRecord.(map[string]interface{}); ok {
+			signatureRecord = recordMap
+		} else {
+			signatureRecord = make(map[string]interface{})
+		}
+	} else {
+		signatureRecord = make(map[string]interface{})
+		signatureRecord["name"] = req.SignatureName
+		if intro, ok := foundSignature["intro"]; ok {
+			signatureRecord["intro"] = intro
+		}
+		if cardImagePath, ok := foundSignature["cardImagePath"]; ok {
+			signatureRecord["cardImagePath"] = cardImagePath
+		}
+	}
+
+	// Get existing signedAt array or create new one
+	var signedAtList []string
+	if signedAtRaw, exists := signatureRecord["signedAt"]; exists {
+		if signedAtArray, ok := signedAtRaw.([]interface{}); ok {
+			for _, ts := range signedAtArray {
+				if tsStr, ok := ts.(string); ok {
+					signedAtList = append(signedAtList, tsStr)
+				}
+			}
+		}
+	}
+
+	// Append new timestamp
+	signedAtList = append(signedAtList, currentTime)
+
+	// Remove duplicates and sort
+	signedAtList = removeDuplicatesAndSort(signedAtList)
+
+	// Update signature record
+	signatureRecord["signedAt"] = signedAtList
+
+	// Save back to album signatures
+	albumSignatures[signatureKey] = signatureRecord
+	
+	// Save to config
+	config.SetValue(albumConfigKey, albumSignatures)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"ok":               true,
 		"signedAtAppended": currentTime,
 	})
+}
+
+// removeDuplicatesAndSort removes duplicate timestamps and sorts them chronologically
+func removeDuplicatesAndSort(timestamps []string) []string {
+	// Use map to remove duplicates
+	seen := make(map[string]bool)
+	unique := []string{}
+	
+	for _, ts := range timestamps {
+		if !seen[ts] {
+			seen[ts] = true
+			unique = append(unique, ts)
+		}
+	}
+	
+	// Sort chronologically (RFC3339 format sorts lexicographically)
+	sort.Strings(unique)
+	
+	return unique
 }
 
 func keytonePkgRouters(r *gin.Engine) {
