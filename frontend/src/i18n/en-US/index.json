@@ -57,6 +57,55 @@
       "confirm": "OK"
     }
   },
+  "signature": {
+    "title": "Signature Management",
+    "createSignature": "Create Signature",
+    "importSignature": "Import Signature",
+    "exportSignature": "Export Signature",
+    "deleteSignature": "Delete Signature",
+    "signatureName": "Signature Name",
+    "signatureIntro": "Introduction",
+    "cardImage": "Card Image",
+    "selectImage": "Select Image",
+    "createdAt": "Created At",
+    "emptyState": {
+      "noSignatures": "No signatures",
+      "createFirst": "Create or import a signature"
+    },
+    "dialog": {
+      "createTitle": "Create Signature",
+      "editTitle": "Edit Signature",
+      "importTitle": "Import Signature",
+      "exportTitle": "Export Signature",
+      "deleteTitle": "Delete Signature",
+      "overwriteTitle": "Overwrite Confirmation",
+      "overwriteMessage": "Signature \"{name}\" already exists, overwrite?",
+      "overwrite": "Overwrite",
+      "cancel": "Cancel",
+      "confirm": "OK",
+      "selectFile": "Select File",
+      "dragOrClick": "Click or drag .ktsign file"
+    },
+    "notify": {
+      "createSuccess": "Signature created",
+      "createFailed": "Create failed",
+      "importSuccess": "Signature imported",
+      "importFailed": "Import failed",
+      "exportSuccess": "Signature exported",
+      "exportFailed": "Export failed",
+      "deleteSuccess": "Signature deleted",
+      "deleteFailed": "Delete failed",
+      "invalidFormat": "Select .ktsign file",
+      "signatureExists": "Signature exists",
+      "nameRequired": "Name required",
+      "fileDescription": "KeyTone Signature File"
+    },
+    "exportFlow": {
+      "selectSignature": "Select Signature",
+      "signatureRequired": "Album is signed, must select signature for export",
+      "selectPrompt": "Select signature for export"
+    }
+  },
   "KeyToneAlbum": {
     "new": {
       "new": "Create new key sound album",

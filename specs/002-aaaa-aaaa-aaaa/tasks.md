@@ -46,13 +46,13 @@
 
 ## Phase 3.4: Frontend（复用读写 + SSE）
 
-- [ ] T030 签名管理对话框：首次打开 GET `/store/get` 读取 `signature_manager`；创建/导入/删除后由 SSE 自动刷新（frontend/src/components/SignatureManagementDialog.vue）
-- [ ] T031 创建与删除：通过 `/store/set` 更新 `signature_manager`；保护码由前端创建时自动生成且 UI 不展示（frontend/src/services/ 或 stores/）
-- [ ] T032 导出签名文件（.ktsign）：调用 POST `/signature/export`，并处理保存（前端桥接到系统对话框，遵循 Electron 安全边界）；注意：该操作为“签名文件管理”，不涉及“专辑导出”
-- [ ] T033 导入签名：调用 POST `/signature/import`，成功后列表自动刷新（SSE）
+- [x] T030 签名管理对话框：首次打开 GET `/store/get` 读取 `signature_manager`；创建/导入/删除后由 SSE 自动刷新（frontend/src/components/SignatureManagementDialog.vue）
+- [x] T031 创建与删除：通过 `/store/set` 更新 `signature_manager`；保护码由前端创建时自动生成且 UI 不展示（frontend/src/services/ 或 stores/）
+- [x] T032 导出签名文件（.ktsign）：调用 POST `/signature/export`，并处理保存（前端桥接到系统对话框，遵循 Electron 安全边界）；注意：该操作为“签名文件管理”，不涉及“专辑导出”
+- [x] T033 导入签名：调用 POST `/signature/import`，成功后列表自动刷新（SSE）
 - [ ] T034 导出流程集成：在专辑导出步骤弹出签名选择，调用 `/export/sign-bridge` 将签名写入 `album_signatures` 并继续导出（frontend/src/pages/ 或组件）
-- [ ] T035 i18n：新增 `signature` 命名空间的中英文 key，覆盖所有用户可见文本（frontend/src/i18n/{zh-CN,en-US}/index.json）
-- [ ] T036 覆盖确认 UI：导入签名遇到“唯一标识相同”的重复时，弹出“覆盖/取消”确认对话框并完成 i18n 覆盖
+- [x] T035 i18n：新增 `signature` 命名空间的中英文 key，覆盖所有用户可见文本（frontend/src/i18n/{zh-CN,en-US}/index.json）
+- [x] T036 覆盖确认 UI：导入签名遇到“唯一标识相同”的重复时，弹出“覆盖/取消”确认对话框并完成 i18n 覆盖
 - [ ] T037 导出前置校验：当专辑已有签名时，导出流程必须要求再选择签名（否则禁用继续/提示）；与后端桥接响应保持一致的错误提示
 
 ### 3.4.x 追加（一致性与可用性）

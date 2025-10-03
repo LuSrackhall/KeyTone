@@ -99,6 +99,27 @@
               </q-tooltip>
             </q-btn>
 
+            <!-- Signature Management Button -->
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="edit_note"
+              color="primary"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="openSignatureDialog"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                {{ $t('signature.title') }}
+              </q-tooltip>
+            </q-btn>
+
             <!-- 新增社区按钮 -->
             <q-btn
               flat
@@ -260,6 +281,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Signature Management Dialog -->
+  <SignatureManagementDialog ref="signatureDialogRef" />
 </template>
 
 <script setup lang="ts">
@@ -269,6 +293,7 @@ import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
 import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
+import SignatureManagementDialog from 'src/components/SignatureManagementDialog.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -299,9 +324,15 @@ const setting_store = useSettingStore();
 const keytoneAlbum_store = useKeytoneAlbumStore();
 const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
 const keytoneAlbumRef = ref<InstanceType<typeof KeytoneAlbum> | null>(null);
+const signatureDialogRef = ref<InstanceType<typeof SignatureManagementDialog> | null>(null);
 const isCollapsed = ref(false);
 let lastScrollTop = 0;
 const isAtTop = ref(true);
+
+// Open signature management dialog
+const openSignatureDialog = () => {
+  signatureDialogRef.value?.open();
+};
 
 // 键音包的创建与编辑
 // // 键音包的创建分为两个阶段
