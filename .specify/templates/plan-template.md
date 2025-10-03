@@ -53,11 +53,11 @@
 - [ ] API 契约清晰且文档化
 - [ ] 无跨层直接系统调用
 
-**II. 测试优先与覆盖率标准**:
+**II. 测试策略：重构驱动与回归保护**:
 
-- [ ] TDD 方法论已规划（测试先行）
-- [ ] 目标覆盖率已设定（后端 85%+，前端 80%+）
-- [ ] 关键功能集成测试已计划
+- [ ] 已完成影响范围评估（列出可能受影响的既有行为）
+- [ ] 如影响既有逻辑：已先补齐/更新回归测试计划
+- [ ] 关键路径（音频/键盘事件）具备回归与集成验证计划
 
 **III. 用户体验一致性**:
 
@@ -203,8 +203,8 @@ directories captured above]
 - Implementation tasks to make tests pass
 
 **Ordering Strategy**:
-- TDD order: Tests before implementation 
-- Dependency order: Models before services before UI
+- Refactor-first safety: 若影响既有逻辑 → 先补回归测试，再改动实现
+- Dependency order: Models → Services → UI
 - Mark [P] for parallel execution (independent files)
 
 **Estimated Output**: 25-30 numbered, ordered tasks in tasks.md
@@ -245,4 +245,4 @@ directories captured above]
 - [ ] Complexity deviations documented
 
 ---
-*Based on Constitution v2.1.1 - See `/memory/constitution.md`*
+*Based on Constitution v2.0.0 - See `/memory/constitution.md`*

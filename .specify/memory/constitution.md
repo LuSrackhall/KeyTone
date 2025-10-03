@@ -1,22 +1,16 @@
 <!--
-KeyTone Constitution Update Report:
-Version: 1.0.0 (Initial version)
-Created: 2025-09-30
-New Principles Added:
-- I. 代码质量与架构分离 (Code Quality & Architecture Separation)
-- II. 测试优先与覆盖率标准 (Test-First & Coverage Standards)  
-- III. 用户体验一致性 (User Experience Consistency)
-- IV. 性能与响应性要求 (Performance & Responsiveness Requirements)
-- V. 跨平台兼容性 (Cross-Platform Compatibility)
-Templates Status:
-✅ constitution.md (created)
-✅ plan-template.md (constitution check section updated with specific principle verification)
-⚠ spec-template.md (no changes needed - already principle-agnostic)
-✅ tasks-template.md (updated with constitution compliance annotations and quality gates)
-Follow-up TODOs:
-- No placeholders intentionally deferred
-- All principle-based verification points implemented
-- Ready for use in development workflow
+Sync Impact Report
+Version change: 1.0.0 → 2.0.0
+Modified principles:
+- II. 测试优先与覆盖率标准 → II. 测试策略：重构驱动与回归保护
+Added sections: None
+Removed sections: None (semantic rewrite of Principle II)
+Templates requiring updates:
+✅ .specify/templates/plan-template.md (Constitution Check、Ordering Strategy、footer version)
+✅ .specify/templates/tasks-template.md (移除硬性“TDD 先行”门槛 → 引入“影响分析 + 回归保护”阶段；覆盖率改为健康度指标)
+⚠ .specify/templates/spec-template.md（原则无直接依赖，保持不变）
+Other guidance docs reviewed: README.md（无需变更）
+Follow-ups / Deferred: 无
 -->
 
 # KeyTone 项目宪章
@@ -33,16 +27,17 @@ Follow-up TODOs:
 - 禁止在前端直接调用系统 API，所有系统交互必须通过 Go 后端
 - 代码审查必须验证架构边界未被违反
 
-### II. 测试优先与覆盖率标准（不可妥协）
+### II. 测试策略：重构驱动与回归保护（不可妥协）
 
-所有新功能和修改必须采用测试驱动开发（TDD）：
+测试的首要目标是保护“既有稳定业务逻辑”免受改动引发的回归影响；
+当新增功能或重构可能影响既有逻辑时，必须先补齐或调整相关回归测试，随后再实施改动。
 
-- 必须先编写测试 → 用户批准 → 测试失败 → 然后实现功能
-- Go 后端代码覆盖率必须达到 85% 以上
-- 前端组件测试覆盖率必须达到 80% 以上
-- 音频处理和键盘监听等关键功能必须包含集成测试
-- 严格执行红-绿-重构循环
-- 每个 PR 必须包含相应的测试代码
+- 改动前：完成影响范围评估，枚举可能受影响的既有行为与用户可观察结果
+- 影响到既有逻辑：先补齐/更新回归测试，再进行实现或重构（回归保护优先于实现）
+- 不影响既有逻辑的新功能：允许先实现后补充行为级/集成级测试与烟测
+- 关键路径（如音频、键盘事件流）必须具备可执行的回归测试与集成验证
+- 覆盖率作为健康度指标参考，而非硬性百分比门槛；优先保证“受影响范围的充分覆盖”
+- 每个 PR 必须包含“影响与保护”说明：列出影响面、回归测试增补点或“无影响”的简要论证
 
 ### III. 用户体验一致性
 
@@ -109,14 +104,14 @@ Follow-up TODOs:
 ### 代码审查要求
 
 - 所有代码必须通过至少一次代码审查
-- 审查必须验证架构原则、测试覆盖率和性能要求
+- 审查必须验证架构原则、回归保护与性能要求（覆盖率为参考指标，不作硬性门槛）
 - 安全相关代码必须由具有安全背景的审查员审查
 - UI/UX 变更必须包含设计审查
 
 ### 质量门禁
 
 - 所有自动化测试必须通过
-- 代码覆盖率必须达到最低要求
+- “受影响的既有逻辑”的回归测试必须充分并通过；覆盖率作为健康度参考，不设全局硬性百分比门槛
 - 静态代码分析不得有高危或中危问题
 - 性能基准测试不得出现回归
 - 多语言支持必须完整，无遗漏的翻译键
@@ -138,4 +133,4 @@ Follow-up TODOs:
 
 运行时开发指导请参考项目文档和相关的代理特定指导文件。
 
-**版本**: 1.0.0 | **批准日期**: 2025-09-30 | **最后修订**: 2025-09-30
+**版本**: 2.0.0 | **批准日期**: 2025-09-30 | **最后修订**: 2025-10-03
