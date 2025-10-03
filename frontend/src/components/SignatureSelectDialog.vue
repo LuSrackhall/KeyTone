@@ -67,20 +67,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { api } from 'src/boot/axios';
+
+interface Signature {
+  name: string;
+  intro?: string;
+  cardImagePath?: string;
+  createdAt?: string;
+}
 
 const $q = useQuasar();
 const { t } = useI18n();
 
 const showDialog = ref(false);
-const selectedSignature = ref<any>(null);
-const signatureOptions = ref<any[]>([]);
+const selectedSignature = ref<Signature | null>(null);
+const signatureOptions = ref<Signature[]>([]);
 const required = ref(false);
 
-let resolveCallback: ((signature: any) => void) | null = null;
+let resolveCallback: ((signature: Signature | null) => void) | null = null;
 let rejectCallback: (() => void) | null = null;
 
 // Load signatures from backend
@@ -92,7 +99,10 @@ const loadSignatures = async () => {
 
     if (response.data.message === 'ok' && response.data.value) {
       const signatureManager = response.data.value;
-      signatureOptions.value = Object.values(signatureManager).filter((v: any) => v && v.name);
+      signatureOptions.value = Object.values(signatureManager).filter((v: unknown): v is Signature => {
+        const sig = v as Record<string, unknown>;
+        return sig && typeof sig.name === 'string';
+      });
     } else {
       signatureOptions.value = [];
     }
@@ -103,7 +113,7 @@ const loadSignatures = async () => {
 };
 
 // Open the dialog
-const open = (isRequired: boolean = false): Promise<any> => {
+const open = (isRequired = false): Promise<Signature | null> => {
   return new Promise((resolve, reject) => {
     required.value = isRequired;
     selectedSignature.value = null;
