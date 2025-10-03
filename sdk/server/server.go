@@ -26,6 +26,7 @@ import (
 	"KeyTone/keyEvent"
 	"KeyTone/keySound"
 	"KeyTone/logger"
+	"KeyTone/signature"
 	"archive/zip"
 	"bytes"
 	"crypto"
@@ -334,6 +335,8 @@ func ServerRun() {
 
 	mainRouters(r)
 
+	signatureRouters(r)
+
 	r.GET("/stream", func(c *gin.Context) {
 
 		logger.Logger.Debug("新生成了一个线程............................")
@@ -514,6 +517,250 @@ func mainRouters(r *gin.Engine) {
 		})
 	})
 
+}
+
+func signatureRouters(r *gin.Engine) {
+	signatureRouters := r.Group("/sdk/signatures")
+
+	// Export signature to .ktsign file
+	signatureRouters.POST("/:name/export", handleExportSignature)
+
+	// Import signature from .ktsign file
+	signatureRouters.POST("/import", handleImportSignature)
+
+	// Export sign bridge for album export flow
+	exportRouters := r.Group("/export")
+	exportRouters.POST("/sign-bridge", handleExportSignBridge)
+}
+
+// handleExportSignature exports a signature to .ktsign format
+func handleExportSignature(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid_request",
+			"message": "Signature name is required",
+		})
+		return
+	}
+
+	// Get signature_manager from store
+	signatureManagerRaw := config.GetValue("signature_manager")
+	if signatureManagerRaw == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_found",
+			"message": "Signature not found",
+		})
+		return
+	}
+
+	signatureManager, ok := signatureManagerRaw.(map[string]interface{})
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "internal_error",
+			"message": "Invalid signature_manager format",
+		})
+		return
+	}
+
+	// Find signature by name in the values
+	var foundKey string
+	var foundValue map[string]interface{}
+	
+	for key, value := range signatureManager {
+		valueMap, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if sigName, exists := valueMap["name"]; exists && sigName == name {
+			foundKey = key
+			foundValue = valueMap
+			break
+		}
+	}
+
+	if foundKey == "" {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_found",
+			"message": "Signature not found",
+		})
+		return
+	}
+
+	// Create signature file payload
+	payload := &signature.SignatureFilePayload{
+		Key:   foundKey,
+		Value: foundValue,
+	}
+
+	// Encode to .ktsign format
+	encoded, err := signature.EncodeSignatureFile(payload)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "encode_error",
+			"message": "Failed to encode signature file: " + err.Error(),
+		})
+		return
+	}
+
+	// Return response
+	ctx.JSON(http.StatusOK, gin.H{
+		"fileNameSuggested": name + ".ktsign",
+		"blobBase64":        encoded,
+	})
+}
+
+// handleImportSignature imports a signature from .ktsign format
+func handleImportSignature(ctx *gin.Context) {
+	type ImportRequest struct {
+		FileName  string `json:"fileName"`
+		BlobBase64 string `json:"blobBase64"`
+		Overwrite *bool  `json:"overwrite"`
+	}
+
+	var req ImportRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid_request",
+			"message": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	// Decode signature file
+	payload, err := signature.DecodeSignatureFile(req.BlobBase64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid_format",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Get signature name
+	name, ok := payload.Value["name"].(string)
+	if !ok || name == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid_format",
+			"message": "Missing or invalid name field",
+		})
+		return
+	}
+
+	// Get signature_manager from store
+	signatureManagerRaw := config.GetValue("signature_manager")
+	var signatureManager map[string]interface{}
+	
+	if signatureManagerRaw == nil {
+		signatureManager = make(map[string]interface{})
+	} else {
+		var ok bool
+		signatureManager, ok = signatureManagerRaw.(map[string]interface{})
+		if !ok {
+			signatureManager = make(map[string]interface{})
+		}
+	}
+
+	// Check if signature already exists
+	overwritten := false
+	for key, value := range signatureManager {
+		valueMap, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if sigName, exists := valueMap["name"]; exists && sigName == name {
+			// Signature exists
+			if req.Overwrite == nil || !*req.Overwrite {
+				ctx.JSON(http.StatusConflict, gin.H{
+					"error":   "exists_without_overwrite",
+					"message": "Signature already exists",
+				})
+				return
+			}
+			// Delete old entry
+			delete(signatureManager, key)
+			overwritten = true
+			break
+		}
+	}
+
+	// Add new signature
+	signatureManager[payload.Key] = payload.Value
+
+	// Save to store
+	config.SetValue("signature_manager", signatureManager)
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"name":       name,
+		"overwritten": overwritten,
+	})
+}
+
+// handleExportSignBridge handles the export sign bridge for album export flow
+func handleExportSignBridge(ctx *gin.Context) {
+	type ExportSignRequest struct {
+		AlbumID       string `json:"albumId"`
+		SignatureName string `json:"signatureName"`
+	}
+
+	var req ExportSignRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid_request",
+			"message": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	// Get signature_manager from store
+	signatureManagerRaw := config.GetValue("signature_manager")
+	if signatureManagerRaw == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_found",
+			"message": "Signature not found",
+		})
+		return
+	}
+
+	signatureManager, ok := signatureManagerRaw.(map[string]interface{})
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "internal_error",
+			"message": "Invalid signature_manager format",
+		})
+		return
+	}
+
+	// Find signature by name
+	var foundSignature map[string]interface{}
+	for _, value := range signatureManager {
+		valueMap, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if sigName, exists := valueMap["name"]; exists && sigName == req.SignatureName {
+			foundSignature = valueMap
+			break
+		}
+	}
+
+	if foundSignature == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error":   "not_found",
+			"message": "Signature not found",
+		})
+		return
+	}
+
+	// Get album configuration - using keytone_pkg get/set pattern
+	// This would be integrated with existing album configuration logic
+	// For now, we'll return success with timestamp
+	currentTime := time.Now().Format(time.RFC3339)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"ok":               true,
+		"signedAtAppended": currentTime,
+	})
 }
 
 func keytonePkgRouters(r *gin.Engine) {

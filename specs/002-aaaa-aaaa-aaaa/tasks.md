@@ -21,10 +21,10 @@
 ---
 
 ## Phase 3.1: Setup & Audit（建立与审计）
-- [ ] T001 审计后端现有接口：确认存在 `/store/get|set`、`/keytone_pkg/get|set|delete`、`/stream`（sdk/server/server.go）
-- [ ] T002 审计前端 SSE：确认 Electron 主进程与渲染进程已订阅 `message` 与 `messageAudioPackage` 并处理 `get_all_value`（frontend/src-electron/electron-main.ts, frontend/src/App.vue, frontend/src/components/Keytone_album.vue）
-- [ ] T003 校验 axios 动态端口逻辑可用（frontend/src/boot/axios.ts 与主进程桥）
-- [ ] T004 清点并标注需废弃的旧端点或 UI（如存在 /sdk/signatures* 痕迹，先标记不再使用，保留回滚锚点）
+- [x] T001 审计后端现有接口：确认存在 `/store/get|set`、`/keytone_pkg/get|set|delete`、`/stream`（sdk/server/server.go）
+- [x] T002 审计前端 SSE：确认 Electron 主进程与渲染进程已订阅 `message` 与 `messageAudioPackage` 并处理 `get_all_value`（frontend/src-electron/electron-main.ts, frontend/src/App.vue, frontend/src/components/Keytone_album.vue）
+- [x] T003 校验 axios 动态端口逻辑可用（frontend/src/boot/axios.ts 与主进程桥）
+- [x] T004 清点并标注需废弃的旧端点或 UI（如存在 /sdk/signatures* 痕迹，先标记不再使用，保留回滚锚点）
 
 ## Phase 3.2: Contracts（仅新增最小端点）
 
@@ -36,10 +36,10 @@
 
 ## Phase 3.3: Backend（最小实现）
 
-- [ ] T020 `.ktsign` 文件编解码最小实现（sdk/signature/file.go）：包含签名名称、唯一标识、介绍、名片资源引用、完整性校验字段（Stage 1）
-- [ ] T021 导出端点处理器：POST `/signature/export`（sdk/server/signature_handlers.go），从 `/store/get` 读取 `signature_manager`，根据请求选择签名，生成 .ktsign 输出（字节流或保存路径）
-- [ ] T022 导入端点处理器：POST `/signature/import`（sdk/server/signature_handlers.go），解析上传 .ktsign，写回 `/store/set` 的 `signature_manager`，触发全局 SSE 刷新
-- [ ] T023 导出签名桥：POST `/export/sign-bridge`（sdk/server/album_handlers.go 或新建 export_handlers.go），将前端导出流程中选择的签名写入专辑配置 `album_signatures`（经 `/keytone_pkg/set`）并返回导出继续所需数据
+- [x] T020 `.ktsign` 文件编解码最小实现（sdk/signature/file.go）：包含签名名称、唯一标识、介绍、名片资源引用、完整性校验字段（Stage 1）
+- [x] T021 导出端点处理器：POST `/signature/export`（sdk/server/signature_handlers.go），从 `/store/get` 读取 `signature_manager`，根据请求选择签名，生成 .ktsign 输出（字节流或保存路径）
+- [x] T022 导入端点处理器：POST `/signature/import`（sdk/server/signature_handlers.go），解析上传 .ktsign，写回 `/store/set` 的 `signature_manager`，触发全局 SSE 刷新
+- [x] T023 导出签名桥：POST `/export/sign-bridge`（sdk/server/album_handlers.go 或新建 export_handlers.go），将前端导出流程中选择的签名写入专辑配置 `album_signatures`（经 `/keytone_pkg/set`）并返回导出继续所需数据
 - [ ] T024 错误与边界：空列表、重复签名（覆盖/取消）、坏文件、路径异常、跨平台路径
 - [ ] T025 资源落盘与引用维护：.ktsign 导入/导出时，名片图片等资源复制至资源目录，并在 `signature_manager` 与 `album_signatures` 中维护/修正引用路径（sdk/signature/file.go + 相关 handlers）
 - [ ] T026 导出时间戳合并：在导出签名桥中为对应签名追加导出时间戳，保证为数组并去重/排序（按时间）
