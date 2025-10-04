@@ -66,6 +66,7 @@
     "signatureName": "签名名称",
     "signatureIntro": "签名简介",
     "cardImage": "名片图片",
+    "cardImagePreview": "名片预览",
     "selectImage": "选择图片",
     "createdAt": "创建时间",
     "emptyState": {
@@ -89,6 +90,8 @@
     "notify": {
       "createSuccess": "签名创建成功",
       "createFailed": "签名创建失败",
+      "updateSuccess": "签名更新成功",
+      "updateFailed": "签名更新失败",
       "importSuccess": "签名导入成功",
       "importFailed": "签名导入失败",
       "exportSuccess": "签名导出成功",

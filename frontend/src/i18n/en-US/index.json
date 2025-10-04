@@ -66,6 +66,7 @@
     "signatureName": "Signature Name",
     "signatureIntro": "Introduction",
     "cardImage": "Card Image",
+    "cardImagePreview": "Card Preview",
     "selectImage": "Select Image",
     "createdAt": "Created At",
     "emptyState": {
@@ -89,6 +90,8 @@
     "notify": {
       "createSuccess": "Signature created",
       "createFailed": "Create failed",
+      "updateSuccess": "Signature updated",
+      "updateFailed": "Update failed",
       "importSuccess": "Signature imported",
       "importFailed": "Import failed",
       "exportSuccess": "Signature exported",
