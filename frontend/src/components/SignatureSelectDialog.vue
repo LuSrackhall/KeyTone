@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <q-dialog v-model="showDialog" persistent>
+  <q-dialog v-model="showDialog" persistent backdrop-filter="invert(70%)">
     <q-card style="max-width: 360px; width: 100%">
       <q-card-section>
         <div class="text-h6">{{ $t('signature.exportFlow.selectSignature') }}</div>
