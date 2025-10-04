@@ -110,35 +110,38 @@ func LoadConfig(configPath string, isCreate bool) {
 		logger.Info("音频包diff和增量载入完成")
 	}
 
-	Viper.OnConfigChange(func(e fsnotify.Event) {
-		go func(Clients_sse_stores *sync.Map) {
-			viperRWMutex.RLock()
-			stores := &Store{
-				Key:   "get_all_value",
-				Value: Viper.AllSettings(),
-			}
-			viperRWMutex.RUnlock()
-			if stores.Value == nil {
-				return
-			}
-			Clients_sse_stores.Range(func(key, value interface{}) bool {
-				clientChan := key.(chan *Store)
-				serverChan := value.(chan bool)
-				select {
-				case clientChan <- stores:
-					return true
-				case <-serverChan:
-					once_stores.Do(func() {
-						close(serverChan)
-					})
-					return true
+	// 只有在Viper不为nil时才设置配置文件监听
+	if Viper != nil {
+		Viper.OnConfigChange(func(e fsnotify.Event) {
+			go func(Clients_sse_stores *sync.Map) {
+				viperRWMutex.RLock()
+				stores := &Store{
+					Key:   "get_all_value",
+					Value: Viper.AllSettings(),
 				}
-			})
-		}(&Clients_sse_stores)
-	})
+				viperRWMutex.RUnlock()
+				if stores.Value == nil {
+					return
+				}
+				Clients_sse_stores.Range(func(key, value interface{}) bool {
+					clientChan := key.(chan *Store)
+					serverChan := value.(chan bool)
+					select {
+					case clientChan <- stores:
+						return true
+					case <-serverChan:
+						once_stores.Do(func() {
+							close(serverChan)
+						})
+						return true
+					}
+				})
+			}(&Clients_sse_stores)
+		})
 
-	// 监听配置文件更改
-	Viper.WatchConfig()
+		// 监听配置文件更改
+		Viper.WatchConfig()
+	}
 
 }
 

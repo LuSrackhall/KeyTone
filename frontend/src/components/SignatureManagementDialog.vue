@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <q-dialog v-model="showDialog" persistent>
+  <q-dialog v-model="showDialog" persistent backdrop-filter="invert(70%)">
     <q-card style="max-width: 360px; width: 100%; max-height: 420px">
       <q-card-section>
         <div class="text-h6">{{ $t('signature.title') }}</div>
@@ -33,17 +33,17 @@
         </div>
 
         <q-list v-else bordered separator>
-          <q-item v-for="sig in signatures" :key="sig.name" clickable>
+          <q-item v-for="sig in signatures" :key="sig.name" clickable @click="showEditDialog(sig)">
             <q-item-section>
               <q-item-label>{{ sig.name }}</q-item-label>
               <q-item-label caption>{{ sig.intro || $t('signature.signatureIntro') }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-xs">
-                <q-btn flat dense icon="file_download" size="sm" @click="exportSignature(sig.name)">
+                <q-btn flat dense icon="file_download" size="sm" @click.stop="exportSignature(sig.name)">
                   <q-tooltip>{{ $t('signature.exportSignature') }}</q-tooltip>
                 </q-btn>
-                <q-btn flat dense icon="delete" size="sm" @click="deleteSignature(sig.name)">
+                <q-btn flat dense icon="delete" size="sm" @click.stop="deleteSignature(sig.name)">
                   <q-tooltip>{{ $t('signature.deleteSignature') }}</q-tooltip>
                 </q-btn>
               </div>
@@ -55,15 +55,15 @@
       <q-separator />
 
       <q-card-actions align="right">
-        <q-btn flat :label="$t('signature.createSignature')" color="primary" @click="showCreateDialog" />
-        <q-btn flat :label="$t('signature.importSignature')" color="primary" @click="showImportDialog" />
+        <q-btn flat :label="$t('signature.createSignature')" color="primary" @click="showCreateDialogHandler" />
+        <q-btn flat :label="$t('signature.importSignature')" color="primary" @click="showImportDialogHandler" />
         <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
   <!-- Create Signature Dialog -->
-  <q-dialog v-model="createDialog" persistent>
+  <q-dialog v-model="createDialog" persistent backdrop-filter="invert(70%)">
     <q-card style="max-width: 360px; width: 100%">
       <q-card-section>
         <div class="text-h6">{{ $t('signature.dialog.createTitle') }}</div>
@@ -86,17 +86,79 @@
           type="textarea"
           class="q-mt-sm"
         />
+        <q-file
+          v-model="newSignature.cardImageFile"
+          :label="$t('signature.cardImage')"
+          outlined
+          dense
+          accept="image/*"
+          class="q-mt-sm"
+          clearable
+          @update:model-value="handleCardImageSelect"
+        >
+          <template v-slot:prepend>
+            <q-icon name="image" />
+          </template>
+          <template v-slot:hint v-if="newSignature.cardImagePreview">
+            <div class="q-mt-xs">
+              <img :src="newSignature.cardImagePreview" style="max-width: 100%; max-height: 100px" />
+            </div>
+          </template>
+        </q-file>
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat :label="$t('KeyToneAlbum.cancel')" color="primary" v-close-popup />
+        <q-btn flat :label="$t('KeyToneAlbum.cancel')" color="primary" @click="cancelCreateDialog" />
         <q-btn flat :label="$t('KeyToneAlbum.confirm')" color="primary" @click="createSignature" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
+  <!-- Edit Signature Dialog -->
+  <q-dialog v-model="editDialog" persistent backdrop-filter="invert(70%)">
+    <q-card style="max-width: 360px; width: 100%">
+      <q-card-section>
+        <div class="text-h6">{{ $t('signature.dialog.editTitle') }}</div>
+      </q-card-section>
+
+      <q-card-section>
+        <q-input
+          v-model="editSignature.intro"
+          :label="$t('signature.signatureIntro')"
+          outlined
+          dense
+          type="textarea"
+        />
+        <q-file
+          v-model="editSignature.cardImageFile"
+          :label="$t('signature.cardImage')"
+          outlined
+          dense
+          accept="image/*"
+          class="q-mt-sm"
+          clearable
+          @update:model-value="handleEditCardImageSelect"
+        >
+          <template v-slot:prepend>
+            <q-icon name="image" />
+          </template>
+          <template v-slot:hint v-if="editSignature.cardImagePreview">
+            <div class="q-mt-xs">
+              <img :src="editSignature.cardImagePreview" style="max-width: 100%; max-height: 100px" />
+            </div>
+          </template>
+        </q-file>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat :label="$t('KeyToneAlbum.cancel')" color="primary" @click="cancelEditDialog" />
+        <q-btn flat :label="$t('KeyToneAlbum.confirm')" color="primary" @click="updateSignature" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
   <!-- Import Signature Dialog -->
-  <q-dialog v-model="importDialog" persistent>
+  <q-dialog v-model="importDialog" persistent backdrop-filter="invert(70%)">
     <q-card style="max-width: 360px; width: 100%">
       <q-card-section>
         <div class="text-h6">{{ $t('signature.dialog.importTitle') }}</div>
@@ -136,6 +198,7 @@ const { t } = useI18n();
 
 const showDialog = ref(false);
 const createDialog = ref(false);
+const editDialog = ref(false);
 const importDialog = ref(false);
 const signatures = ref<any[]>([]);
 const importFile = ref<File | null>(null);
@@ -143,6 +206,17 @@ const importFile = ref<File | null>(null);
 const newSignature = ref({
   name: '',
   intro: '',
+  cardImageFile: null as File | null,
+  cardImagePreview: null as string | null,
+});
+
+const editSignature = ref({
+  name: '',
+  intro: '',
+  cardImageFile: null as File | null,
+  cardImagePreview: null as string | null,
+  originalKey: '',
+  originalData: null as any,
 });
 
 // Open the dialog
@@ -171,15 +245,123 @@ const loadSignatures = async () => {
 };
 
 // Show create dialog
-const showCreateDialog = () => {
-  newSignature.value = { name: '', intro: '' };
+const showCreateDialogHandler = () => {
+  newSignature.value = { 
+    name: '', 
+    intro: '',
+    cardImageFile: null,
+    cardImagePreview: null,
+  };
   createDialog.value = true;
 };
 
+// Show edit dialog
+const showEditDialog = async (sig: any) => {
+  // Find the signature key in signature_manager
+  try {
+    const response = await api.get('/store/get', {
+      params: { key: 'signature_manager' }
+    });
+
+    if (response.data.message === 'ok' && response.data.value) {
+      const signatureManager = response.data.value;
+      
+      // Find the key for this signature
+      for (const [key, value] of Object.entries(signatureManager)) {
+        if ((value as any)?.name === sig.name) {
+          editSignature.value = {
+            name: sig.name,
+            intro: sig.intro || '',
+            cardImageFile: null,
+            cardImagePreview: sig.cardImagePath || null,
+            originalKey: key,
+            originalData: value,
+          };
+          editDialog.value = true;
+          break;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load signature for editing:', error);
+    $q.notify({
+      type: 'negative',
+      message: t('signature.notify.loadFailed'),
+    });
+  }
+};
+
 // Show import dialog
-const showImportDialog = () => {
+const showImportDialogHandler = () => {
   importFile.value = null;
   importDialog.value = true;
+};
+
+// Cancel create dialog
+const cancelCreateDialog = () => {
+  if (newSignature.value.cardImagePreview) {
+    URL.revokeObjectURL(newSignature.value.cardImagePreview);
+  }
+  newSignature.value = {
+    name: '',
+    intro: '',
+    cardImageFile: null,
+    cardImagePreview: null,
+  };
+  createDialog.value = false;
+};
+
+// Cancel edit dialog
+const cancelEditDialog = () => {
+  if (editSignature.value.cardImagePreview && editSignature.value.cardImageFile) {
+    URL.revokeObjectURL(editSignature.value.cardImagePreview);
+  }
+  editSignature.value = {
+    name: '',
+    intro: '',
+    cardImageFile: null,
+    cardImagePreview: null,
+    originalKey: '',
+    originalData: null,
+  };
+  editDialog.value = false;
+};
+
+// Handle card image selection for create
+const handleCardImageSelect = (file: File | null) => {
+  if (newSignature.value.cardImagePreview) {
+    URL.revokeObjectURL(newSignature.value.cardImagePreview);
+  }
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      newSignature.value.cardImagePreview = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    newSignature.value.cardImagePreview = null;
+  }
+};
+
+// Handle card image selection for edit
+const handleEditCardImageSelect = (file: File | null) => {
+  if (editSignature.value.cardImagePreview && editSignature.value.cardImageFile) {
+    URL.revokeObjectURL(editSignature.value.cardImagePreview);
+  }
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      editSignature.value.cardImagePreview = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  } else if (!file && editSignature.value.originalData?.cardImagePath) {
+    // If cleared and original had image, restore original preview
+    editSignature.value.cardImagePreview = editSignature.value.originalData.cardImagePath;
+  } else {
+    editSignature.value.cardImagePreview = null;
+  }
 };
 
 // Create signature
@@ -197,11 +379,16 @@ const createSignature = async () => {
     const protectCode = 'pc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const encryptedKey = 'key_' + protectCode; // Simple encryption placeholder
 
-    const signatureData = {
+    const signatureData: any = {
       name: newSignature.value.name,
       intro: newSignature.value.intro,
       createdAt: new Date().toISOString(),
     };
+
+    // Add card image if provided
+    if (newSignature.value.cardImagePreview) {
+      signatureData.cardImagePath = newSignature.value.cardImagePreview;
+    }
 
     // Get existing signatures
     const getResponse = await api.get('/store/get', {
@@ -222,13 +409,58 @@ const createSignature = async () => {
       message: t('signature.notify.createSuccess'),
     });
 
-    createDialog.value = false;
+    cancelCreateDialog();
     loadSignatures();
   } catch (error) {
     console.error('Failed to create signature:', error);
     $q.notify({
       type: 'negative',
       message: t('signature.notify.createFailed'),
+    });
+  }
+};
+
+// Update signature
+const updateSignature = async () => {
+  try {
+    // Get existing signatures
+    const getResponse = await api.get('/store/get', {
+      params: { key: 'signature_manager' }
+    });
+
+    const signatureManager = getResponse.data.value || {};
+    
+    // Update the signature data
+    if (signatureManager[editSignature.value.originalKey]) {
+      signatureManager[editSignature.value.originalKey] = {
+        ...signatureManager[editSignature.value.originalKey],
+        intro: editSignature.value.intro,
+      };
+
+      // Update card image if changed
+      if (editSignature.value.cardImageFile) {
+        signatureManager[editSignature.value.originalKey].cardImagePath = editSignature.value.cardImagePreview;
+      }
+    }
+
+    // Save back
+    await api.post('/store/set', {
+      key: 'signature_manager',
+      value: signatureManager,
+    });
+
+    $q.notify({
+      type: 'positive',
+      message: t('signature.notify.updateSuccess'),
+    });
+
+    cancelEditDialog();
+    loadSignatures();
+  } catch (error) {
+    console.error('Failed to update signature:', error);
+    $q.notify({
+      type: 'negative',
+      message: t('signature.notify.updateFailed'),
     });
   }
 };
@@ -283,10 +515,11 @@ const importSignature = async () => {
       const base64 = btoa(String.fromCharCode(...bytes));
 
       try {
+        // First try without overwrite
         const response = await api.post('/sdk/signatures/import', {
           fileName: importFile.value!.name,
           blobBase64: base64,
-          overwrite: true,
+          overwrite: false,
         });
 
         $q.notify({
@@ -302,16 +535,40 @@ const importSignature = async () => {
           $q.dialog({
             title: t('signature.dialog.overwriteTitle'),
             message: t('signature.dialog.overwriteMessage', { name: error.response.data.name || '' }),
-            cancel: t('signature.dialog.cancel'),
-            ok: t('signature.dialog.overwrite'),
+            cancel: true,
+            persistent: true,
+            ok: {
+              label: t('signature.dialog.overwrite'),
+              color: 'primary',
+            },
+            cancel: {
+              label: t('KeyToneAlbum.cancel'),
+              color: 'primary',
+              flat: true,
+            },
           }).onOk(async () => {
-            // Retry with overwrite
-            await api.post('/sdk/signatures/import', {
-              fileName: importFile.value!.name,
-              blobBase64: base64,
-              overwrite: true,
-            });
-            loadSignatures();
+            try {
+              // Retry with overwrite
+              await api.post('/sdk/signatures/import', {
+                fileName: importFile.value!.name,
+                blobBase64: base64,
+                overwrite: true,
+              });
+              
+              $q.notify({
+                type: 'positive',
+                message: t('signature.notify.importSuccess'),
+              });
+              
+              importDialog.value = false;
+              loadSignatures();
+            } catch (retryError) {
+              console.error('Failed to import signature with overwrite:', retryError);
+              $q.notify({
+                type: 'negative',
+                message: t('signature.notify.importFailed'),
+              });
+            }
           });
         } else {
           throw error;
@@ -335,6 +592,15 @@ const deleteSignature = async (name: string) => {
     message: t('KeyToneAlbum.notify.confirmDelete', { name }),
     cancel: true,
     persistent: true,
+    ok: {
+      label: t('KeyToneAlbum.confirm'),
+      color: 'negative',
+    },
+    cancel: {
+      label: t('KeyToneAlbum.cancel'),
+      color: 'primary',
+      flat: true,
+    },
   }).onOk(async () => {
     try {
       // Get existing signatures
@@ -342,21 +608,35 @@ const deleteSignature = async (name: string) => {
         params: { key: 'signature_manager' }
       });
 
+      if (getResponse.data.message !== 'ok') {
+        throw new Error('Failed to get signature manager');
+      }
+
       const signatureManager = getResponse.data.value || {};
       
       // Find and remove the signature
+      let found = false;
       for (const [key, value] of Object.entries(signatureManager)) {
         if ((value as any)?.name === name) {
           delete signatureManager[key];
+          found = true;
           break;
         }
       }
 
+      if (!found) {
+        throw new Error('Signature not found');
+      }
+
       // Save back
-      await api.post('/store/set', {
+      const setResponse = await api.post('/store/set', {
         key: 'signature_manager',
         value: signatureManager,
       });
+
+      if (setResponse.data.message !== 'ok') {
+        throw new Error('Failed to save signature manager');
+      }
 
       $q.notify({
         type: 'positive',
