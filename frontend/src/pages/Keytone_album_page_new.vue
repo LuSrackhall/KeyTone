@@ -481,10 +481,8 @@ const exportAlbumLegacy = async () => {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(link);
 
-    q.notify({
-      type: 'positive',
-      message: $t('keyToneAlbumPage.notify.exportSuccess'),
-    });
+    // 注意：由于浏览器限制，无法确认用户是否真正保存了文件
+    // 因此不显示成功提示，避免误导用户
   } catch (error) {
     console.error('导出专辑失败:', error);
     q.notify({

@@ -67,6 +67,8 @@
     "signatureIntro": "Introduction",
     "cardImage": "Card Image",
     "selectImage": "Select Image",
+    "preview": "Preview",
+    "clickToZoom": "Click to zoom",
     "createdAt": "Created At",
     "emptyState": {
       "noSignatures": "No signatures",
@@ -89,6 +91,8 @@
     "notify": {
       "createSuccess": "Signature created",
       "createFailed": "Create failed",
+      "updateSuccess": "Signature updated",
+      "updateFailed": "Update failed",
       "importSuccess": "Signature imported",
       "importFailed": "Import failed",
       "exportSuccess": "Signature exported",
@@ -96,6 +100,7 @@
       "deleteSuccess": "Signature deleted",
       "deleteFailed": "Delete failed",
       "invalidFormat": "Select .ktsign file",
+      "invalidImageFormat": "Please select a valid image file",
       "signatureExists": "Signature exists",
       "nameRequired": "Name required",
       "fileDescription": "KeyTone Signature File"

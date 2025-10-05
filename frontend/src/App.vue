@@ -239,8 +239,8 @@ function getMacOSStatus() {
 
 <style lang="scss" scoped>
 :global(.q-dialog__backdrop) {
-  // background-color: rgba(0, 0, 0, 0) !important;
-  @apply bg-transparent;
+  // Add semi-transparent dark background for all dialog layers
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 :global(.body) {

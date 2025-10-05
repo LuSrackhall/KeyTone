@@ -67,6 +67,8 @@
     "signatureIntro": "签名简介",
     "cardImage": "名片图片",
     "selectImage": "选择图片",
+    "preview": "预览",
+    "clickToZoom": "点击放大查看",
     "createdAt": "创建时间",
     "emptyState": {
       "noSignatures": "暂无签名",
@@ -89,6 +91,8 @@
     "notify": {
       "createSuccess": "签名创建成功",
       "createFailed": "签名创建失败",
+      "updateSuccess": "签名更新成功",
+      "updateFailed": "签名更新失败",
       "importSuccess": "签名导入成功",
       "importFailed": "签名导入失败",
       "exportSuccess": "签名导出成功",
@@ -96,6 +100,7 @@
       "deleteSuccess": "签名删除成功",
       "deleteFailed": "签名删除失败",
       "invalidFormat": "请选择 .ktsign 格式的签名文件",
+      "invalidImageFormat": "请选择有效的图片文件",
       "signatureExists": "签名已存在",
       "nameRequired": "签名名称不能为空",
       "fileDescription": "KeyTone 签名文件"
