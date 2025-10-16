@@ -845,6 +845,513 @@ export const signatureService = new SignatureService();
 
 ## UI 组件设计
 
+### 签名列表项布局设计
+
+**列表项结构（新增设计）**：
+
+列表项采用**左图右文**的布局设计：
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ┌────────┐                                    ┌─────┐  │
+│  │        │  签名名称（粗体大字）     [编辑] [删除] │
+│  │ 图片   │  个人介绍（灰色小字）...             │  └─ [导出]
+│  │ 缩略图 │  最多2行，超出省略号                │  │
+│  │(80x80) │                                    └──────┤
+│  │        │                                           │
+│  └────────┘                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+**布局特点**：
+
+1. **图片区域**（左侧）：
+   - 尺寸：80x80px（小尺寸缩略图）
+   - 位置：列表项左侧
+   - **功能**：仅用于展示，点击时打开预览对话框查看大图
+   - **样式**：圆角 8px，可选阴影
+
+2. **信息区域**（中间主要内容）：
+   - **签名名称**：大字体（如 16px），粗体
+   - **个人介绍**：小字体（如 12px），灰色，最多 2 行，超出显示省略号
+   - **高度**：约 80px，与图片高度对齐
+
+3. **操作区域**（右侧）：
+   - 按钮：编辑、删除、导出
+   - 使用图标按钮节省空间
+
+4. **交互**：
+   - 点击**图片缩略图** → 打开图片预览对话框
+   - 点击**签名名称或介绍区域** → 打开编辑对话框
+   - **操作按钮** → 相应操作（编辑、删除、导出）
+
+**实现示例**：
+
+```vue
+<template>
+  <q-card class="signature-list-item" @click="handleInfoClick">
+    <q-card-section horizontal class="q-pa-none">
+      <!-- 左侧图片 -->
+      <div class="signature-image-container">
+        <q-img
+          v-if="signature.cardImage"
+          :src="getImageUrl(signature.cardImage)"
+          class="signature-thumbnail"
+          @click.stop="showImagePreview = true"
+        />
+        <div v-else class="signature-image-placeholder">
+          <q-icon name="image" size="lg" />
+        </div>
+      </div>
+
+      <!-- 中间信息 -->
+      <q-card-section class="signature-info-container">
+        <div class="signature-name text-h6 text-weight-bold">
+          {{ signature.name }}
+        </div>
+        <div class="signature-intro text-caption text-grey">
+          {{ truncateText(signature.intro, 2) }}
+        </div>
+      </q-card-section>
+
+      <!-- 右侧操作按钮 -->
+      <q-card-actions vertical class="signature-actions">
+        <q-btn
+          flat
+          dense
+          round
+          icon="edit"
+          @click.stop="handleEdit"
+          size="sm"
+        />
+        <q-btn
+          flat
+          dense
+          round
+          icon="delete"
+          @click.stop="handleDelete"
+          size="sm"
+          color="negative"
+        />
+        <q-btn
+          flat
+          dense
+          round
+          icon="download"
+          @click.stop="handleExport"
+          size="sm"
+        />
+      </q-card-actions>
+    </q-card-section>
+  </q-card>
+
+  <!-- 图片预览对话框 -->
+  <q-dialog
+    v-model="showImagePreview"
+    backdrop-filter="invert(70%)"
+  >
+    <q-card class="image-preview-card">
+      <q-card-section class="q-pa-none">
+        <q-img
+          :src="getImageUrl(signature.cardImage)"
+          fit="contain"
+          style="max-width: 90vw; max-height: 90vh"
+        />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn flat label="关闭" color="primary" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { Signature } from 'types/signature';
+
+const props = defineProps<{
+  signature: Signature;
+}>();
+
+const emit = defineEmits<{
+  edit: [id: string];
+  delete: [id: string];
+  export: [id: string];
+}>();
+
+const showImagePreview = ref(false);
+
+function handleInfoClick() {
+  emit('edit', props.signature.id);
+}
+
+function handleEdit() {
+  emit('edit', props.signature.id);
+}
+
+function handleDelete() {
+  emit('delete', props.signature.id);
+}
+
+function handleExport() {
+  emit('export', props.signature.id);
+}
+
+function truncateText(text: string, lines: number): string {
+  if (!text) return '';
+  const lineArray = text.split('\n');
+  return lineArray.slice(0, lines).join('\n');
+}
+
+function getImageUrl(imagePath: string): string {
+  // 假设 imagePath 是 "signatures/card_images/xyz789.png"
+  return `/signature/image/${imagePath.split('/').pop()}`;
+}
+</script>
+
+<style scoped>
+.signature-list-item {
+  min-height: 100px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.signature-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  padding: 8px;
+}
+
+.signature-thumbnail {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.signature-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  color: #ccc;
+}
+
+.signature-info-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 16px;
+}
+
+.signature-name {
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signature-intro {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.signature-actions {
+  flex-shrink: 0;
+  padding: 8px;
+}
+
+.image-preview-card {
+  background: transparent;
+}
+</style>
+```
+
+### 图片选择器和预览位置（创建/编辑对话框）
+
+**表单布局结构**：
+
+```
+┌────────────────────────────────────────┐
+│ 创建/编辑签名                           │
+├────────────────────────────────────────┤
+│                                        │
+│ 签名名称：[________]                   │
+│ 个人介绍：[________________]            │
+│                                        │
+│ 名片图片：[选择图片] [拖拽上传]         │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │   图片快速预览（可点击打开大图）    │ │
+│ │        [点击放大预览]              │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ [创建/更新]  [取消]                    │
+└────────────────────────────────────────┘
+```
+
+**关键设计点**：
+
+1. **表单字段顺序**：
+   - 签名名称（必填）
+   - 个人介绍（选填）
+   - 图片选择器
+
+2. **图片预览位置**：
+   - **在图片选择器下方**（而不是上方）
+   - 尺寸：约 120x120px
+   - 可点击打开大图预览
+
+3. **图片选择器**：
+   - 支持点击选择文件
+   - 支持拖拽上传
+   - 文件类型不受严格限制，仅支持 webview 支持的图片格式
+
+**实现示例**：
+
+```vue
+<template>
+  <q-dialog
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+    backdrop-filter="invert(70%)"
+  >
+    <q-card style="min-width: 400px; max-width: 600px">
+      <q-card-section class="row items-center q-pb-none">
+        <div class="text-h6">
+          {{ isEdit ? '编辑签名' : '创建签名' }}
+        </div>
+        <q-space />
+        <q-btn icon="close" flat round dense v-close-popup />
+      </q-card-section>
+
+      <q-card-section>
+        <q-form @submit="handleSubmit" class="q-gutter-md">
+          <!-- 签名名称 -->
+          <q-input
+            v-model="formData.name"
+            label="签名名称"
+            :readonly="isEdit"
+            :disable="isEdit"
+            filled
+            :rules="[
+              val => val && val.length > 0 || '请输入签名名称',
+              val => val && val.length <= 50 || '不超过50字符'
+            ]"
+            hint="必填，1-50字符"
+          />
+
+          <!-- 个人介绍 -->
+          <q-input
+            v-model="formData.intro"
+            label="个人介绍"
+            type="textarea"
+            filled
+            :rules="[
+              val => !val || val.length <= 500 || '不超过500字符'
+            ]"
+            hint="选填，最多500字符"
+            rows="3"
+          />
+
+          <!-- 图片选择器 -->
+          <div class="q-mt-md">
+            <div class="text-subtitle2 q-mb-sm">名片图片</div>
+            <q-file
+              v-model="formData.cardImageFile"
+              label="选择图片或拖拽上传"
+              filled
+              @update:model-value="handleImageSelect"
+              accept="image/*"
+              max-file-size="5242880"
+              hint="选填，支持 webview 支持的所有图片格式，最大 5MB"
+            >
+              <template v-slot:prepend>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+          </div>
+
+          <!-- 图片快速预览（在选择器下方） -->
+          <div v-if="imagePreviewUrl" class="q-mt-md">
+            <div class="text-subtitle2 q-mb-sm">预览</div>
+            <div class="image-preview-container">
+              <q-img
+                :src="imagePreviewUrl"
+                class="image-preview"
+                @click="showFullPreview = true"
+              >
+                <div class="absolute-full flex flex-center">
+                  <div class="text-white text-center">
+                    <div class="text-caption">点击放大</div>
+                  </div>
+                </div>
+              </q-img>
+            </div>
+          </div>
+
+          <!-- 提交按钮 -->
+          <div class="q-mt-lg row q-gutter-md">
+            <q-btn
+              type="submit"
+              color="primary"
+              :label="isEdit ? '更新' : '创建'"
+              class="col"
+            />
+            <q-btn
+              type="button"
+              flat
+              label="取消"
+              color="grey"
+              class="col"
+              v-close-popup
+            />
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+
+    <!-- 全屏图片预览对话框 -->
+    <q-dialog
+      v-model="showFullPreview"
+      backdrop-filter="invert(70%)"
+    >
+      <q-card class="image-full-preview-card">
+        <q-card-section class="q-pa-none">
+          <q-img
+            :src="imagePreviewUrl"
+            fit="contain"
+            style="max-width: 90vw; max-height: 90vh"
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="关闭" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </q-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import { Signature } from 'types/signature';
+
+interface FormData {
+  name: string;
+  intro: string;
+  cardImageFile: File | null;
+}
+
+const props = defineProps<{
+  modelValue: boolean;
+  signature?: Signature;
+}>();
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean];
+  submit: [data: Omit<Signature, 'id' | 'cardImage'> & { cardImageFile: File | null }];
+}>();
+
+const isEdit = computed(() => !!props.signature);
+
+const formData = ref<FormData>({
+  name: props.signature?.name || '',
+  intro: props.signature?.intro || '',
+  cardImageFile: null,
+});
+
+const imagePreviewUrl = ref<string>('');
+const showFullPreview = ref(false);
+
+function handleImageSelect(file: File | null) {
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreviewUrl.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    imagePreviewUrl.value = '';
+  }
+}
+
+function handleSubmit() {
+  emit('submit', {
+    name: formData.value.name,
+    intro: formData.value.intro,
+    cardImageFile: formData.value.cardImageFile,
+  });
+}
+</script>
+
+<style scoped>
+.image-preview-container {
+  display: flex;
+  justify-content: center;
+}
+
+.image-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.image-full-preview-card {
+  background: transparent;
+}
+</style>
+```
+
+### 图片格式支持
+
+**格式支持原则**：
+
+- 不严格限制图片格式
+- 允许用户上传 webview（Chromium）支持的所有图片格式
+- 常见支持格式：PNG、JPG/JPEG、WebP、GIF、BMP、SVG 等
+- 后端负责验证图片的实际有效性
+
+**前端文件选择器配置**：
+
+```vue
+<!-- 使用宽泛的 MIME 类型，允许用户选择所有图片 -->
+<q-file
+  v-model="imageFile"
+  accept="image/*"  <!-- 允许所有图片格式 -->
+  max-file-size="5242880"  <!-- 5MB 限制 -->
+/>
+```
+
 ### 尺寸适配说明
 
 **应用固定尺寸限制**：
@@ -881,86 +1388,6 @@ export const signatureService = new SignatureService();
    }
    </style>
    ```
-
-### 图片预览功能
-
-**图片预览组件要求**：
-
-1. **缩略图预览**：在创建/编辑表单中显示缩略图（如 120x120px）
-2. **点击放大**：点击缩略图打开全尺寸预览对话框
-3. **预览对话框特性**：
-   - 显示原始尺寸图片
-   - 支持图片缩放（鼠标滚轮）
-   - 支持图片平移（鼠标拖拽）
-   - 背景使用 `backdrop-filter="invert(70%)"`
-   - 提供关闭按钮
-
-**实现示例**：
-
-```vue
-<template>
-  <!-- 缩略图 -->
-  <q-img
-    v-if="cardImageUrl"
-    :src="cardImageUrl"
-    class="card-image-thumbnail"
-    @click="showPreview = true"
-  >
-    <div class="absolute-bottom text-subtitle2 text-center">
-      点击放大
-    </div>
-  </q-img>
-  
-  <!-- 放大预览对话框 -->
-  <q-dialog
-    v-model="showPreview"
-    backdrop-filter="invert(70%)"
-  >
-    <q-card class="image-preview-card">
-      <q-card-section class="q-pa-none">
-        <q-img
-          :src="cardImageUrl"
-          fit="contain"
-          style="max-width: 90vw; max-height: 90vh"
-        />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn flat label="关闭" color="primary" v-close-popup />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { signatureService } from 'services/signature-service';
-
-const props = defineProps<{
-  cardImagePath?: string;
-}>();
-
-const showPreview = ref(false);
-
-const cardImageUrl = computed(() => {
-  return props.cardImagePath 
-    ? signatureService.getImageUrl(props.cardImagePath)
-    : '';
-});
-</script>
-
-<style scoped>
-.card-image-thumbnail {
-  width: 120px;
-  height: 120px;
-  cursor: pointer;
-  border-radius: 8px;
-}
-
-.image-preview-card {
-  background: transparent;
-}
-</style>
-```
 
 ### 保护码处理说明
 
