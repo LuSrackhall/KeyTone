@@ -32,11 +32,14 @@ import { useAppStore } from './stores/app-store';
 import { debounce } from 'lodash';
 import { useKeyEventStore } from './stores/keyEvent-store';
 import { useMainStore } from './stores/main-store';
+import { useSignatureStore } from './stores/signature-store';
+import { getAllSignatures } from 'boot/query/signature-query';
 import { LoadConfig } from './boot/query/keytonePkg-query';
 
 const app_store = useAppStore();
 const setting_store = useSettingStore();
 const keyEvent_store = useKeyEventStore();
+const signature_store = useSignatureStore();
 // 在此处调用, 只是为了提前初始化, 从而避免在主页面中, 出现初始化延迟所造成的 已选择的键音包 无法正常显示名字(即 显示空名字) 的问题。
 // TIPS: 以上顾虑已通过将main_store内对应的map变量 keyTonePkgOptionsName 设置成 ref响应式变量来解决了, 不过为了加快速度, 仍在此处提前调用下, 而且除了更快的加载, 还起到一定的双重保险提高准确度的作用。
 // TIPS: 调试时也可以观察到, 如果此处调用的话, 主页加载后, 已选择的键音包名称是直接显示的有。(否则, 也就是注释掉此调用后, 是可以观察的到 此名称由 无 到 显现 的闪烁过程的。)
@@ -74,6 +77,16 @@ onBeforeMount(async () => {
   function sseDataToSettingStore(settingStorage: any) {
     setting_store.getConfigFileToUi();
     // TODO: 签名管理器数据同步处理
+    // 签名管理器数据同步
+    if (settingStorage.signature_manager !== undefined) {
+      // SSE 中的 signature_manager 是加密后的键值对，前端需要调用后端 API 获取解密后的完整数据
+      // 这是正常流程：SSE 通知"配置变化了"，前端通过 API 拉取解密后的签名列表
+      getAllSignatures().then((manager) => {
+        if (manager) {
+          signature_store.updateFromSSE(manager);
+        }
+      });
+    }
   }
 
   // 防抖处理, 避免短时间内多次触发时, 引起多次不必要的赋值操作, 我们的sse回调仅保证ui与配置文件的最终一致性即可。

@@ -335,5 +335,69 @@
       "mute": "Mute",
       "unmute": "Unmute"
     }
+  },
+  "signature": {
+    "page": {
+      "title": "Signature Management",
+      "create": "Create Signature",
+      "import": "Import Signature",
+      "loadError": "Failed to load signatures",
+      "retry": "Retry",
+      "emptyState": "No signatures yet",
+      "createFirst": "Create your first signature"
+    },
+    "form": {
+      "createTitle": "Create Signature",
+      "editTitle": "Edit Signature",
+      "name": "Signature Name",
+      "nameHint": "1-50 characters",
+      "nameRequired": "Please enter signature name",
+      "nameTooLong": "Signature name cannot exceed 50 characters",
+      "intro": "Introduction",
+      "introHint": "Up to 500 characters (optional)",
+      "introTooLong": "Introduction cannot exceed 500 characters",
+      "cardImage": "Card Image",
+      "selectImage": "Select Image",
+      "imageHint": "Supports PNG, JPEG, WebP formats",
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update",
+      "close": "Close"
+    },
+    "delete": {
+      "confirmTitle": "Confirm Delete",
+      "confirmMessage": "Are you sure you want to delete signature '{name}'? This action cannot be undone."
+    },
+    "import": {
+      "title": "Import Signature",
+      "selectFile": "Select .ktsign file",
+      "fileHint": "Please select a KeyTone signature file (.ktsign)",
+      "import": "Import"
+    },
+    "select": {
+      "title": "Select Signature",
+      "description": "Choose a signature for this album to identify the creator",
+      "emptyState": "No signatures available",
+      "createSignature": "Go to create signature",
+      "noIntro": "No introduction",
+      "noSignature": "No signature",
+      "confirm": "Confirm"
+    },
+    "notify": {
+      "createSuccess": "Signature created successfully",
+      "createFailed": "Failed to create signature",
+      "updateSuccess": "Signature updated successfully",
+      "updateFailed": "Failed to update signature",
+      "deleteSuccess": "Signature deleted successfully",
+      "deleteFailed": "Failed to delete signature",
+      "exportSuccess": "Signature exported successfully",
+      "exportFailed": "Failed to export signature",
+      "importSuccess": "Signature imported successfully",
+      "importFailed": "Failed to import signature",
+      "loadFailed": "Failed to load signatures",
+      "imageReadFailed": "Failed to read image",
+      "invalidFileFormat": "Invalid file format",
+      "unexpectedError": "An unexpected error occurred"
+    }
   }
 }
