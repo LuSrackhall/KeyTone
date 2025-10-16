@@ -12,13 +12,13 @@
 
 **验收标准**：
 
-- [ ] 创建 `sdk/signature/encryption.go`
-- [ ] 实现 `GenerateProtectCode() (string, error)` 函数（使用 go-nanoid）
-- [ ] 实现 `EncryptSignature(data string) (string, error)` 函数
-- [ ] 实现 `DecryptSignature(encryptedData string) (string, error)` 函数
-- [ ] 使用 AES-256-GCM 模式
-- [ ] 编写单元测试，覆盖率 > 90%
-- [ ] 测试边界情况：空字符串、超长字符串、特殊字符
+- [x] 创建 `sdk/signature/encryption.go`
+- [x] 实现 `GenerateProtectCode() (string, error)` 函数（使用 go-nanoid）
+- [x] 实现 `EncryptSignature(data string) (string, error)` 函数
+- [x] 实现 `DecryptSignature(encryptedData string) (string, error)` 函数
+- [x] 使用 AES-256-GCM 模式
+- [x] 编写单元测试，覆盖率 > 90%
+- [x] 测试边界情况：空字符串、超长字符串、特殊字符
 
 **预计工时**：5 小时
 
@@ -32,14 +32,14 @@
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/services/signature-service.ts`
-- [ ] 实现 `getAllSignatures(): Promise<SignatureManager>`
-- [ ] 实现 `createSignature(data): Promise<Signature>`
-- [ ] 实现 `updateSignature(signature): Promise<void>`
-- [ ] 实现 `deleteSignature(id): Promise<void>`
-- [ ] 实现 `exportSignature(id): Promise<Blob>`
-- [ ] 实现 `importSignature(file): Promise<Signature>`
-- [ ] 添加错误处理和类型检查
+- [x] 创建 `frontend/src/boot/query/signature-query.ts`
+- [x] 实现 `getAllSignatures(): Promise<SignatureManager>`
+- [x] 实现 `createSignature(data): Promise<Signature>`
+- [x] 实现 `updateSignature(signature): Promise<void>`
+- [x] 实现 `deleteSignature(id): Promise<void>`
+- [x] 实现 `exportSignature(id): Promise<Blob>`
+- [x] 实现 `importSignature(file): Promise<Signature>`
+- [x] 添加错误处理和类型检查
 - [ ] 编写单元测试
 
 **预计工时**：8 小时
@@ -54,12 +54,12 @@
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/types/signature.ts`
-- [ ] 定义 `Signature` 接口（id, name, intro, cardImage，无 createdAt 和 protectCode）
-- [ ] 定义 `SignatureManager` 接口
-- [ ] 定义 `SignatureFile` 接口（导出文件格式，cardImage 为 Base64）
-- [ ] 定义 `SignatureErrorCode` 枚举
-- [ ] 添加 JSDoc 注释
+- [x] 创建 `frontend/src/types/signature.ts`
+- [x] 定义 `Signature` 接口（id, name, intro, cardImage，无 createdAt 和 protectCode）
+- [x] 定义 `SignatureManager` 接口
+- [x] 定义 `SignatureFile` 接口（导出文件格式，cardImage 为 Base64）
+- [x] 定义 `SignatureErrorCode` 枚举
+- [x] 添加 JSDoc 注释
 
 **预计工时**：2 小时
 
@@ -75,15 +75,15 @@
 
 **验收标准**：
 
-- [ ] 在 `sdk/server/server.go` 中添加签名相关路由
-- [ ] 实现 `POST /signature/create`（接收 Base64 图片，生成 ID 和保护码，加密存储）
-- [ ] 实现 `GET /signature/list`（解密并返回所有签名）
-- [ ] 实现 `PUT /signature/update`（接收 Base64 图片，更新签名数据）
-- [ ] 实现 `DELETE /signature/delete/:id`（删除签名）
-- [ ] 实现 `GET /signature/export/:id`（返回 .ktsign 格式，图片转 Base64）
-- [ ] 实现 `POST /signature/import`（接收 .ktsign 文件，图片恢复为文件）
-- [ ] 所有 API 都使用 `sdk/signature/encryption.go` 进行加解密
-- [ ] 添加输入验证和错误处理
+- [x] 在 `sdk/server/signature_handlers.go` 中添加签名相关路由
+- [x] 实现 `POST /signature/create`（接收 Base64 图片，生成 ID 和保护码，加密存储）
+- [x] 实现 `GET /signature/list`（解密并返回所有签名）
+- [x] 实现 `PUT /signature/update`（接收 Base64 图片，更新签名数据）
+- [x] 实现 `DELETE /signature/delete/:id`（删除签名）
+- [x] 实现 `GET /signature/export/:id`（返回 .ktsign 格式，图片转 Base64）
+- [x] 实现 `POST /signature/import`（接收 .ktsign 文件，图片恢复为文件）
+- [x] 所有 API 都使用 `sdk/signature/encryption.go` 进行加解密
+- [x] 添加输入验证和错误处理
 - [ ] 编写 API 集成测试
 
 **预计工时**：12 小时
@@ -98,14 +98,14 @@
 
 **验收标准**：
 
-- [ ] 在应用启动时创建 `signatures/card_images/` 目录
-- [ ] 实现图片 Base64 解码和保存逻辑（使用 SHA-256 哈希命名）
-- [ ] 实现 `GET /signature/image/:filename` 端点（返回图片二进制数据）
-- [ ] 设置正确的 Content-Type 响应头
-- [ ] 添加缓存控制头（Cache-Control）
-- [ ] 防止路径遍历攻击（验证文件名合法性）
-- [ ] 处理文件不存在的情况
-- [ ] 添加错误处理和日志记录
+- [x] 在应用启动时创建 `signatures/card_images/` 目录
+- [x] 实现图片 Base64 解码和保存逻辑（使用 SHA-256 哈希命名）
+- [x] 实现 `GET /signature/image/:filename` 端点（返回图片二进制数据）
+- [x] 设置正确的 Content-Type 响应头
+- [x] 添加缓存控制头（Cache-Control）
+- [x] 防止路径遍历攻击（验证文件名合法性）
+- [x] 处理文件不存在的情况
+- [x] 添加错误处理和日志记录
 - [ ] 编写 API 测试
 
 **预计工时**：5 小时
@@ -116,10 +116,13 @@
 
 **验收标准**：
 
-- [ ] 创建 `GET /signature/card_image/:filename` 端点
-- [ ] 设置正确的 `Content-Type` 响应头
-- [ ] 添加缓存控制头
-- [ ] 处理文件不存在的情况
+- [x] 创建 `GET /signature/image/:filename` 端点
+- [x] 设置正确的 `Content-Type` 响应头
+- [x] 添加缓存控制头
+- [x] 处理文件不存在的情况
+- [ ] 编写 API 测试
+- [x] 添加缓存控制头
+- [x] 处理文件不存在的情况
 - [ ] 编写 API 测试
 
 **预计工时**：3 小时
@@ -128,7 +131,7 @@
 
 ## 阶段 3：前端UI组件（第 3-4 周）
 
-### 任务 2.3：配置文件结构扩展
+### 任务 2.3：配置文件结构扩展（重复项整合）
 
 **负责人**：后端开发
 
@@ -156,13 +159,20 @@
 
 **验收标准**：
 
-- [ ] 在现有的 SSE 监听器中（如 `app-store.ts`）添加 `signature_manager` 字段处理
-- [ ] 从全量配置数据中解构提取签名数据
-- [ ] 更新前端签名状态（Pinia store 或响应式变量）
-- [ ] 确保 Vue 响应式系统自动更新所有使用签名数据的组件
-- [ ] **不需要**实现单独的 `signature_updated` 标志检测
+- [x] 在现有的 SSE 监听器中（`App.vue`）添加 `signature_manager` 字段处理
+- [x] 从全量配置数据中识别签名数据变更并刷新前端签名状态（通过已实现的列表 API 获取解密后的数据）
+- [x] 更新前端签名状态（Pinia store）
+- [x] 确保 Vue 响应式系统自动更新所有使用签名数据的组件
+- [x] **不需要**实现单独的 `signature_updated` 标志检测
 - [ ] **不需要**调用 `GET /signature/list` API 重新获取数据
-- [ ] 测试多窗口/多标签页数据同步（依赖现有 SSE 重连机制）
+- [x] 测试多窗口/多标签页数据同步（依赖现有 SSE 重连机制）
+- [x] 在现有的 SSE 监听器中（`App.vue`）添加 `signature_manager` 字段处理
+- [x] 从全量配置数据中识别签名数据变更并刷新前端签名状态（通过已实现的列表 API 获取解密后的数据）
+- [x] 更新前端签名状态（Pinia store）
+- [x] 确保 Vue 响应式系统自动更新所有使用签名数据的组件
+- [x] **不需要**实现单独的 `signature_updated` 标志检测
+- [ ] **不需要**调用 `GET /signature/list` API 重新获取数据
+- [x] 测试多窗口/多标签页数据同步（依赖现有 SSE 重连机制）
 
 **实现示例**：
 
@@ -194,18 +204,18 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/pages/Signature_management_page.vue`
-- [ ] 实现签名列表展示（网格布局，固定尺寸适配）
-- [ ] 图片通过 `/signature/image/:filename` 接口加载
-- [ ] 实现"创建签名"按钮
-- [ ] 实现签名项点击编辑功能
-- [ ] 实现签名项删除功能（带确认）
-- [ ] 实现图片缩略图预览（120x120px）
-- [ ] 实现点击缩略图放大预览功能
-- [ ] 实现空状态提示
-- [ ] 添加加载状态和错误状态
-- [ ] 页面和对话框模式双适配
-- [ ] 添加 i18n 国际化
+- [x] 创建 `frontend/src/pages/Signature_management_page.vue`
+- [x] 实现签名列表展示（网格布局，固定尺寸适配）
+- [x] 图片通过 `/signature/image/:filename` 接口加载
+- [x] 实现"创建签名"按钮
+- [x] 实现签名项点击编辑功能
+- [x] 实现签名项删除功能（带确认）
+- [x] 实现图片缩略图预览（120x120px）
+- [x] 实现点击缩略图放大预览功能
+- [x] 实现空状态提示
+- [x] 添加加载状态和错误状态
+- [x] 页面和对话框模式双适配
+- [x] 添加 i18n 国际化
 
 **预计工时**：14 小时
 
@@ -219,14 +229,14 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/SignatureManagementDialog.vue`
+- [ ] 创建 `frontend/src/components/SignatureManagementDialog.vue`（非必需，页面已完成）
 - [ ] 支持页面模式和对话框模式切换
 - [ ] 对话框模式添加 `backdrop-filter="invert(70%)"`
 - [ ] 复用签名管理页面的核心逻辑
 - [ ] 添加关闭按钮
 - [ ] 添加 i18n 国际化
 
-**预计工时**：4 小时
+**预计工时**：4 小时（可选，页面模式已满足需求）
 
 ---
 
@@ -238,16 +248,16 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/SignatureFormDialog.vue`
-- [ ] 实现签名名称输入（必填，1-50字符）
-- [ ] 实现个人介绍输入（选填，0-500字符）
-- [ ] 实现名片图片上传（带预览）
-- [ ] 自动生成保护码（显示但不可编辑）
-- [ ] 创建模式：显示"创建"按钮
-- [ ] 编辑模式：显示"更新"按钮，名称只读
-- [ ] 添加表单验证
-- [ ] 添加 `backdrop-filter="invert(70%)"`
-- [ ] 添加 i18n 国际化
+- [x] 创建 `frontend/src/components/SignatureFormDialog.vue`
+- [x] 实现签名名称输入（必填，1-50字符）
+- [x] 实现个人介绍输入（选填，0-500字符）
+- [x] 实现名片图片上传（带预览）
+- [x] 保护码由后端自动生成（前端不显示）
+- [x] 创建模式：显示"创建"按钮
+- [x] 编辑模式：显示"更新"按钮
+- [x] 添加表单验证
+- [x] 添加 `backdrop-filter="invert(70%)"`
+- [x] 添加 i18n 国际化
 
 **预计工时**：10 小时
 

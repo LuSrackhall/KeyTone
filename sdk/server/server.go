@@ -323,6 +323,11 @@ func xorCrypt(data []byte, key string) []byte {
 }
 
 func ServerRun() {
+	// 初始化签名图片目录
+	if err := EnsureSignatureImageDir(); err != nil {
+		logger.Error("Failed to initialize signature image directory", "error", err)
+	}
+
 	// 启动gin
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -333,6 +338,7 @@ func ServerRun() {
 	})
 
 	mainRouters(r)
+	signatureRouters(r)
 
 	r.GET("/stream", func(c *gin.Context) {
 
