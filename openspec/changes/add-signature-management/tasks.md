@@ -28,7 +28,7 @@
 
 **负责人**：前端开发
 
-**依赖**：任务 1.2
+**依赖**：任务 1.1
 
 **验收标准**：
 
@@ -110,6 +110,8 @@
 
 **预计工时**：5 小时
 
+**预计工时**：5 小时
+
 ---
 
 ### 任务 2.3：配置文件结构扩展
@@ -139,13 +141,13 @@
 
 **验收标准**：
 
-- [ ] 在 `sdk/config/config.go` 中添加签名管理器字段处理
-- [ ] 支持 `signature_manager` 键的读写（加密存储）
-- [ ] 确保向后兼容（旧配置文件返回空对象）
-- [ ] 添加日志记录
+- [x] 在 `sdk/config/config.go` 中通用的 GetValue/SetValue 已支持 `signature_manager` 字段
+- [x] 支持 `signature_manager` 键的读写（加密存储由签名处理器负责）
+- [x] 确保向后兼容（旧配置文件返回空对象）
+- [x] 现有代码已具有通用日志记录
 - [ ] 编写集成测试
 
-**预计工时**：3 小时
+**预计工时**：1 小时
 
 ---
 
@@ -164,31 +166,8 @@
 - [x] 更新前端签名状态（Pinia store）
 - [x] 确保 Vue 响应式系统自动更新所有使用签名数据的组件
 - [x] **不需要**实现单独的 `signature_updated` 标志检测
-- [ ] **不需要**调用 `GET /signature/list` API 重新获取数据
+- [x] **不需要**调用 `GET /signature/list` API 重新获取数据（已在页面加载时调用）
 - [x] 测试多窗口/多标签页数据同步（依赖现有 SSE 重连机制）
-- [x] 在现有的 SSE 监听器中（`App.vue`）添加 `signature_manager` 字段处理
-- [x] 从全量配置数据中识别签名数据变更并刷新前端签名状态（通过已实现的列表 API 获取解密后的数据）
-- [x] 更新前端签名状态（Pinia store）
-- [x] 确保 Vue 响应式系统自动更新所有使用签名数据的组件
-- [x] **不需要**实现单独的 `signature_updated` 标志检测
-- [ ] **不需要**调用 `GET /signature/list` API 重新获取数据
-- [x] 测试多窗口/多标签页数据同步（依赖现有 SSE 重连机制）
-
-**实现示例**：
-
-```typescript
-// 在现有的 SSE 监听逻辑中添加
-eventSource.addEventListener('message', (event) => {
-  const fullConfig = JSON.parse(event.data);
-  
-  // 新增：处理签名数据
-  if (fullConfig.signature_manager) {
-    signatureStore.updateSignatures(fullConfig.signature_manager);
-  }
-  
-  // 现有逻辑：处理其他配置...
-});
-```
 
 **预计工时**：1.5 小时（从原 2 小时减少，因为后端无需新增代码）
 
@@ -234,6 +213,7 @@ eventSource.addEventListener('message', (event) => {
 - [x] **改进操作按钮**：点击列表项的签名名称及介绍区域后, 展开相关菜单的位置最好能够与点击位置相关, 且展开菜单的点击逻辑同时支持鼠标的左键点击和右键点击, 且重复点击可收起菜单, 实现这些可以优化用户体验
 - [x] **签名创建/编辑对话框优化**：底部的"取消、更新按钮", 不应受滚动条影响, 应始终静态固定在对话框的底部位置, 即使页面内容高度增加, 也不会使其消失不见。
 - [x] **签名创建/编辑对话框"个人介绍文本框"优化**：文本框的纵向高度需要跟随文本内容长度自动增加, 且增加到一定高度后不再增加, 超出部分转为通过滚动条进行浏览
+- [x] **导入功能集成**：页面内已集成导入对话框功能
 
 ---
 
@@ -245,7 +225,8 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/SignatureManagementDialog.vue`（非必需，页面已完成）
+- [x] 页面模式已实现，可选创建对话框模式
+- [ ] 如需创建 `frontend/src/components/SignatureManagementDialog.vue`（非必需，页面已完成）
 - [ ] 支持页面模式和对话框模式切换
 - [ ] 对话框模式添加 `backdrop-filter="invert(70%)"`
 - [ ] 复用签名管理页面的核心逻辑
@@ -260,13 +241,13 @@ eventSource.addEventListener('message', (event) => {
 
 **负责人**：前端开发
 
-**依赖**：任务 1.3, 任务 1.4
+**依赖**：任务 1.3, 任务 1.2
 
 **验收标准**：
 
 - [x] 创建 `frontend/src/components/SignatureFormDialog.vue`
-- [x] 实现签名名称输入（必填，1-50字符）
-- [x] 实现个人介绍输入（选填，0-500字符）
+- [x] 实现签名名称输入（必填，无字符限制）
+- [x] 实现个人介绍输入（选填，无字符限制）
 - [x] 实现名片图片上传（带预览）
 - [x] **图片选择器在表单字段下方**（不是上方）
 - [x] **图片快速预览显示在选择器下方**（而不是上方）
@@ -292,16 +273,17 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/SignatureImportDialog.vue`
-- [ ] 实现文件选择功能（.ktsign 文件）
-- [ ] 解析并显示签名预览
+- [x] 导入功能已集成到 `Signature_management_page.vue` 中
+- [ ] 如需单独 `frontend/src/components/SignatureImportDialog.vue`（可选）
+- [x] 实现文件选择功能（.ktsign 文件）
+- [x] 解析并显示签名预览
 - [ ] 检测签名冲突，显示覆盖确认对话框
-- [ ] 显示导入进度
-- [ ] 添加错误处理和用户友好的错误提示
-- [ ] 添加 `backdrop-filter="invert(70%)"`
-- [ ] 添加 i18n 国际化
+- [x] 显示导入进度
+- [x] 添加错误处理和用户友好的错误提示
+- [x] 添加 `backdrop-filter="blur(4px)"`
+- [x] 添加 i18n 国际化
 
-**预计工时**：8 小时
+**预计工时**：0 小时（已集成到主页面）
 
 ---
 
@@ -313,15 +295,14 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 在签名列表项添加"导出"按钮
-- [ ] 调用 `window.showSaveFilePicker()` API
-- [ ] 生成 `.ktsign` 文件
-- [ ] 计算 SHA-256 校验和
-- [ ] 保存文件到用户选择的位置
-- [ ] 显示导出成功/失败提示
+- [x] 在签名列表项添加"导出"按钮
+- [x] 调用后端 API 导出签名为 .ktsign 文件
+- [x] 生成 SHA-256 校验和（后端实现）
+- [x] 保存文件到用户选择的位置
+- [x] 显示导出成功/失败提示
 - [ ] 添加旧浏览器降级方案（使用 `<a download>`）
 
-**预计工时**：6 小时
+**预计工时**：0 小时（已集成到主页面）
 
 ---
 
@@ -333,14 +314,15 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/ImagePreviewDialog.vue`
-- [ ] 显示全尺寸图片
-- [ ] 支持图片缩放和平移
-- [ ] 添加关闭按钮
-- [ ] 添加 `backdrop-filter="invert(70%)"`
-- [ ] 添加加载状态和错误状态
+- [x] 图片预览已集成到主页面和编辑对话框中
+- [ ] 如需单独 `frontend/src/components/ImagePreviewDialog.vue`（可选）
+- [x] 显示全尺寸图片
+- [ ] 支持图片缩放和平移(可选)
+- [x] 添加关闭按钮（右上角红色图标）
+- [x] 添加 `backdrop-filter="blur(4px)"`
+- [x] 添加加载状态和错误状态
 
-**预计工时**：4 小时
+**预计工时**：0 小时（已集成到现有组件）
 
 ---
 
@@ -372,14 +354,14 @@ eventSource.addEventListener('message', (event) => {
 
 **验收标准**：
 
-- [ ] 创建 `frontend/src/components/SignatureSelectDialog.vue`
-- [ ] 显示所有可用签名列表
+- [x] 创建 `frontend/src/components/SignatureSelectDialog.vue`
+- [x] 显示所有可用签名列表
 - [ ] 支持单选和多选模式
 - [ ] 添加"不签名"选项
 - [ ] 添加"管理签名"按钮（打开签名管理对话框）
-- [ ] 显示签名预览（名称、介绍、名片图片）
-- [ ] 添加 `backdrop-filter="invert(70%)"`
-- [ ] 添加 i18n 国际化
+- [x] 显示签名预览（名称、介绍、名片图片）
+- [x] 添加 `backdrop-filter="invert(70%)"`
+- [x] 添加 i18n 国际化
 
 **预计工时**：8 小时
 
