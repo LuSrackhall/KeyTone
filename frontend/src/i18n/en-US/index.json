@@ -354,6 +354,7 @@
     "form": {
       "createTitle": "Create Signature",
       "editTitle": "Edit Signature",
+      "editWarning": "After editing a signature, if you need to update the signature in albums already signed with this signature, you need to re-export the signature for those albums.",
       "name": "Signature Name",
       "nameHint": "1-50 characters",
       "nameRequired": "Please enter signature name",
@@ -363,7 +364,7 @@
       "introTooLong": "Introduction cannot exceed 500 characters",
       "cardImage": "Card Image",
       "selectImage": "Select Image",
-      "imageHint": "Supports all image formats that webview supports (PNG, JPEG, WebP, GIF, etc.)",
+      "imageHint": "Supports PNG, JPEG, WebP, GIF and other image formats",
       "clickToPreview": "Click to preview",
       "cancel": "Cancel",
       "create": "Create",

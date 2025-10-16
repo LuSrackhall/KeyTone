@@ -348,6 +348,7 @@
     "form": {
       "createTitle": "创建签名",
       "editTitle": "编辑签名",
+      "editWarning": "编辑签名后，如需为已签该签名的专辑中的签名执行更新，则需对相关专辑重新进行签名导出操作。",
       "name": "签名名称",
       "nameHint": "1-50 个字符",
       "nameRequired": "请输入签名名称",
@@ -357,7 +358,7 @@
       "introTooLong": "个人介绍不能超过 500 个字符",
       "cardImage": "名片图片",
       "selectImage": "选择图片",
-      "imageHint": "支持所有 webview 支持的图片格式（PNG、JPEG、WebP、GIF 等）",
+      "imageHint": "支持 PNG、JPEG、WebP、GIF 等图片格式",
       "clickToPreview": "点击预览",
       "cancel": "取消",
       "create": "创建",
