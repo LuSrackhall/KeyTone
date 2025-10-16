@@ -27,15 +27,7 @@
       <div class="flex justify-between items-center">
         <h1 class="text-h5 q-my-none">{{ $t('signature.page.title') }}</h1>
         <div class="q-gutter-md">
-          <q-btn
-            flat
-            dense
-            round
-            icon="file_upload"
-            @click="showImportDialog"
-            size="md"
-            :title="$t('signature.page.import')"
-          >
+          <q-btn flat dense round icon="input" @click="showImportDialog" size="md" :title="$t('signature.page.import')">
             <q-tooltip>{{ $t('signature.page.import') }}</q-tooltip>
           </q-btn>
           <q-btn
@@ -128,9 +120,11 @@
 
               <!-- 中间信息区域（点击展开菜单） -->
               <div
+                :ref="(el) => { if (el) contextMenuRefs.set(signature.id, el as HTMLElement); }"
                 class="flex-1 flex flex-col justify-center cursor-pointer hover:bg-grey-2 rounded transition-colors"
                 :style="{ padding: signature.cardImage ? '8px 12px' : '8px 12px 8px 0', minWidth: 0 }"
-                @click="showContextMenu(signature, $event)"
+                @click="handleInfoClick(signature, $event)"
+                @contextmenu="handleInfoContextMenu(signature, $event)"
               >
                 <div
                   class="text-subtitle2 text-weight-bold"
@@ -219,13 +213,21 @@
       </q-card>
     </q-dialog>
 
+    <!-- 虚拟菜单参考元素（用于精确定位菜单到点击位置） -->
+    <div ref="virtualMenuRef" style="position: fixed; width: 1px; height: 1px; pointer-events: none; z-index: -1" />
+
     <!-- 上下文菜单 -->
     <q-menu
       v-model="contextMenuVisible"
-      :target="contextMenuTarget"
-      anchor="bottom left"
-      self="top left"
+      :target="(virtualMenuRef as any)"
+      :anchor="menuAnchor"
+      :self="menuSelf"
       no-parent-event
+      @hide="
+        () => {
+          activeMenuSignatureId = null;
+        }
+      "
     >
       <q-list dense style="min-width: 120px">
         <q-item clickable v-close-popup @click="handleEdit(contextMenuSignature!)">
@@ -236,7 +238,7 @@
         </q-item>
         <q-item clickable v-close-popup @click="handleExport(contextMenuSignature!)">
           <q-item-section avatar>
-            <q-icon name="file_download" />
+            <q-icon name="drive_file_move" />
           </q-item-section>
           <q-item-section>{{ $t('signature.page.export') }}</q-item-section>
         </q-item>
@@ -320,6 +322,31 @@ const previewImageUrl = ref('');
 const contextMenuVisible = ref(false);
 const contextMenuTarget = ref<Element | undefined>();
 const contextMenuSignature = ref<Signature | null>(null);
+const contextMenuRefs = new Map<string, HTMLElement>();
+const activeMenuSignatureId = ref<string | null>(null);
+const virtualMenuRef = ref<HTMLElement | null>(null);
+const menuAnchor = ref<
+  | 'bottom left'
+  | 'bottom right'
+  | 'top left'
+  | 'top right'
+  | 'center left'
+  | 'center right'
+  | 'bottom middle'
+  | 'top middle'
+  | 'center middle'
+>('bottom left');
+const menuSelf = ref<
+  | 'bottom left'
+  | 'bottom right'
+  | 'top left'
+  | 'top right'
+  | 'center left'
+  | 'center right'
+  | 'bottom middle'
+  | 'top middle'
+  | 'center middle'
+>('top left');
 
 // 从 store 获取签名列表
 const signatureList = computed(() => {
@@ -390,6 +417,101 @@ function showContextMenu(signature: Signature, event: MouseEvent) {
   contextMenuSignature.value = signature;
   contextMenuTarget.value = event.currentTarget as Element;
   contextMenuVisible.value = true;
+}
+
+function handleInfoClick(signature: Signature, event: MouseEvent) {
+  // 左键点击展开菜单或收起菜单
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (activeMenuSignatureId.value === signature.id && contextMenuVisible.value) {
+    // 重复点击同一项，收起菜单
+    contextMenuVisible.value = false;
+    activeMenuSignatureId.value = null;
+  } else {
+    // 展开菜单 - 使用点击位置计算最佳菜单位置
+    calculateMenuPosition(null, event.clientX, event.clientY);
+    contextMenuSignature.value = signature;
+    contextMenuVisible.value = true;
+    activeMenuSignatureId.value = signature.id;
+  }
+}
+
+function handleInfoContextMenu(signature: Signature, event: MouseEvent) {
+  // 右键点击展开菜单或收起菜单
+  event.preventDefault();
+  event.stopPropagation();
+
+  // 检查是否已经打开了相同签名的菜单
+  if (activeMenuSignatureId.value === signature.id && contextMenuVisible.value) {
+    // 重复右键点击同一项，收起菜单
+    contextMenuVisible.value = false;
+    activeMenuSignatureId.value = null;
+  } else {
+    // 展开菜单 - 使用点击位置计算最佳菜单位置
+    calculateMenuPosition(null, event.clientX, event.clientY);
+    contextMenuSignature.value = signature;
+    contextMenuVisible.value = true;
+    activeMenuSignatureId.value = signature.id;
+  }
+}
+
+function calculateMenuPosition(element: HTMLElement | null, clientX: number, clientY: number) {
+  // 将虚拟参考元素定位到点击位置，使菜单精确显示在点击点附近
+  if (virtualMenuRef.value) {
+    virtualMenuRef.value.style.left = `${clientX}px`;
+    virtualMenuRef.value.style.top = `${clientY}px`;
+  }
+
+  // 菜单的预计大小（根据项数）
+  const menuHeight = 130; // 约3项的高度
+  const menuWidth = 120;
+
+  // 计算从点击位置到视口边界的距离
+  const spaceBelow = window.innerHeight - clientY;
+  const spaceAbove = clientY;
+  const spaceRight = window.innerWidth - clientX;
+  const spaceLeft = clientX;
+
+  // 决定垂直位置 - 优先使用下方，如果空间不足则使用上方
+  let verticalAnchor: 'top' | 'bottom' = 'bottom';
+  let verticalSelf: 'top' | 'bottom' = 'top';
+
+  if (spaceBelow >= menuHeight) {
+    // 下方有足够空间，菜单在点击点下方展开
+    verticalAnchor = 'bottom';
+    verticalSelf = 'top';
+  } else if (spaceAbove >= menuHeight) {
+    // 下方空间不足但上方充足，菜单在点击点上方展开
+    verticalAnchor = 'top';
+    verticalSelf = 'bottom';
+  } else {
+    // 两方都不足（很少见），默认向下，可能被视口裁剪
+    verticalAnchor = 'bottom';
+    verticalSelf = 'top';
+  }
+
+  // 决定水平位置 - 优先使用右方，如果空间不足则使用左方
+  let horizontalAnchor: 'left' | 'right' = 'left';
+  let horizontalSelf: 'left' | 'right' = 'left';
+
+  if (spaceRight >= menuWidth) {
+    // 右方有足够空间，菜单在点击点右方展开
+    horizontalAnchor = 'left';
+    horizontalSelf = 'left';
+  } else if (spaceLeft >= menuWidth) {
+    // 右方空间不足但左方充足，菜单在点击点左方展开
+    horizontalAnchor = 'right';
+    horizontalSelf = 'right';
+  } else {
+    // 两方都不足（空间特别拥挤），默认向右
+    horizontalAnchor = 'left';
+    horizontalSelf = 'left';
+  }
+
+  // 组合垂直和水平位置
+  menuAnchor.value = `${verticalAnchor} ${horizontalAnchor}` as any;
+  menuSelf.value = `${verticalSelf} ${horizontalSelf}` as any;
 }
 
 function handleEdit(signature: Signature) {
