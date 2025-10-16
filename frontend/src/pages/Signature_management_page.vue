@@ -83,61 +83,80 @@
         <q-btn :label="$t('signature.page.createFirst')" color="primary" icon="add" @click="handleCreate" />
       </div>
 
-      <!-- 签名列表网格 -->
+      <!-- 签名列表 -->
       <div v-else class="q-pa-md">
-        <div class="row q-col-gutter-md">
-          <div v-for="signature in signatureList" :key="signature.id" class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
-            <q-card clickable @click="handleEdit(signature)" class="cursor-pointer hover:shadow-lg transition-all">
-              <!-- 图片 -->
-              <q-img
-                v-if="signature.cardImage"
-                :src="getImageUrl(signature.cardImage)"
-                ratio="1"
-                class="cursor-pointer"
-                @click.stop="handleImagePreview(signature.cardImage)"
+        <div class="space-y-2">
+          <q-card
+            v-for="signature in signatureList"
+            :key="signature.id"
+            class="cursor-pointer hover:shadow-lg transition-all relative"
+            :style="{ minHeight: signature.cardImage ? '60px' : '50px' }"
+          >
+            <q-card-section class="q-pa-none" style="display: flex; align-items: center; position: relative">
+              <!-- 左侧图片区域 -->
+              <div
+                class="flex-shrink-0 flex items-center justify-center"
+                style="width: 60px; height: 60px; min-width: 60px; background-color: #f5f5f5; border-radius: 4px"
               >
-                <div class="absolute-top-left q-pa-xs">
-                  <q-btn round flat dense icon="close" color="red" size="sm" @click.stop="handleDelete(signature)" />
-                </div>
-                <div class="absolute-top-right q-pa-xs">
-                  <q-btn
-                    round
-                    flat
-                    dense
-                    icon="file_download"
-                    color="blue"
-                    size="sm"
-                    @click.stop="handleExport(signature)"
-                  />
-                </div>
-              </q-img>
-              <div v-else class="flex items-center justify-center bg-grey-2" style="aspect-ratio: 1">
-                <q-icon name="person" size="80px" color="grey-5" />
-                <div class="absolute-top-left q-pa-xs">
-                  <q-btn round flat dense icon="close" color="red" size="sm" @click.stop="handleDelete(signature)" />
-                </div>
-                <div class="absolute-top-right q-pa-xs">
-                  <q-btn
-                    round
-                    flat
-                    dense
-                    icon="file_download"
-                    color="blue"
-                    size="sm"
-                    @click.stop="handleExport(signature)"
-                  />
+                <q-img
+                  v-if="signature.cardImage"
+                  :src="getImageUrl(signature.cardImage)"
+                  style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
+                  class="object-cover"
+                  @click.stop="handleImagePreview(signature.cardImage)"
+                >
+                  <template v-slot:loading>
+                    <q-spinner color="primary" size="24px" />
+                  </template>
+                  <template v-slot:error>
+                    <q-icon name="image_not_supported" size="24px" color="grey-5" />
+                  </template>
+                </q-img>
+                <!-- 无图片占位符 -->
+                <div
+                  v-else
+                  class="flex flex-col items-center justify-center"
+                  :title="$t('signature.page.noImage')"
+                  style="width: 50px; height: 50px; cursor: default"
+                >
+                  <q-icon name="image_not_supported" size="28px" color="grey-4" />
+                  <div class="text-caption text-grey-4" style="font-size: 0.65rem; margin-top: 2px">
+                    {{ $t('signature.page.noImageHint') }}
+                  </div>
                 </div>
               </div>
 
-              <!-- 签名信息 -->
-              <q-card-section class="q-pa-md">
-                <div class="text-subtitle2 text-weight-bold ellipsis">{{ signature.name }}</div>
-                <div v-if="signature.intro" class="text-caption text-grey-7 ellipsis-2-lines q-mt-xs">
+              <!-- 中间信息区域（点击展开菜单） -->
+              <div
+                class="flex-1 flex flex-col justify-center cursor-pointer hover:bg-grey-2 rounded transition-colors"
+                :style="{ padding: signature.cardImage ? '8px 12px' : '8px 12px 8px 0', minWidth: 0 }"
+                @click="showContextMenu(signature, $event)"
+              >
+                <div
+                  class="text-subtitle2 text-weight-bold"
+                  style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem"
+                >
+                  {{ signature.name }}
+                </div>
+                <div
+                  v-if="signature.intro"
+                  class="text-caption text-grey-7"
+                  :style="{
+                    marginTop: '2px',
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: '1',
+                    lineClamp: '1',
+                    overflow: 'hidden',
+                    lineHeight: '1.3',
+                    fontSize: '0.8rem',
+                  }"
+                >
                   {{ signature.intro }}
                 </div>
-              </q-card-section>
-            </q-card>
-          </div>
+              </div>
+            </q-card-section>
+          </q-card>
         </div>
       </div>
     </q-scroll-area>
@@ -182,15 +201,54 @@
 
     <!-- 图片预览对话框 -->
     <q-dialog v-model="showImagePreview" backdrop-filter="blur(4px)">
-      <q-card>
-        <q-card-section class="q-pa-none">
-          <img :src="previewImageUrl" class="max-w-full" style="max-height: 80vh" />
+      <q-card class="relative" style="background: transparent">
+        <q-btn
+          icon="close"
+          flat
+          round
+          dense
+          color="negative"
+          size="md"
+          v-close-popup
+          class="absolute top-0 right-0 z-10"
+          style="background-color: rgba(255, 255, 255, 0.5)"
+        />
+        <q-card-section class="q-pa-md">
+          <img :src="previewImageUrl" class="max-w-full" style="max-height: 80vh; border-radius: 4px" />
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat :label="$t('signature.form.close')" color="primary" v-close-popup />
-        </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- 上下文菜单 -->
+    <q-menu
+      v-model="contextMenuVisible"
+      :target="contextMenuTarget"
+      anchor="bottom left"
+      self="top left"
+      no-parent-event
+    >
+      <q-list dense style="min-width: 120px">
+        <q-item clickable v-close-popup @click="handleEdit(contextMenuSignature!)">
+          <q-item-section avatar>
+            <q-icon name="edit" />
+          </q-item-section>
+          <q-item-section>{{ $t('signature.page.edit') }}</q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup @click="handleExport(contextMenuSignature!)">
+          <q-item-section avatar>
+            <q-icon name="file_download" />
+          </q-item-section>
+          <q-item-section>{{ $t('signature.page.export') }}</q-item-section>
+        </q-item>
+        <q-separator />
+        <q-item clickable v-close-popup @click="handleDelete(contextMenuSignature!)" class="text-negative">
+          <q-item-section avatar>
+            <q-icon name="delete" />
+          </q-item-section>
+          <q-item-section>{{ $t('signature.page.delete') }}</q-item-section>
+        </q-item>
+      </q-list>
+    </q-menu>
   </q-page>
 </template>
 
@@ -259,6 +317,9 @@ const importFile = ref<File | null>(null);
 const importing = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref('');
+const contextMenuVisible = ref(false);
+const contextMenuTarget = ref<Element | undefined>();
+const contextMenuSignature = ref<Signature | null>(null);
 
 // 从 store 获取签名列表
 const signatureList = computed(() => {
@@ -323,6 +384,12 @@ async function loadSignatures() {
 function handleCreate() {
   selectedSignature.value = null;
   showFormDialog.value = true;
+}
+
+function showContextMenu(signature: Signature, event: MouseEvent) {
+  contextMenuSignature.value = signature;
+  contextMenuTarget.value = event.currentTarget as Element;
+  contextMenuVisible.value = true;
 }
 
 function handleEdit(signature: Signature) {

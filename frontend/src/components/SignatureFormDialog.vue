@@ -32,6 +32,8 @@
           :hint="$t('signature.form.nameHint')"
           outlined
           dense
+          :readonly="isEditMode"
+          :disable="isEditMode"
           :rules="[
             (val) => (val && val.length > 0) || $t('signature.form.nameRequired'),
             (val) => (val && val.length <= 50) || $t('signature.form.nameTooLong'),
@@ -56,10 +58,32 @@
         <div class="mb-4">
           <div class="text-caption text-grey-7 mb-2">{{ $t('signature.form.cardImage') }}</div>
 
-          <!-- 图片预览 -->
-          <div v-if="imagePreview" class="mb-2 flex justify-center">
+          <!-- 文件选择器 -->
+          <q-file
+            v-model="formData.cardImage"
+            :label="$t('signature.form.selectImage')"
+            outlined
+            dense
+            accept="image/*"
+            @update:model-value="handleImageChange"
+          >
+            <template v-slot:prepend>
+              <q-icon name="image" />
+            </template>
+          </q-file>
+          <div class="text-caption text-grey-6 mt-1">
+            {{ $t('signature.form.imageHint') }}
+          </div>
+
+          <!-- 图片快速预览（在选择器下方） -->
+          <div v-if="imagePreview" class="mt-4 flex justify-center">
             <div class="relative">
-              <img :src="imagePreview" class="w-32 h-32 object-cover rounded-lg border-2 border-grey-4" />
+              <img
+                :src="imagePreview"
+                class="w-32 h-32 object-cover rounded-lg border-2 border-grey-4 cursor-pointer hover:opacity-90"
+                @click="showImagePreviewDialog = true"
+                :title="$t('signature.form.clickToPreview')"
+              />
               <q-btn
                 round
                 dense
@@ -70,23 +94,6 @@
                 @click="removeImage"
               />
             </div>
-          </div>
-
-          <!-- 文件选择器 -->
-          <q-file
-            v-model="formData.cardImage"
-            :label="$t('signature.form.selectImage')"
-            outlined
-            dense
-            accept="image/png,image/jpeg,image/jpg,image/webp"
-            @update:model-value="handleImageChange"
-          >
-            <template v-slot:prepend>
-              <q-icon name="image" />
-            </template>
-          </q-file>
-          <div class="text-caption text-grey-6 mt-1">
-            {{ $t('signature.form.imageHint') }}
           </div>
         </div>
       </q-card-section>
@@ -102,6 +109,26 @@
         />
       </q-card-actions>
     </q-card>
+
+    <!-- 图片大图预览对话框 -->
+    <q-dialog v-model="showImagePreviewDialog" backdrop-filter="invert(70%)">
+      <q-card class="image-preview-card relative" style="background: transparent">
+        <q-btn
+          icon="close"
+          flat
+          round
+          dense
+          color="negative"
+          size="md"
+          v-close-popup
+          class="absolute top-0 right-0 z-10"
+          style="background-color: rgba(255, 255, 255, 0.5)"
+        />
+        <q-card-section class="q-pa-none">
+          <img :src="imagePreview" class="max-w-full" style="max-height: 90vh; width: auto; margin: auto" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-dialog>
 </template>
 
@@ -132,6 +159,7 @@ const dialogVisible = computed({
 
 const isEditMode = computed(() => !!props.signature);
 const loading = ref(false);
+const showImagePreviewDialog = ref(false);
 
 const formData = ref<{
   name: string;
