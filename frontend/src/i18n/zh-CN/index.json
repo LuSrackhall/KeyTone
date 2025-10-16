@@ -335,10 +335,15 @@
       "title": "签名管理",
       "create": "创建签名",
       "import": "导入签名",
+      "edit": "编辑",
+      "delete": "删除",
+      "export": "导出",
       "loadError": "加载签名失败",
       "retry": "重试",
       "emptyState": "暂无签名",
-      "createFirst": "创建第一个签名"
+      "createFirst": "创建第一个签名",
+      "noImage": "暂无名片图片",
+      "noImageHint": "无图片"
     },
     "form": {
       "createTitle": "创建签名",
@@ -352,7 +357,8 @@
       "introTooLong": "个人介绍不能超过 500 个字符",
       "cardImage": "名片图片",
       "selectImage": "选择图片",
-      "imageHint": "支持 PNG、JPEG、WebP 格式",
+      "imageHint": "支持所有 webview 支持的图片格式（PNG、JPEG、WebP、GIF 等）",
+      "clickToPreview": "点击预览",
       "cancel": "取消",
       "create": "创建",
       "update": "更新",

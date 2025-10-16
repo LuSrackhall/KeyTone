@@ -341,10 +341,15 @@
       "title": "Signature Management",
       "create": "Create Signature",
       "import": "Import Signature",
+      "edit": "Edit",
+      "delete": "Delete",
+      "export": "Export",
       "loadError": "Failed to load signatures",
       "retry": "Retry",
       "emptyState": "No signatures yet",
-      "createFirst": "Create your first signature"
+      "createFirst": "Create your first signature",
+      "noImage": "No card image",
+      "noImageHint": "No Image"
     },
     "form": {
       "createTitle": "Create Signature",
@@ -358,7 +363,8 @@
       "introTooLong": "Introduction cannot exceed 500 characters",
       "cardImage": "Card Image",
       "selectImage": "Select Image",
-      "imageHint": "Supports PNG, JPEG, WebP formats",
+      "imageHint": "Supports all image formats that webview supports (PNG, JPEG, WebP, GIF, etc.)",
+      "clickToPreview": "Click to preview",
       "cancel": "Cancel",
       "create": "Create",
       "update": "Update",
