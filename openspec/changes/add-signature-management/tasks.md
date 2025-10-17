@@ -398,6 +398,84 @@
 
 - [ ] 在 `frontend/src/i18n/zh-CN/index.json` 中添加所有签名相关的键
 - [ ] 包含所有页面、对话框、按钮、提示的翻译
+
+---
+
+## 阶段 6：缺陷修复与稳定性（当周）
+
+### 任务 6.1：创建成功后列表被清空问题修复
+
+**负责人**：前端开发
+
+**涉及**：
+- `frontend/src/pages/Signature_management_page.vue`
+- `frontend/src/boot/query/signature-query.ts` 或签名 store（如存在）
+- SSE 全量数据处理位置（如 `App.vue` 或 store）
+
+**验收标准**：
+- [ ] 创建成功后显示成功通知，且列表立即包含历史项与新建项
+- [ ] 不需要重启应用即可看到新项
+- [ ] SSE 全量数据抵达不会把列表误置空（合并/覆盖策略正确）
+
+---
+
+### 任务 6.2：签名图片目录不在 ConfigPath 的问题修复
+
+**负责人**：后端开发
+
+**涉及**：
+- `sdk/main.go`（在应用启动处，传入 ConfigPath 给签名模块初始化函数）
+- `sdk/server/signature_handlers.go`（读写图片基于初始化后的根路径）
+- （如存在）`sdk/signature` 下的初始化函数（新增 `InitSignatureStorage(basePath string)`）
+
+**验收标准**：
+- [ ] 运行时 signatures 目录位于 ConfigPath 下（如 ConfigPath/signatures/card_images）
+- [ ] 当前工作目录不再出现 signatures/
+- [ ] 新增/导入的图片均写入到正确路径
+
+---
+
+### 任务 6.3：删除签名失败通知问题修复
+
+**负责人**：前后端联合
+
+**涉及**：
+- 前端：`Signature_management_page.vue` 中的删除调用方法与响应处理
+- 后端：`sdk/server/signature_handlers.go` 的 `DELETE /signature/delete/:id` 返回码与错误消息
+
+**验收标准**：
+- [ ] 删除成功时返回 200/204，前端显示成功通知并移除列表项
+- [ ] 删除失败时前端显示失败通知但不移除列表项，并记录错误日志
+
+---
+
+### 任务 6.4：更新签名失败通知问题修复
+
+**负责人**：前后端联合
+
+**涉及**：
+- 前端：`SignatureFormDialog.vue` 提交的负载（必须含 id，intro 可选，cardImage Base64 可选）
+- 后端：`PUT /signature/update` 的部分字段更新与成功返回
+
+**验收标准**：
+- [ ] 仅修改介绍或图片的部分更新可成功
+- [ ] 成功更新返回 200，前端显示成功提示并关闭对话框，列表刷新或由 SSE 更新
+- [ ] 失败更新保留对话框并给出可读错误
+
+---
+
+### 任务 6.5：编辑对话框二次打开数据为空问题修复
+
+**负责人**：前端开发
+
+**涉及**：
+- `frontend/src/components/SignatureFormDialog.vue`
+- 触发编辑的列表项逻辑（在 `Signature_management_page.vue`）
+
+**验收标准**：
+- [ ] 关闭后再次打开同一签名的编辑，对话框表单被正确填充（按 id 受控初始化）
+- [ ] 名称只读、介绍与图片预览正确展示
+- [ ] 不出现空白表单或上一条数据残留
 - [ ] 包含所有错误消息的翻译
 - [ ] 审核翻译质量，确保语言自然流畅
 
