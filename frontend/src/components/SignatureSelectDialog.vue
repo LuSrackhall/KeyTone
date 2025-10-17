@@ -1,0 +1,210 @@
+<!--
+ * This file is part of the KeyTone project.
+ *
+ * Copyright (C) 2024 LuSrackhall
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<template>
+  <q-dialog v-model="dialogVisible" backdrop-filter="invert(70%)" @hide="handleClose">
+    <q-card class="w-[500px]">
+      <q-card-section class="row items-center q-pb-none text-h6">
+        {{ $t('signature.select.title') }}
+      </q-card-section>
+
+      <q-card-section>
+        <div class="text-caption text-grey-7 mb-3">
+          {{ $t('signature.select.description') }}
+        </div>
+
+        <!-- 加载状态 -->
+        <div v-if="loading" class="flex justify-center items-center py-10">
+          <q-spinner color="primary" size="2em" />
+        </div>
+
+        <!-- 空状态 -->
+        <div v-else-if="signatureList.length === 0" class="flex flex-col items-center py-10 text-gray-500">
+          <q-icon name="badge" size="40px" class="mb-2 opacity-50" />
+          <div class="text-sm mb-2">{{ $t('signature.select.emptyState') }}</div>
+          <q-btn flat dense color="primary" @click="goToSignaturePage">
+            {{ $t('signature.select.createSignature') }}
+          </q-btn>
+        </div>
+
+        <!-- 签名列表 -->
+        <div v-else class="max-h-96 overflow-y-auto">
+          <q-list bordered separator>
+            <q-item
+              v-for="signature in signatureList"
+              :key="signature.id"
+              clickable
+              v-ripple
+              :active="selectedSignatureId === signature.id"
+              @click="selectSignature(signature.id)"
+            >
+              <q-item-section avatar>
+                <q-avatar size="40px" rounded>
+                  <img v-if="signature.cardImage" :src="getImageUrl(signature.cardImage)" class="object-cover" />
+                  <q-icon v-else name="person" size="24px" />
+                </q-avatar>
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>{{ signature.name }}</q-item-label>
+                <q-item-label caption lines="1">
+                  {{ signature.intro || $t('signature.select.noIntro') }}
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section side>
+                <q-icon v-if="selectedSignatureId === signature.id" name="check_circle" color="primary" size="24px" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </div>
+
+        <!-- 无签名选项 -->
+        <div class="mt-3">
+          <q-checkbox
+            v-model="noSignature"
+            :label="$t('signature.select.noSignature')"
+            @update:model-value="handleNoSignatureChange"
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat :label="$t('signature.form.cancel')" color="primary" @click="handleClose" />
+        <q-btn
+          flat
+          :label="$t('signature.select.confirm')"
+          color="primary"
+          @click="handleConfirm"
+          :disable="!selectedSignatureId && !noSignature"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, computed, onMounted } from 'vue';
+import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import { getAllSignatures, getSignatureImageUrl } from 'boot/query/signature-query';
+import type { Signature } from 'src/types/signature';
+
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void;
+  (e: 'select', signatureId: string | null): void;
+}>();
+
+const q = useQuasar();
+const { t: $t } = useI18n();
+const router = useRouter();
+
+const dialogVisible = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val),
+});
+
+const loading = ref(false);
+const signatures = ref<Record<string, Signature> | null>(null);
+const selectedSignatureId = ref<string | null>(null);
+const noSignature = ref(false);
+
+const signatureList = computed(() => {
+  if (!signatures.value) return [];
+  return Object.values(signatures.value).sort((a, b) => a.name.localeCompare(b.name));
+});
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (newVal) {
+      loadSignatures();
+    }
+  }
+);
+
+onMounted(() => {
+  if (props.modelValue) {
+    loadSignatures();
+  }
+});
+
+async function loadSignatures() {
+  loading.value = true;
+
+  try {
+    const result = await getAllSignatures();
+    if (result !== false && result) {
+      signatures.value = result as Record<string, Signature>;
+    } else {
+      signatures.value = null;
+    }
+  } catch (err) {
+    console.error('Failed to load signatures:', err);
+    q.notify({
+      type: 'negative',
+      message: $t('signature.notify.loadFailed'),
+      position: 'top',
+    });
+    signatures.value = null;
+  } finally {
+    loading.value = false;
+  }
+}
+
+function selectSignature(id: string) {
+  selectedSignatureId.value = id;
+  noSignature.value = false;
+}
+
+function handleNoSignatureChange(value: boolean) {
+  if (value) {
+    selectedSignatureId.value = null;
+  }
+}
+
+function handleClose() {
+  selectedSignatureId.value = null;
+  noSignature.value = false;
+  dialogVisible.value = false;
+}
+
+function handleConfirm() {
+  emit('select', noSignature.value ? null : selectedSignatureId.value);
+  handleClose();
+}
+
+function getImageUrl(filename: string): string {
+  return getSignatureImageUrl(filename);
+}
+
+function goToSignaturePage() {
+  handleClose();
+  router.push('/signature-management');
+}
+</script>
+
+<style scoped>
+/* 自定义样式 */
+</style>

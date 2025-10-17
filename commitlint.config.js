@@ -3,6 +3,8 @@ module.exports = {
   rules: {
     // 提交时的主内容限制默认为100, 但我是个啰嗦的人, 往往100是不够用的, 因此将其扩展到150。
     "header-max-length": [2, "always", 150],
+    // 关闭 body 最大行长度检查，避免 commit-msg 钩子因正文行过长而失败
+    "body-max-line-length": [0, "always"],
     // "header-max-length": [1, "always", 100], // 无法同时定义警告和错误<不过可以通过自定义插件来完成这个需求, 但没必要>
     // 这个配置的含义如下：
 

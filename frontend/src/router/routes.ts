@@ -71,6 +71,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/Main_layout.vue'),
     children: [{ path: '', component: () => import('pages/Keytone_album_page_new.vue') }],
   },
+  {
+    path: '/signature-management',
+    component: () => import('layouts/Main_layout.vue'),
+    children: [{ path: '', component: () => import('pages/Signature_management_page.vue') }],
+  },
 
   // Always leave this as last one,
   // but you can also remove it
