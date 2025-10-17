@@ -92,10 +92,10 @@
               >
                 <q-img
                   v-if="signature.cardImage"
-                  :src="getImageUrl(signature.cardImage)"
+                  :src="getImageUrl(signature.cardImage as unknown as string)"
                   style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
                   class="object-cover"
-                  @click.stop="handleImagePreview(signature.cardImage)"
+                  @click.stop="handleImagePreview(signature.cardImage as unknown as string)"
                 >
                   <template v-slot:loading>
                     <q-spinner color="primary" size="24px" />
@@ -230,20 +230,20 @@
       "
     >
       <q-list dense style="min-width: 120px">
-        <q-item clickable v-close-popup @click="handleEdit(contextMenuSignature!)">
+        <q-item clickable v-close-popup @click="handleEdit">
           <q-item-section avatar>
             <q-icon name="edit" />
           </q-item-section>
           <q-item-section>{{ $t('signature.page.edit') }}</q-item-section>
         </q-item>
-        <q-item clickable v-close-popup @click="handleExport(contextMenuSignature!)">
+        <q-item clickable v-close-popup @click="handleExport">
           <q-item-section avatar>
             <q-icon name="drive_file_move" />
           </q-item-section>
           <q-item-section>{{ $t('signature.page.export') }}</q-item-section>
         </q-item>
         <q-separator />
-        <q-item clickable v-close-popup @click="handleDelete(contextMenuSignature!)" class="text-negative">
+        <q-item clickable v-close-popup @click="handleDelete" class="text-negative">
           <q-item-section avatar>
             <q-icon name="delete" />
           </q-item-section>
@@ -258,51 +258,13 @@
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useSignatureStore } from 'src/stores/signature-store';
-import { useAppStore } from 'src/stores/app-store';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
-import {
-  getAllSignatures,
-  deleteSignature,
-  exportSignature,
-  importSignature,
-  getSignatureImageUrl,
-} from 'boot/query/signature-query';
-import type { Signature, SignatureFile } from 'src/types/signature';
+import type { Signature } from 'src/types/signature';
 
 const q = useQuasar();
 const { t: $t } = useI18n();
-const signature_store = useSignatureStore();
-const app_store = useAppStore();
 
-// SSE 消息监听函数
-const sseMessageListener = (e: Event) => {
-  const messageEvent = e as MessageEvent;
-  try {
-    const data = JSON.parse(messageEvent.data);
-    console.log('[Signature_management_page] SSE 消息接收:', data);
-
-    // 处理全量配置数据推送
-    if (data.key === 'get_all_value' && data.value) {
-      const value = data.value;
-      console.log('[Signature_management_page] 检查 signature_manager 字段');
-
-      // 从全量配置中提取签名数据
-      if (value.signature_manager) {
-        console.log('[Signature_management_page] 检测到 signature_manager 字段，触发重新加载签名数据');
-        // SSE 中的 signature_manager 是加密后的键值对（未解密），前端需要调用后端 API 获取解密后的完整数据
-        // 这是正常的工作流程：SSE 通知"配置变化了"，前端再通过 API 拉取解密后的签名列表
-        loadSignatures();
-      } else {
-        console.log('[Signature_management_page] 配置中未找到 signature_manager');
-      }
-    }
-  } catch (error) {
-    console.error('[Signature_management_page] SSE 消息处理异常:', error);
-  }
-};
-
-// 获取系统类型
+// 系统类型判断
 const isMacOS = computed(() => {
   if (process.env.MODE === 'electron') {
     return process.platform === 'darwin' || navigator.platform === 'MacIntel';
@@ -310,21 +272,58 @@ const isMacOS = computed(() => {
   return navigator.platform === 'MacIntel';
 });
 
+// ========== 列表数据状态 ==========
+
+// 页面数据加载状态 - 绑定加载动画显示
 const loading = ref(false);
+
+// 页面数据加载错误状态 - 绑定错误提示显示
 const error = ref(false);
+
+// 签名列表数据 - 由具体数据流实现填充，绑定到签名卡片列表渲染
+const signatureList = ref<Signature[]>([]);
+
+// ========== 对话框和菜单状态 ==========
+
+// 表单对话框显示状态
 const showFormDialog = ref(false);
+
+// 当前编辑/查看的签名对象 - 传递给 SignatureFormDialog，null 表示创建模式
 const selectedSignature = ref<Signature | null>(null);
+
+// 导入对话框显示状态
 const showImportDialogVisible = ref(false);
+
+// 导入文件 - 绑定文件选择器
 const importFile = ref<File | null>(null);
+
+// 导入操作加载状态 - 绑定导入按钮的 loading 属性
 const importing = ref(false);
+
+// 图片预览对话框显示状态
 const showImagePreview = ref(false);
+
+// 预览图片 URL - 绑定到预览对话框的 img 标签
 const previewImageUrl = ref('');
+
+// ========== 上下文菜单状态 ==========
+
+// 上下文菜单显示状态
 const contextMenuVisible = ref(false);
-const contextMenuTarget = ref<Element | undefined>();
+
+// 当前上下文菜单指向的签名对象 - 用于菜单操作
 const contextMenuSignature = ref<Signature | null>(null);
+
+// 菜单项 DOM 引用映射 - 签名 ID -> DOM 元素
 const contextMenuRefs = new Map<string, HTMLElement>();
+
+// 当前打开菜单的签名 ID - 用于防止重复打开
 const activeMenuSignatureId = ref<string | null>(null);
+
+// 虚拟菜单参考元素引用 - 用于精确定位菜单
 const virtualMenuRef = ref<HTMLElement | null>(null);
+
+// 菜单锚点位置 - 决定菜单相对于虚拟点的附着位置
 const menuAnchor = ref<
   | 'bottom left'
   | 'bottom right'
@@ -336,6 +335,8 @@ const menuAnchor = ref<
   | 'top middle'
   | 'center middle'
 >('bottom left');
+
+// 菜单自身位置 - 决定菜单的哪一边与锚点对齐
 const menuSelf = ref<
   | 'bottom left'
   | 'bottom right'
@@ -348,58 +349,23 @@ const menuSelf = ref<
   | 'center middle'
 >('top left');
 
-// 从 store 获取签名列表
-const signatureList = computed(() => {
-  console.log('[signatureList] computed 重新计算，store.signatureManager:', signature_store.signatureManager);
-  const list = Object.values(signature_store.signatureManager as any) as Signature[];
-  // 过滤掉任何不完整或加密未解密的项（即 name 为 undefined 的项）
-  const validList = list.filter((item) => {
-    if (!item || typeof item !== 'object') {
-      console.warn('[signatureList] 跳过非对象项:', item);
-      return false;
-    }
-    if (!item.name) {
-      console.warn('[signatureList] 跳过 name 为空的项:', item);
-      return false;
-    }
-    return true;
-  });
-  return validList.sort((a, b) => a.name.localeCompare(b.name));
-});
-
 onMounted(() => {
-  console.log('[Signature_management_page] onMounted 被调用');
   loadSignatures();
-
-  // 添加 SSE 消息监听
-  console.log('[Signature_management_page] 添加 SSE 消息监听器');
-  app_store.eventSource.addEventListener('message', sseMessageListener);
+  // TODO: 添加 SSE 事件监听器
 });
 
 onUnmounted(() => {
-  console.log('[Signature_management_page] onUnmounted 被调用，移除 SSE 监听器');
-  if (sseMessageListener) {
-    app_store.eventSource.removeEventListener('message', sseMessageListener);
-  }
+  // TODO: 移除 SSE 事件监听器
 });
 
+/** 加载签名列表数据 */
 async function loadSignatures() {
   loading.value = true;
   error.value = false;
 
   try {
-    console.log('[loadSignatures] 开始加载');
-    const result = await getAllSignatures();
-    console.log('[loadSignatures] API 返回:', result);
-
-    if (result !== false && result) {
-      console.log('[loadSignatures] 使用 updateFromSSE 更新 store');
-      signature_store.updateFromSSE(result);
-      console.log('[loadSignatures] 更新完成，当前列表长度:', signatureList.value.length);
-    } else {
-      console.error('[loadSignatures] API 返回 false');
-      error.value = true;
-    }
+    // TODO: 具体数据加载逻辑由业务层实现
+    signatureList.value = [];
   } catch (err) {
     console.error('[loadSignatures] 异常:', err);
     error.value = true;
@@ -408,28 +374,21 @@ async function loadSignatures() {
   }
 }
 
+/** 打开创建签名表单 */
 function handleCreate() {
   selectedSignature.value = null;
   showFormDialog.value = true;
 }
 
-function showContextMenu(signature: Signature, event: MouseEvent) {
-  contextMenuSignature.value = signature;
-  contextMenuTarget.value = event.currentTarget as Element;
-  contextMenuVisible.value = true;
-}
-
+/** 处理列表项信息区域点击 - 展开或收起菜单 */
 function handleInfoClick(signature: Signature, event: MouseEvent) {
-  // 左键点击展开菜单或收起菜单
   event.preventDefault();
   event.stopPropagation();
 
   if (activeMenuSignatureId.value === signature.id && contextMenuVisible.value) {
-    // 重复点击同一项，收起菜单
     contextMenuVisible.value = false;
     activeMenuSignatureId.value = null;
   } else {
-    // 展开菜单 - 使用点击位置计算最佳菜单位置
     calculateMenuPosition(null, event.clientX, event.clientY);
     contextMenuSignature.value = signature;
     contextMenuVisible.value = true;
@@ -437,18 +396,15 @@ function handleInfoClick(signature: Signature, event: MouseEvent) {
   }
 }
 
+/** 处理列表项信息区域右键 - 展开或收起菜单 */
 function handleInfoContextMenu(signature: Signature, event: MouseEvent) {
-  // 右键点击展开菜单或收起菜单
   event.preventDefault();
   event.stopPropagation();
 
-  // 检查是否已经打开了相同签名的菜单
   if (activeMenuSignatureId.value === signature.id && contextMenuVisible.value) {
-    // 重复右键点击同一项，收起菜单
     contextMenuVisible.value = false;
     activeMenuSignatureId.value = null;
   } else {
-    // 展开菜单 - 使用点击位置计算最佳菜单位置
     calculateMenuPosition(null, event.clientX, event.clientY);
     contextMenuSignature.value = signature;
     contextMenuVisible.value = true;
@@ -456,190 +412,66 @@ function handleInfoContextMenu(signature: Signature, event: MouseEvent) {
   }
 }
 
+/** 计算菜单最佳显示位置 */
 function calculateMenuPosition(element: HTMLElement | null, clientX: number, clientY: number) {
-  // 将虚拟参考元素定位到点击位置，使菜单精确显示在点击点附近
-  if (virtualMenuRef.value) {
-    virtualMenuRef.value.style.left = `${clientX}px`;
-    virtualMenuRef.value.style.top = `${clientY}px`;
-  }
-
-  // 菜单的预计大小（根据项数）
-  const menuHeight = 130; // 约3项的高度
-  const menuWidth = 120;
-
-  // 计算从点击位置到视口边界的距离
-  const spaceBelow = window.innerHeight - clientY;
-  const spaceAbove = clientY;
-  const spaceRight = window.innerWidth - clientX;
-  const spaceLeft = clientX;
-
-  // 决定垂直位置 - 优先使用下方，如果空间不足则使用上方
-  let verticalAnchor: 'top' | 'bottom' = 'bottom';
-  let verticalSelf: 'top' | 'bottom' = 'top';
-
-  if (spaceBelow >= menuHeight) {
-    // 下方有足够空间，菜单在点击点下方展开
-    verticalAnchor = 'bottom';
-    verticalSelf = 'top';
-  } else if (spaceAbove >= menuHeight) {
-    // 下方空间不足但上方充足，菜单在点击点上方展开
-    verticalAnchor = 'top';
-    verticalSelf = 'bottom';
-  } else {
-    // 两方都不足（很少见），默认向下，可能被视口裁剪
-    verticalAnchor = 'bottom';
-    verticalSelf = 'top';
-  }
-
-  // 决定水平位置 - 优先使用右方，如果空间不足则使用左方
-  let horizontalAnchor: 'left' | 'right' = 'left';
-  let horizontalSelf: 'left' | 'right' = 'left';
-
-  if (spaceRight >= menuWidth) {
-    // 右方有足够空间，菜单在点击点右方展开
-    horizontalAnchor = 'left';
-    horizontalSelf = 'left';
-  } else if (spaceLeft >= menuWidth) {
-    // 右方空间不足但左方充足，菜单在点击点左方展开
-    horizontalAnchor = 'right';
-    horizontalSelf = 'right';
-  } else {
-    // 两方都不足（空间特别拥挤），默认向右
-    horizontalAnchor = 'left';
-    horizontalSelf = 'left';
-  }
-
-  // 组合垂直和水平位置
-  menuAnchor.value = `${verticalAnchor} ${horizontalAnchor}` as any;
-  menuSelf.value = `${verticalSelf} ${horizontalSelf}` as any;
+  // TODO: 菜单位置计算逻辑
 }
 
-function handleEdit(signature: Signature) {
-  selectedSignature.value = signature;
-  showFormDialog.value = true;
-}
-
-async function handleDelete(signature: Signature) {
-  q.dialog({
-    title: $t('signature.delete.confirmTitle'),
-    message: $t('signature.delete.confirmMessage', { name: signature.name }),
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    const result = await deleteSignature(signature.id);
-    if (result) {
-      q.notify({
-        type: 'positive',
-        message: $t('signature.notify.deleteSuccess'),
-        position: 'top',
-      });
-      await loadSignatures();
-    } else {
-      q.notify({
-        type: 'negative',
-        message: $t('signature.notify.deleteFailed'),
-        position: 'top',
-      });
-    }
-  });
-}
-
-async function handleExport(signature: Signature) {
-  try {
-    const fileData = await exportSignature(signature.id);
-    if (!fileData) {
-      q.notify({
-        type: 'negative',
-        message: $t('signature.notify.exportFailed'),
-        position: 'top',
-      });
-      return;
-    }
-
-    const blob = new Blob([JSON.stringify(fileData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${signature.name}.ktsign`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    q.notify({
-      type: 'positive',
-      message: $t('signature.notify.exportSuccess'),
-      position: 'top',
-    });
-  } catch (error) {
-    console.error('Failed to export signature:', error);
-    q.notify({
-      type: 'negative',
-      message: $t('signature.notify.exportFailed'),
-      position: 'top',
-    });
+/** 打开编辑表单 */
+function handleEdit() {
+  if (contextMenuSignature.value) {
+    selectedSignature.value = contextMenuSignature.value;
+    showFormDialog.value = true;
   }
 }
 
+/** 删除签名 */
+async function handleDelete() {
+  if (!contextMenuSignature.value) return;
+
+  // TODO: 具体删除逻辑由业务层实现
+}
+
+/** 导出签名 */
+async function handleExport() {
+  if (!contextMenuSignature.value) return;
+
+  // TODO: 具体导出逻辑由业务层实现
+}
+
+/** 打开导入对话框 */
 function showImportDialog() {
   importFile.value = null;
   showImportDialogVisible.value = true;
 }
 
+/** 导入签名 */
 async function handleImport() {
   if (!importFile.value) return;
 
   importing.value = true;
 
   try {
-    const text = await importFile.value.text();
-    const fileData: SignatureFile = JSON.parse(text);
-
-    if (!fileData.version || !fileData.signature || !fileData.checksum) {
-      q.notify({
-        type: 'negative',
-        message: $t('signature.notify.invalidFileFormat'),
-        position: 'top',
-      });
-      return;
-    }
-
-    const result = await importSignature(fileData);
-    if (result) {
-      q.notify({
-        type: 'positive',
-        message: $t('signature.notify.importSuccess'),
-        position: 'top',
-      });
-      showImportDialogVisible.value = false;
-      await loadSignatures();
-    } else {
-      q.notify({
-        type: 'negative',
-        message: $t('signature.notify.importFailed'),
-        position: 'top',
-      });
-    }
+    // TODO: 具体导入逻辑由业务层实现
   } catch (error) {
     console.error('Failed to import signature:', error);
-    q.notify({
-      type: 'negative',
-      message: $t('signature.notify.importFailed'),
-      position: 'top',
-    });
   } finally {
     importing.value = false;
   }
 }
 
+/** 表单成功提交后的回调 - 刷新列表 */
 function handleFormSuccess() {
   loadSignatures();
 }
 
+/** 获取签名图片 URL - 由具体业务层实现 */
 function getImageUrl(filename: string): string {
-  return getSignatureImageUrl(filename);
+  // TODO: 具体 URL 生成逻辑由业务层实现
+  return '';
 }
 
+/** 预览签名图片 */
 function handleImagePreview(filename: string) {
   previewImageUrl.value = getImageUrl(filename);
   showImagePreview.value = true;

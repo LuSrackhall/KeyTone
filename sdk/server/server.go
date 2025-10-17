@@ -323,10 +323,6 @@ func xorCrypt(data []byte, key string) []byte {
 }
 
 func ServerRun() {
-	// 初始化签名图片目录
-	if err := EnsureSignatureImageDir(); err != nil {
-		logger.Error("Failed to initialize signature image directory", "error", err)
-	}
 
 	// 启动gin
 	r := gin.Default()
@@ -338,7 +334,6 @@ func ServerRun() {
 	})
 
 	mainRouters(r)
-	signatureRouters(r)
 
 	r.GET("/stream", func(c *gin.Context) {
 
@@ -410,6 +405,7 @@ func ServerRun() {
 	})
 
 	keytonePkgRouters(r)
+	signatureRouters(r)
 
 	// 尝试在指定端口启动服务
 	listener, err := net.Listen("tcp", "localhost:38888")

@@ -56,7 +56,11 @@
             >
               <q-item-section avatar>
                 <q-avatar size="40px" rounded>
-                  <img v-if="signature.cardImage" :src="getImageUrl(signature.cardImage)" class="object-cover" />
+                  <img
+                    v-if="signature.cardImage"
+                    :src="getImageUrl(signature.cardImage as unknown as string)"
+                    class="object-cover"
+                  />
                   <q-icon v-else name="person" size="24px" />
                 </q-avatar>
               </q-item-section>
@@ -104,7 +108,6 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { getAllSignatures, getSignatureImageUrl } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const props = defineProps<{
@@ -120,20 +123,23 @@ const q = useQuasar();
 const { t: $t } = useI18n();
 const router = useRouter();
 
+// 对话框显示状态控制
 const dialogVisible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
 });
 
+// 数据加载状态 - 绑定加载动画显示
 const loading = ref(false);
-const signatures = ref<Record<string, Signature> | null>(null);
-const selectedSignatureId = ref<string | null>(null);
-const noSignature = ref(false);
 
-const signatureList = computed(() => {
-  if (!signatures.value) return [];
-  return Object.values(signatures.value).sort((a, b) => a.name.localeCompare(b.name));
-});
+// 签名列表数据 - 由具体数据流实现填充，绑定到签名列表渲染
+const signatureList = ref<Signature[]>([]);
+
+// 当前选中的签名 ID - 绑定到列表项的 active 状态和右侧勾选图标
+const selectedSignatureId = ref<string | null>(null);
+
+// 是否选择"无签名"选项 - 绑定到 checkbox，控制 selectedSignatureId 置空
+const noSignature = ref(false);
 
 watch(
   () => props.modelValue,
@@ -150,16 +156,12 @@ onMounted(() => {
   }
 });
 
+/** 加载签名列表数据 */
 async function loadSignatures() {
   loading.value = true;
-
   try {
-    const result = await getAllSignatures();
-    if (result !== false && result) {
-      signatures.value = result as Record<string, Signature>;
-    } else {
-      signatures.value = null;
-    }
+    // TODO: 具体数据加载逻辑由业务层实现
+    signatureList.value = [];
   } catch (err) {
     console.error('Failed to load signatures:', err);
     q.notify({
@@ -167,38 +169,44 @@ async function loadSignatures() {
       message: $t('signature.notify.loadFailed'),
       position: 'top',
     });
-    signatures.value = null;
   } finally {
     loading.value = false;
   }
 }
 
+/** 选中一个签名 */
 function selectSignature(id: string) {
   selectedSignatureId.value = id;
   noSignature.value = false;
 }
 
+/** 处理"无签名"选项变化 */
 function handleNoSignatureChange(value: boolean) {
   if (value) {
     selectedSignatureId.value = null;
   }
 }
 
+/** 关闭对话框并重置状态 */
 function handleClose() {
   selectedSignatureId.value = null;
   noSignature.value = false;
   dialogVisible.value = false;
 }
 
+/** 确认选择并发出信号 */
 function handleConfirm() {
   emit('select', noSignature.value ? null : selectedSignatureId.value);
   handleClose();
 }
 
+/** 获取图片 URL - 由具体业务层实现 */
 function getImageUrl(filename: string): string {
-  return getSignatureImageUrl(filename);
+  // TODO: 具体 URL 生成逻辑由业务层实现
+  return '';
 }
 
+/** 导航到签名管理页面 */
 function goToSignaturePage() {
   handleClose();
   router.push('/signature-management');

@@ -147,7 +147,6 @@
 import { ref, watch, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { createSignature, updateSignature, fileToBase64 } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const props = defineProps<{
@@ -163,15 +162,26 @@ const emit = defineEmits<{
 const q = useQuasar();
 const { t: $t } = useI18n();
 
+// 对话框显示状态
 const dialogVisible = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val),
 });
 
+// 是否为编辑模式（由 props.signature 是否存在决定）
 const isEditMode = computed(() => !!props.signature);
+
+// 表单提交加载状态 - 绑定提交按钮的 loading 属性
 const loading = ref(false);
+
+// 图片预览大图对话框显示状态
 const showImagePreviewDialog = ref(false);
 
+// 表单数据对象 - 绑定到各输入框
+// 结构: { name, intro, cardImage }
+// - name: 签名名称，编辑模式下禁用
+// - intro: 个人介绍，支持多行
+// - cardImage: 选择的图片文件
 const formData = ref<{
   name: string;
   intro: string;
@@ -182,24 +192,17 @@ const formData = ref<{
   cardImage: null,
 });
 
+// 图片预览 URL - 绑定到预览图片和大图预览对话框
+// 可以是 Base64 字符串或 HTTP URL
 const imagePreview = ref<string>('');
 
-// 监听 signature 属性变化，填充表单
+// 监听 props.signature 变化，填充表单数据
 watch(
   () => props.signature,
   (newVal) => {
     if (newVal) {
-      formData.value.name = newVal.name;
-      formData.value.intro = newVal.intro || '';
-      formData.value.cardImage = null;
-
-      // 如果有现有图片，显示预览
-      if (newVal.cardImage) {
-        const port = (window as any).myWindowAPI?.getBackendPort() || 38888;
-        imagePreview.value = `http://127.0.0.1:${port}/signature/image/${newVal.cardImage}`;
-      } else {
-        imagePreview.value = '';
-      }
+      // TODO: 具体表单填充逻辑由业务层实现
+      // 根据 props.signature 填充 formData 和 imagePreview
     } else {
       resetForm();
     }
@@ -207,6 +210,7 @@ watch(
   { immediate: true }
 );
 
+/** 重置表单到初始状态 */
 function resetForm() {
   formData.value = {
     name: '',
@@ -216,16 +220,18 @@ function resetForm() {
   imagePreview.value = '';
 }
 
+/** 关闭对话框并重置表单 */
 function handleClose() {
   resetForm();
   dialogVisible.value = false;
 }
 
+/** 处理图片文件变化 - 生成预览 */
 async function handleImageChange(file: File | null) {
   if (file) {
     try {
-      const base64 = await fileToBase64(file);
-      imagePreview.value = base64;
+      // TODO: 具体图片转 Base64 预览生成逻辑由业务层实现
+      imagePreview.value = '';
     } catch (error) {
       console.error('Failed to read image file:', error);
       q.notify({
@@ -239,16 +245,18 @@ async function handleImageChange(file: File | null) {
   }
 }
 
+/** 移除已选择的图片 */
 function removeImage() {
   formData.value.cardImage = null;
   imagePreview.value = '';
 }
 
+/** 处理介绍文本输入 */
 function handleIntroInput() {
-  // 使用 autogrow 模式，无需手动调整行数
-  // 此函数保留为兼容性，但功能由 autogrow 属性处理
+  // 由 autogrow 属性处理自动高度，此处保留扩展空间
 }
 
+/** 提交表单 - 创建或更新签名 */
 async function handleSubmit() {
   // 验证表单
   if (!formData.value.name || formData.value.name.length === 0) {
@@ -263,61 +271,9 @@ async function handleSubmit() {
   loading.value = true;
 
   try {
-    let cardImageBase64 = '';
-
-    // 如果有新图片，转换为 Base64
-    if (formData.value.cardImage) {
-      cardImageBase64 = await fileToBase64(formData.value.cardImage);
-    }
-
-    if (isEditMode.value && props.signature) {
-      // 更新模式
-      const result = await updateSignature({
-        id: props.signature.id,
-        name: formData.value.name,
-        intro: formData.value.intro,
-        cardImage: cardImageBase64 || undefined,
-      });
-
-      if (result) {
-        q.notify({
-          type: 'positive',
-          message: $t('signature.notify.updateSuccess'),
-          position: 'top',
-        });
-        emit('success');
-        handleClose();
-      } else {
-        q.notify({
-          type: 'negative',
-          message: $t('signature.notify.updateFailed'),
-          position: 'top',
-        });
-      }
-    } else {
-      // 创建模式
-      const result = await createSignature({
-        name: formData.value.name,
-        intro: formData.value.intro,
-        cardImage: cardImageBase64 || undefined,
-      });
-
-      if (result) {
-        q.notify({
-          type: 'positive',
-          message: $t('signature.notify.createSuccess'),
-          position: 'top',
-        });
-        emit('success');
-        handleClose();
-      } else {
-        q.notify({
-          type: 'negative',
-          message: $t('signature.notify.createFailed'),
-          position: 'top',
-        });
-      }
-    }
+    // TODO: 具体创建/更新逻辑由业务层实现
+    // 根据 isEditMode 区分创建模式（isEditMode 为 false）和更新模式（isEditMode 为 true）
+    // 需要处理图片上传和表单数据提交
   } catch (error) {
     console.error('Failed to submit signature:', error);
     q.notify({
@@ -334,12 +290,11 @@ async function handleSubmit() {
 <style scoped>
 /* 可滚动的表单内容区 */
 .form-content-scroll {
-  max-height: calc(90vh - 180px); /* 给标题、提示、按钮留出空间 */
+  max-height: calc(90vh - 180px);
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* 滚动条样式 */
 .form-content-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -359,21 +314,17 @@ async function handleSubmit() {
 }
 
 .name-input-wrapper :deep(.q-field__control) {
-  /* 确保输入框容器能够溢出 */
   overflow: hidden;
 }
 
 .name-input-wrapper :deep(input) {
-  /* 单行模式 */
   white-space: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
-  /* 参考主页选择框的滚动条样式 */
   scrollbar-width: thin;
   scrollbar-color: rgba(203, 213, 225, 0.4) transparent;
 }
 
-/* 自定义滚动条样式（webkit浏览器） - 参考主页风格 */
 .name-input-wrapper :deep(input::-webkit-scrollbar) {
   height: 4px;
 }
@@ -392,26 +343,21 @@ async function handleSubmit() {
   background: rgba(51, 65, 85, 0.5);
 }
 
-/* 介绍文本框自动高度 */
 .intro-input-wrapper :deep(.q-field__control) {
   display: flex;
   align-items: flex-start;
 }
 
 .intro-input-wrapper :deep(textarea) {
-  /* autogrow 会自动调整高度，我们设置最大高度限制 */
-  max-height: calc(1.5em * 3 + 8px); /* 最多3行的高度 */
+  max-height: calc(1.5em * 3 + 8px);
   resize: none;
   overflow-y: auto;
-  /* 自定义滚动条样式 */
   scrollbar-width: thin;
   scrollbar-color: rgba(203, 213, 225, 0.4) transparent;
-  /* 确保文本可换行显示 */
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 
-/* 介绍文本框的滚动条样式 */
 .intro-input-wrapper :deep(textarea::-webkit-scrollbar) {
   width: 4px;
 }
@@ -430,7 +376,6 @@ async function handleSubmit() {
   background: rgba(51, 65, 85, 0.5);
 }
 
-/* 大图预览卡片样式 */
 .image-preview-card {
   display: flex;
   align-items: center;
@@ -447,5 +392,3 @@ async function handleSubmit() {
   border-radius: 8px;
 }
 </style>
-
-```
