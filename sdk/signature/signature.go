@@ -33,6 +33,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // SignatureData 用于存储签名信息的结构体
@@ -47,9 +48,10 @@ type SignatureData struct {
 // id: 签名唯一标识（未加密）
 // signatureData: 签名数据
 // imageData: 图片文件的二进制数据
-// imageExt: 图片文件的扩展名（如 .jpg, .png，不包含点号）
+// imageExt: 图片文件的扩展名（如 .jpg, .png，可以为空）
+// originalImageName: 图片原始文件名
 // encryptionKey: 对称加密密钥
-func CreateSignature(id string, signatureData SignatureData, imageData []byte, imageExt string, encryptionKey []byte) (string, error) {
+func CreateSignature(id string, signatureData SignatureData, imageData []byte, imageExt string, originalImageName string, encryptionKey []byte) (string, error) {
 	// 1. 对ID进行对称加密
 	encryptedID, err := encryptData(id, encryptionKey)
 	if err != nil {
@@ -57,11 +59,27 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 		return "", err
 	}
 
-	// 2. 处理图片：计算SHA-1哈希，存入文件系统
+	// 2. 处理图片：使用uuid命名策略, 存入文件系统
+	// 使用"id+名称+原始图片名称+unix时间戳"经过SHA-1哈希后作为文件名
 	if len(imageData) > 0 {
-		sha1Hash := sha1.Sum(imageData)
-		// 使用 SHA-1 哈希 + 扩展名 作为文件名
+		// 构建用于生成文件名的字符串
+		// 格式: id + "|" + name + "|" + originalImageName + "|" + unix时间戳
+		fileNameSeed := fmt.Sprintf("%s|%s|%s|%d",
+			id,
+			signatureData.Name,
+			originalImageName,
+			time.Now().Unix(),
+		)
+
+		logger.Debug("图片文件名种子生成",
+			"seed", fileNameSeed,
+		)
+
+		// 对文件名种子的字符串计算SHA-1哈希
+		sha1Hash := sha1.Sum([]byte(fileNameSeed))
 		imageFileName := hex.EncodeToString(sha1Hash[:])
+
+		// 添加扩展名
 		if imageExt != "" {
 			// 确保扩展名以点开头
 			if !strings.HasPrefix(imageExt, ".") {
@@ -69,6 +87,12 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 			}
 			imageFileName = imageFileName + imageExt
 		}
+
+		logger.Debug("图片文件名生成完成",
+			"原始文件名", originalImageName,
+			"种子文件名", fileNameSeed,
+			"文件名", imageFileName,
+		)
 
 		// 创建 signature 目录
 		signatureDir := filepath.Join(config.ConfigPath, "signature")

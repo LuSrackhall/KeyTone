@@ -59,10 +59,11 @@ func signatureRouters(r *gin.Engine) {
 		// 获取上传的图片文件（可选）
 		var imageData []byte
 		var imageExt string
+		var fileName string
 		file, err := ctx.FormFile("cardImage")
 		if err == nil && file != nil {
-			// 获取文件扩展名
-			fileName := file.Filename
+			// 获取文件名信息(包括文件名+扩展名)
+			fileName = file.Filename
 			// 从文件名中提取扩展名
 			extIndex := -1
 			for i := len(fileName) - 1; i >= 0; i-- {
@@ -109,7 +110,7 @@ func signatureRouters(r *gin.Engine) {
 		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
 
 		// 调用signature包创建签名
-		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, encryptionKey)
+		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, fileName, encryptionKey)
 		if err != nil {
 			logger.Error("创建签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
