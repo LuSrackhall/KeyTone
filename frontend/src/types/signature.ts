@@ -6,10 +6,10 @@ export interface Signature {
   /** 唯一标识（nanoid，21字符） / Unique identifier (nanoid, 21 chars) */
   id: string;
 
-  /** 签名名称 */
+  /** 签名名称(必填) */
   name: string;
 
-  /** 个人介绍 */
+  /** 个人介绍(选填) */
   intro: string;
 
   /** 名片图片路径（选填） / Card image path (optional) */

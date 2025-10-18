@@ -147,6 +147,8 @@
 import { ref, watch, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
+import { nanoid } from 'nanoid';
+import { createSignature } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const props = defineProps<{
@@ -230,8 +232,12 @@ function handleClose() {
 async function handleImageChange(file: File | null) {
   if (file) {
     try {
-      // TODO: 具体图片转 Base64 预览生成逻辑由业务层实现
-      imagePreview.value = '';
+      // 图片转 Base64 预览生成
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.value = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Failed to read image file:', error);
       q.notify({
@@ -271,9 +277,40 @@ async function handleSubmit() {
   loading.value = true;
 
   try {
-    // TODO: 具体创建/更新逻辑由业务层实现
-    // 根据 isEditMode 区分创建模式（isEditMode 为 false）和更新模式（isEditMode 为 true）
-    // 需要处理图片上传和表单数据提交
+    if (isEditMode.value) {
+      // 编辑模式：更新签名
+      // TODO: 实现更新逻辑
+      q.notify({
+        type: 'info',
+        message: '更新功能即将开放',
+        position: 'top',
+      });
+    } else {
+      // 创建模式：新建签名
+      const signatureData: Signature = {
+        id: nanoid(21),
+        name: formData.value.name,
+        intro: formData.value.intro,
+        cardImage: formData.value.cardImage || new File([], ''),
+      };
+
+      const success = await createSignature(signatureData);
+      if (success) {
+        q.notify({
+          type: 'positive',
+          message: $t('signature.notify.createSuccess'),
+          position: 'top',
+        });
+        emit('success');
+        handleClose();
+      } else {
+        q.notify({
+          type: 'negative',
+          message: $t('signature.notify.createFailed'),
+          position: 'top',
+        });
+      }
+    }
   } catch (error) {
     console.error('Failed to submit signature:', error);
     q.notify({

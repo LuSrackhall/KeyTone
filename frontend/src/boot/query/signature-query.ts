@@ -6,8 +6,22 @@ import type { Signature } from 'src/types/signature';
  * Create a new signature
  */
 export async function createSignature(data: Signature): Promise<boolean> {
+  // 使用 FormData 以支持文件上传
+  const formData = new FormData();
+  formData.append('id', data.id);
+  formData.append('name', data.name);
+  formData.append('intro', data.intro);
+  // 只在文件存在且有效时才添加文件
+  if (data.cardImage && data.cardImage.size > 0) {
+    formData.append('cardImage', data.cardImage);
+  }
+
   return await api
-    .post('/signature/create', data)
+    .post('/signature/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     .then((req) => {
       console.debug('status=', req.status, '->createSignature 请求已成功执行并返回->', req.data);
       if (req.data.success && req.data.data) {
