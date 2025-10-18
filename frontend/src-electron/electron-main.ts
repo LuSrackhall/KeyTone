@@ -235,8 +235,8 @@ if (process.env.DEBUGGING) {
 
       // 不过个人推荐使用sdk-debug路径, 因为这样更容易观察
       const sdkProcessParameter: Array<string> = [
-        '-configPath=' + './src-electron/sdk-debug/', //给到路径即可
-        '-audioPackagePath=' + './src-electron/sdk-debug/', //给到路径即可
+        '-configPath=' + './src-electron/sdk-debug/Config', //给到路径即可
+        '-audioPackagePath=' + './src-electron/sdk-debug/AudioPackage', //给到路径即可
         '-logPathAndName=' + './src-electron/sdk-debug/KeyToneSdkLog.jsonl', //必须给到日志的文件名称
       ];
 
