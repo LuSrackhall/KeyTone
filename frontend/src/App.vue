@@ -72,61 +72,10 @@ onBeforeMount(async () => {
   //#region    -----<<<<<<<<<<<<<<<<<<<< -- save setting start ^_^-_-^_^
 
   function sseDataToSettingStore(settingStorage: any) {
-    if (settingStorage.language_default !== undefined) {
-      setting_store.languageDefault = settingStorage.language_default;
-    }
-
-    // 手动打开应用时的默认设置
-    // TIPS: 因为值本身就是boolean类型, 因此不能直接用于判断(最常见的做法时通过判断undefined来实现<因为当对象中不存在某个字段时, 会返回undefined>)。
-    //       *  if (typeof settingStorage.startup.is_hide_windows === 'boolean') 虽然这样判断更准确, 但不够通用。 因为我只想简化开发成本, 所以我不用。
-    if (settingStorage.startup.is_hide_windows !== undefined) {
-      setting_store.startup.isHideWindows = settingStorage.startup.is_hide_windows;
-    }
-
-    // 自动启动应用时的默认设置
-    if (settingStorage.auto_startup.is_auto_run !== undefined) {
-      setting_store.autoStartup.isAutoRun = settingStorage.auto_startup.is_auto_run;
-    }
-
-    if (settingStorage.auto_startup.is_hide_windows !== undefined) {
-      setting_store.autoStartup.isHideWindows = settingStorage.auto_startup.is_hide_windows;
-    }
-
-    // 音频音量处理的默认设置
-    // * 用于设置页面 音量提升/缩减 设置
-    if (settingStorage.audio_volume_processing.volume_amplify !== undefined) {
-      setting_store.audioVolumeProcessing.volumeAmplify = settingStorage.audio_volume_processing.volume_amplify;
-    }
-    if (settingStorage.audio_volume_processing.volume_amplify_limit !== undefined) {
-      setting_store.audioVolumeProcessing.volumeAmplifyLimit =
-        settingStorage.audio_volume_processing.volume_amplify_limit;
-    }
-
-    // 主页面的默认设置
-    if (settingStorage.main_home.audio_volume_processing.volume_normal !== undefined) {
-      setting_store.mainHome.audioVolumeProcessing.volumeNormal =
-        settingStorage.main_home.audio_volume_processing.volume_normal;
-    }
-    if (settingStorage.main_home.audio_volume_processing.volume_normal_reduce_scope !== undefined) {
-      setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope =
-        settingStorage.main_home.audio_volume_processing.volume_normal_reduce_scope;
-    }
-    if (settingStorage.main_home.audio_volume_processing.volume_silent !== undefined) {
-      setting_store.mainHome.audioVolumeProcessing.volumeSilent =
-        settingStorage.main_home.audio_volume_processing.volume_silent;
-    }
-    if (settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider !== undefined) {
-      setting_store.mainHome.audioVolumeProcessing.isOpenVolumeDebugSlider =
-        settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
-    }
-    if (settingStorage.main_home.selected_key_tone_pkg !== undefined) {
-      setting_store.mainHome.selectedKeyTonePkg = settingStorage.main_home.selected_key_tone_pkg;
-      // 每次用户的主动选择, 都会在SSE中触发实际选择的键音包重新进行加载。
-      // 也就是说, 不止在主页面中通过watch监听触发此函数, 在sse回调中也再次调用此函数, 以保证用户的选择能够最大程度上被可靠的加载。
-      // 并且无需担心, 重复调用此函数也不会引发重复加载相同的键音包。
-      main_store.LoadSelectedKeyTonePkg();
-    }
+    setting_store.getConfigFileToUi();
+    // TODO: 签名管理器数据同步处理
   }
+
   const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 30, {
     trailing: true,
   });

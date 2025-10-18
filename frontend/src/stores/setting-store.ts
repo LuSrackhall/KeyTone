@@ -4,11 +4,13 @@ import { StoreGet, StoreSet } from 'src/boot/query/store-query';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import messages from 'src/i18n';
+import { useMainStore } from './main-store';
 
 export const useSettingStore = defineStore('setting', () => {
   /*------------------------------------------------------------------------------------------------------------------*/
   const q = useQuasar();
   const { t } = useI18n();
+  const main_store = useMainStore();
 
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
@@ -140,10 +142,8 @@ export const useSettingStore = defineStore('setting', () => {
 
   /*------------------------------------------------------------------------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
-  //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
-
-  async function settingInitAndRealTimeStorage() {
-    // 优先使用数据库中保存的设置, 即先通过数据库存储, 对内存做初始化
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- 首次启动获取及同步获取配置文件内容至ui start ^_^-_-^_^
+  async function getConfigFileToUi() {
     await StoreGet('get_all_value').then((req) => {
       // console.debug('打印观察获取的值', req);
       if (req === false) {
@@ -223,9 +223,26 @@ export const useSettingStore = defineStore('setting', () => {
       }
       if (settingStorage.main_home.selected_key_tone_pkg !== undefined) {
         mainHome.value.selectedKeyTonePkg = settingStorage.main_home.selected_key_tone_pkg;
+        // 每次用户的主动选择, 都会在SSE中触发实际选择的键音包重新进行加载。
+        // 也就是说, 不止在主页面中通过watch监听触发此函数, 在sse回调中也再次调用此函数, 以保证用户的选择能够最大程度上被可靠的加载。
+        // 并且无需担心, 重复调用此函数也不会引发重复加载相同的键音包。
+        main_store.LoadSelectedKeyTonePkg();
       }
     });
+  }
 
+  //#endregion ----->>>>>>>>>>>>>>>>>>>> -- 首次启动获取及同步获取配置文件内容至ui end -_-^_^-_- ^_^-_-^_^-_-
+  // ...
+  // ...
+  // ...
+  //!endregion ----->>>>>>>>>>>>>>>>>>>> -- 首次启动获取及同步获取配置文件内容至ui end -_-^_^-_- ^_^-_-^_^-_-
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
+  //#region    -----<<<<<<<<<<<<<<<<<<<< -- setting持久化 start ^_^-_-^_^
+
+  async function settingInitAndRealTimeStorage() {
+    // 优先使用数据库中保存的设置, 即先通过数据库存储, 对内存做初始化
+    await getConfigFileToUi();
     // realTimeStorageCore(实时存储核心), 用于将用户所做的设置, 实时监听式的存入底层数据库。
     // watchEffect(() => {
     //   const settingStorage = {
@@ -344,6 +361,7 @@ export const useSettingStore = defineStore('setting', () => {
     autoStartup,
     audioVolumeProcessing,
     mainHome,
+    getConfigFileToUi,
     settingInitAndRealTimeStorage,
   };
 });

@@ -77,7 +77,7 @@ func ConfigRun(path string) {
 		go func(Clients_sse_stores *sync.Map) {
 			stores := &Store{
 				Key:   "get_all_value",
-				Value: GetValue("get_all_value"),
+				Value: "",
 			}
 			Clients_sse_stores.Range(func(key, value interface{}) bool {
 				clientChan := key.(chan *Store)
