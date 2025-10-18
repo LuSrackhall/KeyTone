@@ -28,6 +28,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ConfigPath 存储配置文件路径，供其他包使用
+var ConfigPath string
+
 type Store struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
@@ -38,6 +41,8 @@ var once_stores sync.Once
 
 // Setting.json is the configuration for the application
 func ConfigRun(path string) {
+	// 保存配置路径到全局变量
+	ConfigPath = path
 	// 设置配置文件名称和类型
 	viper.SetConfigName("KeyToneSetting")
 	viper.SetConfigType("json")
