@@ -76,7 +76,8 @@ onBeforeMount(async () => {
     // TODO: 签名管理器数据同步处理
   }
 
-  const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 30, {
+  // 防抖处理, 避免短时间内多次触发时, 引起多次不必要的赋值操作, 我们的sse回调仅保证ui与配置文件的最终一致性即可。
+  const debounced_sseDataToSettingStore = debounce<(settingStorage: any) => void>(sseDataToSettingStore, 300, {
     trailing: true,
   });
   app_store.eventSource.addEventListener(
