@@ -139,7 +139,54 @@ func signatureRouters(r *gin.Engine) {
 
 	// 删除签名
 	signatureRouter.POST("/signature/delete", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		var req struct {
+			ID string `json:"id" binding:"required"`
+		}
+
+		if err := ctx.BindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "无效的请求参数",
+			})
+			return
+		}
+
+		// 从配置中获取签名
+		signatureMap := config.GetValue("signature")
+		if signatureMap == nil {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "签名不存在",
+			})
+			return
+		}
+
+		// 类型转换并删除
+		if m, ok := signatureMap.(map[string]interface{}); ok {
+			if _, exists := m[req.ID]; !exists {
+				ctx.JSON(http.StatusNotFound, gin.H{
+					"success": false,
+					"message": "签名不存在",
+				})
+				return
+			}
+
+			// 删除签名
+			delete(m, req.ID)
+
+			// 更新配置
+			config.SetValue("signature", m)
+
+			ctx.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "签名删除成功",
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "配置数据格式错误",
+			})
+		}
 	})
 
 	// 导出签名

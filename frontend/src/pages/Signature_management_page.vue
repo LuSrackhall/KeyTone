@@ -260,7 +260,12 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import { useSignatureStore } from 'src/stores/signature-store';
-import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'boot/query/signature-query';
+import {
+  getSignaturesList,
+  decryptSignatureData,
+  getSignatureImage,
+  deleteSignature,
+} from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const q = useQuasar();
@@ -518,7 +523,38 @@ function handleInfoContextMenu(signature: Signature, event: MouseEvent) {
 
 /** 计算菜单最佳显示位置 */
 function calculateMenuPosition(element: HTMLElement | null, clientX: number, clientY: number) {
-  // TODO: 菜单位置计算逻辑
+  if (!virtualMenuRef.value) return;
+
+  // 设置虚拟菜单位置到点击的确切坐标
+  virtualMenuRef.value.style.left = clientX + 'px';
+  virtualMenuRef.value.style.top = clientY + 'px';
+
+  // 判断菜单是否可能超出视口边界，动态调整锚点和自身位置
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const menuWidth = 150; // 菜单估计宽度
+  const menuHeight = 120; // 菜单估计高度
+
+  // 判断是否需要向左展开
+  if (clientX + menuWidth > viewportWidth) {
+    menuAnchor.value = 'bottom right';
+    menuSelf.value = 'top right';
+  } else {
+    menuAnchor.value = 'bottom left';
+    menuSelf.value = 'top left';
+  }
+
+  // 判断是否需要向上展开
+  if (clientY + menuHeight > viewportHeight) {
+    // 如果已经是向右展开，改为右上
+    if (menuAnchor.value === 'bottom right') {
+      menuAnchor.value = 'top right';
+      menuSelf.value = 'bottom right';
+    } else {
+      menuAnchor.value = 'top left';
+      menuSelf.value = 'bottom left';
+    }
+  }
 }
 
 /** 打开编辑表单 */
@@ -533,14 +569,51 @@ function handleEdit() {
 async function handleDelete() {
   if (!contextMenuSignature.value) return;
 
-  // TODO: 具体删除逻辑由业务层实现
+  // 确认删除对话框
+  q.dialog({
+    title: $t('signature.delete.confirmTitle'),
+    message: $t('signature.delete.confirm'),
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const success = await deleteSignature(contextMenuSignature.value!.id);
+      if (success) {
+        q.notify({
+          type: 'positive',
+          message: $t('signature.notify.deleteSuccess'),
+          position: 'top',
+        });
+        // 重新加载列表
+        await loadSignatures();
+      } else {
+        q.notify({
+          type: 'negative',
+          message: $t('signature.notify.deleteFailed'),
+          position: 'top',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete signature:', error);
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.unexpectedError'),
+        position: 'top',
+      });
+    }
+  });
 }
 
 /** 导出签名 */
 async function handleExport() {
   if (!contextMenuSignature.value) return;
 
-  // TODO: 具体导出逻辑由业务层实现
+  // 暂不实现具体逻辑，仅展示UI交互
+  q.notify({
+    type: 'info',
+    message: $t('signature.export.comingSoon') || 'Export feature coming soon',
+    position: 'top',
+  });
 }
 
 /** 打开导入对话框 */

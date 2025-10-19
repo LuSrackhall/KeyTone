@@ -373,7 +373,10 @@
     },
     "delete": {
       "confirmTitle": "Confirm Delete",
-      "confirmMessage": "Are you sure you want to delete signature '{name}'? This action cannot be undone."
+      "confirm": "Delete this signature"
+    },
+    "export": {
+      "comingSoon": "Export feature coming soon"
     },
     "import": {
       "title": "Import Signature",
@@ -397,7 +400,7 @@
       "updateFailed": "Failed to update signature",
       "deleteSuccess": "Signature deleted successfully",
       "deleteFailed": "Failed to delete signature",
-      "exportSuccess": "Signature exported successfully",
+      "exportSuccess": "Export feature coming soon",
       "exportFailed": "Failed to export signature",
       "importSuccess": "Signature imported successfully",
       "importFailed": "Failed to import signature",

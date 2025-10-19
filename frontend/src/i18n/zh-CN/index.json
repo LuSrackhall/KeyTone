@@ -367,7 +367,10 @@
     },
     "delete": {
       "confirmTitle": "确认删除",
-      "confirmMessage": "确定要删除签名「{name}」吗？此操作无法撤销。"
+      "confirm": "删除此签名"
+    },
+    "export": {
+      "comingSoon": "导出功能即将推出"
     },
     "import": {
       "title": "导入签名",
