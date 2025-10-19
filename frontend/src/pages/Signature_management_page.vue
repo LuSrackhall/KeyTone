@@ -259,10 +259,13 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
+import { useSignatureStore } from 'src/stores/signature-store';
+import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const q = useQuasar();
 const { t: $t } = useI18n();
+const signatureStore = useSignatureStore();
 
 // 系统类型判断
 const isMacOS = computed(() => {
@@ -282,6 +285,9 @@ const error = ref(false);
 
 // 签名列表数据 - 由具体数据流实现填充，绑定到签名卡片列表渲染
 const signatureList = ref<Signature[]>([]);
+
+// 图片 URL Map - 存储每个图片路径对应的 Blob URL
+const imageUrls = ref<Map<string, string>>(new Map());
 
 // ========== 对话框和菜单状态 ==========
 
@@ -349,23 +355,84 @@ const menuSelf = ref<
   | 'center middle'
 >('top left');
 
+// ========== 生命周期 ==========
+
 onMounted(() => {
+  // 加载初始数据
   loadSignatures();
-  // TODO: 添加 SSE 事件监听器
+
+  // 注册 SSE 回调
+  signatureStore.registerSseCallback(handleSseUpdate);
 });
 
 onUnmounted(() => {
-  // TODO: 移除 SSE 事件监听器
+  // 注销 SSE 回调
+  signatureStore.unregisterSseCallback();
+
+  // 清理图片 Blob URL
+  imageUrls.value.forEach((url) => {
+    URL.revokeObjectURL(url);
+  });
+  imageUrls.value.clear();
 });
 
-/** 加载签名列表数据 */
+// ========== 数据加载和同步 ==========
+
+/**
+ * 加载签名列表数据
+ * 流程：
+ * 1. 从后端获取加密的 key-value 对
+ * 2. 逐个解密 value 值
+ * 3. 将 JSON 字符串解析为 Signature 对象
+ * 4. 获取图片 Blob URL
+ */
 async function loadSignatures() {
   loading.value = true;
   error.value = false;
 
   try {
-    // TODO: 具体数据加载逻辑由业务层实现
-    signatureList.value = [];
+    // 步骤1: 获取加密的签名列表
+    const encryptedSignatures = await getSignaturesList();
+    if (!encryptedSignatures) {
+      error.value = true;
+      return;
+    }
+
+    const signatures: Signature[] = [];
+
+    // 步骤2: 逐个解密并解析
+    for (const [encryptedId, encryptedValue] of Object.entries(encryptedSignatures)) {
+      try {
+        // 解密 value 值
+        const decryptedJson = await decryptSignatureData(encryptedValue);
+        if (!decryptedJson) {
+          console.warn(`Failed to decrypt signature with id: ${encryptedId}`);
+          continue;
+        }
+
+        // 解析 JSON
+        const signatureData = JSON.parse(decryptedJson);
+
+        // 创建 Signature 对象
+        const signature: Signature = {
+          id: encryptedId,
+          name: signatureData.name,
+          intro: signatureData.intro,
+          cardImage: signatureData.cardImage ? signatureData.cardImage : new File([], ''),
+        };
+
+        signatures.push(signature);
+
+        // 异步获取图片 URL（不阻塞列表显示）
+        if (signatureData.cardImage) {
+          loadImageUrl(signatureData.cardImage);
+        }
+      } catch (err) {
+        console.error(`Failed to process signature with id ${encryptedId}:`, err);
+      }
+    }
+
+    signatureList.value = signatures;
   } catch (err) {
     console.error('[loadSignatures] 异常:', err);
     error.value = true;
@@ -374,7 +441,44 @@ async function loadSignatures() {
   }
 }
 
-/** 打开创建签名表单 */
+/**
+ * SSE 更新回调
+ * 当后端配置变化时（通过 SSE），触发此回调
+ * 重新加载列表
+ */
+async function handleSseUpdate() {
+  console.debug('[SSE] Signature list updated, reloading...');
+  await loadSignatures();
+}
+
+/**
+ * 异步加载图片 URL
+ * 获取图片 Blob 并存储为 Blob URL
+ */
+async function loadImageUrl(imagePath: string) {
+  // 如果已加载，跳过
+  if (imageUrls.value.has(imagePath)) {
+    return;
+  }
+
+  try {
+    const blob = await getSignatureImage(imagePath);
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      imageUrls.value.set(imagePath, url);
+    }
+  } catch (err) {
+    console.warn(`Failed to load image from ${imagePath}:`, err);
+  }
+}
+
+/**
+ * 获取图片 URL
+ * 从 Map 中查询已加载的 Blob URL
+ */
+function getImageUrl(filename: string): string {
+  return imageUrls.value.get(filename) || '';
+}
 function handleCreate() {
   selectedSignature.value = null;
   showFormDialog.value = true;
@@ -463,12 +567,6 @@ async function handleImport() {
 /** 表单成功提交后的回调 - 刷新列表 */
 function handleFormSuccess() {
   loadSignatures();
-}
-
-/** 获取签名图片 URL - 由具体业务层实现 */
-function getImageUrl(filename: string): string {
-  // TODO: 具体 URL 生成逻辑由业务层实现
-  return '';
 }
 
 /** 预览签名图片 */

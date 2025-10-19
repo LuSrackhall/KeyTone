@@ -25,6 +25,26 @@ import { ref } from 'vue';
  * 用于管理签名数据的状态，支持 SSE 实时同步
  */
 export const useSignatureStore = defineStore('signature', () => {
-  // 签名管理器数据
-  return {};
+  let sseCallBack: (() => void) | null = null;
+  sseCallBack = null;
+
+  function registerSseCallback(callback: () => void) {
+    sseCallBack = callback;
+  }
+
+  function unregisterSseCallback() {
+    sseCallBack = null;
+  }
+
+  function sseSync() {
+    if (sseCallBack) {
+      sseCallBack();
+    }
+  }
+
+  return {
+    registerSseCallback,
+    unregisterSseCallback,
+    sseSync,
+  };
 });

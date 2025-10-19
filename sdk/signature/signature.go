@@ -193,6 +193,11 @@ func encryptData(data string, key []byte) (string, error) {
 	return hex.EncodeToString(ciphertext), nil
 }
 
+// DecryptData 使用AES-GCM对数据进行对称解密（导出函数，供其他包使用）
+func DecryptData(encryptedData string, key []byte) (string, error) {
+	return decryptData(encryptedData, key)
+}
+
 // decryptData 使用AES-GCM对数据进行对称解密
 func decryptData(encryptedData string, key []byte) (string, error) {
 	// 确保密钥长度正确
