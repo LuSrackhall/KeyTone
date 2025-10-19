@@ -110,7 +110,7 @@ func signatureRouters(r *gin.Engine) {
 		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
 
 		// 调用signature包创建签名
-		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, encryptionKey)
+		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, fileName, encryptionKey)
 		if err != nil {
 			logger.Error("创建签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
