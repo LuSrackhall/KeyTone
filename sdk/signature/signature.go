@@ -237,3 +237,86 @@ func decryptData(encryptedData string, key []byte) (string, error) {
 
 	return string(plaintext), nil
 }
+
+// CleanupOrphanCardImages 清理不在配置中的孤立签名图片
+// 该函数会扫描 signature 目录下的所有文件，
+// 与配置中的签名数据进行比对，删除不在配置中的图片文件
+func CleanupOrphanCardImages(encryptionKey []byte) error {
+	logger.Info("开始执行签名名片图片清理操作...")
+
+	// 1. 获取 signature 目录路径
+	signatureDir := filepath.Join(config.ConfigPath, "signature")
+
+	// 检查目录是否存在
+	if _, err := os.Stat(signatureDir); os.IsNotExist(err) {
+		logger.Info("签名目录不存在，无需执行清理操作", "path", signatureDir)
+		return nil
+	}
+
+	// 2. 从配置中获取所有签名数据，解析出有效的图片路径集合
+	validImagePaths := make(map[string]bool)
+	signatureMapValue := config.GetValue("signature")
+
+	if signatureMapValue != nil {
+		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
+			// 遍历所有的签名配置
+			for _, encryptedValue := range signatureMap {
+				if encryptedValueStr, ok := encryptedValue.(string); ok {
+					// 解密签名数据
+					decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
+					if err != nil {
+						logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
+						continue
+					}
+
+					// 解析 JSON 数据
+					var sigData SignatureData
+					if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
+						logger.Warn("签名数据 JSON 解析失败，跳过此签名", "error", err.Error())
+						continue
+					}
+
+					// 如果有图片路径，添加到有效路径集合
+					if sigData.CardImage != "" {
+						validImagePaths[sigData.CardImage] = true
+						logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
+					}
+				}
+			}
+		}
+	}
+
+	logger.Info("配置中的有效签名图片数量", "count", len(validImagePaths))
+
+	// 3. 获取 signature 目录下的所有文件
+	files, err := os.ReadDir(signatureDir)
+	if err != nil {
+		logger.Error("读取签名目录失败", "error", err.Error())
+		return err
+	}
+
+	// 4. 遍历目录中的所有文件，删除不在有效路径中的文件
+	deletedCount := 0
+	for _, file := range files {
+		// 只处理文件，跳过目录
+		if file.IsDir() {
+			continue
+		}
+
+		filePath := filepath.Join(signatureDir, file.Name())
+
+		// 检查文件路径是否在有效路径集合中
+		if _, exists := validImagePaths[filePath]; !exists {
+			// 文件不在有效路径中，删除它
+			if err := os.Remove(filePath); err != nil {
+				logger.Warn("删除孤立图片文件失败", "path", filePath, "error", err.Error())
+			} else {
+				logger.Debug("成功删除孤立图片文件", "path", filePath)
+				deletedCount++
+			}
+		}
+	}
+
+	logger.Info("签名名片图片清理操作完成", "deleted_count", deletedCount)
+	return nil
+}
