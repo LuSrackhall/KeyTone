@@ -335,9 +335,6 @@ const showImagePreview = ref(false);
 // 预览图片 URL - 绑定到预览对话框的 img 标签
 const previewImageUrl = ref('');
 
-// 最后一次排序更新的时间戳 - 用于避免 SSE 回调导致的不必要重新加载
-let lastSortUpdateTime = 0;
-
 // ========== 上下文菜单状态 ==========
 
 // 上下文菜单显示状态
@@ -507,23 +504,9 @@ async function loadSignatures() {
  * SSE 更新回调
  * 当后端配置变化时（通过 SSE），触发此回调
  * 重新加载列表
- *
- * 注意：排序更新会导致 SSE 通知，为避免闪烁，
- * 我们在排序成功后的短时间内跳过重新加载
  */
 async function handleSseUpdate() {
-  console.debug('[SSE] Signature list updated, checking if reload needed...');
-
-  // 如果最近执行过排序更新（2秒内），则跳过重新加载
-  // 因为排序更新时前端已经有最新的列表了
-  const timeSinceLastSort = Date.now() - lastSortUpdateTime;
-  if (timeSinceLastSort < 2000) {
-    console.debug(`[SSE] Skipping reload (last sort was ${timeSinceLastSort}ms ago)`);
-    return;
-  }
-
-  // 其他情况下重新加载列表
-  console.debug('[SSE] Reloading signature list...');
+  console.debug('[SSE] Signature list updated, reloading...');
   await loadSignatures();
 }
 
@@ -906,9 +889,6 @@ async function updateSignatureSort() {
       // 还原到原始顺序
       await loadSignatures();
     } else {
-      // ✅ 排序成功，记录时间戳以避免 SSE 导致的闪烁
-      lastSortUpdateTime = Date.now();
-
       q.notify({
         type: 'positive',
         message: '排序已更新',
