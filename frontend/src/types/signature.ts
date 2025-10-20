@@ -13,5 +13,5 @@ export interface Signature {
   intro: string;
 
   /** 名片图片路径（选填） / Card image path (optional) */
-  cardImage: File;
+  cardImage: File | null;
 }

@@ -343,7 +343,8 @@
       "emptyState": "暂无签名",
       "createFirst": "创建第一个签名",
       "noImage": "暂无名片图片",
-      "noImageHint": "无图片"
+      "noImageHint": "此签名未提供名片",
+      "noImagePreviewTip": "此签名未提供名片"
     },
     "form": {
       "createTitle": "创建签名",

@@ -349,7 +349,8 @@
       "emptyState": "No signatures yet",
       "createFirst": "Create your first signature",
       "noImage": "No card image",
-      "noImageHint": "No Image"
+      "noImageHint": "No card image provided",
+      "noImagePreviewTip": "No card image provided"
     },
     "form": {
       "createTitle": "Create Signature",

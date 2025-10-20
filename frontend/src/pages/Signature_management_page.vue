@@ -82,7 +82,7 @@
             v-for="signature in signatureList"
             :key="signature.id"
             class="cursor-pointer hover:shadow-lg transition-all relative"
-            :style="{ minHeight: signature.cardImage ? '60px' : '50px' }"
+            :style="{ minHeight: '60px' }"
           >
             <q-card-section class="q-pa-none" style="display: flex; align-items: center; position: relative">
               <!-- 左侧图片区域 -->
@@ -90,6 +90,7 @@
                 class="flex-shrink-0 flex items-center justify-center"
                 style="width: 60px; height: 60px; min-width: 60px; background-color: #f5f5f5; border-radius: 4px"
               >
+                <!-- 有图片时显示 -->
                 <q-img
                   v-if="signature.cardImage"
                   :src="getImageUrl(signature.cardImage as unknown as string)"
@@ -107,12 +108,14 @@
                 <!-- 无图片占位符 -->
                 <div
                   v-else
-                  class="flex flex-col items-center justify-center"
-                  :title="$t('signature.page.noImage')"
-                  style="width: 50px; height: 50px; cursor: default"
+                  class="flex items-center justify-center w-full h-full"
+                  :title="$t('signature.page.noImageHint')"
+                  style="cursor: default"
                 >
-                  <q-icon name="image_not_supported" size="28px" color="grey-4" />
-                  <div class="text-caption text-grey-4" style="font-size: 0.65rem; margin-top: 2px">
+                  <div
+                    class="text-caption text-grey-6 text-center"
+                    style="font-size: 0.65rem; line-height: 1.3; padding: 4px"
+                  >
                     {{ $t('signature.page.noImageHint') }}
                   </div>
                 </div>
@@ -122,7 +125,7 @@
               <div
                 :ref="(el) => { if (el) contextMenuRefs.set(signature.id, el as HTMLElement); }"
                 class="flex-1 flex flex-col justify-center cursor-pointer hover:bg-grey-2 rounded transition-colors"
-                :style="{ padding: signature.cardImage ? '8px 12px' : '8px 12px 8px 0', minWidth: 0 }"
+                :style="{ padding: '8px 12px', minWidth: 0 }"
                 @click="handleInfoClick(signature, $event)"
                 @contextmenu="handleInfoContextMenu(signature, $event)"
               >
@@ -423,7 +426,7 @@ async function loadSignatures() {
           id: encryptedId,
           name: signatureData.name,
           intro: signatureData.intro,
-          cardImage: signatureData.cardImage ? signatureData.cardImage : new File([], ''),
+          cardImage: signatureData.cardImage || null,
         };
 
         signatures.push(signature);
@@ -644,7 +647,16 @@ function handleFormSuccess() {
 
 /** 预览签名图片 */
 function handleImagePreview(filename: string) {
-  previewImageUrl.value = getImageUrl(filename);
+  const imageUrl = getImageUrl(filename);
+  if (!imageUrl || imageUrl.trim() === '') {
+    q.notify({
+      type: 'info',
+      message: $t('signature.page.noImagePreviewTip'),
+      position: 'top',
+    });
+    return;
+  }
+  previewImageUrl.value = imageUrl;
   showImagePreview.value = true;
 }
 </script>
