@@ -402,6 +402,108 @@ onUnmounted(() => {
 // ========== 数据加载和同步 ==========
 
 /**
+ * 从加密签名数据中解密并构建 Signature 对象集合
+ * 这是一个公共方法，被 loadSignatures 和 handleSseUpdate 共享调用
+ *
+ * @param encryptedSignatures 后端返回的加密签名对象
+ * @returns 解密后的签名 Map (id -> Signature)
+ */
+async function decryptAndBuildSignatureMap(encryptedSignatures: Record<string, any>): Promise<Map<string, Signature>> {
+  const signatureMap = new Map<string, Signature>();
+
+  for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+    try {
+      // 兼容新旧格式
+      let encryptedValue: string;
+
+      if (typeof entry === 'string') {
+        // 旧格式：直接是字符串
+        encryptedValue = entry;
+      } else if (typeof entry === 'object' && entry !== null) {
+        // 新格式：是 SignatureStorageEntry 对象
+        encryptedValue = (entry as any).value || '';
+      } else {
+        console.warn(`Unrecognized signature entry format for id: ${encryptedId}`);
+        continue;
+      }
+
+      if (!encryptedValue) {
+        console.warn(`Empty encrypted value for signature with id: ${encryptedId}`);
+        continue;
+      }
+
+      // 解密 value 值
+      const decryptedJson = await decryptSignatureData(encryptedValue);
+      if (!decryptedJson) {
+        console.warn(`Failed to decrypt signature with id: ${encryptedId}`);
+        continue;
+      }
+
+      // 解析 JSON
+      const signatureData = JSON.parse(decryptedJson);
+
+      // 创建 Signature 对象
+      const signature: Signature = {
+        id: encryptedId,
+        name: signatureData.name,
+        intro: signatureData.intro,
+        cardImage: signatureData.cardImage || null,
+      };
+
+      signatureMap.set(encryptedId, signature);
+
+      // 异步获取图片 URL（不阻塞列表显示）
+      if (signatureData.cardImage) {
+        loadImageUrl(signatureData.cardImage);
+      }
+    } catch (err) {
+      console.error(`Failed to process signature with id ${encryptedId}:`, err);
+    }
+  }
+
+  return signatureMap;
+}
+
+/**
+ * 从签名 Map 中提取排序后的列表
+ * @param encryptedSignatures 原始的加密签名对象（用于提取排序信息）
+ * @param signatureMap 已解密的签名 Map
+ * @returns 排序后的签名数组
+ */
+function extractSortedSignatures(
+  encryptedSignatures: Record<string, any>,
+  signatureMap: Map<string, Signature>
+): Signature[] {
+  // 构建带排序信息的数组
+  const signatureWithSort: Array<{ signature: Signature; sortTime: number }> = [];
+
+  for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+    const signature = signatureMap.get(encryptedId);
+    if (!signature) continue;
+
+    // 提取排序时间戳
+    let sortTime = 0;
+    if (typeof entry === 'object' && entry !== null) {
+      sortTime = (entry as any).sort?.time || 0;
+    }
+
+    signatureWithSort.push({ signature, sortTime });
+  }
+
+  // 按排序时间戳排序（升序：最早创建的在前面）
+  signatureWithSort.sort((a, b) => {
+    // 如果排序时间都是 0（旧格式迁移或未初始化），则按 ID 排序保持稳定性
+    if (a.sortTime === 0 && b.sortTime === 0) {
+      return a.signature.id.localeCompare(b.signature.id);
+    }
+    return a.sortTime - b.sortTime;
+  });
+
+  // 提取排序后的签名列表
+  return signatureWithSort.map((item) => item.signature);
+}
+
+/**
  * 加载签名列表数据
  * 流程：
  * 1. 从后端获取加密的 key-value 对
@@ -421,76 +523,13 @@ async function loadSignatures() {
       return;
     }
 
-    const signatures: Signature[] = [];
+    // 步骤2: 解密并构建签名 Map
+    const signatureMap = await decryptAndBuildSignatureMap(encryptedSignatures);
 
-    // 步骤2: 逐个解密并解析，收集排序信息
-    const signatureWithSort: Array<{ signature: Signature; sortTime: number }> = [];
+    // 步骤3: 排序签名列表
+    const sortedSignatures = extractSortedSignatures(encryptedSignatures, signatureMap);
 
-    for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
-      try {
-        // 兼容新旧格式
-        let encryptedValue: string;
-        let sortTime = 0;
-
-        if (typeof entry === 'string') {
-          // 旧格式：直接是字符串
-          encryptedValue = entry;
-          sortTime = 0;
-        } else if (typeof entry === 'object' && entry !== null) {
-          // 新格式：是 SignatureStorageEntry 对象
-          const storageEntry = entry as any;
-          encryptedValue = storageEntry.value || '';
-          sortTime = storageEntry.sort?.time || 0;
-        } else {
-          console.warn(`Unrecognized signature entry format for id: ${encryptedId}`);
-          continue;
-        }
-
-        if (!encryptedValue) {
-          console.warn(`Empty encrypted value for signature with id: ${encryptedId}`);
-          continue;
-        }
-
-        // 解密 value 值
-        const decryptedJson = await decryptSignatureData(encryptedValue);
-        if (!decryptedJson) {
-          console.warn(`Failed to decrypt signature with id: ${encryptedId}`);
-          continue;
-        }
-
-        // 解析 JSON
-        const signatureData = JSON.parse(decryptedJson);
-
-        // 创建 Signature 对象
-        const signature: Signature = {
-          id: encryptedId,
-          name: signatureData.name,
-          intro: signatureData.intro,
-          cardImage: signatureData.cardImage || null,
-        };
-
-        signatureWithSort.push({ signature, sortTime });
-
-        // 异步获取图片 URL（不阻塞列表显示）
-        if (signatureData.cardImage) {
-          loadImageUrl(signatureData.cardImage);
-        }
-      } catch (err) {
-        console.error(`Failed to process signature with id ${encryptedId}:`, err);
-      }
-    }
-
-    // 按排序时间戳排序（升序：最早创建的在前面）
-    signatureWithSort.sort((a, b) => {
-      // 如果排序时间都是 0（旧格式迁移或未初始化），则按 ID 排序保持稳定性
-      if (a.sortTime === 0 && b.sortTime === 0) {
-        return a.signature.id.localeCompare(b.signature.id);
-      }
-      return a.sortTime - b.sortTime;
-    });
-
-    // 提取排序后的签名列表
-    const sortedSignatures = signatureWithSort.map((item) => item.signature);
+    // 步骤4: 赋值给响应式变量
     signatureList.value = sortedSignatures;
   } catch (err) {
     console.error('[loadSignatures] 异常:', err);
@@ -503,11 +542,121 @@ async function loadSignatures() {
 /**
  * SSE 更新回调
  * 当后端配置变化时（通过 SSE），触发此回调
- * 重新加载列表
+ * 执行增量更新而不是全量重新加载，避免列表闪烁
+ *
+ * 增量更新的优势：
+ * - 避免完整替换数组导致的 DOM 闪烁
+ * - 保留现有的排序状态和展开/收起状态
+ * - 只更新真正有变化的项目
  */
 async function handleSseUpdate() {
-  console.debug('[SSE] Signature list updated, reloading...');
-  await loadSignatures();
+  console.debug('[SSE] Signature list updated, performing incremental update...');
+  try {
+    // 获取最新的加密签名列表
+    const encryptedSignatures = await getSignaturesList();
+    if (!encryptedSignatures) {
+      console.warn('[SSE] Failed to fetch updated signatures');
+      return;
+    }
+
+    // 解密并构建新的签名 Map
+    const newSignaturesMap = await decryptAndBuildSignatureMap(encryptedSignatures);
+
+    // 执行增量更新
+    updateSignaturesIncremental(newSignaturesMap);
+  } catch (err) {
+    console.error('[SSE] Incremental update failed:', err);
+    // 降级方案：全量重新加载
+    console.debug('[SSE] Falling back to full reload');
+    await loadSignatures();
+  }
+}
+
+/**
+ * 执行签名列表的增量更新
+ * 只更新有变化的项，避免整个列表重新渲染
+ *
+ * @param newSignaturesMap 新的签名数据 Map
+ */
+function updateSignaturesIncremental(newSignaturesMap: Map<string, Signature>) {
+  // 构建当前列表的 ID Set
+  const currentIds = new Set(signatureList.value.map((s) => s.id));
+  const newIds = new Set(newSignaturesMap.keys());
+
+  // 检测需要删除的签名（存在于当前但不存在于新数据中）
+  const toDeleteIds = new Set<string>();
+  currentIds.forEach((id) => {
+    if (!newIds.has(id)) {
+      toDeleteIds.add(id);
+    }
+  });
+
+  // 检测需要添加的签名（存在于新数据但不存在于当前中）
+  const toAddIds = new Set<string>();
+  newIds.forEach((id) => {
+    if (!currentIds.has(id)) {
+      toAddIds.add(id);
+    }
+  });
+
+  // 检测需要更新的签名（检查数据是否发生变化）
+  const toUpdateIds = new Set<string>();
+  for (const id of currentIds) {
+    if (newIds.has(id) && !toDeleteIds.has(id) && !toAddIds.has(id)) {
+      const currentSig = signatureList.value.find((s) => s.id === id);
+      const newSig = newSignaturesMap.get(id);
+      if (currentSig && newSig) {
+        // 比较关键字段，判断是否需要更新
+        if (
+          currentSig.name !== newSig.name ||
+          currentSig.intro !== newSig.intro ||
+          currentSig.cardImage !== newSig.cardImage
+        ) {
+          toUpdateIds.add(id);
+        }
+      }
+    }
+  }
+
+  console.debug('[SSE] Incremental update detected:', {
+    toAdd: toAddIds.size,
+    toDelete: toDeleteIds.size,
+    toUpdate: toUpdateIds.size,
+  });
+
+  // 如果没有任何变化，直接返回
+  if (toAddIds.size === 0 && toDeleteIds.size === 0 && toUpdateIds.size === 0) {
+    console.debug('[SSE] No changes detected, skipping update');
+    return;
+  }
+
+  // 执行删除操作
+  if (toDeleteIds.size > 0) {
+    signatureList.value = signatureList.value.filter((s) => !toDeleteIds.has(s.id));
+  }
+
+  // 执行更新操作（保持在原位置）
+  if (toUpdateIds.size > 0) {
+    signatureList.value.forEach((sig, index) => {
+      if (toUpdateIds.has(sig.id)) {
+        const newSig = newSignaturesMap.get(sig.id);
+        if (newSig) {
+          // 使用 Object.assign 进行原地更新，保持数组引用不变
+          Object.assign(sig, newSig);
+        }
+      }
+    });
+  }
+
+  // 执行添加操作（添加到列表末尾）
+  if (toAddIds.size > 0) {
+    const addedSignatures = Array.from(toAddIds)
+      .map((id) => newSignaturesMap.get(id))
+      .filter((sig): sig is Signature => sig !== undefined);
+    signatureList.value.push(...addedSignatures);
+  }
+
+  console.debug('[SSE] Incremental update completed');
 }
 
 /**
