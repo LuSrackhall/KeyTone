@@ -77,7 +77,7 @@
 
       <!-- 签名列表 -->
       <div v-else class="q-pa-md">
-        <div class="space-y-2">
+        <TransitionGroup name="list" tag="div" class="space-y-2">
           <q-card
             v-for="signature in signatureList"
             :key="signature.id"
@@ -161,7 +161,7 @@
               </div>
             </q-card-section>
           </q-card>
-        </div>
+        </TransitionGroup>
       </div>
     </q-scroll-area>
 
@@ -962,5 +962,25 @@ function handleImagePreview(filename: string) {
   border-bottom: 3px solid #1976d2;
   padding-bottom: 0px;
   background-color: rgba(25, 118, 210, 0.08);
+}
+
+/** TransitionGroup 动画样式 */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
 }
 </style>
