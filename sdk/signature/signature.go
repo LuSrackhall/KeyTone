@@ -44,6 +44,17 @@ type SignatureData struct {
 	// CardImageExt string `json:"cardImageExt"` // 图片文件扩展名（用于前端显示）
 }
 
+// SignatureSortMetadata 签名排序元数据（仅用于本地排序，不参与导出）
+type SignatureSortMetadata struct {
+	Time int64 `json:"time"` // Unix 时间戳，仅在创建或导入时生成；更新签名不会改变此值；但可通过拖动排序操作更改
+}
+
+// SignatureStorageEntry 签名在配置文件中的存储结构
+type SignatureStorageEntry struct {
+	Value string                `json:"value"` // 加密的签名数据
+	Sort  SignatureSortMetadata `json:"sort"`  // 排序元数据
+}
+
 // CreateSignature 创建新签名的处理函数
 // id: 签名唯一标识（未加密）
 // signatureData: 签名数据
@@ -51,6 +62,12 @@ type SignatureData struct {
 // imageExt: 图片文件的扩展名（如 .jpg, .png，可以为空）
 // originalImageName: 图片原始文件名
 // encryptionKey: 对称加密密钥
+//
+// 说明：
+// - 生成的签名存储条目包含 value（加密数据）和 sort.time（Unix 时间戳）
+// - sort.time 仅在首次创建或导入时生成，代表排序顺序
+// - 更新签名时不会改变 sort.time（需要在更新逻辑中保留原值）
+// - 用户的拖动排序操作可以改变 sort.time 值（需要单独的 API 实现）
 func CreateSignature(id string, signatureData SignatureData, imageData []byte, imageExt string, originalImageName string, encryptionKey []byte) (string, error) {
 	// 1. 对ID进行对称加密
 	encryptedID, err := encryptData(id, encryptionKey)
@@ -138,24 +155,49 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 	// 6. 调用config包的SetValue函数，存储加密后的key:value键值对
 	// 获取现有的signature配置值（如果存在）
 	existingValue := config.GetValue("signature")
-	var signatureMap map[string]string
+	var signatureMap map[string]SignatureStorageEntry
 
 	if existingValue != nil {
-		// 如果已存在，将其转换为map
+		// 如果已存在，将其转换为map[string]SignatureStorageEntry
 		if m, ok := existingValue.(map[string]interface{}); ok {
-			signatureMap = make(map[string]string)
+			signatureMap = make(map[string]SignatureStorageEntry)
 			for k, v := range m {
-				if str, ok := v.(string); ok {
-					signatureMap[k] = str
+				// 尝试解析为新格式的 SignatureStorageEntry
+				if entry, ok := v.(map[string]interface{}); ok {
+					// 新格式
+					storageEntry := SignatureStorageEntry{}
+					if value, ok := entry["value"].(string); ok {
+						storageEntry.Value = value
+					}
+					if sort, ok := entry["sort"].(map[string]interface{}); ok {
+						if time, ok := sort["time"].(float64); ok {
+							storageEntry.Sort.Time = int64(time)
+						}
+					}
+					signatureMap[k] = storageEntry
+				} else if str, ok := v.(string); ok {
+					// 兼容旧格式：如果是字符串，创建新的存储条目
+					logger.Warn("检测到旧格式的签名数据，正在进行格式升级", "key", k)
+					signatureMap[k] = SignatureStorageEntry{
+						Value: str,
+						Sort: SignatureSortMetadata{
+							Time: time.Now().Unix(), // 使用当前时间作为迁移时间戳
+						},
+					}
 				}
 			}
 		}
 	} else {
-		signatureMap = make(map[string]string)
+		signatureMap = make(map[string]SignatureStorageEntry)
 	}
 
-	// 添加新的签名数据
-	signatureMap[encryptedID] = encryptedValue
+	// 添加新的签名数据，生成排序时间戳
+	signatureMap[encryptedID] = SignatureStorageEntry{
+		Value: encryptedValue,
+		Sort: SignatureSortMetadata{
+			Time: time.Now().Unix(), // 仅在创建时生成
+		},
+	}
 
 	// 存储回配置文件
 	config.SetValue("signature", signatureMap)
@@ -260,27 +302,43 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 	if signatureMapValue != nil {
 		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
 			// 遍历所有的签名配置
-			for _, encryptedValue := range signatureMap {
-				if encryptedValueStr, ok := encryptedValue.(string); ok {
-					// 解密签名数据
-					decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
-					if err != nil {
-						logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
+			for _, v := range signatureMap {
+				var encryptedValueStr string
+
+				// 兼容新格式 SignatureStorageEntry
+				if entry, ok := v.(map[string]interface{}); ok {
+					if value, ok := entry["value"].(string); ok {
+						encryptedValueStr = value
+					} else {
+						logger.Warn("无法从 SignatureStorageEntry 中提取 value 字段")
 						continue
 					}
+				} else if str, ok := v.(string); ok {
+					// 兼容旧格式：直接是加密字符串
+					encryptedValueStr = str
+				} else {
+					logger.Warn("无法识别签名数据格式")
+					continue
+				}
 
-					// 解析 JSON 数据
-					var sigData SignatureData
-					if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
-						logger.Warn("签名数据 JSON 解析失败，跳过此签名", "error", err.Error())
-						continue
-					}
+				// 解密签名数据
+				decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
+				if err != nil {
+					logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
+					continue
+				}
 
-					// 如果有图片路径，添加到有效路径集合
-					if sigData.CardImage != "" {
-						validImagePaths[sigData.CardImage] = true
-						logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
-					}
+				// 解析 JSON 数据
+				var sigData SignatureData
+				if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
+					logger.Warn("签名数据 JSON 解析失败，跳过此签名", "error", err.Error())
+					continue
+				}
+
+				// 如果有图片路径，添加到有效路径集合
+				if sigData.CardImage != "" {
+					validImagePaths[sigData.CardImage] = true
+					logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
 				}
 			}
 		}

@@ -77,6 +77,14 @@
 
       <!-- 签名列表 -->
       <div v-else class="q-pa-md">
+        <!-- TODO: 实现拖动排序功能
+             1. 使用 Quasar 的 q-sortable 或类似组件
+             2. 允许用户拖动排序签名卡片
+             3. 拖动完成后，生成新的排序时间戳数组
+             4. 调用后端 API /signature/update-sort 更新排序
+             5. 后端需要更新每个签名的 sort.time 值
+             注意：只改变 sort.time，不改变签名数据本身
+        -->
         <div class="space-y-2">
           <q-card
             v-for="signature in signatureList"
@@ -408,9 +416,34 @@ async function loadSignatures() {
 
     const signatures: Signature[] = [];
 
-    // 步骤2: 逐个解密并解析
-    for (const [encryptedId, encryptedValue] of Object.entries(encryptedSignatures)) {
+    // 步骤2: 逐个解密并解析，收集排序信息
+    const signatureWithSort: Array<{ signature: Signature; sortTime: number }> = [];
+
+    for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
       try {
+        // 兼容新旧格式
+        let encryptedValue: string;
+        let sortTime = 0;
+
+        if (typeof entry === 'string') {
+          // 旧格式：直接是字符串
+          encryptedValue = entry;
+          sortTime = 0;
+        } else if (typeof entry === 'object' && entry !== null) {
+          // 新格式：是 SignatureStorageEntry 对象
+          const storageEntry = entry as any;
+          encryptedValue = storageEntry.value || '';
+          sortTime = storageEntry.sort?.time || 0;
+        } else {
+          console.warn(`Unrecognized signature entry format for id: ${encryptedId}`);
+          continue;
+        }
+
+        if (!encryptedValue) {
+          console.warn(`Empty encrypted value for signature with id: ${encryptedId}`);
+          continue;
+        }
+
         // 解密 value 值
         const decryptedJson = await decryptSignatureData(encryptedValue);
         if (!decryptedJson) {
@@ -429,7 +462,7 @@ async function loadSignatures() {
           cardImage: signatureData.cardImage || null,
         };
 
-        signatures.push(signature);
+        signatureWithSort.push({ signature, sortTime });
 
         // 异步获取图片 URL（不阻塞列表显示）
         if (signatureData.cardImage) {
@@ -440,7 +473,18 @@ async function loadSignatures() {
       }
     }
 
-    signatureList.value = signatures;
+    // 按排序时间戳排序（升序：最早创建的在前面）
+    signatureWithSort.sort((a, b) => {
+      // 如果排序时间都是 0（旧格式迁移或未初始化），则按 ID 排序保持稳定性
+      if (a.sortTime === 0 && b.sortTime === 0) {
+        return a.signature.id.localeCompare(b.signature.id);
+      }
+      return a.sortTime - b.sortTime;
+    });
+
+    // 提取排序后的签名列表
+    const sortedSignatures = signatureWithSort.map((item) => item.signature);
+    signatureList.value = sortedSignatures;
   } catch (err) {
     console.error('[loadSignatures] 异常:', err);
     error.value = true;

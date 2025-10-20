@@ -134,8 +134,25 @@ func signatureRouters(r *gin.Engine) {
 
 	// 更新签名
 	signatureRouter.POST("/signature/update", func(ctx *gin.Context) {
+		// TODO: 实现完整的签名更新逻辑
+		// 需要：
+		// 1. 从请求中获取签名 ID、name、intro、cardImage（Base64）
+		// 2. 从配置中读取现有的签名存储条目
+		// 3. 保留原有的 sort.time 时间戳（不更改排序时间）
+		// 4. 处理图片：如果有新图片，保存并更新路径；如果没有新图片，保留原路径或清除
+		// 5. 加密新的签名数据
+		// 6. 更新配置文件中的 value，但保留 sort.time 不变
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
+
+	// TODO: 实现更新签名排序时间戳的 API 端点
+	// 需要支持：
+	// 1. 当用户执行拖动排序操作时，更新指定签名的 sort.time 值
+	// 2. 后端需要读取现有的签名存储数据，更新排序时间戳，然后保存回配置文件
+	// 3. 前端拖动排序完成后调用此 API 提交新的排序顺序
+	// signatureRouter.POST("/signature/update-sort", func(ctx *gin.Context) {
+	//     // 实现逻辑
+	// })
 
 	// 删除签名
 	signatureRouter.POST("/signature/delete", func(ctx *gin.Context) {
@@ -202,17 +219,28 @@ func signatureRouters(r *gin.Engine) {
 			// 没有签名时返回空对象
 			ctx.JSON(http.StatusOK, gin.H{
 				"success": true,
-				"data":    make(map[string]string),
+				"data":    make(map[string]interface{}),
 			})
 			return
 		}
 
-		// 类型转换为 map[string]string
-		encryptedSignatures := make(map[string]string)
+		// 类型转换为 map[string]interface{}
+		// 兼容新格式 map[string]SignatureStorageEntry 和旧格式 map[string]string
+		encryptedSignatures := make(map[string]interface{})
 		if m, ok := signatureMap.(map[string]interface{}); ok {
 			for k, v := range m {
-				if str, ok := v.(string); ok {
-					encryptedSignatures[k] = str
+				if entry, ok := v.(map[string]interface{}); ok {
+					// 新格式：SignatureStorageEntry
+					encryptedSignatures[k] = entry
+				} else if str, ok := v.(string); ok {
+					// 旧格式：直接是加密字符串，需要升级为新格式
+					logger.Warn("检测到旧格式的签名数据，正在进行格式升级", "key", k)
+					encryptedSignatures[k] = map[string]interface{}{
+						"value": str,
+						"sort": map[string]interface{}{
+							"time": 0, // TODO: 应该获取文件创建时间或使用其他策略
+						},
+					}
 				}
 			}
 		}
@@ -290,6 +318,16 @@ func signatureRouters(r *gin.Engine) {
 
 	// 导入签名
 	signatureRouter.POST("/signature/import", func(ctx *gin.Context) {
+		// TODO: 实现完整的签名导入逻辑
+		// 需要：
+		// 1. 从请求中获取 .ktsign 文件内容
+		// 2. 解析文件并验证格式和校验和
+		// 3. 检查签名 ID 是否已存在
+		// 4. 如果存在，询问用户是否覆盖
+		// 5. 保存图片文件（Base64 解码）
+		// 6. 加密签名数据
+		// 7. 生成 sort.time（当前时间戳），用于排序
+		// 8. 存储到配置文件
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 

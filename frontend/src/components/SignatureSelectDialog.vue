@@ -160,7 +160,14 @@ onMounted(() => {
 async function loadSignatures() {
   loading.value = true;
   try {
-    // TODO: 具体数据加载逻辑由业务层实现
+    // TODO: 实现签名列表加载逻辑
+    // 1. 调用 getSignaturesList() 获取加密的签名列表
+    // 2. 处理新的 SignatureStorageEntry 结构：{ value: string, sort: { time: number } }
+    // 3. 按 sort.time 时间戳排序（升序）
+    // 4. 逐个解密并解析签名数据
+    // 5. 获取签名图片 URL
+    // 6. 填充 signatureList
+    // 注意：与 Signature_management_page.vue 中的排序逻辑保持一致
     signatureList.value = [];
   } catch (err) {
     console.error('Failed to load signatures:', err);

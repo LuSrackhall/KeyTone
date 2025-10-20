@@ -1,18 +1,40 @@
 import { api } from 'boot/axios';
-import type { Signature } from 'src/types/signature';
+import type { Signature, SignatureStorageEntry } from 'src/types/signature';
 
 /**
- * 获取所有签名列表（加密的key-value对）
- * Get all signatures list (encrypted key-value pairs)
+ * 获取所有签名列表（加密的key-value对，包含排序元数据）
+ * Get all signatures list (encrypted key-value pairs with sort metadata)
+ *
+ * 返回格式可能为：
+ * 1. 新格式：{ encryptedId: { value: encryptedData, sort: { time: 1234567890 } } }
+ * 2. 旧格式：{ encryptedId: encryptedData } (需要升级处理)
  */
-export async function getSignaturesList(): Promise<{ [key: string]: string } | false> {
+export async function getSignaturesList(): Promise<{ [key: string]: SignatureStorageEntry } | false> {
   return await api
     .get('/signature/list')
     .then((req) => {
       console.debug('status=', req.status, '->getSignaturesList 请求已成功执行并返回->', req.data);
       if (req.data.success && req.data.data) {
-        // 返回加密的key-value对象
-        return req.data.data as { [key: string]: string };
+        // 处理新格式和旧格式的兼容
+        const result: { [key: string]: SignatureStorageEntry } = {};
+        const data = req.data.data;
+
+        for (const [key, value] of Object.entries(data)) {
+          if (typeof value === 'string') {
+            // 旧格式：直接是加密字符串，升级为新格式
+            result[key] = {
+              value: value,
+              sort: {
+                time: 0, // TODO: 应该从本地存储或其他方式获取原始创建时间
+              },
+            };
+          } else if (typeof value === 'object' && value !== null) {
+            // 新格式：已是 SignatureStorageEntry
+            result[key] = value as SignatureStorageEntry;
+          }
+        }
+
+        return result;
       } else {
         console.error('Failed to get signatures list:', req.data.message);
         return false;
@@ -291,3 +313,20 @@ export async function importSignature(fileData: File): Promise<Signature | false
       return false;
     });
 }
+
+/**
+ * TODO: 实现更新签名排序的函数
+ * Update signature sort order (for drag-and-drop reordering)
+ *
+ * 参数说明：
+ * - sortOrder: 签名 ID 的数组，表示新的排序顺序
+ *
+ * 功能：
+ * 1. 前端用户拖动排序完成后调用此函数
+ * 2. 向后端 POST /signature/update-sort
+ * 3. 后端需要生成新的 sort.time 值并保存到配置文件
+ *
+ * export async function updateSignatureSort(sortOrder: string[]): Promise<boolean> {
+ *   // 实现逻辑
+ * }
+ */
