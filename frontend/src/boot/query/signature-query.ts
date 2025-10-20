@@ -315,18 +315,44 @@ export async function importSignature(fileData: File): Promise<Signature | false
 }
 
 /**
- * TODO: 实现更新签名排序的函数
+ * 更新签名排序
  * Update signature sort order (for drag-and-drop reordering)
  *
  * 参数说明：
- * - sortOrder: 签名 ID 的数组，表示新的排序顺序
+ * - sortOrder: { id: 签名ID, sortTime: Unix时间戳 } 的数组，表示新的排序顺序
  *
  * 功能：
  * 1. 前端用户拖动排序完成后调用此函数
  * 2. 向后端 POST /signature/update-sort
- * 3. 后端需要生成新的 sort.time 值并保存到配置文件
- *
- * export async function updateSignatureSort(sortOrder: string[]): Promise<boolean> {
- *   // 实现逻辑
- * }
+ * 3. 后端需要根据提供的 sort.time 值更新配置文件
  */
+export async function updateSignatureSort(sortOrder: Array<{ id: string; sortTime: number }>): Promise<boolean> {
+  return await api
+    .post('/signature/update-sort', { sortOrder })
+    .then((req) => {
+      console.debug('status=', req.status, '->updateSignatureSort 请求已成功执行并返回->', req.data);
+      if (req.data.success) {
+        return true;
+      } else {
+        console.error('Failed to update signature sort:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('updateSignatureSort 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}

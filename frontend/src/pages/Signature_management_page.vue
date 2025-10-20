@@ -77,20 +77,19 @@
 
       <!-- 签名列表 -->
       <div v-else class="q-pa-md">
-        <!-- TODO: 实现拖动排序功能
-             1. 使用 Quasar 的 q-sortable 或类似组件
-             2. 允许用户拖动排序签名卡片
-             3. 拖动完成后，生成新的排序时间戳数组
-             4. 调用后端 API /signature/update-sort 更新排序
-             5. 后端需要更新每个签名的 sort.time 值
-             注意：只改变 sort.time，不改变签名数据本身
-        -->
         <div class="space-y-2">
           <q-card
             v-for="signature in signatureList"
             :key="signature.id"
-            class="cursor-pointer hover:shadow-lg transition-all relative"
+            class="cursor-move hover:shadow-lg transition-all relative draggable-card"
             :style="{ minHeight: '60px' }"
+            draggable="true"
+            @dragstart="handleDragStart($event, signature)"
+            @dragend="handleDragEnd"
+            @dragover.prevent="handleDragOver"
+            @drop="handleDrop($event, signature)"
+            @dragenter="handleDragEnter"
+            @dragleave="handleDragLeave"
           >
             <q-card-section class="q-pa-none" style="display: flex; align-items: center; position: relative">
               <!-- 左侧图片区域 -->
@@ -276,6 +275,7 @@ import {
   decryptSignatureData,
   getSignatureImage,
   deleteSignature,
+  updateSignatureSort as updateSignatureSortApi,
 } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
@@ -302,8 +302,15 @@ const error = ref(false);
 // 签名列表数据 - 由具体数据流实现填充，绑定到签名卡片列表渲染
 const signatureList = ref<Signature[]>([]);
 
+// 签名排序信息 Map - 存储每个签名 ID 对应的排序时间戳
+// 用于排序后持久化到后端
+const signatureSortMap = ref<Map<string, number>>(new Map());
+
 // 图片 URL Map - 存储每个图片路径对应的 Blob URL
 const imageUrls = ref<Map<string, string>>(new Map());
+
+// 拖动排序中的状态 - 防止重复请求
+const isSortingUpdating = ref(false);
 
 // ========== 对话框和菜单状态 ==========
 
@@ -689,6 +696,207 @@ function handleFormSuccess() {
   loadSignatures();
 }
 
+// ========== 拖动排序相关函数 ==========
+
+// 当前被拖动的签名
+let draggedSignature: Signature | null = null;
+// 拖动时的 DOM 元素
+let draggedElement: HTMLElement | null = null;
+// 插入位置指示器
+let dropIndicator: HTMLElement | null = null;
+
+/** 处理拖动开始 */
+function handleDragStart(event: DragEvent, signature: Signature) {
+  draggedSignature = signature;
+  draggedElement = event.target as HTMLElement;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/html', (event.target as HTMLElement).innerHTML);
+  }
+  // 添加拖动中的视觉效果
+  const cardElement = (event.target as HTMLElement).closest('.draggable-card');
+  if (cardElement) {
+    cardElement.classList.add('dragging');
+  }
+}
+
+/** 处理拖动结束 */
+function handleDragEnd(event: DragEvent) {
+  const target = event.target as HTMLElement;
+  target.closest('.draggable-card')?.classList.remove('dragging');
+
+  // 移除所有高亮
+  document.querySelectorAll('.draggable-card').forEach((card) => {
+    card.classList.remove('drag-over-top');
+    card.classList.remove('drag-over-bottom');
+  });
+
+  // 移除插入指示器
+  if (dropIndicator) {
+    dropIndicator.remove();
+    dropIndicator = null;
+  }
+
+  draggedSignature = null;
+  draggedElement = null;
+}
+
+/** 处理拖动悬停 */
+function handleDragOver(event: DragEvent) {
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+}
+
+/** 处理拖动进入 */
+function handleDragEnter(event: DragEvent) {
+  if (!draggedSignature) return;
+
+  const target = event.target as HTMLElement;
+  const cardElement = target.closest('.draggable-card');
+
+  if (!cardElement || cardElement === draggedElement) {
+    return;
+  }
+
+  // 获取鼠标在卡片中的位置
+  const rect = cardElement.getBoundingClientRect();
+  const midpoint = rect.height / 2;
+  const mouseY = event.clientY - rect.top;
+
+  // 移除之前的高亮
+  document.querySelectorAll('.draggable-card').forEach((card) => {
+    card.classList.remove('drag-over-top');
+    card.classList.remove('drag-over-bottom');
+  });
+
+  // 根据鼠标位置添加高亮
+  if (mouseY < midpoint) {
+    // 上方插入
+    cardElement.classList.add('drag-over-top');
+  } else {
+    // 下方插入
+    cardElement.classList.add('drag-over-bottom');
+  }
+}
+
+/** 处理拖动离开 */
+function handleDragLeave(event: DragEvent) {
+  const target = event.target as HTMLElement;
+  const cardElement = target.closest('.draggable-card');
+
+  if (cardElement) {
+    // 检查是否真的离开了卡片
+    if (!cardElement.contains(event.relatedTarget as Node)) {
+      cardElement.classList.remove('drag-over-top');
+      cardElement.classList.remove('drag-over-bottom');
+    }
+  }
+}
+
+/** 处理放下 - 插入排序 */
+async function handleDrop(event: DragEvent, targetSignature: Signature) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const target = event.target as HTMLElement;
+  const cardElement = target.closest('.draggable-card');
+
+  if (cardElement) {
+    cardElement.classList.remove('drag-over-top');
+    cardElement.classList.remove('drag-over-bottom');
+  }
+
+  if (!draggedSignature || draggedSignature.id === targetSignature.id) {
+    return;
+  }
+
+  // 查找两个签名在列表中的索引
+  const draggedIndex = signatureList.value.findIndex((s) => s.id === draggedSignature!.id);
+  const targetIndex = signatureList.value.findIndex((s) => s.id === targetSignature.id);
+
+  if (draggedIndex === -1 || targetIndex === -1) {
+    return;
+  }
+
+  // 获取鼠标在卡片中的位置
+  const rect = (event.target as HTMLElement).closest('.draggable-card')!.getBoundingClientRect();
+  const midpoint = rect.height / 2;
+  const mouseY = event.clientY - rect.top;
+
+  // 判断是否在下方插入
+  const insertAfter = mouseY >= midpoint;
+
+  // 从原位置移除
+  const [draggedItem] = signatureList.value.splice(draggedIndex, 1);
+
+  // 删除后，重新计算目标位置
+  // 如果被拖动的元素在目标之前，删除后目标索引会减 1
+  let newIndex = signatureList.value.findIndex((s) => s.id === targetSignature.id);
+
+  // 根据插入位置调整
+  if (insertAfter) {
+    // 在目标下方插入：在目标索引之后
+    newIndex += 1;
+  }
+  // else: 在目标上方插入：直接使用当前的 newIndex
+
+  // 插入到新位置
+  signatureList.value.splice(newIndex, 0, draggedItem);
+
+  // 更新排序时间戳并提交到后端
+  await updateSignatureSort();
+}
+
+/** 更新签名排序 - 生成新的时间戳并提交到后端 */
+async function updateSignatureSort() {
+  if (isSortingUpdating.value) {
+    return;
+  }
+
+  isSortingUpdating.value = true;
+
+  try {
+    // 为排序后的签名列表生成新的排序时间戳
+    // 使用递增的时间戳，从当前时间开始，每个签名间隔 1000 毫秒
+    const baseTime = Math.floor(Date.now() / 1000);
+    const newSortOrder = signatureList.value.map((sig, index) => ({
+      id: sig.id,
+      sortTime: baseTime + index,
+    }));
+
+    // 调用后端 API 更新排序
+    const success = await updateSignatureSortApi(newSortOrder);
+    if (!success) {
+      q.notify({
+        type: 'negative',
+        message: '排序更新失败，请重试',
+        position: 'top',
+      });
+      // 还原到原始顺序
+      await loadSignatures();
+    } else {
+      q.notify({
+        type: 'positive',
+        message: '排序已更新',
+        position: 'top',
+      });
+    }
+  } catch (error) {
+    console.error('Failed to update signature sort:', error);
+    q.notify({
+      type: 'negative',
+      message: '排序更新失败',
+      position: 'top',
+    });
+    // 还原到原始顺序
+    await loadSignatures();
+  } finally {
+    isSortingUpdating.value = false;
+  }
+}
+
 /** 预览签名图片 */
 function handleImagePreview(filename: string) {
   const imageUrl = getImageUrl(filename);
@@ -718,5 +926,29 @@ function handleImagePreview(filename: string) {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.draggable-card {
+  user-select: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.draggable-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+/** 在目标上方插入 - 显示上边框 */
+.draggable-card.drag-over-top {
+  border-top: 3px solid #1976d2;
+  padding-top: 0px;
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+/** 在目标下方插入 - 显示下边框 */
+.draggable-card.drag-over-bottom {
+  border-bottom: 3px solid #1976d2;
+  padding-bottom: 0px;
+  background-color: rgba(25, 118, 210, 0.08);
 }
 </style>

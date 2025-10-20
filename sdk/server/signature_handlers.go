@@ -150,9 +150,64 @@ func signatureRouters(r *gin.Engine) {
 	// 1. 当用户执行拖动排序操作时，更新指定签名的 sort.time 值
 	// 2. 后端需要读取现有的签名存储数据，更新排序时间戳，然后保存回配置文件
 	// 3. 前端拖动排序完成后调用此 API 提交新的排序顺序
-	// signatureRouter.POST("/signature/update-sort", func(ctx *gin.Context) {
-	//     // 实现逻辑
-	// })
+	signatureRouter.POST("/signature/update-sort", func(ctx *gin.Context) {
+		var req struct {
+			SortOrder []struct {
+				ID       string `json:"id" binding:"required"`
+				SortTime int64  `json:"sortTime" binding:"required"`
+			} `json:"sortOrder" binding:"required"`
+		}
+
+		if err := ctx.BindJSON(&req); err != nil {
+			logger.Error("绑定请求参数失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "无效的请求参数",
+			})
+			return
+		}
+
+		// 从配置中获取现有的签名存储数据
+		signatureMapValue := config.GetValue("signature")
+		if signatureMapValue == nil {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "签名不存在",
+			})
+			return
+		}
+
+		// 类型转换
+		if m, ok := signatureMapValue.(map[string]interface{}); ok {
+			// 为每个签名更新排序时间戳
+			for _, item := range req.SortOrder {
+				if entry, ok := m[item.ID].(map[string]interface{}); ok {
+					// 更新 sort.time
+					if sort, ok := entry["sort"].(map[string]interface{}); ok {
+						sort["time"] = item.SortTime
+					} else {
+						// 创建新的 sort 对象
+						entry["sort"] = map[string]interface{}{
+							"time": item.SortTime,
+						}
+					}
+				}
+			}
+
+			// 保存回配置文件
+			config.SetValue("signature", m)
+
+			ctx.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"message": "排序更新成功",
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "配置数据格式错误",
+			})
+		}
+	})
 
 	// 删除签名
 	signatureRouter.POST("/signature/delete", func(ctx *gin.Context) {
