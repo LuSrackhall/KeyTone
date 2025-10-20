@@ -548,6 +548,7 @@ async function loadSignatures() {
  * - 避免完整替换数组导致的 DOM 闪烁
  * - 保留现有的排序状态和展开/收起状态
  * - 只更新真正有变化的项目
+ * - 支持排序的增量更新
  */
 async function handleSseUpdate() {
   console.debug('[SSE] Signature list updated, performing incremental update...');
@@ -562,8 +563,8 @@ async function handleSseUpdate() {
     // 解密并构建新的签名 Map
     const newSignaturesMap = await decryptAndBuildSignatureMap(encryptedSignatures);
 
-    // 执行增量更新
-    updateSignaturesIncremental(newSignaturesMap);
+    // 执行增量更新（传递加密签名对象以获取排序信息）
+    updateSignaturesIncremental(newSignaturesMap, encryptedSignatures);
   } catch (err) {
     console.error('[SSE] Incremental update failed:', err);
     // 降级方案：全量重新加载
@@ -573,12 +574,96 @@ async function handleSseUpdate() {
 }
 
 /**
+ * 从加密签名对象中提取排序信息
+ * @param encryptedSignatures 原始的加密签名对象
+ * @returns 签名 ID -> 排序时间戳 的 Map
+ */
+function extractSortTimeMap(encryptedSignatures: Record<string, any>): Map<string, number> {
+  const sortTimeMap = new Map<string, number>();
+
+  for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+    let sortTime = 0;
+    if (typeof entry === 'object' && entry !== null) {
+      sortTime = (entry as any).sort?.time || 0;
+    }
+    sortTimeMap.set(encryptedId, sortTime);
+  }
+
+  return sortTimeMap;
+}
+
+/**
+ * 检查排序是否改变，如果改变则应用新的排序
+ * 这个函数不会重新创建数组或元素，只会调整元素的顺序
+ *
+ * @param newSortTimeMap 新的排序信息 Map (id -> sortTime)
+ * @returns 是否发生了排序变化
+ */
+function checkAndApplySortOrder(newSortTimeMap: Map<string, number>): boolean {
+  // 构建当前列表的排序 Map（按当前顺序生成）
+  const currentSortTimeMap = new Map<string, number>();
+  signatureList.value.forEach((sig, index) => {
+    currentSortTimeMap.set(sig.id, index);
+  });
+
+  // 构建新的排序顺序（基于新的排序时间戳）
+  const itemsWithNewSort: Array<{ id: string; sortTime: number; item: Signature }> = [];
+
+  for (const sig of signatureList.value) {
+    const sortTime = newSortTimeMap.get(sig.id) || 0;
+    itemsWithNewSort.push({ id: sig.id, sortTime, item: sig });
+  }
+
+  // 按新的排序时间戳排序
+  itemsWithNewSort.sort((a, b) => {
+    // 如果排序时间都是 0，则按当前顺序保持不变
+    if (a.sortTime === 0 && b.sortTime === 0) {
+      return currentSortTimeMap.get(a.id)! - currentSortTimeMap.get(b.id)!;
+    }
+    return a.sortTime - b.sortTime;
+  });
+
+  // 检查排序是否真的改变了
+  let sortOrderChanged = false;
+  for (let i = 0; i < signatureList.value.length; i++) {
+    if (signatureList.value[i].id !== itemsWithNewSort[i].id) {
+      sortOrderChanged = true;
+      break;
+    }
+  }
+
+  // 如果排序改变，更新列表
+  if (sortOrderChanged) {
+    console.debug('[SSE] Sort order changed, applying new sort order');
+    console.debug(
+      '[SSE] Old order:',
+      signatureList.value.map((s) => s.id)
+    );
+    console.debug(
+      '[SSE] New order:',
+      itemsWithNewSort.map((i) => i.id)
+    );
+
+    // 重新排列数组元素（保持对象引用，只改变顺序）
+    const newList = itemsWithNewSort.map((item) => item.item);
+    signatureList.value.splice(0, signatureList.value.length, ...newList);
+  }
+
+  return sortOrderChanged;
+}
+
+/**
  * 执行签名列表的增量更新
  * 只更新有变化的项，避免整个列表重新渲染
+ * 支持增量的排序更新
  *
  * @param newSignaturesMap 新的签名数据 Map
+ * @param encryptedSignatures 原始的加密签名对象（用于提取排序信息）
  */
-function updateSignaturesIncremental(newSignaturesMap: Map<string, Signature>) {
+function updateSignaturesIncremental(
+  newSignaturesMap: Map<string, Signature>,
+  encryptedSignatures?: Record<string, any>
+) {
   // 构建当前列表的 ID Set
   const currentIds = new Set(signatureList.value.map((s) => s.id));
   const newIds = new Set(newSignaturesMap.keys());
@@ -624,10 +709,20 @@ function updateSignaturesIncremental(newSignaturesMap: Map<string, Signature>) {
     toUpdate: toUpdateIds.size,
   });
 
-  // 如果没有任何变化，直接返回
+  // 如果没有任何变化且无排序信息，直接返回
   if (toAddIds.size === 0 && toDeleteIds.size === 0 && toUpdateIds.size === 0) {
-    console.debug('[SSE] No changes detected, skipping update');
-    return;
+    // 即使没有数据变化，也要检查排序是否改变
+    if (encryptedSignatures) {
+      const sortTimeMap = extractSortTimeMap(encryptedSignatures);
+      const sortChanged = checkAndApplySortOrder(sortTimeMap);
+      if (!sortChanged) {
+        console.debug('[SSE] No changes detected, skipping update');
+        return;
+      }
+    } else {
+      console.debug('[SSE] No changes detected, skipping update');
+      return;
+    }
   }
 
   // 执行删除操作
@@ -637,7 +732,7 @@ function updateSignaturesIncremental(newSignaturesMap: Map<string, Signature>) {
 
   // 执行更新操作（保持在原位置）
   if (toUpdateIds.size > 0) {
-    signatureList.value.forEach((sig, index) => {
+    signatureList.value.forEach((sig) => {
       if (toUpdateIds.has(sig.id)) {
         const newSig = newSignaturesMap.get(sig.id);
         if (newSig) {
@@ -654,6 +749,12 @@ function updateSignaturesIncremental(newSignaturesMap: Map<string, Signature>) {
       .map((id) => newSignaturesMap.get(id))
       .filter((sig): sig is Signature => sig !== undefined);
     signatureList.value.push(...addedSignatures);
+  }
+
+  // 检查并应用排序更新
+  if (encryptedSignatures) {
+    const sortTimeMap = extractSortTimeMap(encryptedSignatures);
+    checkAndApplySortOrder(sortTimeMap);
   }
 
   console.debug('[SSE] Incremental update completed');
