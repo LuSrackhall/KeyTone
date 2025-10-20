@@ -828,24 +828,36 @@ async function handleDrop(event: DragEvent, targetSignature: Signature) {
   // 判断是否在下方插入
   const insertAfter = mouseY >= midpoint;
 
+  // 计算新位置将会是什么
+  let newIndex: number;
+  if (draggedIndex < targetIndex) {
+    // 从前往后拖动：删除后目标索引会减 1
+    newIndex = insertAfter ? targetIndex : targetIndex - 1;
+  } else {
+    // 从后往前拖动：删除后目标索引不变
+    newIndex = insertAfter ? targetIndex + 1 : targetIndex;
+  }
+
+  // 检查是否真的改变了位置
+  // 如果新位置等于原位置，就不需要更新
+  if (newIndex === draggedIndex) {
+    return;
+  }
+
   // 从原位置移除
   const [draggedItem] = signatureList.value.splice(draggedIndex, 1);
 
-  // 删除后，重新计算目标位置
-  // 如果被拖动的元素在目标之前，删除后目标索引会减 1
-  let newIndex = signatureList.value.findIndex((s) => s.id === targetSignature.id);
+  // 重新计算新位置（因为移除后索引会改变）
+  let finalNewIndex = signatureList.value.findIndex((s) => s.id === targetSignature.id);
 
-  // 根据插入位置调整
   if (insertAfter) {
-    // 在目标下方插入：在目标索引之后
-    newIndex += 1;
+    finalNewIndex += 1;
   }
-  // else: 在目标上方插入：直接使用当前的 newIndex
 
   // 插入到新位置
-  signatureList.value.splice(newIndex, 0, draggedItem);
+  signatureList.value.splice(finalNewIndex, 0, draggedItem);
 
-  // 更新排序时间戳并提交到后端
+  // 只在位置真的改变时才更新排序
   await updateSignatureSort();
 }
 
