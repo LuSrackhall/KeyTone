@@ -82,7 +82,10 @@
             v-for="signature in signatureList"
             :key="signature.id"
             class="cursor-move hover:shadow-lg transition-all relative draggable-card"
-            :style="{ minHeight: '60px' }"
+            :style="{
+              minHeight: '60px',
+              zIndex: isDraggingInProgress && draggedSignature?.id === signature.id ? 1000 : 0,
+            }"
             draggable="true"
             @dragstart="handleDragStart($event, signature)"
             @dragend="handleDragEnd"
@@ -311,6 +314,9 @@ const imageUrls = ref<Map<string, string>>(new Map());
 
 // 拖动排序中的状态 - 防止重复请求
 const isSortingUpdating = ref(false);
+
+// 拖动进行中的状态 - 用于在动画期间保持被拖动元素的高 z-index
+const isDraggingInProgress = ref(false);
 
 // ========== 对话框和菜单状态 ==========
 
@@ -954,17 +960,21 @@ let draggedSignature: Signature | null = null;
 let draggedElement: HTMLElement | null = null;
 // 插入位置指示器
 let dropIndicator: HTMLElement | null = null;
+// 被拖动元素在列表中的原始索引
+let draggedElementOriginalIndex = -1;
 
 /** 处理拖动开始 */
 function handleDragStart(event: DragEvent, signature: Signature) {
   draggedSignature = signature;
   draggedElement = event.target as HTMLElement;
+  draggedElementOriginalIndex = signatureList.value.findIndex((s) => s.id === signature.id);
+  isDraggingInProgress.value = true;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/html', (event.target as HTMLElement).innerHTML);
   }
   // 添加拖动中的视觉效果
-  const cardElement = (event.target as HTMLElement).closest('.draggable-card');
+  const cardElement = (event.target as HTMLElement).closest('.draggable-card') as HTMLElement;
   if (cardElement) {
     cardElement.classList.add('dragging');
   }
@@ -973,7 +983,10 @@ function handleDragStart(event: DragEvent, signature: Signature) {
 /** 处理拖动结束 */
 function handleDragEnd(event: DragEvent) {
   const target = event.target as HTMLElement;
-  target.closest('.draggable-card')?.classList.remove('dragging');
+  const cardElement = target.closest('.draggable-card') as HTMLElement;
+  if (cardElement) {
+    cardElement.classList.remove('dragging');
+  }
 
   // 移除所有高亮
   document.querySelectorAll('.draggable-card').forEach((card) => {
@@ -989,6 +1002,12 @@ function handleDragEnd(event: DragEvent) {
 
   draggedSignature = null;
   draggedElement = null;
+  draggedElementOriginalIndex = -1;
+
+  // 在动画完成后清除拖动状态（300ms 是 list-move 动画时长）
+  setTimeout(() => {
+    isDraggingInProgress.value = false;
+  }, 350);
 }
 
 /** 处理拖动悬停 */
@@ -1143,6 +1162,7 @@ async function updateSignatureSort() {
         type: 'positive',
         message: '排序已更新',
         position: 'top',
+        timeout: 300,
       });
     }
   } catch (error) {
@@ -1193,6 +1213,7 @@ function handleImagePreview(filename: string) {
 .draggable-card {
   user-select: none;
   transition: opacity 0.2s, transform 0.2s;
+  position: relative;
 }
 
 .draggable-card.dragging {
