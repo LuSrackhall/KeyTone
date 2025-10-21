@@ -1253,5 +1253,6 @@ function handleImagePreview(filename: string) {
 
 .list-move {
   transition: transform 0.3s ease;
+  opacity: 0.6;
 }
 </style>
