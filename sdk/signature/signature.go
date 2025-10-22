@@ -205,6 +205,207 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 	return encryptedID, nil
 }
 
+// UpdateSignature 更新签名的处理函数
+// encryptedID: 签名唯一标识（已加密）
+// signatureData: 签名数据
+// imageData: 图片文件的二进制数据（可为空表示不更改图片）
+// imageExt: 图片文件的扩展名（如 .jpg, .png，可以为空）
+// originalImageName: 图片原始文件名
+// encryptionKey: 对称加密密钥
+// removeImage: 是否需要删除图片（当用户主动删除时设为 true）
+// imageChanged: 图片是否发生变更（前端报告的变更状态，用于区分"用户未修改"和"用户上传相同图片"）
+//
+// 说明：
+// - 接收加密的ID，对其进行对称解密以验证和查找原有的签名存储条目
+// - 保留原有的 sort.time（排序时间戳）不变，不更新此值
+// - 根据 imageChanged 标记判断是否需要处理图片：
+//   - 如果 imageChanged 为 false，表示用户未修改图片，直接使用原有的 cardImage URL
+//   - 如果 imageChanged 为 true，则按照原有逻辑处理：删除或保存新图片
+//
+// - 图片删除由程序启动时的清理逻辑处理，不需要在此关心
+// - 加密新的签名数据并替换原有的 value 字段
+func UpdateSignature(encryptedID string, signatureData SignatureData, imageData []byte, imageExt string, originalImageName string, encryptionKey []byte, removeImage bool, imageChanged bool) error {
+	// 1. 从配置中获取现有的签名存储数据
+	existingValue := config.GetValue("signature")
+	if existingValue == nil {
+		logger.Error("签名配置不存在", "encryptedID", encryptedID)
+		return fmt.Errorf("签名不存在")
+	}
+
+	// 类型转换
+	signatureMap, ok := existingValue.(map[string]interface{})
+	if !ok {
+		logger.Error("签名配置数据格式错误")
+		return fmt.Errorf("签名配置数据格式错误")
+	}
+
+	// 2. 检查要更新的签名是否存在
+	entryData, exists := signatureMap[encryptedID]
+	if !exists {
+		logger.Error("要更新的签名不存在", "encryptedID", encryptedID)
+		return fmt.Errorf("签名不存在")
+	}
+
+	// 3. 提取现有的排序时间戳
+	var originalSortTime int64
+	if entry, ok := entryData.(map[string]interface{}); ok {
+		if sort, ok := entry["sort"].(map[string]interface{}); ok {
+			if time, ok := sort["time"].(float64); ok {
+				originalSortTime = int64(time)
+			}
+		}
+	}
+
+	// 如果没有找到有效的排序时间戳，使用当前时间（为了安全）
+	if originalSortTime == 0 {
+		logger.Warn("未找到原有的排序时间戳，使用当前时间", "encryptedID", encryptedID)
+		originalSortTime = time.Now().Unix()
+	}
+
+	// 4. 处理图片逻辑
+	// 首先检查 imageChanged 标记：
+	// - 如果 imageChanged 为 false，表示图片未发生变更，直接使用原有的 CardImage URL
+	// - 否则按照以下逻辑处理：
+	//   情况1: 用户明确删除了图片（removeImage == true），则设置 CardImage 为空
+	//   情况2: 用户上传了新图片（len(imageData) > 0），则使用新图片
+	//   情况3: 既没有删除也没有上传（len(imageData) == 0 && removeImage == false），则保留原图片
+	var originalCardImage string
+
+	if !imageChanged {
+		// 图片未发生变更，从现有数据中读取原始的图片路径
+		logger.Debug("图片未发生变更，保留原有图片URL", "encryptedID", encryptedID)
+		if entry, ok := entryData.(map[string]interface{}); ok {
+			if value, ok := entry["value"].(string); ok {
+				// 解密现有的签名数据
+				decryptedData, err := decryptData(value, encryptionKey)
+				if err == nil {
+					// 反序列化以获取原始的 CardImage
+					var originalSignatureData SignatureData
+					if err := json.Unmarshal([]byte(decryptedData), &originalSignatureData); err == nil {
+						originalCardImage = originalSignatureData.CardImage
+						signatureData.CardImage = originalCardImage
+					}
+				}
+			}
+		}
+	} else if removeImage {
+		// 用户明确删除了图片，设置为空字符串
+		signatureData.CardImage = ""
+		logger.Debug("删除签名图片", "encryptedID", encryptedID)
+	} else if len(imageData) == 0 {
+		// 没有新图片，从现有数据中读取原始的图片路径
+		// 尝试从现有的加密数据中解密并获取原始的 CardImage
+		if entry, ok := entryData.(map[string]interface{}); ok {
+			if value, ok := entry["value"].(string); ok {
+				// 解密现有的签名数据
+				decryptedData, err := decryptData(value, encryptionKey)
+				if err == nil {
+					// 反序列化以获取原始的 CardImage
+					var originalSignatureData SignatureData
+					if err := json.Unmarshal([]byte(decryptedData), &originalSignatureData); err == nil {
+						originalCardImage = originalSignatureData.CardImage
+					}
+				}
+			}
+		}
+		// 如果成功读取了原始的 CardImage，则使用它
+		if originalCardImage != "" {
+			signatureData.CardImage = originalCardImage
+		}
+	}
+
+	// 处理图片：如果有新图片数据，按照创建逻辑处理
+	// 解密加密的ID用于生成图片文件名
+	unencryptedID, err := decryptData(encryptedID, encryptionKey)
+	if err != nil {
+		logger.Error("ID解密失败", "error", err.Error())
+		return err
+	}
+
+	if len(imageData) > 0 {
+		// 构建用于生成文件名的字符串
+		fileNameSeed := fmt.Sprintf("%s|%s|%s|%d",
+			unencryptedID,
+			signatureData.Name,
+			originalImageName,
+			time.Now().Unix(),
+		)
+
+		logger.Debug("图片文件名种子生成（编辑模式）",
+			"seed", fileNameSeed,
+		)
+
+		// 对文件名种子的字符串计算SHA-1哈希
+		sha1Hash := sha1.Sum([]byte(fileNameSeed))
+		imageFileName := hex.EncodeToString(sha1Hash[:])
+
+		// 添加扩展名
+		if imageExt != "" {
+			if !strings.HasPrefix(imageExt, ".") {
+				imageExt = "." + imageExt
+			}
+			imageFileName = imageFileName + imageExt
+		}
+
+		logger.Debug("图片文件名生成完成（编辑模式）",
+			"原始文件名", originalImageName,
+			"文件名", imageFileName,
+		)
+
+		// 创建 signature 目录
+		signatureDir := filepath.Join(config.ConfigPath, "signature")
+		if err := os.MkdirAll(signatureDir, os.ModePerm); err != nil {
+			logger.Error("创建signature目录失败", "error", err.Error())
+			return err
+		}
+
+		// 保存新的图片文件
+		imagePath := filepath.Join(signatureDir, imageFileName)
+		if err := os.WriteFile(imagePath, imageData, 0644); err != nil {
+			logger.Error("保存图片文件失败", "error", err.Error())
+			return err
+		}
+
+		// 更新签名数据中的图片路径
+		signatureData.CardImage = imagePath
+	}
+
+	// 5. 对签名数据结构进行JSON序列化
+	jsonData, err := json.Marshal(signatureData)
+	if err != nil {
+		logger.Error("签名数据JSON序列化失败", "error", err.Error())
+		return err
+	}
+
+	// 6. 对JSON字符串进行对称加密
+	encryptedValue, err := encryptData(string(jsonData), encryptionKey)
+	if err != nil {
+		logger.Error("签名数据加密失败", "error", err.Error())
+		return err
+	}
+
+	// 7. 以调试级别打印加密前后的数据
+	logger.Debug("签名加密处理完成（编辑模式）",
+		"加密ID", encryptedID,
+		"原始Value", string(jsonData),
+		"加密后Value", encryptedValue,
+	)
+
+	// 8. 更新签名存储条目（保留原有的排序时间戳）
+	signatureMap[encryptedID] = SignatureStorageEntry{
+		Value: encryptedValue,
+		Sort: SignatureSortMetadata{
+			Time: originalSortTime, // 保留原有的排序时间戳
+		},
+	}
+
+	// 9. 存储回配置文件
+	config.SetValue("signature", signatureMap)
+
+	logger.Info("签名更新完成", "encryptedID", encryptedID)
+	return nil
+}
+
 // encryptData 使用AES-GCM对数据进行对称加密
 func encryptData(data string, key []byte) (string, error) {
 	// 确保密钥长度正确（16, 24, 或 32 字节）

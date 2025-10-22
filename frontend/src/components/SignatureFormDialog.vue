@@ -148,7 +148,7 @@ import { ref, watch, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { nanoid } from 'nanoid';
-import { createSignature } from 'boot/query/signature-query';
+import { createSignature, updateSignature, decryptSignatureData, getSignatureImage } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
 const props = defineProps<{
@@ -179,11 +179,14 @@ const loading = ref(false);
 // 图片预览大图对话框显示状态
 const showImagePreviewDialog = ref(false);
 
+// 原始签名的深拷贝 - 用于编辑模式，确保编辑过程不影响原列表项
+const editingSignatureClone = ref<Signature | null>(null);
+
 // 表单数据对象 - 绑定到各输入框
 // 结构: { name, intro, cardImage }
 // - name: 签名名称，编辑模式下禁用
-// - intro: 个人介绍，支持多行
-// - cardImage: 选择的图片文件
+// - intro: 个人介绍，支持多行，允许清空
+// - cardImage: 选择的图片文件（File | null）
 const formData = ref<{
   name: string;
   intro: string;
@@ -194,18 +197,141 @@ const formData = ref<{
   cardImage: null,
 });
 
-// 图片预览 URL - 绑定到预览图片和大图预览对话框
-// 可以是 Base64 字符串或 HTTP URL
+// 原始图片预览 URL（编辑模式下，保存从后端加载的原图片预览）
+const originalImageUrl = ref<string>('');
+
+// 当前图片预览 URL - 绑定到预览图片和大图预览对话框
+// 可以是 Base64 字符串（新选择的图片）或 HTTP URL（原图片）
 const imagePreview = ref<string>('');
+
+// 标记图片是否有变化（用于判断是否需要上传新图片）
+const imageChanged = ref(false);
+
+// 编辑模式下，保存原始的表单数据（用于检测是否有变更）
+const originalFormData = ref<{
+  name: string;
+  intro: string;
+}>({
+  name: '',
+  intro: '',
+});
+
+/**
+ * 检测编辑模式下是否有变更
+ * @returns true 表示有变更，false 表示无变更
+ */
+function hasChanges(): boolean {
+  if (!isEditMode.value || !editingSignatureClone.value) {
+    return true; // 创建模式总是返回 true
+  }
+
+  // 检查名称是否改变（编辑模式下名称禁用，所以名称不应改变）
+  if (formData.value.name !== originalFormData.value.name) {
+    return true;
+  }
+
+  // 检查介绍是否改变
+  if (formData.value.intro !== originalFormData.value.intro) {
+    return true;
+  }
+
+  // 检查图片是否改变
+  if (imageChanged.value) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * 创建签名对象的深拷贝
+ * @param signature 原始签名对象
+ * @returns 深拷贝后的签名对象
+ */
+function deepCloneSignature(signature: Signature): Signature {
+  return {
+    id: signature.id,
+    name: signature.name,
+    intro: signature.intro,
+    cardImage: signature.cardImage, // cardImage 是文件路径字符串或 File 对象，无需深拷贝
+  };
+}
+
+/**
+ * 将 Blob 转换为 File 对象，使用国际化的固定文件名（无后缀）
+ * @param blob Blob 对象
+ * @param mimeType MIME 类型，用于后端识别文件类型
+ * @returns File 对象
+ */
+function convertBlobToFile(blob: Blob, mimeType: string): File {
+  // 获取国际化的文件名（不包含后缀）
+  const fileName = $t('signature.form.cardImageFileName');
+
+  // 将 Blob 转换为 File 对象
+  // 注：文件名不包含后缀，后端通过 MIME 类型识别文件格式
+  return new File([blob], fileName, { type: mimeType });
+}
+
+/**
+ * 加载原始签名的图片预览（编辑模式）
+ * @param imagePath 图片文件路径
+ */
+async function loadOriginalImagePreview(imagePath: string) {
+  if (!imagePath) {
+    originalImageUrl.value = '';
+    return;
+  }
+
+  try {
+    const blob = await getSignatureImage(imagePath);
+    if (blob) {
+      originalImageUrl.value = URL.createObjectURL(blob);
+      imagePreview.value = originalImageUrl.value;
+
+      // 将原始图片 Blob 转换为 File 对象并赋值给表单
+      // 这样在提交时，即使用户没有修改图片，也能正确上传
+      const mimeType = blob.type || 'image/jpeg'; // 默认使用 image/jpeg
+      formData.value.cardImage = convertBlobToFile(blob, mimeType);
+    }
+  } catch (error) {
+    console.warn('Failed to load original image preview:', error);
+  }
+}
 
 // 监听 props.signature 变化，填充表单数据
 watch(
   () => props.signature,
-  (newVal) => {
+  async (newVal) => {
     if (newVal) {
-      // TODO: 具体表单填充逻辑由业务层实现
-      // 根据 props.signature 填充 formData 和 imagePreview
+      // 编辑模式：创建深拷贝，防止编辑过程影响原列表项
+      editingSignatureClone.value = deepCloneSignature(newVal);
+
+      // 填充表单数据
+      formData.value = {
+        name: newVal.name,
+        intro: newVal.intro,
+        cardImage: null, // 编辑模式下，cardImage 初始为 null（表示不上传新图片）
+      };
+
+      // 保存原始表单数据（用于变更检测）
+      originalFormData.value = {
+        name: newVal.name,
+        intro: newVal.intro,
+      };
+
+      // 重置图片变化标志
+      imageChanged.value = false;
+
+      // 如果有原始图片，加载预览
+      if (newVal.cardImage && typeof newVal.cardImage === 'string') {
+        await loadOriginalImagePreview(newVal.cardImage);
+      } else {
+        originalImageUrl.value = '';
+        imagePreview.value = '';
+      }
     } else {
+      // 创建模式：重置所有状态
+      editingSignatureClone.value = null;
       resetForm();
     }
   },
@@ -219,11 +345,22 @@ function resetForm() {
     intro: '',
     cardImage: null,
   };
+  originalFormData.value = {
+    name: '',
+    intro: '',
+  };
   imagePreview.value = '';
+  originalImageUrl.value = '';
+  imageChanged.value = false;
+  editingSignatureClone.value = null;
 }
 
 /** 关闭对话框并重置表单 */
 function handleClose() {
+  // 清理 Blob URL（如果是加载的原始图片）
+  if (originalImageUrl.value) {
+    URL.revokeObjectURL(originalImageUrl.value);
+  }
   resetForm();
   dialogVisible.value = false;
 }
@@ -236,6 +373,7 @@ async function handleImageChange(file: File | null) {
       const reader = new FileReader();
       reader.onload = (e) => {
         imagePreview.value = e.target?.result as string;
+        imageChanged.value = true; // 标记图片有变化
       };
       reader.readAsDataURL(file);
     } catch (error) {
@@ -247,7 +385,9 @@ async function handleImageChange(file: File | null) {
       });
     }
   } else {
+    // 文件被清空
     imagePreview.value = '';
+    imageChanged.value = true; // 标记图片有变化（可能是删除操作）
   }
 }
 
@@ -255,11 +395,13 @@ async function handleImageChange(file: File | null) {
 function removeImage() {
   formData.value.cardImage = null;
   imagePreview.value = '';
+  imageChanged.value = true; // 标记图片有变化（用户主动删除）
 }
 
 /** 处理介绍文本输入 */
 function handleIntroInput() {
   // 由 autogrow 属性处理自动高度，此处保留扩展空间
+  // 允许用户清空介绍文本
 }
 
 /** 提交表单 - 创建或更新签名 */
@@ -274,17 +416,61 @@ async function handleSubmit() {
     return;
   }
 
+  // 编辑模式下，检测是否有变更
+  if (isEditMode.value && !hasChanges()) {
+    q.notify({
+      type: 'info',
+      message: $t('signature.notify.noChanges') || 'No changes detected',
+      position: 'top',
+    });
+    return;
+  }
+
   loading.value = true;
 
   try {
     if (isEditMode.value) {
       // 编辑模式：更新签名
-      // TODO: 实现更新逻辑
-      q.notify({
-        type: 'info',
-        message: '更新功能即将开放',
-        position: 'top',
-      });
+      if (!editingSignatureClone.value) {
+        throw new Error('Editing signature clone not found');
+      }
+
+      // 构建更新数据
+      // 在编辑模式下，formData.value.cardImage 已经被设置为：
+      // 1. 如果用户选择了新图片，则为新图片的 File 对象
+      // 2. 如果没有选择新图片，则为原始图片转换后的 File 对象（已在 loadOriginalImagePreview 中设置）
+      // 3. 如果用户主动删除图片，则为 null 且 imageChanged 为 true
+      let cardImage: File | null = formData.value.cardImage;
+
+      // 如果没有图片且用户主动删除，则设置为空 File
+      if (!cardImage && imageChanged.value) {
+        cardImage = new File([], '');
+      }
+
+      const updateData: Signature = {
+        id: editingSignatureClone.value.id, // 使用加密的 ID
+        name: formData.value.name,
+        intro: formData.value.intro,
+        cardImage: cardImage || new File([], ''),
+        imageChanged: imageChanged.value, // 传递图片是否发生变更的标记
+      };
+
+      const success = await updateSignature(updateData);
+      if (success) {
+        q.notify({
+          type: 'positive',
+          message: $t('signature.notify.updateSuccess'),
+          position: 'top',
+        });
+        emit('success');
+        handleClose();
+      } else {
+        q.notify({
+          type: 'negative',
+          message: $t('signature.notify.updateFailed'),
+          position: 'top',
+        });
+      }
     } else {
       // 创建模式：新建签名
       const signatureData: Signature = {

@@ -134,15 +134,99 @@ func signatureRouters(r *gin.Engine) {
 
 	// 更新签名
 	signatureRouter.POST("/signature/update", func(ctx *gin.Context) {
-		// TODO: 实现完整的签名更新逻辑
-		// 需要：
-		// 1. 从请求中获取签名 ID、name、intro、cardImage（Base64）
-		// 2. 从配置中读取现有的签名存储条目
-		// 3. 保留原有的 sort.time 时间戳（不更改排序时间）
-		// 4. 处理图片：如果有新图片，保存并更新路径；如果没有新图片，保留原路径或清除
-		// 5. 加密新的签名数据
-		// 6. 更新配置文件中的 value，但保留 sort.time 不变
-		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		// 解析表单数据
+		encryptedID := ctx.PostForm("encryptedId")
+		name := ctx.PostForm("name")
+		intro := ctx.PostForm("intro")
+		removeImage := ctx.PostForm("removeImage")   // 获取删除图片标记
+		imageChanged := ctx.PostForm("imageChanged") // 获取图片是否发生变更的标记
+
+		// 验证必填字段
+		if encryptedID == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填字段: encryptedId",
+			})
+			return
+		}
+
+		// 获取上传的图片文件（可选）
+		var imageData []byte
+		var imageExt string
+		var fileName string
+		file, err := ctx.FormFile("cardImage")
+		if err == nil && file != nil {
+			// 获取文件名信息(包括文件名+扩展名)
+			fileName = file.Filename
+			// 从文件名中提取扩展名
+			extIndex := -1
+			for i := len(fileName) - 1; i >= 0; i-- {
+				if fileName[i] == '.' {
+					extIndex = i
+					break
+				}
+			}
+			if extIndex != -1 {
+				imageExt = fileName[extIndex:]
+			}
+
+			// 读取文件内容
+			fileContent, err := file.Open()
+			if err != nil {
+				logger.Error("打开上传的图片文件失败", "error", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "处理图片文件失败",
+				})
+				return
+			}
+			defer fileContent.Close()
+
+			imageData, err = io.ReadAll(fileContent)
+			if err != nil {
+				logger.Error("读取上传的图片文件内容失败", "error", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "读取图片文件失败",
+				})
+				return
+			}
+		}
+
+		// 构建签名数据结构
+		signatureData := signature.SignatureData{
+			Name:  name,
+			Intro: intro,
+		}
+
+		// 定义加密密钥（需要与创建时保持一致）
+		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
+
+		// 调用signature包更新签名，传递 removeImage 和 imageChanged 标记
+		shouldRemoveImage := removeImage == "true"
+		hasImageChanged := imageChanged != "false" // 默认为 true（向后兼容）
+
+		logger.Debug("更新签名图片状态",
+			"encryptedId", encryptedID,
+			"removeImage", shouldRemoveImage,
+			"imageChanged", hasImageChanged,
+		)
+
+		err = signature.UpdateSignature(encryptedID, signatureData, imageData, imageExt, fileName, encryptionKey, shouldRemoveImage, hasImageChanged)
+		if err != nil {
+			logger.Error("更新签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "更新签名失败: " + err.Error(),
+			})
+			return
+		}
+
+		// 返回成功响应
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "签名更新成功",
+		})
 	})
 
 	// TODO: 实现更新签名排序时间戳的 API 端点

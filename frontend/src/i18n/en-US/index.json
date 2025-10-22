@@ -364,6 +364,7 @@
       "introHint": "Up to 500 characters (optional)",
       "introTooLong": "Introduction cannot exceed 500 characters",
       "cardImage": "Card Image",
+      "cardImageFileName": "Signature Card",
       "selectImage": "Select Image",
       "imageHint": "Supports PNG, JPEG, WebP, GIF and other image formats",
       "clickToPreview": "Click to preview",
@@ -408,7 +409,8 @@
       "loadFailed": "Failed to load signatures",
       "imageReadFailed": "Failed to read image",
       "invalidFileFormat": "Invalid file format",
-      "unexpectedError": "An unexpected error occurred"
+      "unexpectedError": "An unexpected error occurred",
+      "noChanges": "No changes detected"
     }
   }
 }

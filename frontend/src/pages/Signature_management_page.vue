@@ -870,7 +870,15 @@ function calculateMenuPosition(element: HTMLElement | null, clientX: number, cli
 /** 打开编辑表单 */
 function handleEdit() {
   if (contextMenuSignature.value) {
-    selectedSignature.value = contextMenuSignature.value;
+    // 为编辑的列表项创建深拷贝，避免过程中影响到原有列表项的实际内容
+    // 深拷贝中的 cardImage 保持为字符串路径，不包含 File 对象
+    const clonedSignature: Signature = {
+      id: contextMenuSignature.value.id,
+      name: contextMenuSignature.value.name,
+      intro: contextMenuSignature.value.intro,
+      cardImage: contextMenuSignature.value.cardImage,
+    };
+    selectedSignature.value = clonedSignature;
     showFormDialog.value = true;
   }
 }

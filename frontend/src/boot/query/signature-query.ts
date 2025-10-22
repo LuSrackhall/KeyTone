@@ -177,14 +177,48 @@ export async function createSignature(data: Signature): Promise<boolean> {
 /**
  * 更新签名
  * Update a signature
+ *
+ * 参数说明：
+ * - data: 包含 id (加密的签名ID)、name、intro、cardImage (File | null) 的 Signature 对象
+ * - 使用 FormData 格式以支持文件上传
+ * - 如果 cardImage 为 null，则不上传新图片（保留原图片）
+ * - 如果需要删除图片，cardImage 应为大小为0的空File，并通过 removeImage 标记告知后端
+ * - 如果 imageChanged 为 false，表示图片未变更，后端将跳过图片处理逻辑
  */
 export async function updateSignature(data: Signature): Promise<boolean> {
+  // 使用 FormData 以支持文件上传
+  const formData = new FormData();
+  formData.append('encryptedId', data.id);
+  formData.append('name', data.name);
+  formData.append('intro', data.intro);
+
+  // 检查是否需要删除图片：如果 cardImage 是大小为0的空File
+  const isRemovingImage = data.cardImage && data.cardImage.size === 0 && data.cardImage.name === '';
+
+  // 判断图片是否发生变更
+  const hasImageChanged = data.imageChanged ?? true; // 默认为 true（向后兼容）
+
+  if (isRemovingImage) {
+    // 添加删除图片标记
+    formData.append('removeImage', 'true');
+  } else if (data.cardImage && data.cardImage.size > 0 && hasImageChanged) {
+    // 仅当图片发生变更且不是删除时才上传
+    formData.append('cardImage', data.cardImage);
+  }
+
+  // 总是传递 imageChanged 标记，让后端了解图片是否变更
+  formData.append('imageChanged', String(hasImageChanged));
+
   return await api
-    .post('/signature/update', data)
+    .post('/signature/update', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     .then((req) => {
       console.debug('status=', req.status, '->updateSignature 请求已成功执行并返回->', req.data);
-      if (req.data.success && req.data.data) {
-        return req.data.data;
+      if (req.data.success) {
+        return true;
       } else {
         console.error('Failed to update signature:', req.data.message);
         return false;

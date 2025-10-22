@@ -358,6 +358,7 @@
       "introHint": "最多 500 个字符（选填）",
       "introTooLong": "个人介绍不能超过 500 个字符",
       "cardImage": "名片图片",
+      "cardImageFileName": "签名卡片",
       "selectImage": "选择图片",
       "imageHint": "支持 PNG、JPEG、WebP、GIF 等图片格式",
       "clickToPreview": "点击预览",
@@ -402,7 +403,8 @@
       "loadFailed": "签名加载失败",
       "imageReadFailed": "图片读取失败",
       "invalidFileFormat": "无效的文件格式",
-      "unexpectedError": "发生未知错误"
+      "unexpectedError": "发生未知错误",
+      "noChanges": "未检测到任何变更"
     }
   }
 }

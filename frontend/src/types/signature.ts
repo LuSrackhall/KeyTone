@@ -23,6 +23,9 @@ export interface Signature {
 
   /** 名片图片路径（选填） / Card image path (optional) */
   cardImage: File | null;
+
+  /** 图片是否发生变更（仅在编辑模式下使用） / Whether image has changed (only used in edit mode) */
+  imageChanged?: boolean;
 }
 
 /**
