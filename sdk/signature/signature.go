@@ -55,6 +55,20 @@ type SignatureStorageEntry struct {
 	Sort  SignatureSortMetadata `json:"sort"`  // 排序元数据
 }
 
+// SignatureExportData 用于导出的签名数据结构，仅包含必要信息
+// Key: 签名唯一标识（已加密）
+// Name: 签名名称
+// Intro: 签名介绍
+// CardImage: 名片图片数据（Base64 编码）
+// CardImageName: 名片图片文件名（包含扩展名，如 "avatar.jpg"）
+type SignatureExportData struct {
+	Key           string `json:"key"`           // 加密后的签名ID
+	Name          string `json:"name"`          // 签名名称
+	Intro         string `json:"intro"`         // 签名介绍
+	CardImage     string `json:"cardImage"`     // Base64编码的图片数据
+	CardImageName string `json:"cardImageName"` // 原始图片文件名（带扩展名）
+}
+
 // CreateSignature 创建新签名的处理函数
 // id: 签名唯一标识（未加密）
 // signatureData: 签名数据
@@ -436,6 +450,11 @@ func encryptData(data string, key []byte) (string, error) {
 	return hex.EncodeToString(ciphertext), nil
 }
 
+// EncryptData 使用AES-GCM对数据进行对称加密（导出函数，供其他包使用）
+func EncryptData(data string, key []byte) (string, error) {
+	return encryptData(data, key)
+}
+
 // DecryptData 使用AES-GCM对数据进行对称解密（导出函数，供其他包使用）
 func DecryptData(encryptedData string, key []byte) (string, error) {
 	return decryptData(encryptedData, key)
@@ -578,4 +597,324 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 
 	logger.Info("签名名片图片清理操作完成", "deleted_count", deletedCount)
 	return nil
+}
+
+// ExportSignature 导出签名为结构化数据，用于生成 .ktsign 文件
+// encryptedID: 签名唯一标识（已加密）
+// encryptionKey: 对称加密密钥
+//
+// 返回值：
+// - SignatureExportData 结构体，包含导出所需的所有信息
+// - error 错误信息
+//
+// 说明：
+// - 从配置中读取加密的签名数据
+// - 解密签名数据获得原始的 SignatureData
+// - 读取名片图片文件并转换为 Base64 编码
+// - 构建 SignatureExportData 结构体，包含加密的 Key（encryptedID）和 Base64 图片
+// - 调用方需要将此结构体转换为 JSON，再进行加密和二进制存储
+func ExportSignature(encryptedID string, encryptionKey []byte) (*SignatureExportData, error) {
+	// 1. 从配置中获取签名数据
+	signatureMapValue := config.GetValue("signature")
+	if signatureMapValue == nil {
+		logger.Error("签名配置不存在", "encryptedID", encryptedID)
+		return nil, fmt.Errorf("签名不存在")
+	}
+
+	// 类型转换
+	signatureMap, ok := signatureMapValue.(map[string]interface{})
+	if !ok {
+		logger.Error("签名配置数据格式错误")
+		return nil, fmt.Errorf("签名配置数据格式错误")
+	}
+
+	// 2. 检查要导出的签名是否存在
+	entryData, exists := signatureMap[encryptedID]
+	if !exists {
+		logger.Error("要导出的签名不存在", "encryptedID", encryptedID)
+		return nil, fmt.Errorf("签名不存在")
+	}
+
+	// 3. 提取加密的签名值
+	var encryptedValueStr string
+	if entry, ok := entryData.(map[string]interface{}); ok {
+		if value, ok := entry["value"].(string); ok {
+			encryptedValueStr = value
+		} else {
+			logger.Error("无法从 SignatureStorageEntry 中提取加密值")
+			return nil, fmt.Errorf("签名数据格式错误")
+		}
+	} else if str, ok := entryData.(string); ok {
+		// 兼容旧格式
+		encryptedValueStr = str
+	} else {
+		logger.Error("无法识别签名数据格式")
+		return nil, fmt.Errorf("签名数据格式错误")
+	}
+
+	// 4. 解密签名数据
+	decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
+	if err != nil {
+		logger.Error("签名数据解密失败", "error", err.Error())
+		return nil, fmt.Errorf("签名数据解密失败: %w", err)
+	}
+
+	// 5. 解析 JSON 数据为 SignatureData
+	var signatureData SignatureData
+	if err := json.Unmarshal([]byte(decryptedData), &signatureData); err != nil {
+		logger.Error("签名数据 JSON 解析失败", "error", err.Error())
+		return nil, fmt.Errorf("签名数据解析失败: %w", err)
+	}
+
+	// 6. 构建导出数据结构
+	exportData := &SignatureExportData{
+		Key:   encryptedID,
+		Name:  signatureData.Name,
+		Intro: signatureData.Intro,
+	}
+
+	// 7. 处理图片：读取文件并转换为 Base64
+	if signatureData.CardImage != "" {
+		// 读取图片文件
+		imageBytes, err := os.ReadFile(signatureData.CardImage)
+		if err != nil {
+			logger.Warn("读取签名图片文件失败，将跳过图片导出", "path", signatureData.CardImage, "error", err.Error())
+			// 不中止导出流程，继续处理其他数据
+			exportData.CardImage = ""
+			exportData.CardImageName = ""
+		} else {
+			// 转换为 Base64
+			exportData.CardImage = hex.EncodeToString(imageBytes)
+
+			// 提取文件名（包含扩展名）
+			exportData.CardImageName = filepath.Base(signatureData.CardImage)
+
+			logger.Debug("签名图片转换为 Base64",
+				"原始路径", signatureData.CardImage,
+				"文件名", exportData.CardImageName,
+				"Base64长度", len(exportData.CardImage),
+			)
+		}
+	}
+
+	logger.Info("签名导出数据构建完成",
+		"encryptedID", encryptedID,
+		"名称", exportData.Name,
+		"包含图片", exportData.CardImage != "",
+	)
+
+	return exportData, nil
+}
+
+// ImportSignature 导入签名数据，检查冲突并保存
+// exportData: 导出的签名数据结构体
+// encryptionKey: 对称加密密钥
+//
+// 返回值：
+// - encryptedID: 导入后的签名加密ID（若已存在则返回现有ID）
+// - conflict: 是否存在冲突（签名已存在）
+// - error: 错误信息
+//
+// 说明：
+// - 检查 exportData.Key（加密的签名ID）是否已在配置中存在
+// - 如果存在，返回 conflict=true，调用方应提示用户是否覆盖
+// - 如果不存在或用户选择覆盖，则调用 CreateSignature 复用创建逻辑
+// - 需要先将 Base64 图片数据解码为二进制，再调用 CreateSignature
+// - 返回的 encryptedID 应该与 exportData.Key 保持一致
+func ImportSignature(exportData *SignatureExportData, encryptionKey []byte) (string, bool, error) {
+	if exportData == nil {
+		logger.Error("导入的签名数据为空")
+		return "", false, fmt.Errorf("签名数据为空")
+	}
+
+	// 1. 检查签名是否已存在
+	signatureMapValue := config.GetValue("signature")
+	var signatureMap map[string]interface{}
+
+	if signatureMapValue != nil {
+		if m, ok := signatureMapValue.(map[string]interface{}); ok {
+			signatureMap = m
+		} else {
+			logger.Error("签名配置数据格式错误")
+			return "", false, fmt.Errorf("签名配置数据格式错误")
+		}
+	} else {
+		signatureMap = make(map[string]interface{})
+	}
+
+	// 检查 Key 是否存在
+	if _, exists := signatureMap[exportData.Key]; exists {
+		logger.Warn("尝试导入的签名已存在", "key", exportData.Key)
+		return exportData.Key, true, nil // 返回冲突标记，由调用方决定是否覆盖
+	}
+
+	// 2. 解密导入的 Key 以获得原始的签名 ID
+	unencryptedID, err := decryptData(exportData.Key, encryptionKey)
+	if err != nil {
+		logger.Error("签名 Key 解密失败", "error", err.Error())
+		return "", false, fmt.Errorf("签名 Key 解密失败: %w", err)
+	}
+
+	// 3. 处理图片数据
+	var imageData []byte
+	var imageExt string
+	var imageFileName string
+
+	if exportData.CardImage != "" {
+		// 从 Base64（十六进制编码）解码
+		var err error
+		imageData, err = hex.DecodeString(exportData.CardImage)
+		if err != nil {
+			logger.Warn("图片数据解码失败，将跳过图片导入", "error", err.Error())
+			imageData = []byte{}
+		} else {
+			imageFileName = exportData.CardImageName
+			// 提取文件扩展名
+			lastDotIndex := strings.LastIndex(imageFileName, ".")
+			if lastDotIndex != -1 && lastDotIndex < len(imageFileName)-1 {
+				imageExt = imageFileName[lastDotIndex:]
+			}
+
+			logger.Debug("签名图片数据已解码",
+				"文件名", imageFileName,
+				"扩展名", imageExt,
+				"数据大小", len(imageData),
+			)
+		}
+	}
+
+	// 4. 构建签名数据结构
+	signatureData := SignatureData{
+		Name:  exportData.Name,
+		Intro: exportData.Intro,
+	}
+
+	// 5. 调用 CreateSignature 复用创建逻辑
+	// 注意：CreateSignature 会生成新的 encryptedID，但我们需要使用导入的 Key
+	// 为了保持 Key 的一致性，我们需要直接保存到配置，而不是调用 CreateSignature
+
+	// 处理图片文件保存
+	if len(imageData) > 0 {
+		// 创建 signature 目录
+		signatureDir := filepath.Join(config.ConfigPath, "signature")
+		if err := os.MkdirAll(signatureDir, os.ModePerm); err != nil {
+			logger.Error("创建signature目录失败", "error", err.Error())
+			return "", false, fmt.Errorf("创建签名目录失败: %w", err)
+		}
+
+		// 生成文件名（使用与导出时相同的策略）
+		fileNameSeed := fmt.Sprintf("%s|%s|%s|%d",
+			unencryptedID,
+			signatureData.Name,
+			imageFileName,
+			time.Now().Unix(),
+		)
+
+		sha1Hash := sha1.Sum([]byte(fileNameSeed))
+		generatedFileName := hex.EncodeToString(sha1Hash[:])
+
+		// 添加扩展名
+		if imageExt != "" {
+			if !strings.HasPrefix(imageExt, ".") {
+				imageExt = "." + imageExt
+			}
+			generatedFileName = generatedFileName + imageExt
+		}
+
+		// 保存图片文件
+		imagePath := filepath.Join(signatureDir, generatedFileName)
+		if err := os.WriteFile(imagePath, imageData, 0644); err != nil {
+			logger.Error("保存导入的图片文件失败", "error", err.Error())
+			return "", false, fmt.Errorf("保存图片失败: %w", err)
+		}
+
+		// 更新签名数据中的图片路径
+		signatureData.CardImage = imagePath
+
+		logger.Debug("导入的签名图片已保存",
+			"目标路径", imagePath,
+		)
+	}
+
+	// 6. 对签名数据进行 JSON 序列化
+	jsonData, err := json.Marshal(signatureData)
+	if err != nil {
+		logger.Error("签名数据JSON序列化失败", "error", err.Error())
+		return "", false, fmt.Errorf("签名数据序列化失败: %w", err)
+	}
+
+	// 7. 对 JSON 字符串进行加密
+	encryptedValue, err := encryptData(string(jsonData), encryptionKey)
+	if err != nil {
+		logger.Error("签名数据加密失败", "error", err.Error())
+		return "", false, fmt.Errorf("签名数据加密失败: %w", err)
+	}
+
+	// 8. 保存到配置
+	signatureMap[exportData.Key] = SignatureStorageEntry{
+		Value: encryptedValue,
+		Sort: SignatureSortMetadata{
+			Time: time.Now().Unix(), // 导入时生成新的排序时间戳
+		},
+	}
+
+	config.SetValue("signature", signatureMap)
+
+	logger.Info("签名导入完成",
+		"encryptedID", exportData.Key,
+		"名称", signatureData.Name,
+	)
+
+	return exportData.Key, false, nil
+}
+
+// ImportSignatureWithOverwrite 导入签名数据并强制覆盖现有签名
+// exportData: 导出的签名数据结构体
+// overwrite: 是否覆盖现有签名
+// encryptionKey: 对称加密密钥
+//
+// 返回值：
+// - encryptedID: 导入后的签名加密ID
+// - error: 错误信息
+func ImportSignatureWithOverwrite(exportData *SignatureExportData, overwrite bool, encryptionKey []byte) (string, error) {
+	// 1. 先执行检查
+	encryptedID, conflict, err := ImportSignature(exportData, encryptionKey)
+	if err != nil {
+		return "", err
+	}
+
+	// 2. 如果有冲突且不覆盖，返回错误
+	if conflict && !overwrite {
+		logger.Warn("签名已存在，未选择覆盖", "key", encryptedID)
+		return "", fmt.Errorf("签名已存在，用户未选择覆盖")
+	}
+
+	// 3. 如果有冲突且选择覆盖，需要删除旧的签名并重新导入
+	if conflict && overwrite {
+		logger.Info("覆盖现有签名", "key", encryptedID)
+
+		// 删除旧的签名配置
+		signatureMapValue := config.GetValue("signature")
+		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
+			delete(signatureMap, encryptedID)
+			config.SetValue("signature", signatureMap)
+		}
+
+		// 重新调用 ImportSignature 进行导入
+		newEncryptedID, newConflict, err := ImportSignature(exportData, encryptionKey)
+		if err != nil {
+			return "", err
+		}
+
+		if newConflict {
+			// 不应该再次出现冲突
+			logger.Error("覆盖导入时意外出现冲突", "key", newEncryptedID)
+			return "", fmt.Errorf("覆盖导入失败")
+		}
+
+		return newEncryptedID, nil
+	}
+
+	// 4. 没有冲突，直接返回
+	return encryptedID, nil
 }

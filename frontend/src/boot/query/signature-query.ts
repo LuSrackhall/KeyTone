@@ -281,18 +281,25 @@ export async function deleteSignature(id: string): Promise<boolean> {
 /**
  * 导出签名为 .ktsign 文件
  * Export signature as .ktsign file
+ *
+ * @param encryptedId 加密的签名ID
+ * @returns Promise<Blob | false> 返回二进制文件数据，或 false 表示失败
  */
-export async function exportSignature(id: string): Promise<boolean> {
+export async function exportSignature(encryptedId: string): Promise<Blob | false> {
   return await api
-    .post('/signature/export', { id })
-    .then((req) => {
-      console.debug('status=', req.status, '->exportSignature 请求已成功执行并返回->', req.data);
-      if (req.data.success && req.data.data) {
-        return req.data.data;
-      } else {
-        console.error('Failed to export signature:', req.data.message);
-        return false;
+    .post(
+      '/signature/export',
+      { encryptedId },
+      {
+        responseType: 'arraybuffer', // 获取二进制数据
       }
+    )
+    .then((req) => {
+      console.debug('status=', req.status, '->exportSignature 请求已成功执行并返回');
+
+      // 将 ArrayBuffer 转换为 Blob
+      const blob = new Blob([req.data], { type: 'application/octet-stream' });
+      return blob;
     })
     .catch((error) => {
       console.group('exportSignature 请求执行失败');
@@ -316,21 +323,111 @@ export async function exportSignature(id: string): Promise<boolean> {
 /**
  * 导入签名从 .ktsign 文件
  * Import signature from .ktsign file
+ *
+ * @param fileData 要导入的 .ktsign 文件
+ * @returns { conflict?: boolean; encryptedId?: string; name?: string } | false
+ *          返回导入结果。如果 conflict 为 true，表示签名已存在，需要用户确认
  */
-export async function importSignature(fileData: File): Promise<Signature | false> {
+export async function importSignature(fileData: File): Promise<any> {
+  const formData = new FormData();
+  formData.append('file', fileData);
+
   return await api
-    .post('/signature/import', fileData)
+    .post('/signature/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     .then((req) => {
       console.debug('status=', req.status, '->importSignature 请求已成功执行并返回->', req.data);
+
+      // 处理冲突情况 (409 Conflict)
+      if (req.status === 409 || req.data.conflict) {
+        console.warn('Signature already exists, conflict detected');
+        return {
+          conflict: true,
+          encryptedId: req.data.data?.encryptedId,
+          name: req.data.data?.name,
+        };
+      }
+
+      // 处理成功导入
       if (req.data.success && req.data.data) {
-        return req.data.data;
+        console.debug('Signature imported successfully');
+        return {
+          success: true,
+          encryptedId: req.data.data.encryptedId,
+          name: req.data.data.name,
+        };
       } else {
         console.error('Failed to import signature:', req.data.message);
         return false;
       }
     })
     .catch((error) => {
+      // 检查是否是冲突错误 (409)
+      if (error.response?.status === 409) {
+        console.warn('Signature conflict detected:', error.response.data);
+        return {
+          conflict: true,
+          encryptedId: error.response.data.data?.encryptedId,
+          name: error.response.data.data?.name,
+        };
+      }
+
       console.group('importSignature 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 确认导入签名（处理冲突选择）
+ * Confirm import signature with overwrite option
+ *
+ * @param encryptedId 签名的加密ID
+ * @param fileContent 文件的加密内容（Base64/十六进制字符串）
+ * @param overwrite 是否覆盖现有签名
+ */
+export async function confirmImportSignature(
+  encryptedId: string,
+  fileContent: string,
+  overwrite: boolean
+): Promise<any> {
+  return await api
+    .post('/signature/import-confirm', {
+      file: fileContent,
+      overwrite,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->confirmImportSignature 请求已成功执行并返回->', req.data);
+
+      if (req.data.success && req.data.data) {
+        console.debug('Signature import confirmed successfully');
+        return {
+          success: true,
+          encryptedId: req.data.data.encryptedId,
+          name: req.data.data.name,
+        };
+      } else {
+        console.error('Failed to confirm import signature:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('confirmImportSignature 请求执行失败');
       if (error.response) {
         console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
         console.error('Error status:', error.response.status);

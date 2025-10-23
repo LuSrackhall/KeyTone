@@ -23,9 +23,12 @@ import (
 	"KeyTone/config"
 	"KeyTone/logger"
 	"KeyTone/signature"
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -347,7 +350,81 @@ func signatureRouters(r *gin.Engine) {
 
 	// 导出签名
 	signatureRouter.POST("/signature/export", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		// 获取请求中的签名 ID（已加密）
+		var req struct {
+			EncryptedID string `json:"encryptedId" binding:"required"`
+		}
+
+		if err := ctx.BindJSON(&req); err != nil {
+			logger.Error("绑定请求参数失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填字段: encryptedId",
+			})
+			return
+		}
+
+		// 定义加密密钥
+		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+
+		// 1. 调用导出函数获取导出数据
+		exportData, err := signature.ExportSignature(req.EncryptedID, encryptionKey)
+		if err != nil {
+			logger.Error("导出签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "导出签名失败: " + err.Error(),
+			})
+			return
+		}
+
+		// 2. 将导出数据转换为 JSON
+		jsonData, err := json.Marshal(exportData)
+		if err != nil {
+			logger.Error("签名导出数据JSON序列化失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "序列化导出数据失败",
+			})
+			return
+		}
+
+		// 3. 对 JSON 字符串进行加密
+		encryptedJSON, err := signature.EncryptData(string(jsonData), encryptionKey)
+		if err != nil {
+			logger.Error("签名导出数据加密失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "加密导出数据失败",
+			})
+			return
+		}
+
+		// 4. 将加密后的数据转为二进制
+		binaryData := []byte(encryptedJSON)
+
+		// 5. 生成文件名（使用签名名称）
+		fileName := exportData.Name + ".ktsign"
+		// 清理文件名中的非法字符
+		fileName = strings.Map(func(r rune) rune {
+			if r == '<' || r == '>' || r == ':' || r == '"' || r == '/' || r == '\\' || r == '|' || r == '?' || r == '*' {
+				return '_'
+			}
+			return r
+		}, fileName)
+
+		// 6. 设置响应头，返回文件
+		ctx.Header("Content-Type", "application/octet-stream")
+		ctx.Header("Content-Disposition", "attachment; filename="+strconv.Quote(fileName))
+		ctx.Header("Content-Length", strconv.Itoa(len(binaryData)))
+
+		logger.Info("签名导出完成",
+			"encryptedID", req.EncryptedID,
+			"文件名", fileName,
+			"数据大小", len(binaryData),
+		)
+
+		ctx.Data(http.StatusOK, "application/octet-stream", binaryData)
 	})
 
 	// 获取签名列表（加密的key-value对）
@@ -457,17 +534,167 @@ func signatureRouters(r *gin.Engine) {
 
 	// 导入签名
 	signatureRouter.POST("/signature/import", func(ctx *gin.Context) {
-		// TODO: 实现完整的签名导入逻辑
-		// 需要：
-		// 1. 从请求中获取 .ktsign 文件内容
-		// 2. 解析文件并验证格式和校验和
-		// 3. 检查签名 ID 是否已存在
-		// 4. 如果存在，询问用户是否覆盖
-		// 5. 保存图片文件（Base64 解码）
-		// 6. 加密签名数据
-		// 7. 生成 sort.time（当前时间戳），用于排序
-		// 8. 存储到配置文件
-		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+		// 获取上传的 .ktsign 文件
+		file, err := ctx.FormFile("file")
+		if err != nil {
+			logger.Error("获取上传文件失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少文件或文件格式错误",
+			})
+			return
+		}
+
+		// 读取文件内容
+		fileContent, err := file.Open()
+		if err != nil {
+			logger.Error("打开上传的文件失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "无法读取文件",
+			})
+			return
+		}
+		defer fileContent.Close()
+
+		// 读取文件数据
+		fileData, err := io.ReadAll(fileContent)
+		if err != nil {
+			logger.Error("读取文件内容失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "读取文件失败",
+			})
+			return
+		}
+
+		// 定义加密密钥
+		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+
+		// 1. 解密文件数据（文件内容本身是加密的字符串，需要先转成字符串）
+		encryptedJSON := string(fileData)
+
+		// 2. 使用与导出时相同的密钥解密
+		decryptedJSON, err := signature.DecryptData(encryptedJSON, encryptionKey)
+		if err != nil {
+			logger.Error("解密导入文件失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "文件格式错误或密钥不匹配，无法解密",
+			})
+			return
+		}
+
+		// 3. 解析 JSON 为 SignatureExportData
+		var exportData signature.SignatureExportData
+		if err := json.Unmarshal([]byte(decryptedJSON), &exportData); err != nil {
+			logger.Error("解析导入数据失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "导入文件格式错误",
+			})
+			return
+		}
+
+		// 4. 检查签名是否已存在（先不覆盖，返回冲突状态）
+		encryptedID, conflict, err := signature.ImportSignature(&exportData, encryptionKey)
+		if err != nil {
+			logger.Error("导入签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "导入失败: " + err.Error(),
+			})
+			return
+		}
+
+		// 5. 如果存在冲突，返回冲突标记和现有签名的 ID，让前端决定是否覆盖
+		if conflict {
+			logger.Info("导入的签名已存在，等待用户确认是否覆盖", "encryptedID", encryptedID)
+			ctx.JSON(http.StatusConflict, gin.H{
+				"success":  false,
+				"conflict": true,
+				"message":  "签名已存在",
+				"data": gin.H{
+					"encryptedId": encryptedID,
+					"name":        exportData.Name,
+				},
+			})
+			return
+		}
+
+		// 6. 导入成功
+		logger.Info("签名导入成功", "encryptedID", encryptedID, "名称", exportData.Name)
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "签名导入成功",
+			"data": gin.H{
+				"encryptedId": encryptedID,
+				"name":        exportData.Name,
+			},
+		})
+	})
+
+	// 导入签名（处理冲突 - 覆盖或保留）
+	signatureRouter.POST("/signature/import-confirm", func(ctx *gin.Context) {
+		var req struct {
+			File      string `json:"file" binding:"required"`      // Base64 编码的文件内容或文件路径
+			Overwrite bool   `json:"overwrite" binding:"required"` // 是否覆盖现有签名
+		}
+
+		if err := ctx.BindJSON(&req); err != nil {
+			logger.Error("绑定请求参数失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填字段",
+			})
+			return
+		}
+
+		// 定义加密密钥
+		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+
+		// 解密文件数据
+		decryptedJSON, err := signature.DecryptData(req.File, encryptionKey)
+		if err != nil {
+			logger.Error("解密导入文件失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "文件格式错误或密钥不匹配",
+			})
+			return
+		}
+
+		// 解析 JSON
+		var exportData signature.SignatureExportData
+		if err := json.Unmarshal([]byte(decryptedJSON), &exportData); err != nil {
+			logger.Error("解析导入数据失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "导入文件格式错误",
+			})
+			return
+		}
+
+		// 调用带覆盖选项的导入函数
+		encryptedID, err := signature.ImportSignatureWithOverwrite(&exportData, req.Overwrite, encryptionKey)
+		if err != nil {
+			logger.Error("导入签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "导入失败: " + err.Error(),
+			})
+			return
+		}
+
+		logger.Info("签名导入完成", "encryptedID", encryptedID, "覆盖", req.Overwrite)
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "签名导入成功",
+			"data": gin.H{
+				"encryptedId": encryptedID,
+				"name":        exportData.Name,
+			},
+		})
 	})
 
 }

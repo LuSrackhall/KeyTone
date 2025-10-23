@@ -281,6 +281,9 @@ import {
   getSignatureImage,
   deleteSignature,
   updateSignatureSort as updateSignatureSortApi,
+  exportSignature,
+  importSignature,
+  confirmImportSignature,
 } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
@@ -895,12 +898,51 @@ async function handleDelete() {
 async function handleExport() {
   if (!contextMenuSignature.value) return;
 
-  // 暂不实现具体逻辑，仅展示UI交互
-  q.notify({
-    type: 'info',
-    message: $t('signature.export.comingSoon') || 'Export feature coming soon',
-    position: 'top',
-  });
+  const signature = contextMenuSignature.value;
+  const exporting = ref(false);
+
+  try {
+    exporting.value = true;
+
+    // 调用导出 API
+    const fileBlob = await exportSignature(signature.id);
+    if (!fileBlob) {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.exportFailed'),
+        position: 'top',
+      });
+      return;
+    }
+
+    // 使用 Web API 触发文件下载
+    const url = URL.createObjectURL(fileBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${signature.name}.ktsign`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // 显示成功通知
+    q.notify({
+      type: 'positive',
+      message: $t('signature.notify.exportSuccess'),
+      position: 'top',
+    });
+
+    console.debug('Signature exported successfully:', signature.name);
+  } catch (error) {
+    console.error('Failed to export signature:', error);
+    q.notify({
+      type: 'negative',
+      message: $t('signature.notify.unexpectedError'),
+      position: 'top',
+    });
+  } finally {
+    exporting.value = false;
+  }
 }
 
 /** 打开导入对话框 */
@@ -916,9 +958,81 @@ async function handleImport() {
   importing.value = true;
 
   try {
-    // TODO: 具体导入逻辑由业务层实现
+    // 1. 读取文件内容
+    const fileContent = await importFile.value.text();
+
+    // 2. 调用导入 API
+    const result = await importSignature(importFile.value);
+
+    if (result === false) {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.importFailed') || 'Import failed',
+        position: 'top',
+      });
+      return;
+    }
+
+    // 3. 处理冲突情况
+    if (result.conflict) {
+      console.warn('Signature conflict detected:', result.name);
+
+      // 显示冲突对话框，让用户选择是否覆盖
+      q.dialog({
+        title: $t('signature.import.conflictTitle') || 'Signature Exists',
+        message:
+          $t('signature.import.conflictMessage', { name: result.name }) ||
+          `Signature "${result.name}" already exists. Overwrite?`,
+        cancel: true,
+        persistent: true,
+      }).onOk(async () => {
+        // 用户选择覆盖
+        const confirmResult = await confirmImportSignature(result.encryptedId, fileContent, true);
+
+        if (confirmResult && confirmResult.success) {
+          q.notify({
+            type: 'positive',
+            message: $t('signature.notify.importSuccess') || 'Signature imported successfully',
+            position: 'top',
+          });
+          showImportDialogVisible.value = false;
+          importFile.value = null;
+        } else {
+          q.notify({
+            type: 'negative',
+            message: $t('signature.notify.importFailed') || 'Import failed',
+            position: 'top',
+          });
+        }
+      });
+      return;
+    }
+
+    // 4. 导入成功（无冲突）
+    if (result.success) {
+      q.notify({
+        type: 'positive',
+        message: $t('signature.notify.importSuccess') || 'Signature imported successfully',
+        position: 'top',
+      });
+      showImportDialogVisible.value = false;
+      importFile.value = null;
+
+      console.debug('Signature imported successfully:', result.name);
+    } else {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.importFailed') || 'Import failed',
+        position: 'top',
+      });
+    }
   } catch (error) {
     console.error('Failed to import signature:', error);
+    q.notify({
+      type: 'negative',
+      message: $t('signature.notify.unexpectedError') || 'An unexpected error occurred',
+      position: 'top',
+    });
   } finally {
     importing.value = false;
   }
