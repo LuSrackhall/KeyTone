@@ -557,6 +557,13 @@ async function loadSignatures() {
  * - 支持排序的增量更新
  */
 async function handleSseUpdate() {
+  // 如果正在进行排序更新，跳过此次 SSE 更新以避免竞态条件导致的数据混乱
+  // 排序更新完成后，会触发后端 SSE 推送，此时再执行增量更新
+  if (isSortingUpdating.value) {
+    console.debug('[SSE] Skipping update during sort, will be handled by sort callback');
+    return;
+  }
+
   console.debug('[SSE] Signature list updated, performing incremental update...');
   try {
     // 获取最新的加密签名列表
@@ -902,8 +909,11 @@ async function handleDelete() {
           message: $t('signature.notify.deleteSuccess'),
           position: 'top',
         });
-        // 重新加载列表
-        await loadSignatures();
+        // 直接从列表中移除该项，而不是全量重新加载（避免闪烁）
+        // SSE 会推送后端的配置变更来最终确认删除
+        const deletedId = contextMenuSignature.value!.id;
+        signatureList.value = signatureList.value.filter((s) => s.id !== deletedId);
+        console.debug(`[handleDelete] Signature ${deletedId} removed from list, waiting for SSE confirmation...`);
       } else {
         q.notify({
           type: 'negative',
@@ -957,7 +967,10 @@ async function handleImport() {
 
 /** 表单成功提交后的回调 - 刷新列表 */
 function handleFormSuccess() {
-  loadSignatures();
+  // 不再直接调用 loadSignatures() 全量重新加载（会导致列表闪烁）
+  // 而是依赖 SSE 推送的数据通过 handleSseUpdate() 增量更新
+  // SSE 会在后端配置变更后推送新数据，避免前端重复加载
+  console.debug('[handleFormSuccess] Waiting for SSE update to sync signature list...');
 }
 
 // ========== 拖动排序相关函数 ==========
