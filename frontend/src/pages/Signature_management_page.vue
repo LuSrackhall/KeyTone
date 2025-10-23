@@ -942,6 +942,27 @@ let draggedElement: HTMLElement | null = null;
 let dropIndicator: HTMLElement | null = null;
 // 被拖动元素在列表中的原始索引
 let draggedElementOriginalIndex = -1;
+// 当前显示的边框方向 ('top' | 'bottom' | null)
+let currentDropPosition: 'top' | 'bottom' | null = null;
+// 上次计算的目标卡片 DOM
+let lastTargetCard: HTMLElement | null = null;
+// ✨ 关键：记录当前指示的目标卡片及其对应的插入位置
+// 这样在 drop 时可以获取到准确的值，不会被其他 dragenter 改变
+let currentTargetCardForDrop: HTMLElement | null = null;
+let currentInsertPositionForDrop: 'top' | 'bottom' | null = null;
+
+/**
+ * 判断鼠标在卡片中的位置 - 返回应该的插入方向
+ * 使用简单的中点 50% 分界线，确保实时反馈
+ *
+ * @param mouseY 鼠标相对于卡片顶部的 Y 坐标
+ * @param cardHeight 卡片高度
+ * @returns 'top' 表示上方，'bottom' 表示下方
+ */
+function getDropPosition(mouseY: number, cardHeight: number): 'top' | 'bottom' {
+  // 简单的中点判断：越过 50% 就切换
+  return mouseY < cardHeight * 0.5 ? 'top' : 'bottom';
+}
 
 /** 处理拖动开始 */
 function handleDragStart(event: DragEvent, signature: Signature) {
@@ -983,6 +1004,11 @@ function handleDragEnd(event: DragEvent) {
   draggedSignature = null;
   draggedElement = null;
   draggedElementOriginalIndex = -1;
+  currentDropPosition = null;
+  lastTargetCard = null;
+  // ✨ 清除 drop 相关的记录
+  currentTargetCardForDrop = null;
+  currentInsertPositionForDrop = null;
 
   // 在动画完成后清除拖动状态（300ms 是 list-move 动画时长）
   setTimeout(() => {
@@ -1011,8 +1037,22 @@ function handleDragEnter(event: DragEvent) {
 
   // 获取鼠标在卡片中的位置
   const rect = cardElement.getBoundingClientRect();
-  const midpoint = rect.height / 2;
   const mouseY = event.clientY - rect.top;
+
+  // ✨ 简化逻辑：直接判断位置，实时反馈给用户
+  const dropPosition = getDropPosition(mouseY, rect.height);
+
+  // 只在位置改变时才更新 DOM（减少重排，提高性能）
+  if (currentDropPosition === dropPosition && lastTargetCard === cardElement) {
+    return;
+  }
+
+  currentDropPosition = dropPosition;
+  lastTargetCard = cardElement as HTMLElement;
+
+  // ✨ 记录当前卡片和插入位置，供 drop 时使用
+  currentTargetCardForDrop = cardElement as HTMLElement;
+  currentInsertPositionForDrop = dropPosition;
 
   // 移除之前的高亮
   document.querySelectorAll('.draggable-card').forEach((card) => {
@@ -1020,12 +1060,10 @@ function handleDragEnter(event: DragEvent) {
     card.classList.remove('drag-over-bottom');
   });
 
-  // 根据鼠标位置添加高亮
-  if (mouseY < midpoint) {
-    // 上方插入
+  // ✨ 直接显示当前位置对应的边框
+  if (dropPosition === 'top') {
     cardElement.classList.add('drag-over-top');
-  } else {
-    // 下方插入
+  } else if (dropPosition === 'bottom') {
     cardElement.classList.add('drag-over-bottom');
   }
 }
@@ -1040,6 +1078,15 @@ function handleDragLeave(event: DragEvent) {
     if (!cardElement.contains(event.relatedTarget as Node)) {
       cardElement.classList.remove('drag-over-top');
       cardElement.classList.remove('drag-over-bottom');
+
+      // 如果离开的是当前追踪的卡片，清除状态
+      if (cardElement === lastTargetCard) {
+        currentDropPosition = null;
+        lastTargetCard = null;
+        // ✨ 如果离开的是 drop 目标卡片，也清除 drop 相关状态
+        currentTargetCardForDrop = null;
+        currentInsertPositionForDrop = null;
+      }
     }
   }
 }
@@ -1071,11 +1118,19 @@ async function handleDrop(event: DragEvent, targetSignature: Signature) {
 
   // 获取鼠标在卡片中的位置
   const rect = (event.target as HTMLElement).closest('.draggable-card')!.getBoundingClientRect();
-  const midpoint = rect.height / 2;
   const mouseY = event.clientY - rect.top;
+  // ✨ 关键：使用 dragenter 时记录的准确值
+  // 这样可以确保 drop 时使用的是实际显示的边框对应的位置
+  let insertAfter: boolean;
 
-  // 判断是否在下方插入
-  const insertAfter = mouseY >= midpoint;
+  if (currentTargetCardForDrop === cardElement && currentInsertPositionForDrop !== null) {
+    // ✨ 使用 dragenter 时记录的插入位置
+    insertAfter = currentInsertPositionForDrop === 'bottom';
+  } else {
+    // 备用方案（如果没有记录上次的值，重新计算）
+    const dropPosition = getDropPosition(mouseY, rect.height);
+    insertAfter = dropPosition === 'bottom';
+  }
 
   // 计算新位置将会是什么
   let newIndex: number;
