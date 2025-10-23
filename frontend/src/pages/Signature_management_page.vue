@@ -287,6 +287,32 @@ import {
 } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
+// 声明 File System Access API 相关类型
+declare global {
+  interface Window {
+    showSaveFilePicker: (options?: {
+      suggestedName?: string;
+      types?: Array<{
+        description: string;
+        accept: Record<string, string[]>;
+      }>;
+    }) => Promise<FileSystemFileHandle>;
+  }
+}
+
+interface FileSystemCreateWritableOptions {
+  keepExistingData?: boolean;
+}
+
+interface FileSystemFileHandle {
+  createWritable: (options?: FileSystemCreateWritableOptions) => Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream extends WritableStream {
+  write: (data: BufferSource | Blob | string) => Promise<void>;
+  close: () => Promise<void>;
+}
+
 const q = useQuasar();
 const { t: $t } = useI18n();
 const signatureStore = useSignatureStore();
@@ -894,16 +920,13 @@ async function handleDelete() {
   });
 }
 
-/** 导出签名 */
-async function handleExport() {
+/** 导出签名 - 降级方案（使用传统的下载方式） */
+async function exportSignatureLegacy() {
   if (!contextMenuSignature.value) return;
 
   const signature = contextMenuSignature.value;
-  const exporting = ref(false);
 
   try {
-    exporting.value = true;
-
     // 调用导出 API
     const fileBlob = await exportSignature(signature.id);
     if (!fileBlob) {
@@ -923,6 +946,8 @@ async function handleExport() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // 清理
     URL.revokeObjectURL(url);
 
     // 显示成功通知
@@ -932,7 +957,73 @@ async function handleExport() {
       position: 'top',
     });
 
-    console.debug('Signature exported successfully:', signature.name);
+    console.debug('Signature exported successfully (legacy):', signature.name);
+  } catch (error) {
+    console.error('Failed to export signature (legacy):', error);
+    q.notify({
+      type: 'negative',
+      message: $t('signature.notify.unexpectedError'),
+      position: 'top',
+    });
+  }
+}
+
+/** 导出签名 - 使用 File System Access API */
+async function handleExport() {
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, falling back to legacy export');
+    return exportSignatureLegacy();
+  }
+
+  if (!contextMenuSignature.value) return;
+
+  const signature = contextMenuSignature.value;
+
+  try {
+    // 调用导出 API
+    const fileBlob = await exportSignature(signature.id);
+    if (!fileBlob) {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.exportFailed'),
+        position: 'top',
+      });
+      return;
+    }
+
+    try {
+      // 打开系统的保存文件对话框
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${signature.name}.ktsign`,
+        types: [
+          {
+            description: $t('signature.notify') + ' (.ktsign)',
+            accept: { 'application/octet-stream': ['.ktsign'] },
+          },
+        ],
+      });
+
+      // 写入文件
+      const writable = await handle.createWritable();
+      await writable.write(fileBlob);
+      await writable.close();
+
+      // 文件成功保存后再通知
+      q.notify({
+        type: 'positive',
+        message: $t('signature.notify.exportSuccess'),
+        position: 'top',
+      });
+
+      console.debug('Signature exported successfully:', signature.name);
+    } catch (err) {
+      // 用户取消选择文件时不显示错误
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    }
   } catch (error) {
     console.error('Failed to export signature:', error);
     q.notify({
@@ -940,8 +1031,6 @@ async function handleExport() {
       message: $t('signature.notify.unexpectedError'),
       position: 'top',
     });
-  } finally {
-    exporting.value = false;
   }
 }
 

@@ -384,7 +384,9 @@
       "title": "Import Signature",
       "selectFile": "Select .ktsign file",
       "fileHint": "Please select a KeyTone signature file (.ktsign)",
-      "import": "Import"
+      "import": "Import",
+      "conflictTitle": "Signature Already Exists",
+      "conflictMessage": "Signature \"{name}\" already exists. Do you want to overwrite it?"
     },
     "select": {
       "title": "Select Signature",

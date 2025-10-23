@@ -378,7 +378,9 @@
       "title": "导入签名",
       "selectFile": "选择 .ktsign 文件",
       "fileHint": "请选择 KeyTone 签名文件（.ktsign）",
-      "import": "导入"
+      "import": "导入",
+      "conflictTitle": "签名已存在",
+      "conflictMessage": "签名 \"{name}\" 已存在，是否覆盖？"
     },
     "select": {
       "title": "选择签名",
