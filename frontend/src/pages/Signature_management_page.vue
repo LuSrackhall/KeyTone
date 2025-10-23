@@ -226,44 +226,44 @@
       </q-card>
     </q-dialog>
 
-    <!-- 虚拟菜单参考元素（用于精确定位菜单到点击位置） -->
-    <div ref="virtualMenuRef" style="position: fixed; width: 1px; height: 1px; pointer-events: none; z-index: -1" />
-
-    <!-- 上下文菜单 -->
-    <q-menu
-      v-model="contextMenuVisible"
-      :target="(virtualMenuRef as any)"
-      :anchor="menuAnchor"
-      :self="menuSelf"
-      no-parent-event
-      @hide="
-        () => {
-          activeMenuSignatureId = null;
-        }
-      "
-    >
-      <q-list dense style="min-width: 120px">
-        <q-item clickable v-close-popup @click="handleEdit">
-          <q-item-section avatar>
-            <q-icon name="edit" />
-          </q-item-section>
-          <q-item-section>{{ $t('signature.page.edit') }}</q-item-section>
-        </q-item>
-        <q-item clickable v-close-popup @click="handleExport">
-          <q-item-section avatar>
-            <q-icon name="drive_file_move" />
-          </q-item-section>
-          <q-item-section>{{ $t('signature.page.export') }}</q-item-section>
-        </q-item>
-        <q-separator />
-        <q-item clickable v-close-popup @click="handleDelete" class="text-negative">
-          <q-item-section avatar>
-            <q-icon name="delete" />
-          </q-item-section>
-          <q-item-section>{{ $t('signature.page.delete') }}</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
+    <!-- 自定义菜单 -->
+    <ContextMenu v-model="contextMenuVisible" :x="menuX" :y="menuY">
+      <ContextMenuItem
+        icon="edit"
+        @click="
+          () => {
+            contextMenuVisible = false;
+            handleEdit();
+          }
+        "
+      >
+        {{ $t('signature.page.edit') }}
+      </ContextMenuItem>
+      <ContextMenuItem
+        icon="drive_file_move"
+        @click="
+          () => {
+            contextMenuVisible = false;
+            handleExport();
+          }
+        "
+      >
+        {{ $t('signature.page.export') }}
+      </ContextMenuItem>
+      <ContextMenuItem
+        icon="delete"
+        :is-negative="true"
+        :show-divider="false"
+        @click="
+          () => {
+            contextMenuVisible = false;
+            handleDelete();
+          }
+        "
+      >
+        {{ $t('signature.page.delete') }}
+      </ContextMenuItem>
+    </ContextMenu>
   </q-page>
 </template>
 
@@ -272,6 +272,8 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
+import ContextMenu from 'src/components/ContextMenu.vue';
+import ContextMenuItem from 'src/components/ContextMenuItem.vue';
 import { useSignatureStore } from 'src/stores/signature-store';
 import {
   getSignaturesList,
@@ -355,34 +357,9 @@ const contextMenuRefs = new Map<string, HTMLElement>();
 // 当前打开菜单的签名 ID - 用于防止重复打开
 const activeMenuSignatureId = ref<string | null>(null);
 
-// 虚拟菜单参考元素引用 - 用于精确定位菜单
-const virtualMenuRef = ref<HTMLElement | null>(null);
-
-// 菜单锚点位置 - 决定菜单相对于虚拟点的附着位置
-const menuAnchor = ref<
-  | 'bottom left'
-  | 'bottom right'
-  | 'top left'
-  | 'top right'
-  | 'center left'
-  | 'center right'
-  | 'bottom middle'
-  | 'top middle'
-  | 'center middle'
->('bottom left');
-
-// 菜单自身位置 - 决定菜单的哪一边与锚点对齐
-const menuSelf = ref<
-  | 'bottom left'
-  | 'bottom right'
-  | 'top left'
-  | 'top right'
-  | 'center left'
-  | 'center right'
-  | 'bottom middle'
-  | 'top middle'
-  | 'center middle'
->('top left');
+// 自定义菜单的位置坐标
+const menuX = ref(0);
+const menuY = ref(0);
 
 // ========== 生命周期 ==========
 
@@ -838,40 +815,22 @@ function handleInfoContextMenu(signature: Signature, event: MouseEvent) {
   }
 }
 
-/** 计算菜单最佳显示位置 */
+/** 计算菜单显示位置 */
 function calculateMenuPosition(element: HTMLElement | null, clientX: number, clientY: number) {
-  if (!virtualMenuRef.value) return;
+  // 简单直接地设置菜单位置
+  menuX.value = clientX;
+  menuY.value = clientY;
+}
 
-  // 设置虚拟菜单位置到点击的确切坐标
-  virtualMenuRef.value.style.left = clientX + 'px';
-  virtualMenuRef.value.style.top = clientY + 'px';
-
-  // 判断菜单是否可能超出视口边界，动态调整锚点和自身位置
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const menuWidth = 150; // 菜单估计宽度
-  const menuHeight = 120; // 菜单估计高度
-
-  // 判断是否需要向左展开
-  if (clientX + menuWidth > viewportWidth) {
-    menuAnchor.value = 'bottom right';
-    menuSelf.value = 'top right';
-  } else {
-    menuAnchor.value = 'bottom left';
-    menuSelf.value = 'top left';
-  }
-
-  // 判断是否需要向上展开
-  if (clientY + menuHeight > viewportHeight) {
-    // 如果已经是向右展开，改为右上
-    if (menuAnchor.value === 'bottom right') {
-      menuAnchor.value = 'top right';
-      menuSelf.value = 'bottom right';
-    } else {
-      menuAnchor.value = 'top left';
-      menuSelf.value = 'bottom left';
-    }
-  }
+/** 菜单项点击处理 - 关闭菜单并执行回调 */
+function handleMenuItemClick(callback: () => void | Promise<void>) {
+  contextMenuVisible.value = false;
+  activeMenuSignatureId.value = null;
+  contextMenuSignature.value = null;
+  // 异步执行回调，确保菜单已关闭
+  setTimeout(() => {
+    callback();
+  }, 0);
 }
 
 /** 打开编辑表单 */
