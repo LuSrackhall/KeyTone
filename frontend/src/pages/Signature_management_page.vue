@@ -444,8 +444,8 @@ async function decryptAndBuildSignatureMap(encryptedSignatures: Record<string, a
         continue;
       }
 
-      // 解密 value 值
-      const decryptedJson = await decryptSignatureData(encryptedValue);
+      // 解密 value 值（传递encryptedId以使用动态密钥解密）
+      const decryptedJson = await decryptSignatureData(encryptedValue, encryptedId);
       if (!decryptedJson) {
         console.warn(`Failed to decrypt signature with id: ${encryptedId}`);
         continue;

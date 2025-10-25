@@ -62,10 +62,20 @@ export async function getSignaturesList(): Promise<{ [key: string]: SignatureSto
 /**
  * 解密单个签名数据（value值）
  * Decrypt a single signature data (value)
+ *
+ * 支持新的加密方案：
+ * - 如果提供 encryptedId，使用动态密钥解密（新方案）
+ * - 如果不提供 encryptedId，使用旧方式解密（向后兼容）
+ *
+ * @param encryptedValue - 加密的签名数据
+ * @param encryptedId - 可选：已加密的签名ID，用于生成动态密钥
  */
-export async function decryptSignatureData(encryptedValue: string): Promise<string | false> {
+export async function decryptSignatureData(encryptedValue: string, encryptedId?: string): Promise<string | false> {
   return await api
-    .post('/signature/decrypt', { encryptedValue })
+    .post('/signature/decrypt', {
+      encryptedValue,
+      ...(encryptedId && { encryptedId }), // 仅当提供encryptedId时才包含在请求中
+    })
     .then((req) => {
       console.debug('status=', req.status, '->decryptSignatureData 请求已成功执行并返回->', req.data);
       if (req.data.success && req.data.data) {

@@ -75,16 +75,20 @@ type SignatureExportData struct {
 // imageData: 图片文件的二进制数据
 // imageExt: 图片文件的扩展名（如 .jpg, .png，可以为空）
 // originalImageName: 图片原始文件名
-// encryptionKey: 对称加密密钥
+// encryptionKey: 对称加密密钥（已弃用，仅保留以兼容旧调用，实际使用KeyA）
 //
 // 说明：
 // - 生成的签名存储条目包含 value（加密数据）和 sort.time（Unix 时间戳）
 // - sort.time 仅在首次创建或导入时生成，代表排序顺序
 // - 更新签名时不会改变 sort.time（需要在更新逻辑中保留原值）
 // - 用户的拖动排序操作可以改变 sort.time 值（需要单独的 API 实现）
+//
+// 新增密钥方案（v2）：
+// - ID使用KeyA加密（固定）
+// - Value使用动态密钥加密（由ID的后7位+KeyA组合生成）
 func CreateSignature(id string, signatureData SignatureData, imageData []byte, imageExt string, originalImageName string, encryptionKey []byte) (string, error) {
-	// 1. 对ID进行对称加密
-	encryptedID, err := encryptData(id, encryptionKey)
+	// 1. 对ID进行对称加密（使用KeyA）
+	encryptedID, err := EncryptWithKeyA(id)
 	if err != nil {
 		logger.Error("ID加密失败", "error", err.Error())
 		return "", err
@@ -151,8 +155,8 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 		return "", err
 	}
 
-	// 4. 对JSON字符串进行对称加密
-	encryptedValue, err := encryptData(string(jsonData), encryptionKey)
+	// 4. 对JSON字符串进行对称加密（使用动态密钥）
+	encryptedValue, err := EncryptValueWithDynamicKey(string(jsonData), encryptedID)
 	if err != nil {
 		logger.Error("签名数据加密失败", "error", err.Error())
 		return "", err
@@ -225,12 +229,12 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 // imageData: 图片文件的二进制数据（可为空表示不更改图片）
 // imageExt: 图片文件的扩展名（如 .jpg, .png，可以为空）
 // originalImageName: 图片原始文件名
-// encryptionKey: 对称加密密钥
+// encryptionKey: 对称加密密钥（已弃用，仅保留以兼容旧调用，实际使用KeyA）
 // removeImage: 是否需要删除图片（当用户主动删除时设为 true）
 // imageChanged: 图片是否发生变更（前端报告的变更状态，用于区分"用户未修改"和"用户上传相同图片"）
 //
 // 说明：
-// - 接收加密的ID，对其进行对称解密以验证和查找原有的签名存储条目
+// - 接收加密的ID，验证其有效性
 // - 保留原有的 sort.time（排序时间戳）不变，不更新此值
 // - 根据 imageChanged 标记判断是否需要处理图片：
 //   - 如果 imageChanged 为 false，表示用户未修改图片，直接使用原有的 cardImage URL
@@ -238,6 +242,10 @@ func CreateSignature(id string, signatureData SignatureData, imageData []byte, i
 //
 // - 图片删除由程序启动时的清理逻辑处理，不需要在此关心
 // - 加密新的签名数据并替换原有的 value 字段
+//
+// 新增密钥方案（v2）：
+// - 使用动态密钥加密新的Value（由encryptedID生成）
+// - ID保持不变（已加密）
 func UpdateSignature(encryptedID string, signatureData SignatureData, imageData []byte, imageExt string, originalImageName string, encryptionKey []byte, removeImage bool, imageChanged bool) error {
 	// 1. 从配置中获取现有的签名存储数据
 	existingValue := config.GetValue("signature")
@@ -290,8 +298,8 @@ func UpdateSignature(encryptedID string, signatureData SignatureData, imageData 
 		logger.Debug("图片未发生变更，保留原有图片URL", "encryptedID", encryptedID)
 		if entry, ok := entryData.(map[string]interface{}); ok {
 			if value, ok := entry["value"].(string); ok {
-				// 解密现有的签名数据
-				decryptedData, err := decryptData(value, encryptionKey)
+				// 解密现有的签名数据（使用动态密钥）
+				decryptedData, err := DecryptValueWithDynamicKey(value, encryptedID)
 				if err == nil {
 					// 反序列化以获取原始的 CardImage
 					var originalSignatureData SignatureData
@@ -311,8 +319,8 @@ func UpdateSignature(encryptedID string, signatureData SignatureData, imageData 
 		// 尝试从现有的加密数据中解密并获取原始的 CardImage
 		if entry, ok := entryData.(map[string]interface{}); ok {
 			if value, ok := entry["value"].(string); ok {
-				// 解密现有的签名数据
-				decryptedData, err := decryptData(value, encryptionKey)
+				// 解密现有的签名数据（使用动态密钥）
+				decryptedData, err := DecryptValueWithDynamicKey(value, encryptedID)
 				if err == nil {
 					// 反序列化以获取原始的 CardImage
 					var originalSignatureData SignatureData
@@ -391,8 +399,8 @@ func UpdateSignature(encryptedID string, signatureData SignatureData, imageData 
 		return err
 	}
 
-	// 6. 对JSON字符串进行对称加密
-	encryptedValue, err := encryptData(string(jsonData), encryptionKey)
+	// 6. 对JSON字符串进行对称加密（使用动态密钥）
+	encryptedValue, err := EncryptValueWithDynamicKey(string(jsonData), encryptedID)
 	if err != nil {
 		logger.Error("签名数据加密失败", "error", err.Error())
 		return err
@@ -503,6 +511,7 @@ func decryptData(encryptedData string, key []byte) (string, error) {
 // CleanupOrphanCardImages 清理不在配置中的孤立签名图片
 // 该函数会扫描 signature 目录下的所有文件，
 // 与配置中的签名数据进行比对，删除不在配置中的图片文件
+// encryptionKey: 保留用于兼容旧调用，实际使用KeyA获取动态密钥
 func CleanupOrphanCardImages(encryptionKey []byte) error {
 	logger.Info("开始执行签名名片图片清理操作...")
 
@@ -522,7 +531,7 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 	if signatureMapValue != nil {
 		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
 			// 遍历所有的签名配置
-			for _, v := range signatureMap {
+			for encryptedID, v := range signatureMap {
 				var encryptedValueStr string
 
 				// 兼容新格式 SignatureStorageEntry
@@ -541,11 +550,21 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 					continue
 				}
 
-				// 解密签名数据
-				decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
+				// 解密签名数据（使用动态密钥）
+				var decryptedData string
+				var err error
+
+				// 尝试使用新的动态密钥解密
+				decryptedData, err = DecryptValueWithDynamicKey(encryptedValueStr, encryptedID)
 				if err != nil {
-					logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
-					continue
+					// 如果失败，尝试使用旧的方式（KeyA）
+					logger.Debug("动态密钥解密失败，尝试旧方式", "error", err.Error())
+					keyA := GetKeyA()
+					decryptedData, err = decryptData(encryptedValueStr, keyA)
+					if err != nil {
+						logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
+						continue
+					}
 				}
 
 				// 解析 JSON 数据
@@ -652,8 +671,8 @@ func ExportSignature(encryptedID string, encryptionKey []byte) (*SignatureExport
 		return nil, fmt.Errorf("签名数据格式错误")
 	}
 
-	// 4. 解密签名数据
-	decryptedData, err := decryptData(encryptedValueStr, encryptionKey)
+	// 4. 解密签名数据（使用动态密钥）
+	decryptedData, err := DecryptValueWithDynamicKey(encryptedValueStr, encryptedID)
 	if err != nil {
 		logger.Error("签名数据解密失败", "error", err.Error())
 		return nil, fmt.Errorf("签名数据解密失败: %w", err)
@@ -749,7 +768,7 @@ func ImportSignature(exportData *SignatureExportData, encryptionKey []byte) (str
 	}
 
 	// 2. 解密导入的 Key 以获得原始的签名 ID
-	unencryptedID, err := decryptData(exportData.Key, encryptionKey)
+	unencryptedID, err := DecryptWithKeyA(exportData.Key)
 	if err != nil {
 		logger.Error("签名 Key 解密失败", "error", err.Error())
 		return "", false, fmt.Errorf("签名 Key 解密失败: %w", err)
@@ -843,8 +862,8 @@ func ImportSignature(exportData *SignatureExportData, encryptionKey []byte) (str
 		return "", false, fmt.Errorf("签名数据序列化失败: %w", err)
 	}
 
-	// 7. 对 JSON 字符串进行加密
-	encryptedValue, err := encryptData(string(jsonData), encryptionKey)
+	// 7. 对 JSON 字符串进行加密（使用动态密钥）
+	encryptedValue, err := EncryptValueWithDynamicKey(string(jsonData), exportData.Key)
 	if err != nil {
 		logger.Error("签名数据加密失败", "error", err.Error())
 		return "", false, fmt.Errorf("签名数据加密失败: %w", err)

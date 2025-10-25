@@ -110,12 +110,12 @@ func signatureRouters(r *gin.Engine) {
 			Intro: intro,
 		}
 
-		// 定义加密密钥（在实际应用中应该从安全的地方获取）
-		// 这里使用的是一个示例密钥，长度为32字节（256位AES密钥）
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
+		// 使用密钥A（用于ID加密）
+		// 动态密钥会在signature.CreateSignature中自动生成
+		keyA := signature.GetKeyA()
 
 		// 调用signature包创建签名
-		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, fileName, encryptionKey)
+		encryptedID, err := signature.CreateSignature(id, signatureData, imageData, imageExt, fileName, keyA)
 		if err != nil {
 			logger.Error("创建签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -202,8 +202,8 @@ func signatureRouters(r *gin.Engine) {
 			Intro: intro,
 		}
 
-		// 定义加密密钥（需要与创建时保持一致）
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
+		// 使用密钥A（用于ID加密）
+		keyA := signature.GetKeyA()
 
 		// 调用signature包更新签名，传递 removeImage 和 imageChanged 标记
 		shouldRemoveImage := removeImage == "true"
@@ -215,7 +215,7 @@ func signatureRouters(r *gin.Engine) {
 			"imageChanged", hasImageChanged,
 		)
 
-		err = signature.UpdateSignature(encryptedID, signatureData, imageData, imageExt, fileName, encryptionKey, shouldRemoveImage, hasImageChanged)
+		err = signature.UpdateSignature(encryptedID, signatureData, imageData, imageExt, fileName, keyA, shouldRemoveImage, hasImageChanged)
 		if err != nil {
 			logger.Error("更新签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -364,11 +364,11 @@ func signatureRouters(r *gin.Engine) {
 			return
 		}
 
-		// 定义加密密钥
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+		// 使用密钥A（用于解密ID）
+		keyA := signature.GetKeyA()
 
 		// 1. 调用导出函数获取导出数据
-		exportData, err := signature.ExportSignature(req.EncryptedID, encryptionKey)
+		exportData, err := signature.ExportSignature(req.EncryptedID, keyA)
 		if err != nil {
 			logger.Error("导出签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -389,8 +389,9 @@ func signatureRouters(r *gin.Engine) {
 			return
 		}
 
-		// 3. 对 JSON 字符串进行加密
-		encryptedJSON, err := signature.EncryptData(string(jsonData), encryptionKey)
+		// 3. 对 JSON 字符串进行加密（使用密钥B）
+		keyB := signature.GetKeyB()
+		encryptedJSON, err := signature.EncryptData(string(jsonData), keyB)
 		if err != nil {
 			logger.Error("签名导出数据加密失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -471,6 +472,7 @@ func signatureRouters(r *gin.Engine) {
 	signatureRouter.POST("/signature/decrypt", func(ctx *gin.Context) {
 		var req struct {
 			EncryptedValue string `json:"encryptedValue" binding:"required"`
+			EncryptedID    string `json:"encryptedId"` // 可选：用于动态密钥解密
 		}
 
 		if err := ctx.BindJSON(&req); err != nil {
@@ -481,18 +483,33 @@ func signatureRouters(r *gin.Engine) {
 			return
 		}
 
-		// 定义加密密钥
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+		var decryptedValue string
+		var err error
 
-		// 调用解密函数
-		decryptedValue, err := signature.DecryptData(req.EncryptedValue, encryptionKey)
-		if err != nil {
-			logger.Error("解密签名数据失败", "error", err.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"message": "解密失败: " + err.Error(),
-			})
-			return
+		// 如果提供了encryptedID，使用动态密钥解密；否则使用旧方式
+		if req.EncryptedID != "" {
+			// 新方案：使用动态密钥解密
+			decryptedValue, err = signature.DecryptValueWithDynamicKey(req.EncryptedValue, req.EncryptedID)
+			if err != nil {
+				logger.Error("使用动态密钥解密签名数据失败", "error", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "解密失败: " + err.Error(),
+				})
+				return
+			}
+		} else {
+			// 旧方案：使用KeyA解密（兼容旧数据）
+			keyA := signature.GetKeyA()
+			decryptedValue, err = signature.DecryptData(req.EncryptedValue, keyA)
+			if err != nil {
+				logger.Error("解密签名数据失败", "error", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "解密失败: " + err.Error(),
+				})
+				return
+			}
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{
@@ -569,13 +586,14 @@ func signatureRouters(r *gin.Engine) {
 		}
 
 		// 定义加密密钥
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+		// 导入时使用密钥B（与导出时相同）
+		keyB := signature.GetKeyB()
 
 		// 1. 解密文件数据（文件内容本身是加密的字符串，需要先转成字符串）
 		encryptedJSON := string(fileData)
 
-		// 2. 使用与导出时相同的密钥解密
-		decryptedJSON, err := signature.DecryptData(encryptedJSON, encryptionKey)
+		// 2. 使用密钥B解密
+		decryptedJSON, err := signature.DecryptData(encryptedJSON, keyB)
 		if err != nil {
 			logger.Error("解密导入文件失败", "error", err.Error())
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -597,7 +615,9 @@ func signatureRouters(r *gin.Engine) {
 		}
 
 		// 4. 检查签名是否已存在（先不覆盖，返回冲突状态）
-		encryptedID, conflict, err := signature.ImportSignature(&exportData, encryptionKey)
+		// 使用密钥A（用于ID加密）
+		keyA := signature.GetKeyA()
+		encryptedID, conflict, err := signature.ImportSignature(&exportData, keyA)
 		if err != nil {
 			logger.Error("导入签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -650,11 +670,11 @@ func signatureRouters(r *gin.Engine) {
 			return
 		}
 
-		// 定义加密密钥
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32])
+		// 使用密钥B解密（与导出时相同）
+		keyB := signature.GetKeyB()
 
 		// 解密文件数据
-		decryptedJSON, err := signature.DecryptData(req.File, encryptionKey)
+		decryptedJSON, err := signature.DecryptData(req.File, keyB)
 		if err != nil {
 			logger.Error("解密导入文件失败", "error", err.Error())
 			ctx.JSON(http.StatusBadRequest, gin.H{
@@ -676,7 +696,9 @@ func signatureRouters(r *gin.Engine) {
 		}
 
 		// 调用带覆盖选项的导入函数
-		encryptedID, err := signature.ImportSignatureWithOverwrite(&exportData, req.Overwrite, encryptionKey)
+		// 使用密钥A（用于ID加密）
+		keyA := signature.GetKeyA()
+		encryptedID, err := signature.ImportSignatureWithOverwrite(&exportData, req.Overwrite, keyA)
 		if err != nil {
 			logger.Error("导入签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
