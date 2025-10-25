@@ -378,7 +378,17 @@
       "confirm": "Delete this signature"
     },
     "export": {
-      "comingSoon": "Export feature coming soon"
+      "comingSoon": "Export feature coming soon",
+      "confirmTitle": "Confirm Export Signature",
+      "confirmMessage": "⚠️ Security Warning",
+      "confirmWarning": "Please keep your signature file secure and do not send it to others!",
+      "confirmDetail": "Anyone who has your signature file can import and use it to sign operations. Please ensure that your signature file is stored in a secure location.",
+      "confirmRisks": "Risk Tips:",
+      "riskItem1": "• Do not share your signature file with others",
+      "riskItem2": "• Do not upload your signature file to public networks",
+      "riskItem3": "• Back up your signature file to prevent loss",
+      "confirmButton": "I understand, continue to export",
+      "cancelButton": "Cancel"
     },
     "import": {
       "title": "Import Signature",

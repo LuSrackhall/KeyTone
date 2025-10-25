@@ -372,7 +372,17 @@
       "confirm": "删除此签名"
     },
     "export": {
-      "comingSoon": "导出功能即将推出"
+      "comingSoon": "导出功能即将推出",
+      "confirmTitle": "确认导出签名",
+      "confirmMessage": "⚠️ 安全警告",
+      "confirmWarning": "请妥善保管您的签名文件，不要将其发送给他人！",
+      "confirmDetail": "只要持有签名文件，任何人都可以导入并使用您的签名进行签名操作。请确保将签名文件保存在安全的位置。",
+      "confirmRisks": "风险提示：",
+      "riskItem1": "• 不要与他人分享签名文件",
+      "riskItem2": "• 不要将签名文件上传到公开网络",
+      "riskItem3": "• 妥善备份签名文件以防丢失",
+      "confirmButton": "我已了解风险，继续导出",
+      "cancelButton": "取消"
     },
     "import": {
       "title": "导入签名",

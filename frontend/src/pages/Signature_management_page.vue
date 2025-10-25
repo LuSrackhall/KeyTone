@@ -226,6 +226,78 @@
       </q-card>
     </q-dialog>
 
+    <!-- 导出签名确认对话框 -->
+    <q-dialog v-model="showExportConfirmDialog" backdrop-filter="blur(4px)">
+      <q-card style="width: 95%; max-width: 360px; max-height: 85vh">
+        <!-- 对话框标题 -->
+        <q-card-section class="row items-center q-pb-sm q-px-md q-pt-md">
+          <div class="text-h6 q-my-none" style="font-size: 1rem">{{ $t('signature.export.confirmTitle') }}</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup size="sm" />
+        </q-card-section>
+
+        <!-- 对话框内容（可滚动） -->
+        <q-scroll-area style="height: calc(85vh - 140px); min-height: 200px">
+          <q-card-section class="q-px-md q-py-sm">
+            <!-- 安全警告标题 -->
+            <div class="text-subtitle2 text-negative q-mb-md" style="font-size: 0.9rem">
+              {{ $t('signature.export.confirmMessage') }}
+            </div>
+
+            <!-- 主要警告 -->
+            <div
+              class="q-pa-sm"
+              style="background-color: rgba(244, 67, 54, 0.1); border-radius: 4px; border-left: 3px solid #f44336"
+            >
+              <div class="text-weight-medium q-mb-sm" style="font-size: 0.85rem">
+                {{ $t('signature.export.confirmWarning') }}
+              </div>
+              <div class="text-grey-7" style="font-size: 0.75rem; line-height: 1.4">
+                {{ $t('signature.export.confirmDetail') }}
+              </div>
+            </div>
+
+            <!-- 风险提示 -->
+            <div class="q-mt-md">
+              <div class="text-subtitle2 text-weight-medium q-mb-sm" style="font-size: 0.9rem">
+                {{ $t('signature.export.confirmRisks') }}
+              </div>
+              <div class="text-grey-7" style="font-size: 0.75rem; line-height: 1.5">
+                <div class="q-mb-xs">{{ $t('signature.export.riskItem1') }}</div>
+                <div class="q-mb-xs">{{ $t('signature.export.riskItem2') }}</div>
+                <div>{{ $t('signature.export.riskItem3') }}</div>
+              </div>
+            </div>
+          </q-card-section>
+        </q-scroll-area>
+
+        <!-- 按钮区域 -->
+        <q-card-actions align="right" class="q-px-md q-py-sm" style="gap: 8px">
+          <q-btn
+            flat
+            :label="$t('signature.export.cancelButton')"
+            color="primary"
+            v-close-popup
+            size="sm"
+            class="text-caption"
+          />
+          <q-btn
+            unelevated
+            :label="$t('signature.export.confirmButton')"
+            color="negative"
+            @click="
+              () => {
+                showExportConfirmDialog = false;
+                performExport();
+              }
+            "
+            size="sm"
+            class="text-caption"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- 自定义菜单 -->
     <ContextMenu v-model="contextMenuVisible" :x="menuX" :y="menuY">
       <ContextMenuItem
@@ -371,6 +443,9 @@ const showImagePreview = ref(false);
 
 // 预览图片 URL - 绑定到预览对话框的 img 标签
 const previewImageUrl = ref('');
+
+// 导出确认对话框显示状态
+const showExportConfirmDialog = ref(false);
 
 // ========== 上下文菜单状态 ==========
 
@@ -968,8 +1043,8 @@ async function exportSignatureLegacy() {
   }
 }
 
-/** 导出签名 - 使用 File System Access API */
-async function handleExport() {
+/** 导出签名 - 实际执行导出逻辑 */
+async function performExport() {
   // 检查 API 是否可用
   if (typeof window.showSaveFilePicker !== 'function') {
     console.log('Browser does not support File System Access API, falling back to legacy export');
@@ -1032,6 +1107,14 @@ async function handleExport() {
       position: 'top',
     });
   }
+}
+
+/** 导出签名 - 显示安全确认对话框后执行导出 */
+async function handleExport() {
+  if (!contextMenuSignature.value) return;
+
+  // 显示安全确认对话框
+  showExportConfirmDialog.value = true;
 }
 
 /** 打开导入对话框 */
