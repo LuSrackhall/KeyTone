@@ -510,7 +510,7 @@ async function handleSubmit() {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /* 可滚动的表单内容区 */
 .form-content-scroll {
   max-height: calc(90vh - 180px);
@@ -534,6 +534,12 @@ async function handleSubmit() {
 
 .form-content-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(51, 65, 85, 0.5);
+}
+
+.name-input-wrapper {
+  :deep(.q-field__native) {
+    @apply h-auto;
+  }
 }
 
 .name-input-wrapper :deep(.q-field__control) {
