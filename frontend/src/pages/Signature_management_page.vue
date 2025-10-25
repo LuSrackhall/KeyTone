@@ -173,7 +173,7 @@
 
     <!-- 导入对话框 -->
     <q-dialog v-model="showImportDialogVisible" backdrop-filter="blur(4px)">
-      <q-card style="min-width: 400px">
+      <q-card style="width: 95%; max-width: 480px">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">{{ $t('signature.import.title') }}</div>
           <q-space />
