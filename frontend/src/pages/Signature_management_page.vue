@@ -48,7 +48,7 @@
 
     <!-- 滚动容器 -->
     <q-scroll-area
-      class="overflow-hidden"
+      class="overflow-hidden scroll-h-hide"
       :style="{ height: isMacOS ? 'calc(458.5px - 80px)' : 'calc(458.5px - 80px)' }"
     >
       <!-- 加载状态 -->
@@ -81,7 +81,7 @@
           <q-card
             v-for="signature in signatureList"
             :key="signature.id"
-            class="cursor-move hover:shadow-lg transition-all relative draggable-card w-87.1"
+            class="cursor-move hover:shadow-lg transition-all relative draggable-card w-87.2"
             :style="{
               minHeight: '60px',
               zIndex: isDraggingInProgress && draggedSignature?.id === signature.id ? 1000 : 0,
@@ -1528,7 +1528,7 @@ function handleImagePreview(filename: string) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1587,5 +1587,11 @@ function handleImagePreview(filename: string) {
 .list-move {
   transition: transform 0.3s ease;
   opacity: 0.6;
+}
+
+.scroll-h-hide {
+  :deep(.q-scrollarea__thumb--h) {
+    display: none !important;
+  }
 }
 </style>
