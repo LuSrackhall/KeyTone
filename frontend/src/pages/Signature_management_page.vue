@@ -81,7 +81,7 @@
           <q-card
             v-for="signature in signatureList"
             :key="signature.id"
-            class="cursor-move hover:shadow-lg transition-all relative draggable-card"
+            class="cursor-move hover:shadow-lg transition-all relative draggable-card w-87.1"
             :style="{
               minHeight: '60px',
               zIndex: isDraggingInProgress && draggedSignature?.id === signature.id ? 1000 : 0,
@@ -141,6 +141,12 @@
               >
                 <div
                   class="text-subtitle2 text-weight-bold"
+                  :class="[
+                    /* 对溢出的情况, 采取滚动策略 */
+                    'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                    // 添加细微滚动条
+                    'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                  ]"
                   style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem"
                 >
                   {{ signature.name }}
@@ -148,6 +154,12 @@
                 <div
                   v-if="signature.intro"
                   class="text-caption text-grey-7"
+                  :class="[
+                    /* 对溢出的情况, 采取滚动策略 */
+                    'max-w-full !overflow-x-auto whitespace-nowrap !mt-1.5',
+                    // 添加细微滚动条
+                    'h-4.4 [&::-webkit-scrollbar]:h-0.2 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                  ]"
                   :style="{
                     marginTop: '2px',
                     display: '-webkit-box',
