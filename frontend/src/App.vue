@@ -29,6 +29,7 @@
 import { onBeforeMount, ref } from 'vue';
 import { useSettingStore } from 'src/stores/setting-store';
 import { useAppStore } from './stores/app-store';
+import { useSignatureStore } from './stores/signature-store';
 import { debounce } from 'lodash';
 import { useKeyEventStore } from './stores/keyEvent-store';
 import { useMainStore } from './stores/main-store';
@@ -36,6 +37,7 @@ import { LoadConfig } from './boot/query/keytonePkg-query';
 
 const app_store = useAppStore();
 const setting_store = useSettingStore();
+const signature_store = useSignatureStore();
 const keyEvent_store = useKeyEventStore();
 // 在此处调用, 只是为了提前初始化, 从而避免在主页面中, 出现初始化延迟所造成的 已选择的键音包 无法正常显示名字(即 显示空名字) 的问题。
 // TIPS: 以上顾虑已通过将main_store内对应的map变量 keyTonePkgOptionsName 设置成 ref响应式变量来解决了, 不过为了加快速度, 仍在此处提前调用下, 而且除了更快的加载, 还起到一定的双重保险提高准确度的作用。
@@ -73,7 +75,9 @@ onBeforeMount(async () => {
 
   function sseDataToSettingStore(settingStorage: any) {
     setting_store.getConfigFileToUi();
-    // TODO: 签名管理器数据同步处理
+
+    // 签名管理器数据同步处理
+    signature_store.sseSync();
   }
 
   // 防抖处理, 避免短时间内多次触发时, 引起多次不必要的赋值操作, 我们的sse回调仅保证ui与配置文件的最终一致性即可。

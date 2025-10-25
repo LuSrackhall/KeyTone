@@ -28,6 +28,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ConfigPath 存储配置文件路径，供其他包使用
+var ConfigPath string
+
 type Store struct {
 	Key   string `json:"key"`
 	Value any    `json:"value"`
@@ -38,6 +41,8 @@ var once_stores sync.Once
 
 // Setting.json is the configuration for the application
 func ConfigRun(path string) {
+	// 保存配置路径到全局变量
+	ConfigPath = path
 	// 设置配置文件名称和类型
 	viper.SetConfigName("KeyToneSetting")
 	viper.SetConfigType("json")
@@ -139,14 +144,14 @@ func SetValue(key string, value any) {
 	defer close(ch)
 
 	go func(sleep *bool, ch chan struct{}) {
-		defer logger.Info("保护功能完成, 退出当前goroutine以结束保护--->应用配置项")
+		// defer logger.Info("保护功能完成, 退出当前goroutine以结束保护--->应用配置项")
 		for {
 			select {
 			case <-ch:
-				logger.Info("符合预期的退出行为--->应用配置项")
+				// logger.Info("符合预期的退出行为--->应用配置项")
 				return
 			case <-time.After(time.Millisecond * 100): // 这个最大退出时间, 由您自由指定
-				logger.Warn("到达等待时间上限, 而进行的自动强制退出行为, 以避免资源浪费式的长期甚至永久等待行为--->应用配置项")
+				// logger.Warn("到达等待时间上限, 而进行的自动强制退出行为, 以避免资源浪费式的长期甚至永久等待行为--->应用配置项")
 				*sleep = false
 				return
 			}
@@ -159,7 +164,7 @@ func SetValue(key string, value any) {
 			// 如果函数结束, 通道自然会关闭, 从而解除阻塞行为。无需使用下行中可能引入新阻塞的逻辑。
 			// ch <- struct{}{}
 		} else {
-			logger.Info("阻止了一次可能存在的错误删除行为--->应用配置项")
+			// logger.Info("阻止了一次可能存在的错误删除行为--->应用配置项")
 		}
 	}
 }

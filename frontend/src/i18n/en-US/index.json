@@ -335,5 +335,94 @@
       "mute": "Mute",
       "unmute": "Unmute"
     }
+  },
+  "signature": {
+    "page": {
+      "title": "Signature Management",
+      "create": "Create Signature",
+      "import": "Import Signature",
+      "edit": "Edit",
+      "delete": "Delete",
+      "export": "Export",
+      "loadError": "Failed to load signatures",
+      "retry": "Retry",
+      "emptyState": "No signatures yet",
+      "createFirst": "Create your first signature",
+      "noImage": "No card image",
+      "noImageHint": "No card image provided",
+      "noImagePreviewTip": "No card image provided"
+    },
+    "form": {
+      "createTitle": "Create Signature",
+      "editTitle": "Edit Signature",
+      "editWarning": "After editing a signature, if you need to update the signature in albums already signed with this signature, you need to re-export the signature for those albums.",
+      "name": "Signature Name",
+      "nameHint": "1-50 characters",
+      "nameRequired": "Please enter signature name",
+      "nameTooLong": "Signature name cannot exceed 50 characters",
+      "intro": "Introduction",
+      "introHint": "Up to 500 characters (optional)",
+      "introTooLong": "Introduction cannot exceed 500 characters",
+      "cardImage": "Card Image",
+      "cardImageFileName": "Signature Card",
+      "selectImage": "Select Image",
+      "imageHint": "Supports PNG, JPEG, WebP, GIF and other image formats",
+      "clickToPreview": "Click to preview",
+      "cancel": "Cancel",
+      "create": "Create",
+      "update": "Update",
+      "close": "Close"
+    },
+    "delete": {
+      "confirmTitle": "Confirm Delete",
+      "confirm": "Delete this signature"
+    },
+    "export": {
+      "comingSoon": "Export feature coming soon",
+      "confirmTitle": "Confirm Export Signature",
+      "confirmMessage": "⚠️ Security Warning",
+      "confirmWarning": "Please keep your signature file secure and do not send it to others!",
+      "confirmDetail": "Anyone who has your signature file can import and use it to sign operations. Please ensure that your signature file is stored in a secure location.",
+      "confirmRisks": "Risk Tips:",
+      "riskItem1": "• Do not share your signature file with others",
+      "riskItem2": "• Do not upload your signature file to public networks",
+      "riskItem3": "• Back up your signature file to prevent loss",
+      "confirmButton": "I understand, continue to export",
+      "cancelButton": "Cancel"
+    },
+    "import": {
+      "title": "Import Signature",
+      "selectFile": "Select .ktsign file",
+      "fileHint": "Please select a KeyTone signature file (.ktsign)",
+      "import": "Import",
+      "conflictTitle": "Signature Already Exists",
+      "conflictMessage": "Signature \"{name}\" already exists. Do you want to overwrite it?"
+    },
+    "select": {
+      "title": "Select Signature",
+      "description": "Choose a signature for this album to identify the creator",
+      "emptyState": "No signatures available",
+      "createSignature": "Go to create signature",
+      "noIntro": "No introduction",
+      "noSignature": "No signature",
+      "confirm": "Confirm"
+    },
+    "notify": {
+      "createSuccess": "Signature created successfully",
+      "createFailed": "Failed to create signature",
+      "updateSuccess": "Signature updated successfully",
+      "updateFailed": "Failed to update signature",
+      "deleteSuccess": "Signature deleted successfully",
+      "deleteFailed": "Failed to delete signature",
+      "exportSuccess": "Export feature coming soon",
+      "exportFailed": "Failed to export signature",
+      "importSuccess": "Signature imported successfully",
+      "importFailed": "Failed to import signature",
+      "loadFailed": "Failed to load signatures",
+      "imageReadFailed": "Failed to read image",
+      "invalidFileFormat": "Invalid file format",
+      "unexpectedError": "An unexpected error occurred",
+      "noChanges": "No changes detected"
+    }
   }
 }

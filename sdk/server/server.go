@@ -26,6 +26,7 @@ import (
 	"KeyTone/keyEvent"
 	"KeyTone/keySound"
 	"KeyTone/logger"
+	"KeyTone/signature"
 	"archive/zip"
 	"bytes"
 	"crypto"
@@ -323,6 +324,16 @@ func xorCrypt(data []byte, key string) []byte {
 }
 
 func ServerRun() {
+
+	// 启动签名名片图片清理任务（在SDK启动5秒后执行一次）
+	go func() {
+		time.Sleep(5 * time.Second)
+		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
+		if err := signature.CleanupOrphanCardImages(encryptionKey); err != nil {
+			logger.Error("签名名片图片清理任务执行失败", "error", err.Error())
+		}
+	}()
+
 	// 启动gin
 	r := gin.Default()
 	r.Use(cors.Default())
@@ -404,6 +415,7 @@ func ServerRun() {
 	})
 
 	keytonePkgRouters(r)
+	signatureRouters(r)
 
 	// 尝试在指定端口启动服务
 	listener, err := net.Listen("tcp", "localhost:38888")

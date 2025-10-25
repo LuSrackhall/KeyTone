@@ -224,6 +224,12 @@ const essentialLinks: Array<EssentialLinkProps> = [
     to: '/keytone_album',
   },
   {
+    title: 'signature.page.title',
+    caption: '',
+    icon: 'badge',
+    to: '/signature-management',
+  },
+  {
     title: 'KeyTone.setting.index',
     caption: '',
     icon: 'settings',
@@ -248,6 +254,8 @@ const pageLabel = computed(() => {
     return $t('KeyTone.setting.index');
   } else if (router.currentRoute.value.fullPath.split('-')[0] === '/keytone_album') {
     return $t('KeyTone.KeyToneAlbum.index');
+  } else if (router.currentRoute.value.fullPath.split('-')[0] === '/signature') {
+    return $t('signature.page.title');
   } else {
     return '';
   }

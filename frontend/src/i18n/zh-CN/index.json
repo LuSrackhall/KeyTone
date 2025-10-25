@@ -329,5 +329,94 @@
       "mute": "静音",
       "unmute": "取消静音"
     }
+  },
+  "signature": {
+    "page": {
+      "title": "签名管理",
+      "create": "创建签名",
+      "import": "导入签名",
+      "edit": "编辑",
+      "delete": "删除",
+      "export": "导出",
+      "loadError": "加载签名失败",
+      "retry": "重试",
+      "emptyState": "暂无签名",
+      "createFirst": "创建第一个签名",
+      "noImage": "暂无名片图片",
+      "noImageHint": "此签名未提供名片",
+      "noImagePreviewTip": "此签名未提供名片"
+    },
+    "form": {
+      "createTitle": "创建签名",
+      "editTitle": "编辑签名",
+      "editWarning": "编辑签名后，如需为已签该签名的专辑中的签名执行更新，则需对相关专辑重新进行签名导出操作。",
+      "name": "签名名称",
+      "nameHint": "1-50 个字符",
+      "nameRequired": "请输入签名名称",
+      "nameTooLong": "签名名称不能超过 50 个字符",
+      "intro": "个人介绍",
+      "introHint": "最多 500 个字符（选填）",
+      "introTooLong": "个人介绍不能超过 500 个字符",
+      "cardImage": "名片图片",
+      "cardImageFileName": "签名卡片",
+      "selectImage": "选择图片",
+      "imageHint": "支持 PNG、JPEG、WebP、GIF 等图片格式",
+      "clickToPreview": "点击预览",
+      "cancel": "取消",
+      "create": "创建",
+      "update": "更新",
+      "close": "关闭"
+    },
+    "delete": {
+      "confirmTitle": "确认删除",
+      "confirm": "删除此签名"
+    },
+    "export": {
+      "comingSoon": "导出功能即将推出",
+      "confirmTitle": "确认导出签名",
+      "confirmMessage": "⚠️ 安全警告",
+      "confirmWarning": "请妥善保管您的签名文件，不要将其发送给他人！",
+      "confirmDetail": "只要持有签名文件，任何人都可以导入并使用您的签名进行签名操作。请确保将签名文件保存在安全的位置。",
+      "confirmRisks": "风险提示：",
+      "riskItem1": "• 不要与他人分享签名文件",
+      "riskItem2": "• 不要将签名文件上传到公开网络",
+      "riskItem3": "• 妥善备份签名文件以防丢失",
+      "confirmButton": "我已了解风险，继续导出",
+      "cancelButton": "取消"
+    },
+    "import": {
+      "title": "导入签名",
+      "selectFile": "选择 .ktsign 文件",
+      "fileHint": "请选择 KeyTone 签名文件（.ktsign）",
+      "import": "导入",
+      "conflictTitle": "签名已存在",
+      "conflictMessage": "签名 \"{name}\" 已存在，是否覆盖？"
+    },
+    "select": {
+      "title": "选择签名",
+      "description": "为专辑选择一个签名，用于标识创作者身份",
+      "emptyState": "暂无签名",
+      "createSignature": "前往创建签名",
+      "noIntro": "暂无介绍",
+      "noSignature": "不添加签名",
+      "confirm": "确认"
+    },
+    "notify": {
+      "createSuccess": "签名创建成功",
+      "createFailed": "签名创建失败",
+      "updateSuccess": "签名更新成功",
+      "updateFailed": "签名更新失败",
+      "deleteSuccess": "签名删除成功",
+      "deleteFailed": "签名删除失败",
+      "exportSuccess": "签名导出成功",
+      "exportFailed": "签名导出失败",
+      "importSuccess": "签名导入成功",
+      "importFailed": "签名导入失败",
+      "loadFailed": "签名加载失败",
+      "imageReadFailed": "图片读取失败",
+      "invalidFileFormat": "无效的文件格式",
+      "unexpectedError": "发生未知错误",
+      "noChanges": "未检测到任何变更"
+    }
   }
 }
