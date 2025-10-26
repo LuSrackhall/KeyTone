@@ -10,13 +10,13 @@ KeyTone 用户在 itch.io 社区分享键音专辑时，缺少对作品原创性
 - **新增**：签名 CRUD 功能（创建、编辑、删除、查看列表）
 - **新增**：签名数据结构（名称、个人介绍、名片图片、保护码）
 - **新增**：签名文件导入/导出功能（.ktsign 文件格式）
-- **新增**：AES-256 对称加密存储机制
+- **新增**：AES-256-GCM 对称加密存储机制（KeyA/KeyB + 动态密钥派生）
 - **新增**：专辑导出流程中的签名选择步骤
-- **新增**：后端图片访问 API（`GET /signature/image/:filename`）
+- **新增**：后端图片读取 API（`POST /signature/get-image`，按路径读取并返回二进制流）
 - **新增**：图片预览功能（快速预览 + 大图预览）
 - **修改**：侧边栏导航（新增"签名管理"入口）
 - **修改**：专辑文件格式（扩展 signatures 字段）
-- **修改**：配置文件结构（新增 signature_manager 字段）
+- **修改**：配置文件结构：新增 `signature` 字段，键为加密ID（KeyA），值为 `{ value: <用动态密钥加密>, sort: { time } }`
 - **复用**：现有 SSE 全量配置数据推送机制（无需新增代码）
 
 ### 新增目标：缺陷修复与稳定性
@@ -27,20 +27,20 @@ KeyTone 用户在 itch.io 社区分享键音专辑时，缺少对作品原创性
 - 修复创建签名后，列表状态被错误重置为“空”的问题；确保创建成功后，列表包含原有项与新建项，不需重启即可可见。
 - 加固 SSE 全量配置更新与本地列表状态的同步与合并策略，避免清空或闪烁。
 
-2. 签名图片目录存储到当前执行目录而非 ConfigPath
+1. 签名图片目录存储到当前执行目录而非 ConfigPath
 - 在应用启动（main.go）阶段初始化签名模块的存储根路径为 ConfigPath（如：ConfigPath/signatures/card_images）。
 - 所有签名图片的写入/读取均以该初始化路径为根，避免在当前工作目录新建 signatures/。
 
-3. 删除签名总是失败的通知问题
+1. 删除签名总是失败的通知问题
 - 校正前端删除调用参数、方法与后端路由（DELETE /signature/delete/:id）的一致性；
 - 后端返回码与错误消息规范化；前端根据响应正确提示成功/失败。
 
-4. 更新签名总是失败的通知问题
+1. 更新签名总是失败的通知问题
 - 校正前端 PUT /signature/update 的负载与字段（必须包含 id，图片可选 Base64）；
 - 后端对无变更/部分字段更新正确处理，返回成功码；
 - 前端根据结果与 SSE 同步刷新列表。
 
-5. 编辑对话框二次打开数据为空
+1. 编辑对话框二次打开数据为空
 - 修复编辑对话框在关闭后再次打开时的表单复位/初始化问题；
 - 确保以签名 id 为 key 的受控表单在每次打开时重新填充数据，或在对话框挂载时拉取当前项数据；
 - 二次打开应显示正确的签名名称、介绍与图片预览。
@@ -93,14 +93,14 @@ KeyTone 用户在 itch.io 社区分享键音专辑时，缺少对作品原创性
 
 - **Dependencies**:
   - 前端：无新增依赖（移除 crypto-js 和 nanoid，加密逻辑在后端）
-  - 后端新增：`github.com/jaevor/go-nanoid`（用于生成保护码）
+  - 后端无外部依赖变更（使用标准库 crypto/aes、cipher、rand、encoding/hex 等；动态密钥使用 x/crypto/pbkdf2）
   - 后端使用标准库：`crypto/aes`, `crypto/cipher`（用于加密）
 
 ---
 
 ## 详细设计说明
 
-### 数据结构
+### 数据结构（更新）
 
 ```typescript
 // 前端签名数据结构
@@ -115,34 +115,32 @@ interface Signature {
 
 // 后端存储结构（配置文件中）
 {
-  "signature_manager": {
-    "encrypted_protect_code_1": "encrypted_signature_data_1",
-    "encrypted_protect_code_2": "encrypted_signature_data_2",
-    ...
+  "signature": {
+    "<encryptedId>": {
+      "value": "<encryptedSignatureJSON>",
+      "sort": { "time": 1730000000 }
+    }
   }
 }
 ```
 
 ### 关键技术决策
 
-1. **加密方案**：使用对称加密（AES-256），保护码经加密后作为 key
-2. **存储方式**：复用现有 `/store/get` 和 `/store/set` API
+1. **加密方案**：AES-256-GCM；ID 用 KeyA 加密作为键；Value 使用基于 ID 后7位与 KeyA 的 PBKDF2 动态密钥加密；导出/导入整体使用 KeyB 加解密
+2. **存储方式**：通过 config.SetValue/GetValue 维护 `signature` 字段
 3. **数据同步**：通过现有 SSE 全量配置数据推送机制实时同步（无需额外开发）
 4. **图片存储**：
-   - 前端通过选择器获取 File 对象，表单中保存 File 对象（非路径字符串）
-   - 提交时转为 Base64 通过 HTTP 传输到后端
-   - 后端解码 Base64，计算 SHA-256 哈希作为文件名保存到配置目录
-   - 配置文件中仅存储路径字符串
-   - 列表渲染时，前端将路径字符串转为 HTTP URL 访问图片资源
-   - 导出/导入时，图片在 Base64 和文件系统之间互转
-5. **文件格式**：`.ktsign` 文件为 JSON 格式，包含 Base64 编码的图片数据
+- 上传采用 multipart/form-data（字段 cardImage）；后端写入 ConfigPath/signature，文件名为 SHA-1(id|name|originalName|timestamp)
+- 配置中存储的是绝对路径；前端通过后端 `POST /signature/get-image` 或读取为 Blob URL 展示
+- 导出/导入时图片在二进制与十六进制字符串之间转换（内部 JSON 用十六进制表示图片数据），外层整体再用 KeyB 加密
+1. **文件格式**：`.ktsign` 文件为 JSON 格式，包含 Base64 编码的图片数据
 
 ### 用户交互流程
 
-1. **创建签名**：用户填写表单（图片为 File 对象）→ 后端生成保护码 → 图片转 Base64 传输 → 后端保存并加密 → 现有 SSE 自动推送全量配置
-2. **编辑签名**：获取签名数据 → 修改（新图片为 File 对象）→ 图片转 Base64 传输 → 保存 → 现有 SSE 自动推送全量配置
-3. **导出签名**：选择签名 → 后端将图片转 Base64 → 生成 `.ktsign` 文件 → 下载
-4. **导入签名**：选择文件 → 解析验证 → Base64 图片解码保存 → 现有 SSE 自动推送全量配置
+1. **创建签名**：用户填写表单（multipart）→ 后端保存图片并加密存储 → SSE 自动推送全量配置
+2. **编辑签名**：表单（multipart）支持 removeImage/imageChanged → 后端条件更新并加密存储 → SSE 自动推送全量配置
+3. **导出签名**：选择签名 → 后端生成内部 JSON（图片十六进制）→ 用 KeyB 加密 → 以二进制流下载 `.ktsign`
+4. **导入签名**：上传 `.ktsign` → 后端用 KeyB 解密并解析 → 冲突返回 409，确认后走 `/signature/import-confirm` → SSE 自动推送全量配置
 5. **专辑签名**：导出专辑时 → 选择签名 → 嵌入签名信息到专辑文件
 
 ## 风险与缓解

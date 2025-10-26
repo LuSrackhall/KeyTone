@@ -22,8 +22,8 @@
 │                  后端 (Go + Gin)                       │
 ├─────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  /store/get  │  │  /store/set  │  │    /stream   │ │
-│  │  (GET)       │  │  (POST)      │  │    (SSE)     │ │
+│  │  /signature/*│  │  /signature/*│  │    /stream   │ │
+│  │  (CRUD/导入导出/解密/图片/排序)   │  │    (SSE)     │ │
 │  └──────────────┘  └──────────────┘  └──────────────┘ │
 │                          │                               │
 │  ┌──────────────────────▼────────────────────────────┐ │
@@ -35,9 +35,8 @@
 ┌────────────────────────▼─────────────────────────────┐
 │              配置文件 (KeyToneSetting.json)            │
 │  {                                                     │
-│    "signature_manager": {                             │
-│      "加密的保护码1": "加密的签名数据1",                │
-│      "加密的保护码2": "加密的签名数据2"                 │
+│    "signature": {                                     │
+│      "<加密ID>": { "value": "<加密签名JSON>", "sort": { "time": 1730000000 } }  │
 │    }                                                   │
 │  }                                                     │
 └─────────────────────────────────────────────────────┘
@@ -80,13 +79,15 @@ interface SignatureFile {
 }
 ```
 
-### 后端存储结构
+### 后端存储结构（实际实现）
 
 ```json
 {
-  "signature_manager": {
-    "encrypted_id_1": "encrypted_signature_data_1",
-    "encrypted_id_2": "encrypted_signature_data_2"
+  "signature": {
+    "<encryptedId>": {
+      "value": "<hex-encoded AES-GCM ciphertext>",
+      "sort": { "time": 1730000000 }
+    }
   }
 }
 ```
@@ -102,80 +103,13 @@ interface SignatureFile {
 
 ### 后端加密（Go）
 
-所有加密/解密逻辑在 `sdk/signature/encryption.go` 中实现：
+所有加密/解密逻辑在 `sdk/signature/encryption.go` 中实现（实际方案摘要）：
 
-```go
-package signature
-
-import (
-    "crypto/aes"
-    "crypto/cipher"
-    "crypto/rand"
-    "encoding/base64"
-    "io"
-    "github.com/jaevor/go-nanoid"
-)
-
-const encryptionKey = "KeyTone2024SecretKey_SignatureProtection"
-
-// GenerateProtectCode 生成21位保护码（使用nanoid算法）
-func GenerateProtectCode() (string, error) {
-    canonicGenerator, err := nanoid.Standard(21)
-    if err != nil {
-        return "", err
-    }
-    return canonicGenerator(), nil
-}
-
-// EncryptSignature 加密签名数据
-func EncryptSignature(data string) (string, error) {
-    block, err := aes.NewCipher([]byte(encryptionKey))
-    if err != nil {
-        return "", err
-    }
-
-    gcm, err := cipher.NewGCM(block)
-    if err != nil {
-        return "", err
-    }
-
-    nonce := make([]byte, gcm.NonceSize())
-    if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-        return "", err
-    }
-
-    ciphertext := gcm.Seal(nonce, nonce, []byte(data), nil)
-    return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
-
-// DecryptSignature 解密签名数据
-func DecryptSignature(encryptedData string) (string, error) {
-    data, err := base64.StdEncoding.DecodeString(encryptedData)
-    if err != nil {
-        return "", err
-    }
-
-    block, err := aes.NewCipher([]byte(encryptionKey))
-    if err != nil {
-        return "", err
-    }
-
-    gcm, err := cipher.NewGCM(block)
-    if err != nil {
-        return "", err
-    }
-
-    nonceSize := gcm.NonceSize()
-    nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-
-    plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
-    if err != nil {
-        return "", err
-    }
-
-    return string(plaintext), nil
-}
-```
+- 使用 AES-256-GCM 模式
+- KeyA（32字节）：用于加密签名ID（配置键）；同时作为 PBKDF2 的 password
+- 动态密钥：解密出原始ID后取其后7位作为 salt，与 KeyA 通过 PBKDF2(SHA-256, 10000, 32字节) 派生，用于加/解密 Value
+- KeyB（32字节）：用于导出/导入文件的外层整体加/解密
+- 加密输出采用十六进制编码（hex）进行持久化
 
 ## API 设计
 
@@ -187,38 +121,27 @@ func DecryptSignature(encryptedData string) (string, error) {
 
 ```http
 POST /signature/create
-Content-Type: application/json
+Content-Type: multipart/form-data
 
-{
-  "name": "张三",
-  "intro": "资深音效设计师",
-  "cardImage": "data:image/png;base64,..." // Base64 编码的图片（可选）
-}
+字段：
+- id: string（未加密ID）
+- name: string（必填）
+- intro: string（可选）
+- cardImage: file（可选）
 ```
 
 响应：
 
 ```json
-{
-  "message": "ok",
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师",
-    "cardImage": "signatures/card_images/xyz789.png"
-  }
-}
+{ "success": true, "data": { "id": "<encryptedId>" } }
 ```
 
 **处理流程**：
-1. 后端接收前端发来的签名数据
-2. 生成签名 ID（nanoid，21位）
-3. 生成保护码（nanoid，21位，用于加密，UI 中不可见）
-4. 如果有 cardImage（Base64），解码并保存到本地文件系统
-5. 加密签名 ID 和签名数据
-6. 存储到配置文件
-7. **配置文件更新后，现有的 SSE 机制会自动推送全量配置数据**（无需单独实现通知）
-8. 返回未加密的签名数据（供前端显示）
+1. 后端接收表单字段及图片文件
+2. 将图片写入 ConfigPath/signature 目录（文件名为基于 id|name|originalName|timestamp 的 SHA-1）
+3. 使用 KeyA 加密 ID 作为配置键；使用动态密钥加密签名 JSON 作为 value
+4. 存储到配置文件 `signature`
+5. **配置文件更新后，现有 SSE 机制自动推送全量配置**
 
 #### 获取所有签名
 
@@ -230,162 +153,94 @@ GET /signature/list
 
 ```json
 {
-  "message": "ok",
-  "signatures": {
-    "abc123...": {
-      "id": "abc123...",
-      "name": "张三",
-      "intro": "资深音效设计师",
-      "cardImage": "signatures/card_images/xyz789.png"
-    },
-    "def456...": {
-      "id": "def456...",
-      "name": "李四",
-      "intro": "独立开发者",
-      "cardImage": ""
+  "success": true,
+  "data": {
+    "<encryptedId>": {
+      "value": "<hex-ciphertext>",
+      "sort": { "time": 1730000000 }
     }
   }
 }
 ```
 
-**处理流程**：
-1. 从配置文件读取加密的签名管理器
-2. 解密所有签名数据
-3. 返回解密后的签名列表
+如需明文数据，逐项调用：
+
+```http
+POST /signature/decrypt
+{ "encryptedValue": "<hex-ciphertext>", "encryptedId": "<encryptedId>" }
+```
+
+→ 返回：`{ "success": true, "data": "{\"name\":...,\"intro\":...,\"cardImage\":...}" }`
 
 #### 更新签名
 
 ```http
-PUT /signature/update
-Content-Type: application/json
+POST /signature/update
+Content-Type: multipart/form-data
 
-{
-  "id": "abc123...",
-  "name": "张三",
-  "intro": "资深音效设计师 + 键盘爱好者",
-  "cardImage": "data:image/png;base64,..." // 新图片（可选）
-}
+字段：
+- encryptedId: string（必填）
+- name: string（可选）
+- intro: string（可选）
+- cardImage: file（可选）
+- removeImage: "true"|"false"（可选）
+- imageChanged: "true"|"false"（可选；未提供视为 true）
 ```
 
-响应：
-
-```json
-{
-  "message": "ok",
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师 + 键盘爱好者",
-    "cardImage": "signatures/card_images/new_hash.png"
-  }
-}
-```
+响应： `{ "success": true }`
 
 #### 删除签名
 
 ```http
-DELETE /signature/delete/:id
+POST /signature/delete
+{ "id": "<encryptedId>" }
 ```
 
-响应：
-
-```json
-{
-  "message": "ok"
-}
-```
+响应：`{ "success": true }`
 
 #### 导出签名
 
 ```http
-GET /signature/export/:id
+POST /signature/export
+{ "encryptedId": "<encryptedId>" }
 ```
 
-响应：
-
-```json
-{
-  "version": "1.0.0",
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师",
-    "cardImage": "data:image/png;base64,..." // 图片转为 Base64
-  },
-  "checksum": "sha256_hash"
-}
-```
+响应： `.ktsign` 二进制流（Content-Type: application/octet-stream）。
 
 **处理流程**：
-1. 根据 ID 查找签名
-2. 如果有图片，读取图片文件并转为 Base64
-3. 计算签名数据的 SHA-256 校验和
-4. 返回 .ktsign 格式的 JSON
-5. 前端接收 JSON，使用 `window.showSaveFilePicker()` 保存文件
+1. 根据加密ID定位并解密签名数据
+2. 读取图片文件并转为十六进制字符串，连同 Name/Intro 等构建内部 JSON（包含 CardImageName）
+3. 使用 KeyB 对内部 JSON 进行加密，返回加密字符串的字节作为下载内容
+4. 前端将响应保存为 `.ktsign`
 
 #### 导入签名
 
 ```http
 POST /signature/import
-Content-Type: application/json
-
-{
-  "version": "1.0.0",
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师",
-    "cardImage": "data:image/png;base64,..."
-  },
-  "checksum": "sha256_hash"
-}
+Content-Type: multipart/form-data
+- file: .ktsign 文件
 ```
 
 响应：
 
-```json
-{
-  "message": "ok",
-  "exists": false,  // 如果签名已存在则为 true
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师",
-    "cardImage": "signatures/card_images/restored_hash.png"
-  }
-}
-```
+- 成功：`{ "success": true, "data": { "encryptedId": "...", "name": "..." } }`
+- 冲突：HTTP 409 `{ "success": false, "conflict": true, "data": { "encryptedId": "...", "name": "..." } }`
 
-**处理流程**：
-1. 验证文件格式和版本
-2. 验证校验和
-3. 检查签名 ID 是否已存在
-4. 如果存在，返回 `exists: true`，前端提示用户是否覆盖
-5. 如果不存在或用户确认覆盖：
-   - 将 Base64 图片解码并保存到文件系统
-   - 生成新的保护码（因为不保存原保护码）
-   - 加密并存储签名数据
-6. 返回导入结果
+确认覆盖：
+
+```http
+POST /signature/import-confirm
+{ "file": "<加密字符串>", "overwrite": true }
+```
 
 #### 获取图片
 
 ```http
-GET /signature/image/:filename
+POST /signature/get-image
+{ "imagePath": "<absolute path from config>" }
 ```
 
-响应：图片文件的二进制数据，Content-Type 为对应的图片类型（image/png, image/jpeg 等）
-
-**处理流程**：
-1. 验证文件名合法性（防止路径遍历攻击）
-2. 从 `signatures/card_images/` 目录读取图片
-3. 设置正确的 Content-Type
-4. 返回图片二进制数据
-
-**前端使用示例**：
-
-```typescript
-<img :src="`http://localhost:port/signature/image/${signature.cardImage.split('/').pop()}`" />
-```
+响应：图片二进制（application/octet-stream）。前端将二进制转 Blob URL 进行展示。
 
 ### 复用现有 API
 
@@ -408,8 +263,8 @@ KeyTone 项目中已经实现了完整的 SSE 数据同步机制：
 - 不需要前端主动调用 `GET /signature/list` 刷新数据
 
 ✅ **只需要**：
-- 在前端现有的 SSE 全量数据处理逻辑中，添加对 `signature_manager` 字段的解构和处理
-- 当 SSE 推送全量配置数据时，提取其中的 `signature_manager` 数据块
+- 在前端现有的 SSE 全量数据处理逻辑中，添加对 `signature` 字段的解构和处理
+- 当 SSE 推送全量配置数据时，提取其中的 `signature` 数据块
 - 更新前端签名状态存储（如 Pinia store 或组件状态）
 - 触发 Vue 响应式更新，自动刷新相关 UI 组件
 
@@ -430,9 +285,9 @@ eventSource.addEventListener('message', (event) => {
   }
 
   // 新增逻辑：处理签名管理数据
-  if (fullConfig.signature_manager) {
+  if (fullConfig.signature) {
     // 解构获取签名管理数据
-    const signatureData = fullConfig.signature_manager;
+  const signatureData = fullConfig.signature;
     
     // 更新前端状态（根据实际使用的状态管理方案）
     // 方案 1：使用 Pinia store
@@ -456,7 +311,7 @@ eventSource.addEventListener('message', (event) => {
     ↓
 前端 SSE 监听器接收全量数据
     ↓
-解构提取 signature_manager 字段
+解构提取 signature 字段
     ↓
 更新前端签名状态
     ↓
@@ -468,27 +323,26 @@ Vue 响应式自动刷新 UI
 - ✅ 现有代码已有 SSE 全量数据推送，无需重新设计
 - ✅ 签名数据作为配置文件的一部分，会随全量数据一起推送
 - ✅ 前端只需在现有的全量数据处理逻辑中添加签名数据的解构和适配
-- ✅ 不需要单独的 `GET /signature/list` API 调用来刷新数据
+- ✅ 不需要单独的再次调用 `GET /signature/list` 刷新数据
 - ✅ 所有签名 CRUD 操作完成后，后端保存配置文件，自动触发 SSE 推送
 
 ## 文件处理
 
 ### 名片图片存储
 
-1. **目录结构**：
+1. **目录结构**（实际）：
 
    ```text
-   配置目录/
+   ConfigPath/
    ├── KeyToneSetting.json
-   └── signatures/
-       └── card_images/
-           ├── abc123...def.png
-           └── xyz789...uvw.jpg
+   └── signature/
+     ├── <sha1seed>.png
+     └── <sha1seed>.jpg
    ```
 
    **注意**：不再需要 `exported/` 目录，导出文件由用户选择保存位置。
 
-2. **图片命名**：使用 SHA-256 哈希值作为文件名（由后端处理）
+2. **图片命名**：使用基于 `id|name|originalName|timestamp` 的字符串计算 SHA-1 作为文件名（由后端处理）
 
 3. **图片处理流程（分阶段详解）**：
 
@@ -503,147 +357,117 @@ Vue 响应式自动刷新 UI
    
    ```typescript
    // 前端表单数据结构（创建/编辑阶段）
-   interface SignatureFormData {
+  interface SignatureFormData {
      name: string;
      intro: string;
      cardImage: File | null;  // 注意：这里是 File 对象,不是字符串路径
    }
    ```
    
-   #### 阶段 2：提交存储阶段 - Base64 传输与后端持久化
+  #### 阶段 2：提交存储阶段 - multipart 传输与后端持久化（实际）
    
    当用户点击"创建"或"更新"按钮时:
    
-   - **Base64 转换**：前端将 `File` 对象转为 Base64 字符串（通过 `fileToBase64()` 方法）
-   - **HTTP 传输**：Base64 字符串通过 HTTP POST/PUT 发送到后端
-   - **后端处理**：
-     1. 接收 Base64 字符串
-     2. 解码为二进制图片数据
-     3. 计算 SHA-256 哈希值作为文件名
-     4. 保存图片文件到 `signatures/card_images/` 目录
-     5. 在配置文件中只存储**文件路径字符串**（如 `signatures/card_images/xyz789.png`）
+  - **HTTP 传输**：以 multipart/form-data 直接上传 `cardImage` 文件
+  - **后端处理**：
+    1. 接收文件与表单字段
+    2. 基于 `id|name|originalName|timestamp` 生成 SHA-1 文件名
+    3. 保存图片文件到 `ConfigPath/signature/` 目录
+    4. 在配置文件 `signature` 中存储图片绝对路径
    
-   ```typescript
-   // HTTP 请求体（Base64 传输）
-   {
-     name: "张三",
-     intro: "资深音效设计师",
-     cardImage: "data:image/png;base64,iVBORw0KGg..."  // Base64 字符串
-   }
-   ```
+  （改为 multipart 表单，不再传 Base64 图片字符串）
    
-   ```json
-   // 后端配置文件存储（加密后的路径字符串）
-   {
-     "signature_manager": {
-       "encrypted_id": "encrypted_data_contains_path_string"
-     }
-   }
-   ```
+  ```json
+  // 后端配置文件存储（示例）
+  {
+    "signature": {
+      "<encrypted_id>": {
+        "value": "<hex-ciphertext>",
+        "sort": { "time": 1730000000 }
+      }
+    }
+  }
+  ```
    
-   #### 阶段 3：列表渲染阶段 - 路径字符串到图片资源
+#### 阶段 3：列表渲染阶段 - 路径字符串到图片资源
    
    当前端需要显示签名列表时:
    
-   - **获取路径**：通过 API 获取签名数据,其中 `cardImage` 字段是**路径字符串**（如 `signatures/card_images/xyz789.png`）
-   - **路径转换**：前端将路径字符串转为 HTTP URL
-   - **图片渲染**：通过 HTTP 请求获取图片二进制数据并渲染
+- **获取路径**：通过 API 获取签名数据，其中 `cardImage` 为图片绝对路径（由后端存储）
+- **渲染**：通过 `POST /signature/get-image` 读取二进制并转为 Blob URL 渲染
    
-   ```typescript
+  ```typescript
    // 前端签名数据结构（列表显示阶段）
-   interface Signature {
-     id: string;
-     name: string;
-     intro: string;
-     cardImage: string;  // 注意：这里是路径字符串,如 "signatures/card_images/xyz789.png"
-   }
+  interface Signature {
+    name: string;
+    intro: string;
+    cardImage: string;  // 绝对路径
+  }
+  ```
    
-   // 前端渲染时转换路径为 URL
-   function getImageUrl(cardImagePath: string): string {
-     const filename = cardImagePath.split('/').pop();  // 提取文件名
-     return `${baseURL}/signature/image/${filename}`;  // 转为 HTTP URL
-   }
-   ```
+  ```vue
+  <!-- 在模板中使用（示意：通过 Blob URL 显示） -->
+  <q-img :src="imageBlobUrl" />
+  ```
    
-   ```vue
-   <!-- 在模板中使用 -->
-   <q-img :src="getImageUrl(signature.cardImage)" />
-   ```
+  #### 阶段 4：导出/导入阶段 - 文件封装与加解密（实际）
    
-   #### 阶段 4：导出/导入阶段 - 文件系统与 Base64 互转
+  **导出流程**：
+  - 前端调用 `POST /signature/export`（payload: { encryptedId }）
+  - 后端读取签名数据，读取图片并转为十六进制字符串，构建内部 JSON（包含 CardImageName）
+  - 用 KeyB 对内部 JSON 加密，返回加密字符串的字节作为下载内容（octet-stream）
+  - 前端保存为 `.ktsign` 文件
    
-   **导出流程**：
-   - 前端调用 `/signature/export/:id` API
-   - 后端读取配置文件中的路径字符串
-   - 后端根据路径读取图片文件,转为 Base64
-   - 后端返回包含 Base64 图片的 JSON 数据
-   - 前端保存为 .ktsign 文件
+  **导入流程**：
+  - 前端以 multipart 方式上传 `.ktsign` 至 `POST /signature/import`
+  - 后端用 KeyB 解密并解析内部 JSON；若冲突返回 409 与 conflict 标志
+  - 覆盖导入：前端调用 `POST /signature/import-confirm`（{ file, overwrite: true }）
    
-   **导入流程**：
-   - 前端读取 .ktsign 文件,获取 Base64 图片
-   - 前端调用 `/signature/import` API,传递 Base64 数据
-   - 后端解码 Base64 为二进制数据
-   - 后端计算哈希值,保存为新图片文件
-   - 后端在配置文件中存储新的路径字符串
+#### 图片数据形态总结
    
-   #### 图片数据形态总结
+   | 阶段       | 图片数据形态                        | 说明                                  |
+   | ---------- | ----------------------------------- | ------------------------------------- |
+   | 选择器选择 | `File` 对象                         | 前端内存中的文件对象                  |
+   | 表单编辑   | `File` 对象 / 预览用 Base64         | 未提交前仍是 File 对象,不是路径字符串 |
+   | HTTP 传输  | multipart 文件                      | 直接上传文件至后端                    |
+   | 后端存储   | 二进制文件 + 绝对路径（配置文件中） | 图片存为文件，配置中存绝对路径        |
+   | 列表显示   | 绝对路径 → get-image → Blob URL     | 通过后端接口读取二进制再渲染          |
+   | 导出文件   | KeyB 加密的内部 JSON（二进制流）    | 内部 JSON 的图片为十六进制字符串      |
+   | 导入文件   | 二进制流 → KeyB 解密 → 文件写入     | 恢复为文件系统中的图片                |
    
-   | 阶段       | 图片数据形态                          | 说明                                  |
-   | ---------- | ------------------------------------- | ------------------------------------- |
-   | 选择器选择 | `File` 对象                           | 前端内存中的文件对象                  |
-   | 表单编辑   | `File` 对象 / 预览用 Base64           | 未提交前仍是 File 对象,不是路径字符串 |
-   | HTTP 传输  | Base64 字符串                         | 通过 HTTP 传输到后端                  |
-   | 后端存储   | 二进制文件 + 路径字符串（配置文件中） | 图片存为文件,配置中只存路径           |
-   | 列表显示   | 路径字符串 → HTTP URL → 渲染图片      | 通过 HTTP 接口访问图片资源            |
-   | 导出文件   | Base64 字符串（嵌入 JSON）            | 便于文件独立传输                      |
-   | 导入文件   | Base64 字符串 → 二进制文件            | 恢复为文件系统中的图片                |
-   
-   **关键要点**：
-   - ✅ 创建/编辑表单中,图片是 `File` 对象,**不是路径字符串**
-   - ✅ HTTP 传输使用 Base64 字符串
-   - ✅ 配置文件中只存储路径字符串,图片本体存在文件系统
-   - ✅ 列表渲染时,路径字符串通过 HTTP 接口转为真实图片
-   - ✅ 导出/导入使用 Base64 嵌入 JSON 文件
+**关键要点**：
+- ✅ 创建/编辑表单中，图片是 `File` 对象，非路径字符串
+- ✅ HTTP 传输使用 multipart 文件上传
+- ✅ 配置文件存储图片绝对路径，图片本体存于 ConfigPath/signature
+- ✅ 列表渲染通过后端 get-image 接口读取二进制再显示
+- ✅ 导出/导入采用 KeyB 对内部 JSON 进行整体加/解密
 
-### .ktsign 文件格式
+### .ktsign 文件格式（实际）
 
-导出的签名文件包含 Base64 编码的图片数据：
+`.ktsign` 为二进制文件，内容为使用 KeyB 加密后的内部 JSON 字符串。内部 JSON 示例如下：
 
 ```json
 {
-  "version": "1.0.0",
-  "signature": {
-    "id": "abc123...",
-    "name": "张三",
-    "intro": "资深音效设计师",
-    "cardImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-  },
-  "checksum": "sha256_hash_of_signature_data"
+  "key": "<encryptedId>",
+  "name": "张三",
+  "intro": "资深音效设计师",
+  "cardImage": "<hex-encoded-bytes>",
+  "cardImageName": "avatar.png"
 }
 ```
 
-导出流程：
+导出：前端调用 `POST /signature/export`，将返回的二进制流保存为 `.ktsign`。
 
-1. 前端调用 `GET /signature/export/:id`
-2. 后端读取签名数据
-3. 如果有图片，读取图片文件并转为 Base64（格式：`data:image/png;base64,...`）
-4. 计算签名数据的 SHA-256 校验和
-5. 返回 JSON 格式数据
-6. 前端使用 `window.showSaveFilePicker()` API 让用户选择保存路径
-7. 将 JSON 数据写入用户选择的文件
+导入：前端以 multipart 上传 `.ktsign` 到 `POST /signature/import`；如遇冲突，按接口返回进行覆盖确认。
 
-导入流程：
+导入流程（实际）：
 
-1. 前端读取用户选择的 `.ktsign` 文件内容
-2. 调用 `POST /signature/import` 传递文件内容
-3. 后端验证文件格式和版本
-4. 验证 checksum
-5. 解析签名数据
-6. 如果有 Base64 图片，解码并保存到 `signatures/card_images/`
-7. 检查签名 ID 是否已存在
-8. 如已存在，返回 `exists: true`，前端提示用户是否覆盖
-9. 保存到配置文件（加密存储）
-10. **配置文件更新后，现有的 SSE 机制会自动推送全量配置数据**（无需单独实现通知）
+1. 前端以 multipart 上传 `.ktsign` 到 `POST /signature/import`
+2. 后端用 KeyB 解密并解析内部 JSON（包含十六进制图片数据与文件名）
+3. 若目标加密ID已存在，返回 409 冲突与 `conflict: true`
+4. 用户确认覆盖后，调用 `POST /signature/import-confirm` 完成导入
+5. 后端写入图片文件至 ConfigPath/signature，并更新配置 `signature`
+6. 保存后由 SSE 自动推送全量配置
 
 ## 前端服务层设计
 
@@ -851,7 +675,7 @@ export const signatureService = new SignatureService();
 
 列表项采用**左图右文**的布局设计：
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │  ┌────────┐                                    ┌─────┐  │
 │  │        │  签名名称（粗体大字）     [编辑] [删除] │
@@ -1093,7 +917,7 @@ function getImageUrl(imagePath: string): string {
 
 **表单布局结构**：
 
-```
+```text
 ┌────────────────────────────────────────┐
 │ 创建/编辑签名                           │
 ├────────────────────────────────────────┤
@@ -1587,37 +1411,7 @@ export const signatureService = new SignatureService();
 
 ## 专辑签名集成
 
-### 专辑文件格式扩展
-
-在现有的 `.ktalbum` 文件中添加签名信息：
-
-```json
-{
-  "magicNumber": "KTAF",
-  "version": "1.0.0",
-  "exportTime": "2025-10-15T10:30:00.000Z",
-  "albumUUID": "abc123...",
-  "albumName": "My Album",
-  "signatures": [
-    {
-      "signatureId": "xyz789...",
-      "signatureName": "张三",
-      "signedAt": "2025-10-15T10:30:00.000Z",
-      "protectCode": "encrypted_protect_code"
-    }
-  ],
-  "config": {...},
-  "sounds": {...}
-}
-```
-
-### 签名选择流程
-
-1. 用户点击"导出专辑"
-2. 显示签名选择对话框
-3. 用户选择签名（或选择"不签名"）
-4. 如果选择签名，嵌入签名信息到专辑文件
-5. 继续原有的导出流程
+此部分尚未在当前代码中落地实现，后续如需支持将通过独立 Proposal 与变更集补充详细设计与接口。
 
 ## 性能优化
 
@@ -1657,9 +1451,9 @@ eventSource.addEventListener('message', (event) => {
   const fullConfig = JSON.parse(event.data);  // 全量配置数据
 
   // 处理签名管理数据（新增逻辑）
-  if (fullConfig.signature_manager) {
+  if (fullConfig.signature) {
     // 直接更新签名状态，无需调用 API 重新获取
-    const decryptedSignatures = decryptSignatureManager(fullConfig.signature_manager);
+  const decryptedSignatures = fullConfig.signature;
     
     // 更新 Pinia store 或响应式状态
     signatureStore.setSignatures(decryptedSignatures);
@@ -1778,7 +1572,7 @@ const errorMessages = {
 
 ### 向后兼容
 
-- 旧版本不包含 `signature_manager` 字段，读取时返回空对象
+- 旧版本不包含 `signature` 字段，读取时返回空对象
 - 旧版本专辑文件不包含 `signatures` 字段，视为未签名
 
 ### 数据迁移

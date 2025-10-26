@@ -76,13 +76,16 @@
 **验收标准**：
 
 - [x] 在 `sdk/server/signature_handlers.go` 中添加签名相关路由
-- [x] 实现 `POST /signature/create`（接收 Base64 图片，生成 ID 和保护码，加密存储）
-- [x] 实现 `GET /signature/list`（解密并返回所有签名）
-- [x] 实现 `PUT /signature/update`（接收 Base64 图片，更新签名数据）
-- [x] 实现 `DELETE /signature/delete/:id`（删除签名）
-- [x] 实现 `GET /signature/export/:id`（返回 .ktsign 格式，图片转 Base64）
-- [x] 实现 `POST /signature/import`（接收 .ktsign 文件，图片恢复为文件）
-- [x] 所有 API 都使用 `sdk/signature/encryption.go` 进行加解密
+- [x] 实现 `POST /signature/create`（multipart 文件上传，生成加密ID并加密存储）
+- [x] 实现 `GET /signature/list`（返回加密映射 { encryptedId: { value, sort } }，兼容旧格式）
+- [x] 实现 `POST /signature/decrypt`（按需解密单个签名的 value）
+- [x] 实现 `POST /signature/update`（multipart，支持 removeImage 与 imageChanged 标识）
+- [x] 实现 `POST /signature/delete`（JSON：{ id }）
+- [x] 实现 `POST /signature/export`（返回 `.ktsign` 二进制流，内部 JSON 用 KeyB 加密）
+- [x] 实现 `POST /signature/import`（multipart 上传 `.ktsign`，冲突返回 409）
+- [x] 实现 `POST /signature/import-confirm`（处理覆盖导入）
+- [x] 实现 `POST /signature/update-sort`（批量更新 sort.time）
+- [x] 所有 API 都使用 `sdk/signature/encryption.go`（KeyA/动态密钥/KeyB）进行加解密
 - [x] 添加输入验证和错误处理
 - [ ] 编写 API 集成测试
 
@@ -98,12 +101,11 @@
 
 **验收标准**：
 
-- [x] 在应用启动时创建 `signatures/card_images/` 目录
-- [x] 实现图片 Base64 解码和保存逻辑（使用 SHA-256 哈希命名）
-- [x] 实现 `GET /signature/image/:filename` 端点（返回图片二进制数据）
-- [x] 设置正确的 Content-Type 响应头
-- [x] 添加缓存控制头（Cache-Control）
-- [x] 防止路径遍历攻击（验证文件名合法性）
+- [x] 在运行期确保创建 `ConfigPath/signature/` 目录
+- [x] 保存图片文件（文件名为 SHA-1(id|name|originalName|timestamp)）
+- [x] 实现 `POST /signature/get-image` 端点（传 `imagePath`，返回图片二进制数据）
+- [x] 设置合适的响应头（application/octet-stream）
+- [x] 防止路径遍历（仅允许读取配置中存在的绝对路径）
 - [x] 处理文件不存在的情况
 - [x] 添加错误处理和日志记录
 - [ ] 编写 API 测试
