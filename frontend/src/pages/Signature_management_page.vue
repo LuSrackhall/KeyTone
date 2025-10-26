@@ -158,7 +158,7 @@
                     /* 对溢出的情况, 采取滚动策略 */
                     'max-w-full !overflow-x-auto whitespace-nowrap !mt-1.5',
                     // 添加细微滚动条
-                    'h-4.4 [&::-webkit-scrollbar]:h-0.2 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                    'h-4.4 [&::-webkit-scrollbar]:h-0.3 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
                   ]"
                   :style="{
                     marginTop: '2px',
