@@ -330,6 +330,62 @@
       "unmute": "取消静音"
     }
   },
+  "exportFlow": {
+    "policyDialog": {
+      "title": "签名策略与要求",
+      "noSignatureTitle": "设置签名策略",
+      "description": "请确认如何处理此专辑的签名及授权要求",
+      "requireSignature": "需要签名",
+      "noSignature": "无需签名",
+      "requireSignatureHint": "为专辑添加签名以标识创作者身份（仅首次导出可选）",
+      "noSignatureHint": "此专辑导出时不添加签名（仅首次导出可选，后续修改需留下签名痕迹）",
+      "authRequired": "二次创作必须通过当前签名作者授权",
+      "authRequiredHint": "启用此项后，他人在二次导出/修改此专辑前需要获得授权。本次选择不可更改。",
+      "contact": "联系方式",
+      "contactPlaceholder": "请填写您的联系方式（邮箱、社交媒体、官网等）",
+      "contactHint": "此信息将与签名一起保存，供授权者查阅",
+      "contactRequired": "如启用授权要求，联系方式必填",
+      "tipsTitle": "提示",
+      "tips": "• 无签名痕迹的专辑首次导出可选择是否需要签名\n• 一旦添加签名，所有后续修改都需留下签名痕迹\n• 启用授权后，其他人无法在获得授权前导出此专辑",
+      "cancel": "取消",
+      "continue": "继续"
+    },
+    "authGateDialog": {
+      "title": "需要获得授权",
+      "description": "此专辑要求授权才能继续导出",
+      "authorContact": "原作者联系方式",
+      "contactHint": "请通过以下方式联系原作者获取授权",
+      "copy": "复制",
+      "copySuccess": "已复制到剪贴板",
+      "importAuthFile": "导入授权文件",
+      "importHint": "请导入原作者提供的授权文件以继续",
+      "selectFile": "选择授权文件",
+      "noFileSelected": "未选择文件",
+      "fileSelected": "已选择",
+      "importButton": "导入",
+      "help": "如何获得授权？",
+      "continue": "继续",
+      "cancel": "取消"
+    },
+    "pickerDialog": {
+      "title": "选择签名",
+      "description": "请选择此次导出使用的签名",
+      "search": "搜索签名...",
+      "noResults": "未找到匹配的签名",
+      "emptyState": "暂无签名",
+      "createSignature": "创建签名",
+      "createHint": "点击创建新签名",
+      "selectHint": "点击选择签名",
+      "noImage": "暂无图片",
+      "noIntro": "暂无介绍",
+      "confirm": "确认",
+      "cancel": "取消"
+    },
+    "notify": {
+      "contactCopied": "联系方式已复制",
+      "authFileImported": "授权文件已导入"
+    }
+  },
   "signature": {
     "page": {
       "title": "签名管理",

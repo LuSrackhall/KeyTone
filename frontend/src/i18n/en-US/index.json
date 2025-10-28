@@ -336,6 +336,62 @@
       "unmute": "Unmute"
     }
   },
+  "exportFlow": {
+    "policyDialog": {
+      "title": "Signature Policy & Requirements",
+      "noSignatureTitle": "Set Signature Policy",
+      "description": "Please confirm how to handle signature and authorization requirements for this album",
+      "requireSignature": "Require Signature",
+      "noSignature": "No Signature",
+      "requireSignatureHint": "Add signature to identify creator (optional on first export)",
+      "noSignatureHint": "Export album without signature (optional on first export only; later changes require signature)",
+      "authRequired": "Secondary creation must be authorized by current signature author",
+      "authRequiredHint": "Once enabled, others must get authorization before re-exporting/modifying this album. This choice cannot be changed.",
+      "contact": "Contact Information",
+      "contactPlaceholder": "Enter your contact info (email, social media, website, etc.)",
+      "contactHint": "This info will be saved with the signature for authorization reference",
+      "contactRequired": "Contact info is required if authorization is enabled",
+      "tipsTitle": "Tips",
+      "tips": "• First export of albums without signatures can choose whether to add signature\n• Once signature is added, all future changes require signature\n• With authorization enabled, others cannot export until authorized",
+      "cancel": "Cancel",
+      "continue": "Continue"
+    },
+    "authGateDialog": {
+      "title": "Authorization Required",
+      "description": "This album requires authorization before export",
+      "authorContact": "Author Contact",
+      "contactHint": "Contact the author through the following to get authorization",
+      "copy": "Copy",
+      "copySuccess": "Copied to clipboard",
+      "importAuthFile": "Import Authorization File",
+      "importHint": "Please import the authorization file from the author to continue",
+      "selectFile": "Select Authorization File",
+      "noFileSelected": "No file selected",
+      "fileSelected": "Selected",
+      "importButton": "Import",
+      "help": "How to get authorization?",
+      "continue": "Continue",
+      "cancel": "Cancel"
+    },
+    "pickerDialog": {
+      "title": "Select Signature",
+      "description": "Select the signature to use for this export",
+      "search": "Search signatures...",
+      "noResults": "No matching signatures found",
+      "emptyState": "No signatures",
+      "createSignature": "Create Signature",
+      "createHint": "Click to create new signature",
+      "selectHint": "Click to select signature",
+      "noImage": "No image",
+      "noIntro": "No introduction",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "notify": {
+      "contactCopied": "Contact info copied",
+      "authFileImported": "Auth file imported"
+    }
+  },
   "signature": {
     "page": {
       "title": "Signature Management",

@@ -259,6 +259,27 @@
         </div>
       </div>
     </div>
+
+    <!-- Export Signature Flow Dialogs -->
+    <export-signature-policy-dialog
+      :visible="exportFlow.policyDialogVisible.value"
+      :album-has-signature="albumHasSignature"
+      @submit="exportFlow.handlePolicySubmit"
+      @cancel="exportFlow.handlePolicyCancel"
+    />
+    <export-authorization-gate-dialog
+      :visible="exportFlow.authGateDialogVisible.value"
+      :author-contact="authorContact"
+      @authorized="exportFlow.handleAuthGateAuthorized"
+      @cancel="exportFlow.handleAuthGateCancel"
+    />
+    <signature-picker-dialog
+      :visible="exportFlow.pickerDialogVisible.value"
+      :signatures="mockSignatures"
+      @select="exportFlow.handlePickerSelect"
+      @createNew="exportFlow.handlePickerCreateNew"
+      @cancel="exportFlow.handlePickerCancel"
+    />
   </div>
 </template>
 
@@ -271,6 +292,10 @@ import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ExportSignaturePolicyDialog from 'src/components/ExportSignaturePolicyDialog.vue';
+import ExportAuthorizationGateDialog from 'src/components/ExportAuthorizationGateDialog.vue';
+import SignaturePickerDialog from 'src/components/SignaturePickerDialog.vue';
+import { useExportSignatureFlow } from 'src/composables/useExportSignatureFlow';
 import {
   DeleteAlbum,
   GetAudioPackageName,
@@ -310,6 +335,28 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+// Export Signature Flow 初始化
+const exportFlow = useExportSignatureFlow();
+const albumHasSignature = ref(false);
+const authorContact = ref('contact@example.com');
+const mockSignatures = [
+  {
+    id: '1',
+    name: 'Creator A',
+    intro: 'Professional music producer',
+  },
+  {
+    id: '2',
+    name: 'Artist B',
+    intro: 'Sound designer',
+  },
+  {
+    id: '3',
+    name: 'Musician C',
+    intro: 'Composer and keyboardist',
+  },
+];
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -409,8 +456,80 @@ const exportAlbumLegacy = async () => {
   }
 };
 
-// 导出键音专辑 - 使用 File System Access API
+// 导出键音专辑 - 使用签名与授权流程
 const exportAlbum = async () => {
+  // 首先启动签名流程对话框
+  // 我们假设这是一个有签名的专辑，可以根据实际情况改变这个值
+  const hasExistingSignature = false; // TODO: 从实际数据源获取
+
+  await exportFlow.start({ albumHasSignature: hasExistingSignature });
+};
+
+const blur = () => {
+  setTimeout(() => {
+    selectedKeyTonePkgRef?.value?.blur();
+    // TIPS: 这里需要延迟后再blur, 以确保blur的正确触发(太早触发blur会不起作用, 经验证, 本人电脑延迟10ms后, 可以正确触发blur使焦点丧失, 为确保适配更多的低性能设备, 这里保险起见设置为66ms)
+  }, 66);
+};
+
+console.log('main_store.keyTonePkgOptions', main_store.keyTonePkgOptions);
+
+// 监听 KeytoneAlbum 内部的滚动
+const handleAlbumScroll = (event: Event) => {
+  const scrollableElement = (event.target as HTMLElement).closest('.q-scrollarea__container');
+  if (!scrollableElement) return;
+
+  const currentScroll = scrollableElement.scrollTop;
+  const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
+
+  // 更新是否在顶部的状态
+  isAtTop.value = currentScroll === 0;
+
+  // 在顶部继续向上滚动时展开
+  if (currentScroll === 0 && event instanceof WheelEvent && event.deltaY < 0 && isCollapsed.value) {
+    isCollapsed.value = false;
+    return;
+  }
+
+  // 向下滚动时立即收起
+  if (
+    (currentScroll > lastScrollTop ||
+      (currentScroll >= maxScroll && event instanceof WheelEvent && event.deltaY > 0)) &&
+    !isCollapsed.value
+  ) {
+    isCollapsed.value = true;
+  }
+
+  lastScrollTop = currentScroll;
+};
+
+// 添加事件监听器的函数
+const setupScrollListeners = () => {
+  // 给一点延时确保 DOM 已更新
+  setTimeout(() => {
+    const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
+    if (scrollContainer) {
+      // 先移除可能存在的旧监听器
+      scrollContainer.removeEventListener('scroll', handleAlbumScroll);
+      scrollContainer.removeEventListener('wheel', handleAlbumScroll);
+      // 添加新的监听器
+      scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
+      scrollContainer.addEventListener('wheel', handleAlbumScroll, { passive: true });
+    }
+  }, 100);
+};
+
+// 处理签名流程完成
+const handleExportSignatureFlowComplete = async () => {
+  const result = exportFlow.getResult();
+
+  if (!result) {
+    console.log('Export flow cancelled');
+    return;
+  }
+
+  console.log('Export signature flow completed with result:', result);
+
   // 检查 API 是否可用
   if (typeof window.showSaveFilePicker !== 'function') {
     console.log('Browser does not support File System Access API, falling back to legacy export');
@@ -467,59 +586,16 @@ const exportAlbum = async () => {
   }
 };
 
-const blur = () => {
-  setTimeout(() => {
-    selectedKeyTonePkgRef?.value?.blur();
-    // TIPS: 这里需要延迟后再blur, 以确保blur的正确触发(太早触发blur会不起作用, 经验证, 本人电脑延迟10ms后, 可以正确触发blur使焦点丧失, 为确保适配更多的低性能设备, 这里保险起见设置为66ms)
-  }, 66);
-};
-
-console.log('main_store.keyTonePkgOptions', main_store.keyTonePkgOptions);
-
-// 监听 KeytoneAlbum 内部的滚动
-const handleAlbumScroll = (event: Event) => {
-  const scrollableElement = (event.target as HTMLElement).closest('.q-scrollarea__container');
-  if (!scrollableElement) return;
-
-  const currentScroll = scrollableElement.scrollTop;
-  const maxScroll = scrollableElement.scrollHeight - scrollableElement.clientHeight;
-
-  // 更新是否在顶部的状态
-  isAtTop.value = currentScroll === 0;
-
-  // 在顶部继续向上滚动时展开
-  if (currentScroll === 0 && event instanceof WheelEvent && event.deltaY < 0 && isCollapsed.value) {
-    isCollapsed.value = false;
-    return;
-  }
-
-  // 向下滚动时立即收起
-  if (
-    (currentScroll > lastScrollTop ||
-      (currentScroll >= maxScroll && event instanceof WheelEvent && event.deltaY > 0)) &&
-    !isCollapsed.value
-  ) {
-    isCollapsed.value = true;
-  }
-
-  lastScrollTop = currentScroll;
-};
-
-// 添加事件监听器的函数
-const setupScrollListeners = () => {
-  // 给一点延时确保 DOM 已更新
-  setTimeout(() => {
-    const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
-    if (scrollContainer) {
-      // 先移除可能存在的旧监听器
-      scrollContainer.removeEventListener('scroll', handleAlbumScroll);
-      scrollContainer.removeEventListener('wheel', handleAlbumScroll);
-      // 添加新的监听器
-      scrollContainer.addEventListener('scroll', handleAlbumScroll, { passive: true });
-      scrollContainer.addEventListener('wheel', handleAlbumScroll, { passive: true });
+// 监听签名流程完成
+watch(
+  () => exportFlow.currentStep.value,
+  (newStep) => {
+    if (newStep === 'done') {
+      handleExportSignatureFlowComplete();
+      exportFlow.reset();
     }
-  }, 100);
-};
+  }
+);
 
 // 监听键音包变化
 watch(
