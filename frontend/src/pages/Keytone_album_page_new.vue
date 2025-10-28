@@ -140,6 +140,27 @@
                 {{ $t('keyToneAlbumPage.help') }}
               </q-tooltip>
             </q-btn>
+
+            <!-- 验收测试：授权门控开关（仅 UI/交互验证使用） -->
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
+              icon="vpn_key"
+              :color="testExistingSigRequireAuth ? 'amber' : 'grey'"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="toggleTestAuthGate"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                {{ $t('exportFlow.test.authGateTip') }}
+              </q-tooltip>
+            </q-btn>
           </div>
 
           <!-- 键音专辑选择器 -->
@@ -261,25 +282,48 @@
     </div>
 
     <!-- Export Signature Flow Dialogs -->
-    <export-signature-policy-dialog
-      :visible="exportFlow.policyDialogVisible.value"
-      :album-has-signature="albumHasSignature"
-      @submit="exportFlow.handlePolicySubmit"
-      @cancel="exportFlow.handlePolicyCancel"
+    <!-- 1) 是否需要签名（仅无签名专辑导出时展示） -->
+    <export-signature-confirm-dialog
+      :visible="exportFlow.confirmSignatureDialogVisible.value"
+      @submit="exportFlow.handleConfirmSignatureSubmit"
+      @cancel="exportFlow.handleConfirmSignatureCancel"
     />
+    <!-- 2) 是否需要授权（默认无需授权，推荐） -->
+    <export-authorization-requirement-dialog
+      :visible="exportFlow.authRequirementDialogVisible.value"
+      @submit="exportFlow.handleAuthRequirementSubmit"
+      @cancel="exportFlow.handleAuthRequirementCancel"
+    />
+    <!-- 3) 授权的二次确认提示 -->
+    <export-authorization-impact-confirm-dialog
+      :visible="exportFlow.authImpactConfirmDialogVisible.value"
+      @confirm="exportFlow.handleAuthImpactConfirm"
+      @cancel="exportFlow.handleAuthImpactCancel"
+      @back="exportFlow.handleAuthImpactBack"
+    />
+    <!-- 4) 填写授权联系方式（必填） -->
+    <export-authorization-contact-dialog
+      :visible="exportFlow.authContactDialogVisible.value"
+      @submit="exportFlow.handleAuthContactSubmit"
+      @cancel="exportFlow.handleAuthContactCancel"
+    />
+    <!-- 5) 已有签名且需要授权 → 授权门控（导入授权文件） -->
     <export-authorization-gate-dialog
       :visible="exportFlow.authGateDialogVisible.value"
       :author-contact="authorContact"
       @authorized="exportFlow.handleAuthGateAuthorized"
       @cancel="exportFlow.handleAuthGateCancel"
     />
+    <!-- 6) 选择签名（带创建按钮） -->
     <signature-picker-dialog
       :visible="exportFlow.pickerDialogVisible.value"
       :signatures="mockSignatures"
       @select="exportFlow.handlePickerSelect"
-      @createNew="exportFlow.handlePickerCreateNew"
+      @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"
     />
+    <!-- 真实的创建签名对话框（已存在的组件） -->
+    <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />
   </div>
 </template>
 
@@ -292,9 +336,13 @@ import { computed, nextTick, useTemplateRef } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ExportSignaturePolicyDialog from 'src/components/ExportSignaturePolicyDialog.vue';
+import ExportSignatureConfirmDialog from 'src/components/ExportSignatureConfirmDialog.vue';
+import ExportAuthorizationRequirementDialog from 'src/components/ExportAuthorizationRequirementDialog.vue';
+import ExportAuthorizationImpactConfirmDialog from 'src/components/ExportAuthorizationImpactConfirmDialog.vue';
+import ExportAuthorizationContactDialog from 'src/components/ExportAuthorizationContactDialog.vue';
 import ExportAuthorizationGateDialog from 'src/components/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from 'src/components/SignaturePickerDialog.vue';
+import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import { useExportSignatureFlow } from 'src/composables/useExportSignatureFlow';
 import {
   DeleteAlbum,
@@ -357,6 +405,26 @@ const mockSignatures = [
     intro: 'Composer and keyboardist',
   },
 ];
+
+// 测试按钮：模拟“已有签名且要求授权”的场景（仅供验收）
+const testExistingSigRequireAuth = ref(false);
+const toggleTestAuthGate = () => {
+  testExistingSigRequireAuth.value = !testExistingSigRequireAuth.value;
+  q.notify({
+    type: 'info',
+    message: `${$t('exportFlow.test.authGate')}: ${testExistingSigRequireAuth.value ? 'ON' : 'OFF'}`,
+  });
+};
+
+// 真实创建签名对话框控制（已存在组件）
+const showSignatureFormDialog = ref(false);
+const onOpenCreateSignature = () => {
+  showSignatureFormDialog.value = true;
+};
+const onSignatureFormSuccess = () => {
+  // 真实创建成功后，业务上应刷新签名列表；此处作为演示，给出提示
+  q.notify({ type: 'positive', message: $t('signature.page.createSuccess') || 'Signature created' });
+};
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -460,9 +528,11 @@ const exportAlbumLegacy = async () => {
 const exportAlbum = async () => {
   // 首先启动签名流程对话框
   // 我们假设这是一个有签名的专辑，可以根据实际情况改变这个值
-  const hasExistingSignature = false; // TODO: 从实际数据源获取
-
-  await exportFlow.start({ albumHasSignature: hasExistingSignature });
+  const hasExistingSignature = albumHasSignature.value; // TODO: 接入真实专辑元数据
+  await exportFlow.start({
+    albumHasSignature: hasExistingSignature,
+    existingSignatureRequireAuthorization: testExistingSigRequireAuth.value,
+  });
 };
 
 const blur = () => {

@@ -337,6 +337,37 @@
     }
   },
   "exportFlow": {
+    "common": {
+      "cancel": "Cancel",
+      "continue": "Continue",
+      "back": "Back"
+    },
+    "confirmSignature": {
+      "title": "Require a signature?",
+      "description": "This album has no signature yet. Do you want to add a signature for this export?",
+      "needSignature": "Require signature",
+      "noSignature": "No signature"
+    },
+    "authRequire": {
+      "title": "Require authorization for secondary creation?",
+      "description": "Should others be required to obtain your authorization before re-exporting or modifying?",
+      "recommend": "Recommended: No authorization required (better for sharing)",
+      "yes": "Authorization required",
+      "no": "No authorization required"
+    },
+    "authImpact": {
+      "title": "Impact of enabling authorization",
+      "message": "Enabling 'authorization required' will prevent others from exporting/modifying without authorization, which may impact sharing. Your author info will still be preserved even if you don't enable it. Continue?",
+      "confirm": "I understand, continue",
+      "cancel": "Cancel enabling"
+    },
+    "contact": {
+      "title": "Provide contact for authorization",
+      "description": "Please provide a way to contact you (email, social media, website, etc.)",
+      "label": "Contact",
+      "hint": "This will be saved with the signature for authorization reference",
+      "required": "Contact is required when authorization is enabled"
+    },
     "policyDialog": {
       "title": "Signature Policy & Requirements",
       "noSignatureTitle": "Set Signature Policy",
@@ -355,6 +386,10 @@
       "tips": "• First export of albums without signatures can choose whether to add signature\n• Once signature is added, all future changes require signature\n• With authorization enabled, others cannot export until authorized",
       "cancel": "Cancel",
       "continue": "Continue"
+    },
+    "test": {
+      "authGate": "Auth Gate Test",
+      "authGateTip": "Toggle: Simulate 'has signature and requires authorization'"
     },
     "authGateDialog": {
       "title": "Authorization Required",

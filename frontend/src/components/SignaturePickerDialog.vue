@@ -27,6 +27,16 @@
             clearable
             size="sm"
           />
+          <div class="q-mt-xs flex justify-end">
+            <q-btn
+              size="xs"
+              flat
+              color="primary"
+              icon="add"
+              :label="$t('exportFlow.pickerDialog.createSignature')"
+              @click="onCreateNew"
+            />
+          </div>
         </div>
 
         <!-- Signatures Grid / Empty State -->
@@ -58,19 +68,6 @@
 
           <!-- Signatures List -->
           <div v-else class="col">
-            <!-- Create New Card (visible when signatures exist) -->
-            <q-card flat bordered class="signature-card cursor-pointer create-new-card q-mb-sm" @click="onCreateNew">
-              <q-card-section class="text-center q-pa-sm">
-                <q-icon name="add_circle_outline" size="24px" color="primary" />
-                <div class="text-caption text-primary q-mt-xs">
-                  {{ $t('exportFlow.pickerDialog.createSignature') }}
-                </div>
-                <div class="text-caption text-grey q-mt-xs" style="font-size: 0.7rem">
-                  {{ $t('exportFlow.pickerDialog.createHint') }}
-                </div>
-              </q-card-section>
-            </q-card>
-
             <!-- Signature Cards -->
             <div v-for="sig in filteredSignatures" :key="sig.id" class="q-mb-sm">
               <q-card
@@ -163,16 +160,14 @@ const isVisible = ref(false);
 const searchQuery = ref('');
 const selectedId = ref('');
 
-// Filter signatures based on search query
+// Filter signatures based on search query (only by name)
 const filteredSignatures = computed(() => {
   if (!searchQuery.value) {
     return props.signatures;
   }
 
   const query = searchQuery.value.toLowerCase();
-  return props.signatures.filter(
-    (sig) => sig.name.toLowerCase().includes(query) || (sig.intro && sig.intro.toLowerCase().includes(query))
-  );
+  return props.signatures.filter((sig) => sig.name.toLowerCase().includes(query));
 });
 
 // Watch visible prop

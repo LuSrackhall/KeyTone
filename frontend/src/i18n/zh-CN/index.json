@@ -331,6 +331,37 @@
     }
   },
   "exportFlow": {
+    "common": {
+      "cancel": "取消",
+      "continue": "继续",
+      "back": "返回"
+    },
+    "confirmSignature": {
+      "title": "是否需要签名",
+      "description": "当前专辑尚未留下任何签名痕迹，请选择此次导出是否需要添加签名。",
+      "needSignature": "需要签名",
+      "noSignature": "无需签名"
+    },
+    "authRequire": {
+      "title": "二次创作是否需要授权",
+      "description": "是否要求他人在进行二次创作时，必须先获得作者授权？",
+      "recommend": "推荐：无需授权（更利于传播）",
+      "yes": "需要授权",
+      "no": "无需授权"
+    },
+    "authImpact": {
+      "title": "启用授权的影响",
+      "message": "启用“二次创作需授权”将限制他人在未获得授权时进行导出或修改，可能影响专辑的传播。但即使不启用，导出文件中仍会保留原作者信息。是否继续？",
+      "confirm": "我已知晓并继续",
+      "cancel": "放弃启用"
+    },
+    "contact": {
+      "title": "填写授权联系方式",
+      "description": "请提供可以联系到您的方式（邮箱、社交媒体、官网等）",
+      "label": "联系方式",
+      "hint": "此信息将与签名一起保存，供授权者查阅",
+      "required": "授权方式已启用，联系方式必填"
+    },
     "policyDialog": {
       "title": "签名策略与要求",
       "noSignatureTitle": "设置签名策略",
@@ -349,6 +380,10 @@
       "tips": "• 无签名痕迹的专辑首次导出可选择是否需要签名\n• 一旦添加签名，所有后续修改都需留下签名痕迹\n• 启用授权后，其他人无法在获得授权前导出此专辑",
       "cancel": "取消",
       "continue": "继续"
+    },
+    "test": {
+      "authGate": "授权门控测试",
+      "authGateTip": "切换：模拟“已有签名且需授权”的专辑状态"
     },
     "authGateDialog": {
       "title": "需要获得授权",

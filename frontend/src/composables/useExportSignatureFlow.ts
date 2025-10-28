@@ -9,14 +9,24 @@ export interface ExportSignatureFlowResult {
 
 export interface ExportSignatureFlowOptions {
   albumHasSignature?: boolean;
+  /** 临时测试开关：已有签名且原作者要求授权时为 true，用于触发展示授权门控对话框 */
+  existingSignatureRequireAuthorization?: boolean;
 }
 
 interface State {
-  step: 'idle' | 'policy' | 'auth-gate' | 'picker' | 'done';
-  policyData?: {
-    needSignature: boolean;
-    requireAuthorization: boolean;
-    contact?: string;
+  step:
+    | 'idle'
+    | 'confirm-signature' // 没有任何签名时，先确认是否需要签名
+    | 'auth-requirement' // 二次创作是否需要授权（推荐不需要）
+    | 'auth-impact-confirm' // 选择需要授权后的二次确认弹窗
+    | 'auth-contact' // 需要授权时的联系方式填写
+    | 'auth-gate' // 已有签名且原作者要求授权时的授权门控
+    | 'picker' // 选择签名
+    | 'done';
+  flowData?: {
+    needSignature?: boolean; // 是否需要签名
+    requireAuthorization?: boolean; // 二次创作是否需要作者授权
+    contact?: string; // 授权联系方式
   };
   isAuthorized: boolean;
   selectedSignatureId?: string;
@@ -39,7 +49,10 @@ export function useExportSignatureFlow() {
   });
 
   // Dialog visibility refs
-  const policyDialogVisible = ref(false);
+  const confirmSignatureDialogVisible = ref(false);
+  const authRequirementDialogVisible = ref(false);
+  const authImpactConfirmDialogVisible = ref(false);
+  const authContactDialogVisible = ref(false);
   const authGateDialogVisible = ref(false);
   const pickerDialogVisible = ref(false);
 
@@ -51,49 +64,101 @@ export function useExportSignatureFlow() {
    * @param options Configuration for the flow
    */
   const start = async (options: ExportSignatureFlowOptions = {}) => {
-    const { albumHasSignature = false } = options;
+    const { albumHasSignature = false, existingSignatureRequireAuthorization = false } = options;
 
     state.value.step = 'idle';
-    state.value.policyData = undefined;
+    state.value.flowData = undefined;
     state.value.isAuthorized = false;
     state.value.selectedSignatureId = undefined;
 
     // Step 1: Check if album has signatures
     if (!albumHasSignature) {
-      // No signatures → show policy dialog
-      state.value.step = 'policy';
-      policyDialogVisible.value = true;
-    } else {
-      // Has signatures → skip policy, go to auth check
-      await checkAuthAndProceed();
+      // 没有任何签名 → 先询问是否需要签名
+      state.value.step = 'confirm-signature';
+      confirmSignatureDialogVisible.value = true;
+      return;
     }
+
+    // 已有签名：如果要求授权则先显示授权门控；否则直接到签名选择
+    if (existingSignatureRequireAuthorization) {
+      state.value.step = 'auth-gate';
+      authGateDialogVisible.value = true;
+      return;
+    }
+
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
   };
 
-  /**
-   * Handle policy dialog submission.
-   */
-  const handlePolicySubmit = async (data: {
-    needSignature: boolean;
-    requireAuthorization: boolean;
-    contact?: string;
-  }) => {
-    state.value.policyData = data;
+  // ========== Step: confirm-signature ==========
+  const handleConfirmSignatureSubmit = (payload: { needSignature: boolean }) => {
+    state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
 
-    if (!data.needSignature) {
-      // No signature required → done
+    if (!payload.needSignature) {
+      // 用户选择无需签名 → 流程直接完成
+      confirmSignatureDialogVisible.value = false;
       state.value.step = 'done';
-      return getResult();
+      return;
     }
 
-    // Signature required → check auth and proceed to picker
-    await checkAuthAndProceed();
+    // 需要签名 → 进入“是否需要授权”的选择
+    confirmSignatureDialogVisible.value = false;
+    state.value.step = 'auth-requirement';
+    authRequirementDialogVisible.value = true;
+  };
+  const handleConfirmSignatureCancel = () => {
+    confirmSignatureDialogVisible.value = false;
+    state.value.step = 'idle';
   };
 
-  /**
-   * Handle policy dialog cancel.
-   */
-  const handlePolicyCancel = () => {
-    policyDialogVisible.value = false;
+  // ========== Step: auth-requirement ==========
+  const handleAuthRequirementSubmit = (payload: { requireAuthorization: boolean }) => {
+    state.value.flowData = { ...(state.value.flowData ?? {}), requireAuthorization: payload.requireAuthorization };
+    authRequirementDialogVisible.value = false;
+
+    if (!payload.requireAuthorization) {
+      // 不需要授权 → 直接进入签名选择
+      state.value.step = 'picker';
+      pickerDialogVisible.value = true;
+      return;
+    }
+
+    // 需要授权 → 二次确认
+    state.value.step = 'auth-impact-confirm';
+    authImpactConfirmDialogVisible.value = true;
+  };
+  const handleAuthRequirementCancel = () => {
+    authRequirementDialogVisible.value = false;
+    state.value.step = 'idle';
+  };
+
+  // ========== Step: auth-impact-confirm ==========
+  const handleAuthImpactBack = () => {
+    authImpactConfirmDialogVisible.value = false;
+    state.value.step = 'auth-requirement';
+    authRequirementDialogVisible.value = true;
+  };
+  const handleAuthImpactCancel = () => {
+    authImpactConfirmDialogVisible.value = false;
+    state.value.step = 'idle';
+  };
+  const handleAuthImpactConfirm = () => {
+    // 前往填写联系方式
+    authImpactConfirmDialogVisible.value = false;
+    state.value.step = 'auth-contact';
+    authContactDialogVisible.value = true;
+  };
+
+  // ========== Step: auth-contact ==========
+  const handleAuthContactSubmit = (payload: { contact: string }) => {
+    state.value.flowData = { ...(state.value.flowData ?? {}), contact: payload.contact };
+    authContactDialogVisible.value = false;
+    // 进入签名选择
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
+  };
+  const handleAuthContactCancel = () => {
+    authContactDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -101,17 +166,14 @@ export function useExportSignatureFlow() {
    * Check if authorization is needed, and proceed accordingly.
    */
   const checkAuthAndProceed = async () => {
-    const requiresAuth = state.value.policyData?.requireAuthorization || false;
-
-    if (requiresAuth && !state.value.isAuthorized) {
-      // Need auth and not authorized → show auth gate
+    // 此函数保留，仅供已有签名的专辑分支调用（根据 options 判定）
+    if (!state.value.isAuthorized) {
       state.value.step = 'auth-gate';
       authGateDialogVisible.value = true;
-    } else {
-      // Authorized or no auth required → show picker
-      state.value.step = 'picker';
-      pickerDialogVisible.value = true;
+      return;
     }
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
   };
 
   /**
@@ -131,7 +193,6 @@ export function useExportSignatureFlow() {
    */
   const handleAuthGateCancel = () => {
     authGateDialogVisible.value = false;
-    policyDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -167,7 +228,10 @@ export function useExportSignatureFlow() {
   const handlePickerCancel = () => {
     pickerDialogVisible.value = false;
     authGateDialogVisible.value = false;
-    policyDialogVisible.value = false;
+    confirmSignatureDialogVisible.value = false;
+    authRequirementDialogVisible.value = false;
+    authImpactConfirmDialogVisible.value = false;
+    authContactDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -175,11 +239,11 @@ export function useExportSignatureFlow() {
    * Get the final result.
    */
   const getResult = (): ExportSignatureFlowResult => {
-    const needSignature = state.value.policyData?.needSignature ?? true;
+    const needSignature = state.value.flowData?.needSignature ?? true;
     return {
       needSignature,
-      requireAuthorization: state.value.policyData?.requireAuthorization,
-      contact: state.value.policyData?.contact,
+      requireAuthorization: state.value.flowData?.requireAuthorization,
+      contact: state.value.flowData?.contact,
       signatureId: state.value.selectedSignatureId,
     };
   };
@@ -192,7 +256,10 @@ export function useExportSignatureFlow() {
       step: 'idle',
       isAuthorized: false,
     };
-    policyDialogVisible.value = false;
+    confirmSignatureDialogVisible.value = false;
+    authRequirementDialogVisible.value = false;
+    authImpactConfirmDialogVisible.value = false;
+    authContactDialogVisible.value = false;
     authGateDialogVisible.value = false;
     pickerDialogVisible.value = false;
   };
@@ -201,14 +268,24 @@ export function useExportSignatureFlow() {
     // State
     state,
     currentStep,
-    policyDialogVisible,
+    confirmSignatureDialogVisible,
+    authRequirementDialogVisible,
+    authImpactConfirmDialogVisible,
+    authContactDialogVisible,
     authGateDialogVisible,
     pickerDialogVisible,
 
     // Methods
     start,
-    handlePolicySubmit,
-    handlePolicyCancel,
+    handleConfirmSignatureSubmit,
+    handleConfirmSignatureCancel,
+    handleAuthRequirementSubmit,
+    handleAuthRequirementCancel,
+    handleAuthImpactBack,
+    handleAuthImpactCancel,
+    handleAuthImpactConfirm,
+    handleAuthContactSubmit,
+    handleAuthContactCancel,
     handleAuthGateAuthorized,
     handleAuthGateCancel,
     handlePickerSelect,
