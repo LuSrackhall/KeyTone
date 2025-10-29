@@ -388,8 +388,18 @@
       "continue": "Continue"
     },
     "test": {
-      "authGate": "Auth Gate Test",
-      "authGateTip": "Toggle: Simulate 'has signature and requires authorization'"
+      "title": "🧪 Export Flow Test Environment",
+      "description": "Configure test scenarios to verify the UI and interaction logic of the export flow. Choose different album state combinations and observe the sequence and content of dialogs displayed in the flow.",
+      "albumState": "Album State Configuration",
+      "hasSignature": "Current album has signature",
+      "hasSignatureHint": "Check if this album previously had signature history. Otherwise the Confirm Signature dialog will be shown.",
+      "requireAuth": "Original author requires authorization for secondary creation",
+      "requireAuthHint": "Only valid when 'has signature' is checked. Indicates the original author chose 'authorization required for secondary creation', which will show the auth gate dialog.",
+      "currentState": "Current Configuration Status",
+      "flowExplain": "📋 Flow Explanation & Corresponding Dialogs",
+      "openDialog": "Open Test Environment Configuration",
+      "apply": "Apply Configuration",
+      "close": "Close"
     },
     "authGateDialog": {
       "title": "Authorization Required",

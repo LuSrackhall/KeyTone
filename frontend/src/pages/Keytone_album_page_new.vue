@@ -141,16 +141,16 @@
               </q-tooltip>
             </q-btn>
 
-            <!-- 验收测试：授权门控开关（仅 UI/交互验证使用） -->
+            <!-- 验收测试：导出流程测试环境配置（仅 UI/交互验证使用） -->
             <q-btn
               flat
               dense
               round
               size="xs"
-              icon="vpn_key"
-              :color="testExistingSigRequireAuth ? 'amber' : 'grey'"
+              icon="science"
+              color="info"
               class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
-              @click="toggleTestAuthGate"
+              @click="showTestDialog = true"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -158,7 +158,7 @@
                 :offset="[0, 8]"
                 class="rounded-lg text-[0.8rem] px-3 py-1.2"
               >
-                {{ $t('exportFlow.test.authGateTip') }}
+                {{ $t('exportFlow.test.openDialog') }}
               </q-tooltip>
             </q-btn>
           </div>
@@ -324,6 +324,14 @@
     />
     <!-- 真实的创建签名对话框（已存在的组件） -->
     <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />
+
+    <!-- 测试环境对话框：配置导出流程测试场景 -->
+    <ExportSignatureFlowTestDialog
+      v-model:visible="showTestDialog"
+      :album-has-signature="testAlbumHasSignature"
+      :require-authorization="testRequireAuthorization"
+      @apply="onTestDialogApply"
+    />
   </div>
 </template>
 
@@ -342,6 +350,7 @@ import ExportAuthorizationImpactConfirmDialog from 'src/components/ExportAuthori
 import ExportAuthorizationContactDialog from 'src/components/ExportAuthorizationContactDialog.vue';
 import ExportAuthorizationGateDialog from 'src/components/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from 'src/components/SignaturePickerDialog.vue';
+import ExportSignatureFlowTestDialog from 'src/components/ExportSignatureFlowTestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import { useExportSignatureFlow } from 'src/composables/useExportSignatureFlow';
 import {
@@ -406,13 +415,40 @@ const mockSignatures = [
   },
 ];
 
-// 测试按钮：模拟“已有签名且要求授权”的场景（仅供验收）
-const testExistingSigRequireAuth = ref(false);
-const toggleTestAuthGate = () => {
-  testExistingSigRequireAuth.value = !testExistingSigRequireAuth.value;
+// 测试环境对话框控制
+const showTestDialog = ref(false);
+const testAlbumHasSignature = ref(false);
+const testRequireAuthorization = ref(false);
+
+/**
+ * 测试环境对话框应用配置
+ * 这里将用户在测试对话框中选择的状态应用到导出流程中
+ *
+ * @param config - 测试配置状态
+ * @comment
+ *   - albumHasSignature: 模拟当前专辑是否已有过任何签名
+ *   - requireAuthorization: 模拟当前专辑的原作者是否选择了"二次创作需要授权"
+ *
+ * 流程对应关系：
+ *   1. 无签名专辑（albumHasSignature=false）
+ *      - 导出时会先弹"确认签名"对话框（确认是否需要添加签名）
+ *      - 若选"无需签名"→ 直接完成
+ *      - 若选"需要签名" → 进入"授权要求"对话框
+ *
+ *   2. 有签名专辑（albumHasSignature=true）
+ *      - 不弹"确认签名"对话框
+ *      - 若 requireAuthorization=true → 先弹"授权门控"（导入授权文件）→ 再弹"选择签名"
+ *      - 若 requireAuthorization=false → 直接弹"选择签名"
+ */
+const onTestDialogApply = (config: { albumHasSignature: boolean; requireAuthorization: boolean }) => {
+  testAlbumHasSignature.value = config.albumHasSignature;
+  testRequireAuthorization.value = config.requireAuthorization;
+  albumHasSignature.value = config.albumHasSignature;
+
   q.notify({
     type: 'info',
-    message: `${$t('exportFlow.test.authGate')}: ${testExistingSigRequireAuth.value ? 'ON' : 'OFF'}`,
+    message: `Test Config Applied: HasSignature=${config.albumHasSignature}, RequireAuth=${config.requireAuthorization}`,
+    position: 'top',
   });
 };
 
@@ -525,13 +561,24 @@ const exportAlbumLegacy = async () => {
 };
 
 // 导出键音专辑 - 使用签名与授权流程
+/**
+ * 导出流程的入口
+ * 此处会根据测试配置的状态决定是否进入各个对话框步骤
+ *
+ * @comment
+ *   - 从测试环境读取 albumHasSignature 与 requireAuthorization 的配置
+ *   - 若 albumHasSignature=false，则首先弹"确认签名"对话框
+ *   - 若 albumHasSignature=true 且 requireAuthorization=true，则先弹"授权门控"对话框
+ *   - 否则直接进入"签名选择"对话框
+ */
 const exportAlbum = async () => {
-  // 首先启动签名流程对话框
-  // 我们假设这是一个有签名的专辑，可以根据实际情况改变这个值
+  // 从测试配置或真实专辑元数据读取当前专辑状态
   const hasExistingSignature = albumHasSignature.value; // TODO: 接入真实专辑元数据
+  const requiresAuth = testRequireAuthorization.value; // TODO: 接入真实专辑配置
+
   await exportFlow.start({
     albumHasSignature: hasExistingSignature,
-    existingSignatureRequireAuthorization: testExistingSigRequireAuth.value,
+    existingSignatureRequireAuthorization: requiresAuth,
   });
 };
 

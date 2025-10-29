@@ -382,27 +382,20 @@
       "continue": "继续"
     },
     "test": {
-      "authGate": "授权门控测试",
-      "authGateTip": "切换：模拟“已有签名且需授权”的专辑状态"
+      "title": "🧪 导出流程测试环境",
+      "description": "配置测试场景以验证导出流程的 UI 与交互逻辑。选择不同的专辑状态组合，观察流程中显示的对话框顺序与内容。",
+      "albumState": "专辑状态配置",
+      "hasSignature": "当前专辑已有签名",
+      "hasSignatureHint": "勾选表示此专辑之前已有过签名痕迹。否则将显示确认签名对话框。",
+      "requireAuth": "原作者要求二次创作需授权",
+      "requireAuthHint": "仅在已有签名时有效。勾选表示原作者选择了二次创作需要授权，将显示授权门控对话框。",
+      "currentState": "当前配置状态",
+      "flowExplain": "📋 流程说明与对应对话框",
+      "openDialog": "打开测试环境配置",
+      "apply": "应用配置",
+      "close": "关闭"
     },
     "authGateDialog": {
-      "title": "需要获得授权",
-      "description": "此专辑要求授权才能继续导出",
-      "authorContact": "原作者联系方式",
-      "contactHint": "请通过以下方式联系原作者获取授权",
-      "copy": "复制",
-      "copySuccess": "已复制到剪贴板",
-      "importAuthFile": "导入授权文件",
-      "importHint": "请导入原作者提供的授权文件以继续",
-      "selectFile": "选择授权文件",
-      "noFileSelected": "未选择文件",
-      "fileSelected": "已选择",
-      "importButton": "导入",
-      "help": "如何获得授权？",
-      "continue": "继续",
-      "cancel": "取消"
-    },
-    "pickerDialog": {
       "title": "选择签名",
       "description": "请选择此次导出使用的签名",
       "search": "搜索签名...",
