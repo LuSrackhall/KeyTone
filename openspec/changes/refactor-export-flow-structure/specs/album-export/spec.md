@@ -4,7 +4,7 @@
 
 ### Requirement: 导出签名流程组件分层与文档化
 
-系统在维护“导出键音专辑”签名流程时 SHALL 将所有对话框/控件组件集中在 `components/export-flow/` 命名空间内，便于识别与复用；负责编排流程的 `useExportSignatureFlow.ts` MUST 保持文件级注释，说明其为生产级状态机而非临时脚本。任何新增的导出步骤组件 MUST 继续存放在同一目录并复用该状态机。
+系统在维护“导出键音专辑”签名流程时 SHALL 将所有对话框/控件组件集中在 `components/export-flow/` 命名空间内，便于识别与复用；负责编排流程的 `components/export-flow/useExportSignatureFlow.ts` MUST 保持文件级注释，说明其为生产级状态机而非临时脚本。任何新增的导出步骤组件 MUST 继续存放在同一目录并复用该状态机。
 
 #### Scenario: 新增导出流程组件
 

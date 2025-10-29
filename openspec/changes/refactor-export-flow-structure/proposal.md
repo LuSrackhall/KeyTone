@@ -8,7 +8,7 @@
 ## What Changes
 
 - 将导出签名流程相关组件集中到 `components/export-flow/` 目录。
-- 为 `useExportSignatureFlow` 增加文件级注释，明确其作为生产级状态机的角色。
+- 将 `useExportSignatureFlow.ts` 与组件同目录存放，并保持文件级注释，明确其作为生产级状态机的角色。
 - 更新规范，记录组件归档和文档化要求。
 
 ## Impact

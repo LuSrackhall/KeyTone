@@ -351,7 +351,7 @@ import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuth
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
 import ExportSignatureFlowTestDialog from 'src/components/export-flow/ExportSignatureFlowTestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
-import { useExportSignatureFlow } from 'src/composables/useExportSignatureFlow';
+import { useExportSignatureFlow } from 'src/components/export-flow/useExportSignatureFlow';
 import {
   DeleteAlbum,
   GetAudioPackageName,

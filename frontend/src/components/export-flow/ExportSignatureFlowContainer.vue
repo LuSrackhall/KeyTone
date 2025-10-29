@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { useExportSignatureFlow } from '@/composables/useExportSignatureFlow';
+import { useExportSignatureFlow } from './useExportSignatureFlow';
 import ExportSignaturePolicyDialog from '@/components/export-flow/ExportSignaturePolicyDialog.vue';
 import ExportAuthorizationGateDialog from '@/components/export-flow/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from '@/components/export-flow/SignaturePickerDialog.vue';
@@ -115,12 +115,12 @@ const mockSignatures: Signature[] = [
 const { notify } = useQuasar();
 const {
   currentStep,
-  policyDialogVisible,
+  confirmSignatureDialogVisible: policyDialogVisible,
   authGateDialogVisible,
   pickerDialogVisible,
   start,
-  handlePolicySubmit,
-  handlePolicyCancel,
+  handleConfirmSignatureSubmit: handlePolicySubmit,
+  handleConfirmSignatureCancel: handlePolicyCancel,
   handleAuthGateAuthorized,
   handleAuthGateCancel,
   handlePickerSelect,
