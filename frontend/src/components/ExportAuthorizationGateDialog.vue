@@ -21,7 +21,10 @@
           <q-card flat bordered class="bg-grey-1">
             <q-card-section class="q-pa-sm">
               <div class="row items-center justify-between q-gutter-xs">
-                <div class="col-grow text-caption break-words" style="word-break: break-all; line-height: 1.3">
+                <div
+                  class="col-grow text-caption break-words"
+                  style="word-break: break-all; line-height: 1.3; white-space: pre-line"
+                >
                   {{ authorContact }}
                 </div>
                 <q-btn

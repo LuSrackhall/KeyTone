@@ -13,7 +13,6 @@
 
       <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
         <q-btn flat size="sm" color="primary" :label="$t('exportFlow.common.back')" @click="onBack" />
-        <q-btn unelevated size="sm" color="negative" :label="$t('exportFlow.authImpact.cancel')" @click="onCancel" />
         <q-btn unelevated size="sm" color="primary" :label="$t('exportFlow.authImpact.confirm')" @click="onConfirm" />
       </q-card-actions>
     </q-card>
@@ -26,23 +25,19 @@ import { computed } from 'vue';
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
   (e: 'confirm'): void;
-  (e: 'cancel'): void;
   (e: 'back'): void;
 }>();
 
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (v) => {
-    if (!v) emit('cancel');
+  set: () => {
+    /* Dialog is controlled by parent; no local side-effects needed on close */
   },
 });
 const isVisible = dialogVisible;
 
 function onConfirm() {
   emit('confirm');
-}
-function onCancel() {
-  emit('cancel');
 }
 function onBack() {
   emit('back');

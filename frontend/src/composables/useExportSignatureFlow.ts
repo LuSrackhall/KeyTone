@@ -4,6 +4,8 @@ export interface ExportSignatureFlowResult {
   needSignature: boolean;
   requireAuthorization?: boolean;
   contact?: string;
+  contactEmail?: string;
+  contactAdditional?: string;
   signatureId?: string;
 }
 
@@ -26,7 +28,9 @@ interface State {
   flowData?: {
     needSignature?: boolean; // 是否需要签名
     requireAuthorization?: boolean; // 二次创作是否需要作者授权
-    contact?: string; // 授权联系方式
+    contact?: string; // 授权联系方式（格式化字符串）
+    contactEmail?: string; // 邮箱
+    contactAdditional?: string; // 额外联系方式
   };
   isAuthorized: boolean;
   selectedSignatureId?: string;
@@ -138,10 +142,6 @@ export function useExportSignatureFlow() {
     state.value.step = 'auth-requirement';
     authRequirementDialogVisible.value = true;
   };
-  const handleAuthImpactCancel = () => {
-    authImpactConfirmDialogVisible.value = false;
-    state.value.step = 'idle';
-  };
   const handleAuthImpactConfirm = () => {
     // 前往填写联系方式
     authImpactConfirmDialogVisible.value = false;
@@ -150,8 +150,13 @@ export function useExportSignatureFlow() {
   };
 
   // ========== Step: auth-contact ==========
-  const handleAuthContactSubmit = (payload: { contact: string }) => {
-    state.value.flowData = { ...(state.value.flowData ?? {}), contact: payload.contact };
+  const handleAuthContactSubmit = (payload: { contact: string; email: string; additional?: string }) => {
+    state.value.flowData = {
+      ...(state.value.flowData ?? {}),
+      contact: payload.contact,
+      contactEmail: payload.email,
+      contactAdditional: payload.additional?.trim() ? payload.additional.trim() : undefined,
+    };
     authContactDialogVisible.value = false;
     // 进入签名选择
     state.value.step = 'picker';
@@ -244,6 +249,8 @@ export function useExportSignatureFlow() {
       needSignature,
       requireAuthorization: state.value.flowData?.requireAuthorization,
       contact: state.value.flowData?.contact,
+      contactEmail: state.value.flowData?.contactEmail,
+      contactAdditional: state.value.flowData?.contactAdditional,
       signatureId: state.value.selectedSignatureId,
     };
   };
@@ -282,7 +289,6 @@ export function useExportSignatureFlow() {
     handleAuthRequirementSubmit,
     handleAuthRequirementCancel,
     handleAuthImpactBack,
-    handleAuthImpactCancel,
     handleAuthImpactConfirm,
     handleAuthContactSubmit,
     handleAuthContactCancel,

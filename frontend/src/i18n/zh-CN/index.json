@@ -351,16 +351,19 @@
     },
     "authImpact": {
       "title": "启用授权的影响",
-      "message": "启用“二次创作需授权”将限制他人在未获得授权时进行导出或修改，可能影响专辑的传播。但即使不启用，导出文件中仍会保留原作者信息。是否继续？",
-      "confirm": "我已知晓并继续",
-      "cancel": "放弃启用"
+      "message": "启用“二次创作需授权”后，他人未经授权无法导出此专辑，但本地使用或个人修改不受限制。即使不启用，导出文件仍会保留原作者信息。是否继续？",
+      "confirm": "我已知晓并继续"
     },
     "contact": {
       "title": "填写授权联系方式",
-      "description": "请提供可以联系到您的方式（邮箱、社交媒体、官网等）",
-      "label": "联系方式",
-      "hint": "此信息将与签名一起保存，供授权者查阅",
-      "required": "授权方式已启用，联系方式必填"
+      "description": "请先填写一个有效邮箱，可选地补充其他联系方式（社交媒体、官网等）。",
+      "emailLabel": "邮箱",
+      "emailPlaceholder": "请输入邮箱地址",
+      "emailRequired": "请填写有效的邮箱地址",
+      "emailInvalid": "邮箱格式看起来不正确",
+      "additionalLabel": "其他联系方式（选填）",
+      "additionalPlaceholder": "可补充社交媒体、官网等信息",
+      "hint": "这些联系方式将随签名一同保存，供申请授权者查阅"
     },
     "policyDialog": {
       "title": "签名策略与要求",
@@ -371,11 +374,7 @@
       "requireSignatureHint": "为专辑添加签名以标识创作者身份（仅首次导出可选）",
       "noSignatureHint": "此专辑导出时不添加签名（仅首次导出可选，后续修改需留下签名痕迹）",
       "authRequired": "二次创作必须通过当前签名作者授权",
-      "authRequiredHint": "启用此项后，他人在二次导出/修改此专辑前需要获得授权。本次选择不可更改。",
-      "contact": "联系方式",
-      "contactPlaceholder": "请填写您的联系方式（邮箱、社交媒体、官网等）",
-      "contactHint": "此信息将与签名一起保存，供授权者查阅",
-      "contactRequired": "如启用授权要求，联系方式必填",
+      "authRequiredHint": "启用此项后，他人在重新导出此专辑前需要获得授权。本次选择不可更改。",
       "tipsTitle": "提示",
       "tips": "• 无签名痕迹的专辑首次导出可选择是否需要签名\n• 一旦添加签名，所有后续修改都需留下签名痕迹\n• 启用授权后，其他人无法在获得授权前导出此专辑",
       "cancel": "取消",
@@ -396,6 +395,21 @@
       "close": "关闭"
     },
     "authGateDialog": {
+      "title": "需要授权",
+      "description": "导出此专辑前需要获得作者授权",
+      "authorContact": "作者联系方式",
+      "contactHint": "请通过以下方式联系作者以获取授权",
+      "copy": "复制",
+      "importAuthFile": "导入授权文件",
+      "importHint": "请导入作者提供的授权文件后再继续",
+      "selectFile": "选择授权文件",
+      "fileSelected": "已选择",
+      "importButton": "导入",
+      "help": "如何获取授权？",
+      "continue": "继续",
+      "cancel": "取消"
+    },
+    "pickerDialog": {
       "title": "选择签名",
       "description": "请选择此次导出使用的签名",
       "search": "搜索签名...",

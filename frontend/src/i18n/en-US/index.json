@@ -357,16 +357,19 @@
     },
     "authImpact": {
       "title": "Impact of enabling authorization",
-      "message": "Enabling 'authorization required' will prevent others from exporting/modifying without authorization, which may impact sharing. Your author info will still be preserved even if you don't enable it. Continue?",
-      "confirm": "I understand, continue",
-      "cancel": "Cancel enabling"
+      "message": "Enabling 'authorization required for secondary creation' stops others from exporting this album without approval but does not limit their local edits. Exported files still keep your author info even if you leave it off. Continue?",
+      "confirm": "I understand, continue"
     },
     "contact": {
       "title": "Provide contact for authorization",
-      "description": "Please provide a way to contact you (email, social media, website, etc.)",
-      "label": "Contact",
-      "hint": "This will be saved with the signature for authorization reference",
-      "required": "Contact is required when authorization is enabled"
+      "description": "Please enter a valid email and optionally add other contact methods (social media, website, etc.).",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter your email address",
+      "emailRequired": "Email is required when authorization is enabled",
+      "emailInvalid": "Please enter a valid email address",
+      "additionalLabel": "Additional contact (optional)",
+      "additionalPlaceholder": "Add social media, website, or other contact info",
+      "hint": "These details are stored with the signature so requesters can reach you"
     },
     "policyDialog": {
       "title": "Signature Policy & Requirements",
@@ -377,11 +380,7 @@
       "requireSignatureHint": "Add signature to identify creator (optional on first export)",
       "noSignatureHint": "Export album without signature (optional on first export only; later changes require signature)",
       "authRequired": "Secondary creation must be authorized by current signature author",
-      "authRequiredHint": "Once enabled, others must get authorization before re-exporting/modifying this album. This choice cannot be changed.",
-      "contact": "Contact Information",
-      "contactPlaceholder": "Enter your contact info (email, social media, website, etc.)",
-      "contactHint": "This info will be saved with the signature for authorization reference",
-      "contactRequired": "Contact info is required if authorization is enabled",
+      "authRequiredHint": "Once enabled, others must get authorization before re-exporting this album. This choice cannot be changed.",
       "tipsTitle": "Tips",
       "tips": "• First export of albums without signatures can choose whether to add signature\n• Once signature is added, all future changes require signature\n• With authorization enabled, others cannot export until authorized",
       "cancel": "Cancel",

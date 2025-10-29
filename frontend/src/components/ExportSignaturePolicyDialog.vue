@@ -42,22 +42,33 @@
         <!-- Contact Information Input (visible when authorization is enabled) -->
         <div v-if="formData.requireAuthorization" class="q-mb-md">
           <q-input
-            v-model="formData.contact"
-            :label="$t('exportFlow.policyDialog.contact')"
-            :placeholder="$t('exportFlow.policyDialog.contactPlaceholder')"
-            :rules="contactRules"
+            v-model="formData.contactEmail"
+            :label="$t('exportFlow.contact.emailLabel')"
+            :placeholder="$t('exportFlow.contact.emailPlaceholder')"
             filled
             dense
+            type="email"
             counter
             maxlength="200"
-            type="text"
-            @blur="validateContact"
+            @blur="validateEmail"
+          />
+          <q-input
+            v-model="formData.contactAdditional"
+            :label="$t('exportFlow.contact.additionalLabel')"
+            :placeholder="$t('exportFlow.contact.additionalPlaceholder')"
+            filled
+            dense
+            type="textarea"
+            autogrow
+            counter
+            maxlength="500"
+            class="q-mt-sm"
           />
           <div class="text-caption text-grey q-mt-xs">
-            {{ $t('exportFlow.policyDialog.contactHint') }}
+            {{ $t('exportFlow.contact.hint') }}
           </div>
-          <div v-if="contactError" class="text-caption text-negative q-mt-xs">
-            {{ contactError }}
+          <div v-if="emailError" class="text-caption text-negative q-mt-xs">
+            {{ emailError }}
           </div>
         </div>
 
@@ -108,6 +119,8 @@ interface PolicyDialogEmits {
       needSignature: boolean;
       requireAuthorization: boolean;
       contact?: string;
+      contactEmail?: string;
+      contactAdditional?: string;
     }
   ): void;
   (e: 'cancel'): void;
@@ -116,7 +129,8 @@ interface PolicyDialogEmits {
 interface FormData {
   needSignature: boolean;
   requireAuthorization: boolean;
-  contact: string;
+  contactEmail: string;
+  contactAdditional: string;
 }
 
 const props = withDefaults(defineProps<PolicyDialogProps>(), {
@@ -132,9 +146,11 @@ const isVisible = ref(false);
 const formData = ref<FormData>({
   needSignature: true,
   requireAuthorization: false,
-  contact: '',
+  contactEmail: '',
+  contactAdditional: '',
 });
-const contactError = ref('');
+const emailError = ref('');
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Signature requirement options (only for no-signature albums)
 const signatureOptions = computed(() => [
@@ -150,22 +166,11 @@ const signatureOptions = computed(() => [
   },
 ]);
 
-// Contact validation rules
-const contactRules = computed(() => [
-  (val: string) => {
-    if (formData.value.requireAuthorization && !val) {
-      return t('exportFlow.policyDialog.contactRequired');
-    }
-    if (val && val.length > 500) {
-      return 'Max 500 characters';
-    }
-    return true;
-  },
-]);
+const isValidEmail = (value: string) => emailPattern.test(value.trim());
 
 // Computed: Can continue button be enabled?
 const canContinue = computed(() => {
-  if (formData.value.requireAuthorization && !formData.value.contact.trim()) {
+  if (formData.value.requireAuthorization && !isValidEmail(formData.value.contactEmail)) {
     return false;
   }
   return true;
@@ -181,9 +186,10 @@ watch(
       formData.value = {
         needSignature: true,
         requireAuthorization: props.defaultRequireAuth,
-        contact: '',
+        contactEmail: '',
+        contactAdditional: '',
       };
-      contactError.value = '';
+      emailError.value = '';
     }
   }
 );
@@ -198,29 +204,48 @@ watch(isVisible, (newVal) => {
 // Handlers
 const onAuthorizationToggle = () => {
   if (!formData.value.requireAuthorization) {
-    formData.value.contact = '';
-    contactError.value = '';
+    formData.value.contactEmail = '';
+    formData.value.contactAdditional = '';
+    emailError.value = '';
   }
 };
 
-const validateContact = () => {
-  if (formData.value.requireAuthorization && !formData.value.contact.trim()) {
-    contactError.value = t('exportFlow.policyDialog.contactRequired');
-  } else {
-    contactError.value = '';
+const validateEmail = () => {
+  if (!formData.value.requireAuthorization) {
+    emailError.value = '';
+    return;
   }
+
+  const trimmed = formData.value.contactEmail.trim();
+  if (!trimmed) {
+    emailError.value = t('exportFlow.contact.emailRequired');
+    return;
+  }
+
+  if (!isValidEmail(trimmed)) {
+    emailError.value = t('exportFlow.contact.emailInvalid');
+    return;
+  }
+
+  emailError.value = '';
 };
 
 const onSubmit = () => {
   if (!canContinue.value) {
-    validateContact();
+    validateEmail();
     return;
   }
+
+  const email = formData.value.contactEmail.trim();
+  const additional = formData.value.contactAdditional.trim();
+  const contact = formData.value.requireAuthorization ? (additional ? `${email}\n${additional}` : email) : undefined;
 
   emit('submit', {
     needSignature: formData.value.needSignature,
     requireAuthorization: formData.value.requireAuthorization,
-    contact: formData.value.requireAuthorization ? formData.value.contact : undefined,
+    contact,
+    contactEmail: formData.value.requireAuthorization ? email : undefined,
+    contactAdditional: formData.value.requireAuthorization && additional ? additional : undefined,
   });
 
   isVisible.value = false;

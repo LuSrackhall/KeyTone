@@ -298,7 +298,6 @@
     <export-authorization-impact-confirm-dialog
       :visible="exportFlow.authImpactConfirmDialogVisible.value"
       @confirm="exportFlow.handleAuthImpactConfirm"
-      @cancel="exportFlow.handleAuthImpactCancel"
       @back="exportFlow.handleAuthImpactBack"
     />
     <!-- 4) 填写授权联系方式（必填） -->
