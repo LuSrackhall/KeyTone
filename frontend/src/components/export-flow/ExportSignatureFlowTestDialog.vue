@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
@@ -131,7 +131,6 @@ const testState = ref({
 });
 
 // 监听 props 变化，同步到本地副本
-import { watch } from 'vue';
 watch(
   () => ({ hasSignature: props.albumHasSignature, requireAuth: props.requireAuthorization }),
   ({ hasSignature, requireAuth }) => {

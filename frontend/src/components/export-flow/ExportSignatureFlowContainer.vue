@@ -79,9 +79,9 @@
 import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useExportSignatureFlow } from '@/composables/useExportSignatureFlow';
-import ExportSignaturePolicyDialog from '@/components/ExportSignaturePolicyDialog.vue';
-import ExportAuthorizationGateDialog from '@/components/ExportAuthorizationGateDialog.vue';
-import SignaturePickerDialog from '@/components/SignaturePickerDialog.vue';
+import ExportSignaturePolicyDialog from '@/components/export-flow/ExportSignaturePolicyDialog.vue';
+import ExportAuthorizationGateDialog from '@/components/export-flow/ExportAuthorizationGateDialog.vue';
+import SignaturePickerDialog from '@/components/export-flow/SignaturePickerDialog.vue';
 
 interface Signature {
   id: string;

@@ -1,3 +1,11 @@
+/**
+ * Centralized state machine for the album export signature experience.
+ *
+ * This composable intentionally lives alongside the export-flow UI components and
+ * encodes the production-ready sequence of dialogs (policy → authorization → picker).
+ * While the current branch still uses mock data, the flow orchestration and public
+ * interface are meant to be reused when wiring the real export logic.
+ */
 import { ref, computed, Ref } from 'vue';
 
 export interface ExportSignatureFlowResult {
