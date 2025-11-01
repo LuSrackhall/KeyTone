@@ -28,6 +28,47 @@ import (
 	"github.com/spf13/viper"
 )
 
+// migrateConfigFile 自动检测并迁移旧的 config.json 为 package.json
+// 用于支持从旧版本到新版本的平滑升级
+func migrateConfigFile(configPath string) error {
+	oldConfigPath := filepath.Join(configPath, "config.json")
+	newConfigPath := filepath.Join(configPath, "package.json")
+
+	// 检查新的配置文件是否已存在
+	if _, err := os.Stat(newConfigPath); err == nil {
+		// 新文件已存在，检查旧文件是否也存在
+		if _, err := os.Stat(oldConfigPath); err == nil {
+			// 新旧文件都存在，这是一个异常情况，记录警告但不处理
+			logger.Warn("检测到 config.json 和 package.json 同时存在，将保留 package.json", "path", configPath)
+			return nil
+		}
+		// 新文件存在，旧文件不存在，无需迁移
+		return nil
+	} else if !os.IsNotExist(err) {
+		// 其他错误（如权限问题）
+		logger.Error("检查新配置文件时出错", "path", newConfigPath, "error", err.Error())
+		return err
+	}
+
+	// 检查旧的配置文件是否存在
+	if _, err := os.Stat(oldConfigPath); err == nil {
+		// 旧文件存在，执行迁移
+		if err := os.Rename(oldConfigPath, newConfigPath); err != nil {
+			logger.Error("迁移配置文件失败", "from", oldConfigPath, "to", newConfigPath, "error", err.Error())
+			return err
+		}
+		logger.Info("配置文件成功迁移", "from", "config.json", "to", "package.json", "path", configPath)
+		return nil
+	} else if !os.IsNotExist(err) {
+		// 其他错误
+		logger.Error("检查旧配置文件时出错", "path", oldConfigPath, "error", err.Error())
+		return err
+	}
+
+	// 新旧文件都不存在，无需迁移
+	return nil
+}
+
 // 用于获取键音包根目录中, 所有键音包的完整路径的列表。
 func GetAudioPackageList(rootDir string) ([]string, error) {
 	var directories []string
@@ -53,8 +94,13 @@ func GetAudioPackageName(configPath string) any {
 		Viper = nil
 	}()
 
+	// 尝试迁移旧的 config.json 文件为 package.json
+	if err := migrateConfigFile(configPath); err != nil {
+		logger.Warn("配置文件迁移检查失败，继续使用现有配置", "error", err.Error())
+	}
+
 	// 设置配置文件名称和类型
-	Viper.SetConfigName("config")
+	Viper.SetConfigName("package")
 	Viper.SetConfigType("json")
 
 	// 添加配置文件路径
@@ -81,7 +127,7 @@ func GetAudioPackageName(configPath string) any {
 func UpdateAlbumUUID(albumPath string, newUUID string) error {
 	// 加载配置文件
 	v := viper.New()
-	v.SetConfigName("config")
+	v.SetConfigName("package")
 	v.SetConfigType("json")
 	v.AddConfigPath(albumPath)
 

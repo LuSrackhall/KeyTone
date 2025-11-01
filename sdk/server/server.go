@@ -103,10 +103,13 @@ func isValidAlbumStructure(albumPath string) error {
 		return fmt.Errorf("专辑目录名不符合规范")
 	}
 
-	// 检查 config.json 是否存在
-	configPath := filepath.Join(albumPath, "config.json")
+	// 检查 package.json || config.json 是否存在
+	configPath := filepath.Join(albumPath, "package.json")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return fmt.Errorf("缺少必要的配置文件 config.json")
+		configPath = filepath.Join(albumPath, "config.json")
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			return fmt.Errorf("缺少必要的配置文件 package.json 或 config.json")
+		}
 	}
 
 	return nil
