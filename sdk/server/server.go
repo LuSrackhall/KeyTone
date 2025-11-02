@@ -51,8 +51,13 @@ const (
 	KeytoneMagicNumber   = "KTAF"                 // KeyTone Album Format
 	KeytoneVersion       = "1.0.0"                // 当前版本号
 	KeytoneFileSignature = "KTALBUM"              // 文件签名
-	KeytoneFileVersion   = 1                      // 文件版本
-	KeytoneEncryptKey    = "KeyTone2024SecretKey" // 简单的对称加密密钥
+	KeytoneFileVersion   = 1                      // 文件版本（已废弃，仅用于向后兼容）
+	
+	// 版本化加密密钥
+	KeytoneEncryptKeyV1      = "KeyTone2024SecretKey"                                  // v1 密钥（旧版本，用于向后兼容）
+	KeytoneEncryptKeyV2      = "KeyTone2025AlbumSecureEncryptionKeyV2"                 // v2 密钥（当前版本）
+	KeytoneEncryptKeyCurrent = KeytoneEncryptKeyV2                                     // 当前使用的密钥版本
+	KeytoneEncryptKey        = KeytoneEncryptKeyV1                                     // 已废弃：向后兼容，请使用 KeytoneEncryptKeyV1
 )
 
 // KeytoneAlbumMeta 用于存储专辑元数据
@@ -224,14 +229,12 @@ func processImportedFile(src io.Reader, header KeytoneFileHeader, tempZipPath st
 		return &ImportError{Message: "读取文件数据失败:" + err.Error()}
 	}
 
-	// 解密数据
-	zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-	// 验证校验和
-	checksum := sha256.Sum256(zipData)
-	if checksum != header.Checksum {
-		return &ImportError{Message: "文件校验失败，文件可能已损坏"}
+	// 解密数据（支持多版本密钥）
+	zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+	if err != nil {
+		return &ImportError{Message: err.Error()}
 	}
+	logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 	// 保存解密后的数据到临时zip文件
 	if err := os.WriteFile(tempZipPath, zipData, 0644); err != nil {
@@ -324,6 +327,57 @@ func xorCrypt(data []byte, key string) []byte {
 		result[i] = data[i] ^ keyBytes[i%len(keyBytes)]
 	}
 	return result
+}
+
+// getEncryptKeyByVersion 根据版本号获取对应的加密密钥
+// 参数:
+//   - version: 文件版本号
+// 返回:
+//   - string: 对应的加密密钥
+func getEncryptKeyByVersion(version uint8) string {
+	switch version {
+	case 1:
+		return KeytoneEncryptKeyV1
+	case 2:
+		return KeytoneEncryptKeyV2
+	default:
+		// 未知版本，返回当前密钥
+		logger.Warn("未知的文件版本号，使用当前密钥", "version", version)
+		return KeytoneEncryptKeyCurrent
+	}
+}
+
+// decryptAlbumData 解密专辑数据，支持多版本密钥回退
+// 参数:
+//   - encryptedData: 加密的数据
+//   - header: 文件头结构
+// 返回:
+//   - []byte: 解密后的数据
+//   - uint8: 实际使用的密钥版本
+//   - error: 错误信息
+func decryptAlbumData(encryptedData []byte, header KeytoneFileHeader) ([]byte, uint8, error) {
+	// 首先根据版本号选择密钥
+	decryptKey := getEncryptKeyByVersion(header.Version)
+	zipData := xorCrypt(encryptedData, decryptKey)
+
+	// 验证校验和
+	checksum := sha256.Sum256(zipData)
+	if checksum == header.Checksum {
+		return zipData, header.Version, nil
+	}
+
+	// 如果校验失败且版本不是v1，尝试使用v1密钥回退
+	if header.Version != 1 {
+		logger.Warn("使用版本密钥解密失败，尝试v1密钥回退", "version", header.Version)
+		zipData = xorCrypt(encryptedData, KeytoneEncryptKeyV1)
+		checksum = sha256.Sum256(zipData)
+		if checksum == header.Checksum {
+			logger.Info("使用v1密钥成功解密", "file_version", header.Version)
+			return zipData, 1, nil
+		}
+	}
+
+	return nil, 0, fmt.Errorf("文件校验失败，文件可能已损坏或使用了不支持的加密版本")
 }
 
 func ServerRun() {
@@ -1093,12 +1147,12 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 计算校验和
 		checksum := sha256.Sum256(zipData)
 
-		// 加密 zip 数据
-		encryptedData := xorCrypt(zipData, KeytoneEncryptKey)
+		// 加密 zip 数据（使用当前版本密钥 v2）
+		encryptedData := xorCrypt(zipData, KeytoneEncryptKeyCurrent)
 
-		// 创建文件头
+		// 创建文件头（使用版本号 2）
 		header := KeytoneFileHeader{
-			Version:  KeytoneFileVersion,
+			Version:  2, // 使用 v2 版本号
 			DataSize: uint64(len(encryptedData)),
 			Checksum: checksum,
 		}
@@ -1345,17 +1399,15 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 解密数据
-		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-		// 验证校验和
-		checksum := sha256.Sum256(zipData)
-		if checksum != header.Checksum {
+		// 解密数据（支持多版本密钥）
+		zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "error: 文件校验失败，文件可能已损坏",
+				"message": "error: " + err.Error(),
 			})
 			return
 		}
+		logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 		// 创建临时文件保存 zip 数据
 		tempDir, err := os.MkdirTemp("", "keytone_import_*")
@@ -1586,17 +1638,15 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 解密数据
-		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-		// 验证校验和
-		checksum := sha256.Sum256(zipData)
-		if checksum != header.Checksum {
+		// 解密数据（支持多版本密钥）
+		zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "error: 文件校验失败，文件可能已损坏",
+				"message": "error: " + err.Error(),
 			})
 			return
 		}
+		logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 		// 创建临时zip文件
 		tempFile, err := os.CreateTemp("", "keytone_meta_*.zip")
