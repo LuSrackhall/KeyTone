@@ -316,7 +316,6 @@
     <!-- 6) 选择签名（带创建按钮） -->
     <signature-picker-dialog
       :visible="exportFlow.pickerDialogVisible.value"
-      :signatures="mockSignatures"
       @select="exportFlow.handlePickerSelect"
       @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"
@@ -396,23 +395,6 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 const exportFlow = useExportSignatureFlow();
 const albumHasSignature = ref(false);
 const authorContact = ref('contact@example.com');
-const mockSignatures = [
-  {
-    id: '1',
-    name: 'Creator A',
-    intro: 'Professional music producer',
-  },
-  {
-    id: '2',
-    name: 'Artist B',
-    intro: 'Sound designer',
-  },
-  {
-    id: '3',
-    name: 'Musician C',
-    intro: 'Composer and keyboardist',
-  },
-];
 
 // 测试环境对话框控制
 const showTestDialog = ref(false);

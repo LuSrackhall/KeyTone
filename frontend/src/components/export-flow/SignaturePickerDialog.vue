@@ -75,33 +75,50 @@
                 bordered
                 :class="['signature-card cursor-pointer', selectedId === sig.id ? 'selected' : '']"
                 @click="selectSignature(sig.id)"
+                style="display: flex; align-items: center; min-height: 70px"
               >
-                <!-- Image -->
-                <div class="signature-image" style="height: 80px; overflow: hidden">
+                <!-- Left: Image Area (fixed 60px) -->
+                <div
+                  class="flex-shrink-0 flex items-center justify-center"
+                  style="width: 60px; height: 60px; background-color: #f5f5f5; border-radius: 4px; margin: 0 8px"
+                >
                   <img
                     v-if="sig.image"
                     :src="sig.image"
                     :alt="sig.name"
-                    class="full-width full-height"
-                    style="object-fit: cover"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px"
                   />
-                  <div v-else class="full-width full-height bg-grey-2 flex flex-center">
-                    <q-icon name="image_not_supported" size="24px" color="grey-5" />
+                  <div
+                    v-else
+                    style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center"
+                  >
+                    <q-icon name="image_not_supported" size="20px" color="grey-5" />
                   </div>
                 </div>
 
-                <!-- Info -->
-                <q-card-section class="q-pa-xs">
-                  <div class="text-caption text-weight-bold truncate">
+                <!-- Middle: Info Area (flex-grow) -->
+                <div class="col flex flex-col justify-center" style="padding: 0 8px; min-width: 0">
+                  <div class="text-caption text-weight-bold truncate" style="font-size: 0.9rem">
                     {{ sig.name }}
                   </div>
-                  <div class="text-caption text-grey truncate-2 q-mt-xs" style="font-size: 0.75rem">
+                  <div
+                    class="text-caption text-grey"
+                    style="
+                      font-size: 0.75rem;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      display: -webkit-box;
+                      -webkit-line-clamp: 2;
+                      line-clamp: 2;
+                      -webkit-box-orient: vertical;
+                    "
+                  >
                     {{ sig.intro || $t('exportFlow.pickerDialog.noIntro') }}
                   </div>
-                </q-card-section>
+                </div>
 
-                <!-- Selection Indicator -->
-                <div v-if="selectedId === sig.id" class="selection-indicator">
+                <!-- Right: Selection Indicator -->
+                <div v-if="selectedId === sig.id" class="flex-shrink-0" style="margin-left: 8px; margin-right: 8px">
                   <q-icon name="check_circle" size="20px" color="positive" />
                 </div>
               </q-card>
@@ -127,8 +144,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useSignatureStore } from 'src/stores/signature-store';
+import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'boot/query/signature-query';
 
 interface Signature {
   id: string;
@@ -154,30 +173,195 @@ const props = withDefaults(defineProps<SignaturePickerDialogProps>(), {
 });
 
 const emit = defineEmits<SignaturePickerDialogEmits>();
-const { t } = useI18n();
+useI18n(); // Initialize i18n, $t available in template
+const signatureStore = useSignatureStore();
 
+// UI State
 const isVisible = ref(false);
 const searchQuery = ref('');
 const selectedId = ref('');
+const loading = ref(false);
+const localSignatures = ref<Signature[]>([]);
+const imageUrls = ref<Map<string, string>>(new Map()); // cardImage path -> blob URL
+const blobUrls = ref<Set<string>>(new Set()); // Track blob URLs for cleanup
+
+// Determine which signatures to use (real data or fallback to props)
+const effectiveSignatures = computed(() => {
+  if (localSignatures.value.length > 0) {
+    return localSignatures.value;
+  }
+  return props.signatures || [];
+});
 
 // Filter signatures based on search query (only by name)
 const filteredSignatures = computed(() => {
   if (!searchQuery.value) {
-    return props.signatures;
+    return effectiveSignatures.value;
   }
 
   const query = searchQuery.value.toLowerCase();
-  return props.signatures.filter((sig) => sig.name.toLowerCase().includes(query));
+  return effectiveSignatures.value.filter((sig) => sig.name.toLowerCase().includes(query));
+});
+
+/**
+ * Load real signature data from store
+ * Decrypts each signature and fetches image URLs
+ */
+async function loadSignaturesRealtime() {
+  loading.value = true;
+  try {
+    // 1. Get encrypted signature list from backend
+    const encryptedSignatures = await getSignaturesList();
+    if (!encryptedSignatures) {
+      console.warn('[SignaturePicker] Failed to fetch signatures');
+      return;
+    }
+
+    // 2. Decrypt and build signature list
+    const tempSignatures: Signature[] = [];
+    for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+      try {
+        // Handle both old (string) and new (object) formats
+        let encryptedValue: string;
+        if (typeof entry === 'string') {
+          encryptedValue = entry;
+        } else if (typeof entry === 'object' && entry !== null) {
+          encryptedValue = (entry as any).value || '';
+        } else {
+          continue;
+        }
+
+        if (!encryptedValue) continue;
+
+        // Decrypt value
+        const decryptedJson = await decryptSignatureData(encryptedValue, encryptedId);
+        if (!decryptedJson) {
+          console.warn(`[SignaturePicker] Failed to decrypt signature ${encryptedId}`);
+          continue;
+        }
+
+        // Parse JSON
+        const signatureData = JSON.parse(decryptedJson);
+
+        // Create signature object
+        const signature: Signature = {
+          id: encryptedId,
+          name: signatureData.name,
+          intro: signatureData.intro,
+          image: signatureData.cardImage ? await getImageUrlForSignature(signatureData.cardImage) : undefined,
+        };
+
+        tempSignatures.push(signature);
+
+        // Preload image URL if exists
+        if (signatureData.cardImage) {
+          preloadImageUrl(signatureData.cardImage);
+        }
+      } catch (err) {
+        console.error(`[SignaturePicker] Error processing signature ${encryptedId}:`, err);
+      }
+    }
+
+    // 3. Sort by sort.time if available
+    tempSignatures.sort((a, b) => {
+      const timeA = (encryptedSignatures[a.id] as any)?.sort?.time || 0;
+      const timeB = (encryptedSignatures[b.id] as any)?.sort?.time || 0;
+      if (timeA === 0 && timeB === 0) {
+        return a.id.localeCompare(b.id);
+      }
+      return timeA - timeB;
+    });
+
+    localSignatures.value = tempSignatures;
+    console.debug('[SignaturePicker] Loaded', tempSignatures.length, 'signatures');
+  } catch (err) {
+    console.error('[SignaturePicker] Error loading signatures:', err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+/**
+ * Get or fetch image URL for a card image
+ */
+async function getImageUrlForSignature(cardImage: string): Promise<string | undefined> {
+  if (!cardImage) return undefined;
+
+  // Check cache first
+  if (imageUrls.value.has(cardImage)) {
+    return imageUrls.value.get(cardImage);
+  }
+
+  try {
+    const result = await getSignatureImage(cardImage);
+    if (result && result instanceof Blob) {
+      const url = URL.createObjectURL(result);
+      imageUrls.value.set(cardImage, url);
+      blobUrls.value.add(url);
+      return url;
+    }
+  } catch (err) {
+    console.error('[SignaturePicker] Error fetching image:', err);
+  }
+  return undefined;
+}
+
+/**
+ * Preload image URL asynchronously (non-blocking)
+ */
+function preloadImageUrl(cardImage: string) {
+  getImageUrlForSignature(cardImage).catch((err) => {
+    console.debug('[SignaturePicker] Preload failed:', err);
+  });
+}
+
+/**
+ * Handle SSE updates from signature store
+ */
+async function handleSseUpdate() {
+  console.debug('[SignaturePicker] SSE update received');
+  try {
+    await loadSignaturesRealtime();
+    // Preserve selected ID if it still exists
+    if (selectedId.value && !localSignatures.value.find((s) => s.id === selectedId.value)) {
+      selectedId.value = '';
+    }
+  } catch (err) {
+    console.error('[SignaturePicker] Error handling SSE update:', err);
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  // Register SSE callback for updates
+  signatureStore.registerSseCallback(handleSseUpdate);
+});
+
+onUnmounted(() => {
+  // Unregister SSE callback
+  signatureStore.unregisterSseCallback();
+
+  // Clean up image Blob URLs
+  blobUrls.value.forEach((url) => {
+    URL.revokeObjectURL(url);
+  });
+  blobUrls.value.clear();
+  imageUrls.value.clear();
 });
 
 // Watch visible prop
 watch(
   () => props.visible,
-  (newVal) => {
+  async (newVal) => {
     isVisible.value = newVal;
     if (newVal) {
       searchQuery.value = '';
       selectedId.value = '';
+
+      // Load real data if not already loaded and no prop signatures provided
+      if (localSignatures.value.length === 0 && (!props.signatures || props.signatures.length === 0)) {
+        await loadSignaturesRealtime();
+      }
     }
   }
 );
@@ -256,28 +440,6 @@ const onCancel = () => {
       border-color: var(--q-primary) !important;
       border-width: 2px;
       box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-    }
-
-    .signature-image {
-      width: 100%;
-      height: 120px;
-      overflow: hidden;
-      background-color: #f5f5f5;
-    }
-
-    .selection-indicator {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 50%;
-      width: 64px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     :deep(.q-card__section) {
