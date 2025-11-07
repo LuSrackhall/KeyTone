@@ -1,6 +1,6 @@
 # 签名选择对话框优化
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: 签名选择对话框布局与数据源
 
