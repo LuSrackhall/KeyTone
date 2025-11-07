@@ -1,134 +1,134 @@
 <template>
   <q-dialog v-model="isVisible" persistent>
     <q-card
-      class="signature-picker-dialog"
+      class="signature-picker-dialog [overflow:overlay] [&::-webkit-scrollbar]:hidden"
       style="width: 90%; max-width: 340px; max-height: 85vh; display: flex; flex-direction: column"
     >
-      <!-- Header -->
-      <q-card-section class="bg-primary text-white q-pa-sm">
-        <div class="text-subtitle1">{{ $t('exportFlow.pickerDialog.title') }}</div>
-      </q-card-section>
-
-      <!-- Content (Scrollable) -->
-      <q-card-section class="q-pa-md q-pt-lg col-grow overflow-auto">
-        <!-- Description -->
-        <div class="text-caption q-mb-md">
-          {{ $t('exportFlow.pickerDialog.description') }}
-        </div>
+      <!-- Header & Search (Sticky Top) -->
+      <div class="sticky-top">
+        <!-- Header -->
+        <q-card-section class="bg-primary text-white q-pa-sm">
+          <div class="text-subtitle1">{{ $t('exportFlow.pickerDialog.title') }}</div>
+        </q-card-section>
 
         <!-- Search Bar -->
-        <div class="q-mb-md">
-          <q-input
-            v-model="searchQuery"
-            filled
-            dense
-            :placeholder="$t('exportFlow.pickerDialog.search')"
-            icon="search"
-            clearable
-            size="sm"
-          />
-          <div class="q-mt-xs flex justify-end">
-            <q-btn
-              size="xs"
-              flat
-              color="primary"
-              icon="add"
-              :label="$t('exportFlow.pickerDialog.createSignature')"
-              @click="onCreateNew"
+        <q-card-section class="q-pa-sm">
+          <!-- Description -->
+          <div class="text-caption q-mb-sm">
+            {{ $t('exportFlow.pickerDialog.description') }}
+          </div>
+
+          <!-- Search Input -->
+          <div class="q-mb-sm">
+            <q-input
+              v-model="searchQuery"
+              filled
+              dense
+              :placeholder="$t('exportFlow.pickerDialog.search')"
+              icon="search"
+              clearable
+              size="sm"
             />
+            <div class="q-mt-xs flex justify-end">
+              <q-btn
+                size="xs"
+                flat
+                color="primary"
+                icon="add"
+                :label="$t('exportFlow.pickerDialog.createSignature')"
+                @click="onCreateNew"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </div>
+
+      <q-card-section class="q-pa-md col-grow overflow-auto">
+        <!-- Empty State -->
+        <div v-if="filteredSignatures.length === 0 && !searchQuery" class="text-center q-pa-md">
+          <q-icon name="mail" size="32px" color="grey-5" />
+          <div class="text-caption text-grey q-mt-sm">
+            {{ $t('exportFlow.pickerDialog.emptyState') }}
+          </div>
+          <q-btn
+            flat
+            color="primary"
+            :label="$t('exportFlow.pickerDialog.createSignature')"
+            icon="add"
+            size="xs"
+            class="q-mt-md"
+            @click="onCreateNew"
+          />
+        </div>
+
+        <!-- No Results -->
+        <div v-else-if="filteredSignatures.length === 0 && searchQuery" class="text-center q-pa-md">
+          <q-icon name="search_off" size="32px" color="grey-5" />
+          <div class="text-caption text-grey q-mt-sm">
+            {{ $t('exportFlow.pickerDialog.noResults') }}
           </div>
         </div>
 
-        <!-- Signatures Grid / Empty State -->
-        <div class="signatures-container">
-          <!-- Empty State -->
-          <div v-if="filteredSignatures.length === 0 && !searchQuery" class="text-center q-pa-md">
-            <q-icon name="mail" size="32px" color="grey-5" />
-            <div class="text-caption text-grey q-mt-sm">
-              {{ $t('exportFlow.pickerDialog.emptyState') }}
-            </div>
-            <q-btn
+        <!-- Signatures List -->
+        <div v-else class="col">
+          <!-- Signature Cards -->
+          <div v-for="sig in filteredSignatures" :key="sig.id" class="q-mb-xs">
+            <q-card
               flat
-              color="primary"
-              :label="$t('exportFlow.pickerDialog.createSignature')"
-              icon="add"
-              size="xs"
-              class="q-mt-md"
-              @click="onCreateNew"
-            />
-          </div>
-
-          <!-- No Results -->
-          <div v-else-if="filteredSignatures.length === 0 && searchQuery" class="text-center q-pa-md">
-            <q-icon name="search_off" size="32px" color="grey-5" />
-            <div class="text-caption text-grey q-mt-sm">
-              {{ $t('exportFlow.pickerDialog.noResults') }}
-            </div>
-          </div>
-
-          <!-- Signatures List -->
-          <div v-else class="col">
-            <!-- Signature Cards -->
-            <div v-for="sig in filteredSignatures" :key="sig.id" class="q-mb-sm">
-              <q-card
-                flat
-                bordered
-                :class="['signature-card cursor-pointer', selectedId === sig.id ? 'selected' : '']"
-                @click="selectSignature(sig.id)"
-                style="display: flex; align-items: center; min-height: 70px"
+              bordered
+              :class="['signature-card cursor-pointer', selectedId === sig.id ? 'selected' : '']"
+              @click="selectSignature(sig.id)"
+              style="display: flex; align-items: center; min-height: 70px"
+            >
+              <!-- Left: Image Area (fixed 60px) -->
+              <div
+                class="flex-shrink-0 flex items-center justify-center"
+                style="width: 60px; height: 60px; background-color: #f5f5f5; border-radius: 4px; margin: 0 8px"
               >
-                <!-- Left: Image Area (fixed 60px) -->
+                <img
+                  v-if="sig.image"
+                  :src="sig.image"
+                  :alt="sig.name"
+                  style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px"
+                />
                 <div
-                  class="flex-shrink-0 flex items-center justify-center"
-                  style="width: 60px; height: 60px; background-color: #f5f5f5; border-radius: 4px; margin: 0 8px"
+                  v-else
+                  style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center"
                 >
-                  <img
-                    v-if="sig.image"
-                    :src="sig.image"
-                    :alt="sig.name"
-                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px"
-                  />
-                  <div
-                    v-else
-                    style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center"
-                  >
-                    <q-icon name="image_not_supported" size="20px" color="grey-5" />
-                  </div>
+                  <q-icon name="image_not_supported" size="20px" color="grey-5" />
                 </div>
+              </div>
 
-                <!-- Middle: Info Area (flex-grow) -->
-                <div class="col flex flex-col justify-center" style="padding: 0 8px; min-width: 0">
-                  <div class="text-caption text-weight-bold truncate" style="font-size: 0.9rem">
-                    {{ sig.name }}
-                  </div>
-                  <div
-                    class="text-caption text-grey"
-                    style="
-                      font-size: 0.75rem;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      display: -webkit-box;
-                      -webkit-line-clamp: 2;
-                      line-clamp: 2;
-                      -webkit-box-orient: vertical;
-                    "
-                  >
+              <!-- Middle: Info Area (flex-grow) -->
+              <div class="col flex flex-col justify-center q-py-2xs q-px-sm" style="min-width: 0">
+                <!-- Name: single line with horizontal scroll -->
+                <div class="name-container text-caption text-weight-bold" style="font-size: 0.9rem">
+                  <div class="scrollable-x">{{ sig.name }}</div>
+                </div>
+                <!-- Intro: max 2 lines with horizontal scroll -->
+                <div class="intro-container text-caption text-grey q-mt-2xs" style="font-size: 0.75rem; min-width: 0">
+                  <div class="scrollable-x line-clamp-2">
                     {{ sig.intro || $t('exportFlow.pickerDialog.noIntro') }}
                   </div>
                 </div>
+              </div>
 
-                <!-- Right: Selection Indicator -->
-                <div v-if="selectedId === sig.id" class="flex-shrink-0" style="margin-left: 8px; margin-right: 8px">
-                  <q-icon name="check_circle" size="20px" color="positive" />
-                </div>
-              </q-card>
-            </div>
+              <!-- Right: Selection Indicator with Glow -->
+              <div
+                v-if="selectedId === sig.id"
+                class="flex-shrink-0 selection-indicator-wrapper"
+                style="margin-left: 8px; margin-right: 8px"
+              >
+                <div class="selection-glow"></div>
+                <q-icon name="check_circle" size="20px" color="positive" class="selection-icon" />
+              </div>
+            </q-card>
           </div>
         </div>
       </q-card-section>
 
-      <!-- Actions -->
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <!-- Actions (Sticky Bottom) -->
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs sticky-bottom">
         <q-btn flat :label="$t('exportFlow.pickerDialog.cancel')" color="primary" size="sm" @click="onCancel" />
         <q-btn
           unelevated
@@ -375,7 +375,12 @@ watch(isVisible, (newVal) => {
 
 // Handlers
 const selectSignature = (id: string) => {
-  selectedId.value = id;
+  // Toggle: 若点击已选项则取消选择，否则选中
+  if (selectedId.value === id) {
+    selectedId.value = '';
+  } else {
+    selectedId.value = id;
+  }
 };
 
 const onCreateNew = () => {
@@ -397,6 +402,16 @@ const onCancel = () => {
 .signature-picker-dialog {
   border-radius: 8px;
 
+  // Sticky top header and search area
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    background: white;
+  }
+
   :deep(.q-card__section) {
     padding: 16px;
 
@@ -405,41 +420,85 @@ const onCancel = () => {
     }
   }
 
-  .signatures-container {
-    // Scrollbar styling
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.3);
-      }
-    }
-  }
-
   .signature-card {
     position: relative;
     border-radius: 8px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
     &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
     }
 
     &.selected {
-      border-color: var(--q-primary) !important;
-      border-width: 2px;
-      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+      border: 2px solid var(--q-primary) !important;
+      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1), 0 4px 16px rgba(33, 150, 243, 0.15);
+    }
+
+    // Content area optimization
+    .name-container,
+    .intro-container {
+      width: 100%;
+      overflow: hidden;
+
+      .scrollable-x {
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding-right: 4px;
+
+        // Custom scrollbar for horizontal scroll areas
+        &::-webkit-scrollbar {
+          height: 3px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.12);
+          border-radius: 2px;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.2);
+          }
+        }
+      }
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    // Selection indicator with glow effect
+    .selection-indicator-wrapper {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .selection-glow {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(33, 150, 243, 0.3), transparent);
+        animation: glow-pulse 1.5s ease-in-out infinite;
+      }
+
+      .selection-icon {
+        position: relative;
+        z-index: 1;
+      }
     }
 
     :deep(.q-card__section) {
@@ -474,6 +533,41 @@ const onCancel = () => {
         width: 100%;
       }
     }
+  }
+
+  // Sticky bottom action bar with frosted glass effect
+  .sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    // Frosted glass effect: blur background + semi-transparent overlay
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+
+    // Visual separation from content
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    z-index: 10;
+    transition: all 0.2s ease;
+  }
+}
+
+// Animation for selection glow effect
+@keyframes glow-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 0.8;
+    transform: scale(1.1);
   }
 }
 </style>

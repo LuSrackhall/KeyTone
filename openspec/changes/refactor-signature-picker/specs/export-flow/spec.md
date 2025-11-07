@@ -65,3 +65,45 @@ Normative: The dialog SHALL preserve the `signatures` prop and event signatures 
 - **GIVEN** 父组件仍然传入 `signatures` 和 `visible` props
 - **WHEN** 对话框接收
 - **THEN** 接口有效，行为如 Scenario 中所述（优先使用 prop 或自动加载）
+
+---
+
+### Requirement: 隐藏滚动条优化用户体验
+
+Normative: The signature picker dialog's scrollbar on the main card element SHALL be hidden from view while maintaining scrolling functionality to improve visual aesthetics and reduce visual clutter; however, the scrollbar within signature items (for horizontal scrolling of long names/descriptions) SHALL remain visible with refined styling.
+
+#### Scenario: 隐藏主对话框滚动条
+
+- **GIVEN** 用户打开签名选择对话框
+- **WHEN** 对话框内容超过可视区域，需要垂直滚动
+- **THEN** 主对话框的垂直滚动条被隐藏（使用 `[&::-webkit-scrollbar]:hidden`），但用户仍可通过鼠标滚轮或触控板滚动内容，不影响功能
+
+#### Scenario: 保留卡片内横向滚动条样式
+
+- **GIVEN** 签名卡片中的名称或介绍文本过长超出可视区域
+- **WHEN** 卡片内的文本需要水平滚动显示
+- **THEN** 卡片内横向滚动区域的滚动条保持可见且美观（4px 宽，半透明深灰色）
+
+---
+
+### Requirement: 改善布局紧凑度与间距美观性
+
+Normative: The dialog layout SHALL optimize spacing between search/create area and signature list to improve visual aesthetics, reduce unnecessary whitespace, and maintain adequate readability and visual balance.
+
+#### Scenario: 优化搜索区域内部间距
+
+- **GIVEN** 签名选择对话框打开
+- **WHEN** 用户查看搜索框、描述文本和"新建签名"按钮所占的区域
+- **THEN** 搜索区域 padding 从 `q-pa-md`（16px）优化为 `q-pa-sm`（8px）；描述文本、搜索输入框下方 margin 从 `q-mb-md` 优化为 `q-mb-sm`，使搜索区域更紧凑
+
+#### Scenario: 减少签名卡片之间的垂直间隔
+
+- **GIVEN** 签名选择对话框列表包含多个签名
+- **WHEN** 对话框渲染签名卡片列表
+- **THEN** 卡片之间的垂直间隔从 `q-mb-sm`（8px）优化为 `q-mb-xs`（4px），提高列表紧凑度
+
+#### Scenario: 移除过度底部 padding
+
+- **GIVEN** 用户滚动签名列表到底部
+- **WHEN** 观察列表底部空白区域
+- **THEN** 移除原先主内容区域硬编码的 `padding-bottom: 100px`，改为自适应布局，仅保留必要的下方操作栏空间
