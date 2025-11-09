@@ -355,6 +355,7 @@ import {
   DeleteAlbum,
   GetAudioPackageName,
   ExportAlbum,
+  EncryptAlbumConfig,
   ImportAlbum,
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
@@ -507,15 +508,36 @@ interface FileSystemWritableFileStream extends WritableStream {
 // 降级方案 - 使用传统的下载方式
 const exportAlbumLegacy = async () => {
   try {
-    // 获取专辑名称
-    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    // 步骤1：检查是否需要签名，如果需要则先加密配置
+    const result = exportFlow.getResult();
+    const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+    if (!albumPath) {
+      throw new Error('未选择任何键音专辑');
+    }
+    if (result && result.needSignature) {
+      console.log('降级导出：需要签名，正在加密专辑配置...', albumPath);
+      try {
+        const encryptResult = await EncryptAlbumConfig(albumPath);
+        console.log('降级导出：专辑配置加密结果:', encryptResult);
+      } catch (encryptError) {
+        console.error('降级导出：加密专辑配置失败:', encryptError);
+        q.notify({
+          type: 'negative',
+          message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
+        });
+        return; // 加密失败则终止导出流程
+      }
+    }
+
+    // 步骤2：获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(albumPath);
     if (!albumNameResponse || albumNameResponse.message !== 'ok') {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
 
-    // 调用导出函数获取zip文件blob
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    // 步骤3：调用导出函数获取zip文件blob
+    const blob = await ExportAlbum(albumPath);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -635,15 +657,43 @@ const handleExportSignatureFlowComplete = async () => {
   }
 
   try {
-    // 获取专辑名称
-    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+    if (!albumPath) {
+      throw new Error('未选择任何键音专辑');
+    }
+
+    // 步骤1：如果需要签名，先调用加密 API
+    if (result.needSignature) {
+      console.log('需要签名，正在加密专辑配置...', albumPath);
+      try {
+        const encryptResult = await EncryptAlbumConfig(albumPath);
+        console.log('专辑配置加密结果:', encryptResult);
+        if (encryptResult.already_encrypted) {
+          console.log('配置已加密，跳过重复操作');
+        } else if (encryptResult.encrypted) {
+          console.log('配置加密成功');
+        }
+      } catch (encryptError) {
+        console.error('加密专辑配置失败:', encryptError);
+        q.notify({
+          type: 'negative',
+          message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
+        });
+        return; // 加密失败则终止导出流程
+      }
+    } else {
+      console.log('无需签名，跳过配置加密步骤');
+    }
+
+    // 步骤2：获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(albumPath);
     if (!albumNameResponse || albumNameResponse.message !== 'ok') {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
 
-    // 获取导出数据
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    // 步骤3：获取导出数据
+    const blob = await ExportAlbum(albumPath);
 
     try {
       // 打开系统的保存文件对话框

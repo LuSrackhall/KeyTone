@@ -20,11 +20,16 @@
 package audioPackageConfig
 
 import (
-	"KeyTone/logger"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
+
+	"KeyTone/audioPackage/enc"
+	"KeyTone/logger"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -48,6 +53,109 @@ var Clients_sse_stores sync.Map
 var once_stores sync.Once
 
 var viperRWMutex sync.RWMutex
+
+const (
+	encryptionModePlain     = "plain"
+	encryptionModeLegacyHex = "legacy-hex"
+	encryptionModeCore      = "core"
+)
+
+type encryptionState struct {
+	Mode      string
+	AlbumPath string
+	CorePath  string
+	StubPath  string
+}
+
+var currentEncState encryptionState
+
+func resetEncryptionState() {
+	currentEncState = encryptionState{}
+}
+
+func setEncryptionState(mode, albumPath, corePath, stubPath string) {
+	currentEncState = encryptionState{
+		Mode:      mode,
+		AlbumPath: albumPath,
+		CorePath:  corePath,
+		StubPath:  stubPath,
+	}
+}
+
+func loadConfigFromCore(configPath string, stub *coreStubMetadata) error {
+	albumUUID := filepath.Base(configPath)
+	coreFile := filepath.Join(configPath, stub.Core)
+
+	cipherBytes, err := os.ReadFile(coreFile)
+	if err != nil {
+		return fmt.Errorf("读取 core 文件失败: %w", err)
+	}
+
+	plainJSON, err := enc.DecryptConfigBytes(cipherBytes, albumUUID)
+	if err != nil {
+		return fmt.Errorf("解密 core 文件失败: %w", err)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "keytone-album-*")
+	if err != nil {
+		return fmt.Errorf("创建临时目录失败: %w", err)
+	}
+
+	tmpAlbumDir := filepath.Join(tmpDir, albumUUID)
+	if err := os.MkdirAll(tmpAlbumDir, os.ModePerm); err != nil {
+		return fmt.Errorf("创建临时专辑目录失败: %w", err)
+	}
+
+	tmpPkg := filepath.Join(tmpAlbumDir, "package.json")
+	if err := os.WriteFile(tmpPkg, []byte(plainJSON), 0644); err != nil {
+		return fmt.Errorf("写入临时配置失败: %w", err)
+	}
+
+	Viper = viper.New()
+	Viper.SetConfigName("package")
+	Viper.SetConfigType("json")
+	Viper.AddConfigPath(tmpAlbumDir)
+	if err := Viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("加载临时配置失败: %w", err)
+	}
+
+	logger.Info("音频包通过 core 文件解密加载成功", "album", albumUUID)
+	diffAndUpdateDefaultConfig()
+	setEncryptionState(encryptionModeCore, configPath, coreFile, filepath.Join(configPath, "package.json"))
+	attachConfigWatcher()
+	return nil
+}
+
+func attachConfigWatcher() {
+	Viper.OnConfigChange(func(e fsnotify.Event) {
+		go func(Clients_sse_stores *sync.Map) {
+			viperRWMutex.RLock()
+			stores := &Store{
+				Key:   "get_all_value",
+				Value: Viper.AllSettings(),
+			}
+			viperRWMutex.RUnlock()
+			if stores.Value == nil {
+				return
+			}
+			Clients_sse_stores.Range(func(key, value interface{}) bool {
+				clientChan := key.(chan *Store)
+				serverChan := value.(chan bool)
+				select {
+				case clientChan <- stores:
+					return true
+				case <-serverChan:
+					once_stores.Do(func() {
+						close(serverChan)
+					})
+					return true
+				}
+			})
+		}(&Clients_sse_stores)
+	})
+
+	Viper.WatchConfig()
+}
 
 // migrateConfigFile 自动检测并迁移旧的 config.json 为 package.json
 // 用于支持从旧版本到新版本的平滑升级
@@ -99,10 +207,26 @@ func LoadConfig(configPath string, isCreate bool) {
 		Viper = nil
 	}
 	Viper = viper.New()
+	resetEncryptionState()
 
 	// 尝试迁移旧的 config.json 文件为 package.json
 	if err := migrateConfigFile(configPath); err != nil {
 		logger.Warn("配置文件迁移检查失败，继续使用现有配置", "error", err.Error())
+	}
+
+	pkgPath := filepath.Join(configPath, "package.json")
+	stubMeta, pkgRaw, stubErr := readCoreStub(configPath)
+	if stubErr != nil {
+		logger.Error("解析加密指示 JSON 失败", "err", stubErr.Error())
+		Viper = nil
+		return
+	}
+	if stubMeta != nil {
+		if err := loadConfigFromCore(configPath, stubMeta); err != nil {
+			logger.Error("core 文件加载失败", "err", err.Error())
+			Viper = nil
+		}
+		return
 	}
 
 	// 设置配置文件名称和类型（使用新的 package.json）
@@ -144,47 +268,79 @@ func LoadConfig(configPath string, isCreate bool) {
 				// SSE
 			}
 		} else {
-			// 其他错误
+			// 其他错误（包括 JSON 解析失败），尝试解密回退
+			logger.Warn("读取音频包配置失败，尝试解密回退", "err", err.Error())
+			// 尝试读取 package.json 原始内容
+			b := pkgRaw
+			var readErr error
+			if b == nil {
+				b, readErr = os.ReadFile(pkgPath)
+			}
+			if readErr != nil {
+				logger.Error("读取package.json失败，无法解密回退", "err", readErr.Error())
+				Viper = nil
+				return
+			}
+			// 通过目录名作为 albumUUID（默认约定：目录名即专辑UUID），若配置中已有字段则导入后覆盖
+			albumUUID := filepath.Base(configPath)
+			if enc.IsLikelyHexCipher(b) {
+				plain, decErr := enc.DecryptConfigHex(strings.TrimSpace(string(b)), albumUUID)
+				if decErr != nil {
+					logger.Error("解密回退失败", "err", decErr.Error())
+					Viper = nil
+					return
+				}
+				// 将解密后的JSON写入临时目录供Viper加载
+				tmpDir, terr := os.MkdirTemp("", "keytone-album-*")
+				if terr != nil {
+					logger.Error("创建临时目录失败", "err", terr.Error())
+					Viper = nil
+					return
+				}
+				tmpAlbumDir := filepath.Join(tmpDir, albumUUID)
+				_ = os.MkdirAll(tmpAlbumDir, os.ModePerm)
+				tmpPkg := filepath.Join(tmpAlbumDir, "package.json")
+				if werr := os.WriteFile(tmpPkg, []byte(plain), 0644); werr != nil {
+					logger.Error("写入临时配置失败", "err", werr.Error())
+					Viper = nil
+					return
+				}
+				// 重新指向临时目录加载
+				Viper = viper.New()
+				Viper.SetConfigName("package")
+				Viper.SetConfigType("json")
+				Viper.AddConfigPath(tmpAlbumDir)
+				if r2 := Viper.ReadInConfig(); r2 != nil {
+					logger.Error("临时配置加载失败", "err", r2.Error())
+					Viper = nil
+					return
+				}
+				logger.Info("音频包通过解密回退加载成功", "album", albumUUID)
+				// 增量写默认项
+				diffAndUpdateDefaultConfig()
+				setEncryptionState(encryptionModeLegacyHex, configPath, "", pkgPath)
+				attachConfigWatcher()
+				// 在每次明确写入后执行回写加密（在SetValue完成后触发已存在），此处确保首次加载时也能写回一次（不强制）
+				// 不主动覆写源文件以避免无改动写入；实际回写在 SetValue 调用中实现
+				return
+			}
+			// 非十六进制密文但解析失败，按原逻辑报错
 			logger.Error("读取音频包配置时发生致命错误", "err", err.Error())
-			// TODO: 可以返回给前端, 供其提示用户
-			// SSE
 		}
 	} else {
 		logger.Info("音频包已加载, 正在与DefaultConfig进行diff和增量载入...")
 		// 如果正常加载了键音配置文件, 则进行增量式的检测与更新(以在键音包设置出现更新时, 最大程度的兼容旧版本)
 		diffAndUpdateDefaultConfig()
 		logger.Info("音频包diff和增量载入完成")
+		setEncryptionState(encryptionModePlain, configPath, "", pkgPath)
 	}
 
-	Viper.OnConfigChange(func(e fsnotify.Event) {
-		go func(Clients_sse_stores *sync.Map) {
-			viperRWMutex.RLock()
-			stores := &Store{
-				Key:   "get_all_value",
-				Value: Viper.AllSettings(),
-			}
-			viperRWMutex.RUnlock()
-			if stores.Value == nil {
-				return
-			}
-			Clients_sse_stores.Range(func(key, value interface{}) bool {
-				clientChan := key.(chan *Store)
-				serverChan := value.(chan bool)
-				select {
-				case clientChan <- stores:
-					return true
-				case <-serverChan:
-					once_stores.Do(func() {
-						close(serverChan)
-					})
-					return true
-				}
-			})
-		}(&Clients_sse_stores)
-	})
-
-	// 监听配置文件更改
-	Viper.WatchConfig()
+	if Viper != nil {
+		if currentEncState.Mode == "" {
+			setEncryptionState(encryptionModePlain, configPath, "", pkgPath)
+		}
+		attachConfigWatcher()
+	}
 
 }
 
@@ -243,6 +399,95 @@ func SetValue(key string, value any) {
 			// ch <- struct{}{}
 		} else {
 			// logger.Info("阻止了一次可能存在的错误删除行为--->音频包配置项")
+		}
+	}
+
+	// 若源文件为加密形态，则需要将临时目录的明文重新加密写回源文件
+	albumPath := currentEncState.AlbumPath
+	if albumPath == "" {
+		albumPath = AudioPackagePath
+	}
+	pkgPath := filepath.Join(albumPath, "package.json")
+	mode := currentEncState.Mode
+
+	switch mode {
+	case encryptionModeCore:
+		tmpPlain := Viper.ConfigFileUsed()
+		plainBytes, err := os.ReadFile(tmpPlain)
+		if err != nil {
+			logger.Error("读取临时配置失败", "err", err.Error())
+			return
+		}
+		albumUUID := filepath.Base(albumPath)
+		cipherBytes, err := enc.EncryptConfigBytes(string(plainBytes), albumUUID)
+		if err != nil {
+			logger.Error("加密 core 配置失败", "err", err.Error())
+			return
+		}
+		corePath := currentEncState.CorePath
+		if corePath == "" {
+			corePath = filepath.Join(albumPath, CoreFileName)
+		}
+		tmpOut := corePath + ".tmp"
+		if err := os.WriteFile(tmpOut, cipherBytes, 0644); err != nil {
+			logger.Error("写入 core 临时文件失败", "err", err.Error())
+			return
+		}
+		if err := os.Rename(tmpOut, corePath); err != nil {
+			_ = os.Remove(tmpOut)
+			logger.Error("重命名 core 临时文件失败", "err", err.Error())
+			return
+		}
+		if err := writeCoreStub(albumPath, nil); err != nil {
+			logger.Error("更新指示 JSON 失败", "err", err.Error())
+		}
+
+	case encryptionModeLegacyHex:
+		albumUUID := filepath.Base(albumPath)
+		tmp := Viper.ConfigFileUsed()
+		b, rerr := os.ReadFile(tmp)
+		if rerr != nil {
+			logger.Error("读取临时配置失败", "err", rerr.Error())
+			return
+		}
+		cipherHex, eerr := enc.EncryptConfigJSON(string(b), albumUUID)
+		if eerr != nil {
+			logger.Error("加密配置写回失败", "err", eerr.Error())
+			return
+		}
+		tmpOut := pkgPath + ".tmp"
+		if werr := os.WriteFile(tmpOut, []byte(cipherHex), 0644); werr != nil {
+			logger.Error("写入加密回写临时文件失败", "err", werr.Error())
+			return
+		}
+		if err := os.Rename(tmpOut, pkgPath); err != nil {
+			_ = os.Remove(tmpOut)
+			logger.Error("重命名 package 临时文件失败", "err", err.Error())
+		}
+
+	default:
+		// 兼容旧逻辑：若仍检测到十六进制密文则执行旧写回
+		if f, err := os.Open(pkgPath); err == nil {
+			defer f.Close()
+			buf, _ := io.ReadAll(f)
+			if enc.IsLikelyHexCipher(buf) {
+				albumUUID := filepath.Base(albumPath)
+				tmp := Viper.ConfigFileUsed()
+				b, rerr := os.ReadFile(tmp)
+				if rerr == nil {
+					cipherHex, eerr := enc.EncryptConfigJSON(string(b), albumUUID)
+					if eerr == nil {
+						tmpOut := pkgPath + ".tmp"
+						if werr := os.WriteFile(tmpOut, []byte(cipherHex), 0644); werr == nil {
+							_ = os.Rename(tmpOut, pkgPath)
+						} else {
+							logger.Error("写入加密回写临时文件失败", "err", werr.Error())
+						}
+					} else {
+						logger.Error("加密配置写回失败", "err", eerr.Error())
+					}
+				}
+			}
 		}
 	}
 }

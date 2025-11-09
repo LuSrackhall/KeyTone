@@ -524,6 +524,35 @@ export async function GetAlbumMeta(file: File): Promise<AlbumMeta> {
   }
 }
 
+// 加密专辑配置（仅在需要签名时调用）
+export async function EncryptAlbumConfig(albumPath: string): Promise<{
+  message: string;
+  encrypted?: boolean;
+  already_encrypted?: boolean;
+}> {
+  if (!albumPath) {
+    throw new Error('缺少 albumPath');
+  }
+  return await api
+    .post('/keytone_pkg/encrypt_album_config', { albumPath })
+    .then((response) => {
+      console.debug('status=', response.status, '->EncryptAlbumConfig 请求已成功执行并返回');
+      if (response.status === 200) {
+        return response.data;
+      }
+      throw new Error('加密配置失败');
+    })
+    .catch((error) => {
+      console.group('EncryptAlbumConfig 请求执行失败');
+      console.error('加密专辑配置失败:', error);
+      if (error.response?.data?.message) {
+        console.error('服务器返回:', error.response.data.message);
+      }
+      console.groupEnd();
+      throw error;
+    });
+}
+
 // 导出专辑，直接返回zip文件内容
 export async function ExportAlbum(albumPath: string): Promise<Blob> {
   return await api

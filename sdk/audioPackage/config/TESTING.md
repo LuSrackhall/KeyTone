@@ -375,3 +375,31 @@ func TestNewFeature(t *testing.T) {
 **最后更新**: 2024年10月31日
 **版本**: 2.0 (新增文件内容持久化验证)
 
+
+## 加密配置调试（新增功能说明）
+
+当专辑在导出流程选择“需要签名”后，目录结构将变为：
+
+- `package.json` 仅保留指示 JSON（`_keytone_encrypted: true` 与 `_keytone_core: "core"` 等元数据）；
+- 实际的明文配置会在运行时解密，明文不会直接落盘；
+- `core` 文件保存 AES-GCM 的二进制密文（nonce + ciphertext）。
+
+此时：
+
+- Viper 在检测到指示 JSON 后会读取 `core`，解密到临时目录并继续提供对配置的访问；
+- 任何对配置的更改会重新加密并原子写回 `core` 文件，同时刷新指示 JSON 更新时间；
+- 使用调试工具打印实际配置：
+
+```bash
+cd sdk
+go run ./audioPackage/cmd/printconfig --path <albumDir>
+```
+
+若仅想查看原始密文（不解密）：
+
+```bash
+go run ./audioPackage/cmd/printconfig --path <albumDir> --raw
+```
+
+注意：本加密方案旨在避免明文直观暴露，属于“防随手窥视”的工程折中，并非强安全设计。
+
