@@ -1450,6 +1450,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		// 使用新的专辑ID创建目标路径
+		originalAlbumID := filepath.Base(albumPath)
 		targetPath := filepath.Join(audioPackageConfig.AudioPackagePath, newAlbumId)
 
 		// 复制到目标路径
@@ -1461,7 +1462,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		// 更新配置文件中的UUID
-		if err := audioPackageList.UpdateAlbumUUID(targetPath, newAlbumId); err != nil {
+		if err := audioPackageList.UpdateAlbumUUID(targetPath, newAlbumId, originalAlbumID); err != nil {
 			// 如果更新失败，清理已复制的文件夹
 			os.RemoveAll(targetPath)
 			ctx.JSON(http.StatusInternalServerError, gin.H{

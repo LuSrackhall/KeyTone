@@ -4,13 +4,13 @@
 
 ### 需求：专辑配置加密触发
 
-规范性：系统应当（SHALL）在前端调用独立加密 API `POST /encrypt_album_config` 时将专辑的 `package.json` 内容加密（将明文 JSON 替换为 AES-GCM 十六进制密文）；未签名专辑必须（MUST）保持明文。
+规范性：系统应当（SHALL）在前端调用独立加密 API `POST /encrypt_album_config` 时将专辑配置转存为 `core` 二进制密文文件，并将 `package.json` 替换为仅包含 `_keytone_core` 等元数据的指示 JSON；未签名专辑必须（MUST）保持明文。
 
 #### 场景：需要签名时调用加密 API
 
 - **给定** 明文专辑配置且用户在导出流程中选择"需要签名"
 - **当** 前端在调用导出路由前先调用 `POST /encrypt_album_config`
-- **则** 原始 `package.json` 文件内容被十六进制编码的密文替换，后续加载使用降级解密
+- **则** 目录下新增/更新 `core` 密文文件，`package.json` 变为指示 JSON，后续加载使用降级解密
 
 #### 场景：无需签名时跳过加密
 
@@ -64,6 +64,28 @@
 - **当** 导入验证执行
 - **则** 它解密并无错误地验证结构
 
+#### 场景：导入后保存为新专辑
+
+- **给定** 一个带指示 JSON + `core` 的加密专辑文件被导入并指定新的专辑 ID
+- **当** 系统复制到新目录并调用 `UpdateAlbumUUID(targetPath, newAlbumId, originalAlbumId)`
+- **则** 配置以旧密钥（originalAlbumId）解密、更新 `audio_pkg_uuid` 为新 ID，并使用新 ID 重新加密写回 `core`，而后指示 JSON 随之刷新
+
+### 需求：导入重新加密密钥转换
+
+规范性：当导入已加密专辑为新专辑时，系统应当（SHALL）使用原专辑 UUID 作为密钥派生的原始值以解密，之后使用新专辑 UUID 派生新密钥重新加密，确保 AES-GCM 认证成功且新专辑可正常加载。若原 UUID 解密失败，应当（SHALL）尝试当前目录名作为回退；若仍失败则必须（MUST）记录错误并中止 UUID 更新。
+
+#### 场景：重新加密成功
+
+- **给定** 源专辑 ID 为 `source-uuid`，目标新 ID 为 `new-uuid`，`core` 密文以 `source-uuid` 加密
+- **当** `UpdateAlbumUUID` 使用两个参数调用
+- **则** 配置解密成功、UUID 字段更新，`core` 文件使用 `new-uuid` 重新加密，指示 JSON 刷新时间戳
+
+#### 场景：重新加密回退
+
+- **给定** 原 UUID 无效但目录名可用的加密专辑
+- **当** `UpdateAlbumUUID` 执行
+- **则** 先尝试原 UUID 解密失败，自动回退尝试目录名，成功后继续重新加密
+
 ### 需求：调试配置打印 CLI
 
 规范性：独立 CLI 工具应当（SHALL）接受 `--path <albumDir>` 并将解密后的 JSON 打印到标准输出；使用 `--raw` 时必须（MUST）打印原始十六进制密文；错误时必须（MUST）以非零状态退出。
@@ -114,7 +136,7 @@
 
 - **给定** 明文专辑目录路径 `albumPath`
 - **当** 前端调用 `POST /encrypt_album_config` 且提供该路径
-- **则** 后端将对应目录下的 `package.json` 加密为十六进制密文并返回 200 成功
+- **则** 后端将对应目录下的配置转存为 `core` 密文文件并更新 `package.json` 指示 JSON，返回 200 成功
 
 #### 场景：重复调用加密 API 幂等
 

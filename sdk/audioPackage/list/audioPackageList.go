@@ -161,11 +161,16 @@ func GetAudioPackageName(configPath string) any {
 	return Viper.Get("package_name")
 }
 
-// 更新专辑配置文件中的 UUID
-func UpdateAlbumUUID(albumPath string, newUUID string) error {
+// UpdateAlbumUUID 更新专辑配置文件中的 UUID，必要时处理加密 core 文件。
+// originalUUID 用于解密旧密文；若为空则回退为当前目录名。
+func UpdateAlbumUUID(albumPath string, newUUID string, originalUUID string) error {
 	stubInfo, _, err := apconfig.ReadCoreStubInfo(albumPath)
 	if err != nil {
 		return err
+	}
+
+	if originalUUID == "" {
+		originalUUID = filepath.Base(albumPath)
 	}
 
 	albumUUID := filepath.Base(albumPath)
@@ -176,9 +181,14 @@ func UpdateAlbumUUID(albumPath string, newUUID string) error {
 		if err != nil {
 			return err
 		}
-		plain, err := apenc.DecryptConfigBytes(cipherBytes, albumUUID)
+		plain, err := apenc.DecryptConfigBytes(cipherBytes, originalUUID)
 		if err != nil {
-			return err
+			// 兼容旧行为：尝试使用目录名再次解密
+			if fallback, fallbackErr := apenc.DecryptConfigBytes(cipherBytes, albumUUID); fallbackErr == nil {
+				plain = fallback
+			} else {
+				return err
+			}
 		}
 		var data map[string]any
 		if err := json.Unmarshal([]byte(plain), &data); err != nil {
@@ -189,7 +199,7 @@ func UpdateAlbumUUID(albumPath string, newUUID string) error {
 		if err != nil {
 			return err
 		}
-		cipherBytes, err = apenc.EncryptConfigBytes(string(updated), filepath.Base(albumPath))
+		cipherBytes, err = apenc.EncryptConfigBytes(string(updated), newUUID)
 		if err != nil {
 			return err
 		}
