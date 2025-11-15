@@ -11,7 +11,6 @@ import { ref, computed, Ref } from 'vue';
 export interface ExportSignatureFlowResult {
   needSignature: boolean;
   requireAuthorization?: boolean;
-  contact?: string;
   contactEmail?: string;
   contactAdditional?: string;
   signatureId?: string;
@@ -36,7 +35,6 @@ interface State {
   flowData?: {
     needSignature?: boolean; // 是否需要签名
     requireAuthorization?: boolean; // 二次创作是否需要作者授权
-    contact?: string; // 授权联系方式（格式化字符串）
     contactEmail?: string; // 邮箱
     contactAdditional?: string; // 额外联系方式
   };
@@ -48,7 +46,7 @@ interface State {
  * Composable for orchestrating album export signature flow.
  *
  * Flow:
- * 1. No signatures → show policy dialog
+ * 1. No signatures → show policy dialog, then always evaluate authorization requirements
  * 2. Has signatures → skip policy, go to auth check
  * 3. If require auth & not authorized → show auth gate
  * 4. If need signature → show picker
@@ -106,15 +104,8 @@ export function useExportSignatureFlow() {
   const handleConfirmSignatureSubmit = (payload: { needSignature: boolean }) => {
     state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
 
-    if (!payload.needSignature) {
-      // 用户选择无需签名 → 流程直接完成
-      confirmSignatureDialogVisible.value = false;
-      state.value.step = 'done';
-      return;
-    }
-
-    // 需要签名 → 进入“是否需要授权”的选择
     confirmSignatureDialogVisible.value = false;
+    // 无论最终是否需要签名，都要做二次创作授权判断
     state.value.step = 'auth-requirement';
     authRequirementDialogVisible.value = true;
   };
@@ -129,9 +120,15 @@ export function useExportSignatureFlow() {
     authRequirementDialogVisible.value = false;
 
     if (!payload.requireAuthorization) {
-      // 不需要授权 → 直接进入签名选择
-      state.value.step = 'picker';
-      pickerDialogVisible.value = true;
+      const needSignature = state.value.flowData?.needSignature ?? true;
+      if (needSignature) {
+        // 仍需落地签名，继续选择
+        state.value.step = 'picker';
+        pickerDialogVisible.value = true;
+      } else {
+        // 无需签名且无需授权 → 就地完成
+        state.value.step = 'done';
+      }
       return;
     }
 
@@ -158,10 +155,9 @@ export function useExportSignatureFlow() {
   };
 
   // ========== Step: auth-contact ==========
-  const handleAuthContactSubmit = (payload: { contact: string; email: string; additional?: string }) => {
+  const handleAuthContactSubmit = (payload: { email: string; additional?: string }) => {
     state.value.flowData = {
       ...(state.value.flowData ?? {}),
-      contact: payload.contact,
       contactEmail: payload.email,
       contactAdditional: payload.additional?.trim() ? payload.additional.trim() : undefined,
     };
@@ -256,7 +252,6 @@ export function useExportSignatureFlow() {
     return {
       needSignature,
       requireAuthorization: state.value.flowData?.requireAuthorization,
-      contact: state.value.flowData?.contact,
       contactEmail: state.value.flowData?.contactEmail,
       contactAdditional: state.value.flowData?.contactAdditional,
       signatureId: state.value.selectedSignatureId,

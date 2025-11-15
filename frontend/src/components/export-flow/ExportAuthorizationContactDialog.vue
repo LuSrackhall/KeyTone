@@ -50,7 +50,7 @@ import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
-  (e: 'submit', payload: { contact: string; email: string; additional?: string }): void;
+  (e: 'submit', payload: { email: string; additional?: string }): void;
   (e: 'cancel'): void;
 }>();
 
@@ -94,7 +94,6 @@ function onSubmit() {
     return;
   }
   const additional = additionalLocal.value.trim();
-  const contact = additional ? `${email}\n${additional}` : email;
-  emit('submit', { contact, email, additional: additional || undefined });
+  emit('submit', { email, additional: additional || undefined });
 }
 </script>

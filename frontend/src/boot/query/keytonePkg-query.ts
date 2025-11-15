@@ -1,4 +1,5 @@
 import { api } from 'boot/axios';
+import type { ApplySignatureConfigPayload } from 'src/types/export-flow';
 
 export async function SendFileToServer(file: File) {
   const formData = new FormData();
@@ -548,6 +549,35 @@ export async function EncryptAlbumConfig(albumPath: string): Promise<{
       if (error.response?.data?.message) {
         console.error('服务器返回:', error.response.data.message);
       }
+      console.groupEnd();
+      throw error;
+    });
+}
+
+// 将签名/授权决策发送到 SDK，供后续写入专辑配置
+export async function ApplySignatureConfig(payload: ApplySignatureConfigPayload): Promise<boolean> {
+  return await api
+    .post('/keytone_pkg/apply_signature_config', payload)
+    .then((response) => {
+      console.debug('status=', response.status, '->ApplySignatureConfig 请求已成功执行并返回->', response.data);
+      if (response.status === 200) {
+        return true;
+      }
+      throw new Error('应用签名配置失败');
+    })
+    .catch((error) => {
+      console.group('ApplySignatureConfig 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
       console.groupEnd();
       throw error;
     });

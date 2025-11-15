@@ -118,7 +118,6 @@ interface PolicyDialogEmits {
     data: {
       needSignature: boolean;
       requireAuthorization: boolean;
-      contact?: string;
       contactEmail?: string;
       contactAdditional?: string;
     }
@@ -238,12 +237,9 @@ const onSubmit = () => {
 
   const email = formData.value.contactEmail.trim();
   const additional = formData.value.contactAdditional.trim();
-  const contact = formData.value.requireAuthorization ? (additional ? `${email}\n${additional}` : email) : undefined;
-
   emit('submit', {
     needSignature: formData.value.needSignature,
     requireAuthorization: formData.value.requireAuthorization,
-    contact,
     contactEmail: formData.value.requireAuthorization ? email : undefined,
     contactAdditional: formData.value.requireAuthorization && additional ? additional : undefined,
   });

@@ -350,12 +350,16 @@ import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuth
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
 import ExportSignatureFlowTestDialog from 'src/components/export-flow/ExportSignatureFlowTestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
-import { useExportSignatureFlow } from 'src/components/export-flow/useExportSignatureFlow';
+import {
+  useExportSignatureFlow,
+  type ExportSignatureFlowResult,
+} from 'src/components/export-flow/useExportSignatureFlow';
 import {
   DeleteAlbum,
   GetAudioPackageName,
   ExportAlbum,
   EncryptAlbumConfig,
+  ApplySignatureConfig,
   ImportAlbum,
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
@@ -505,28 +509,102 @@ interface FileSystemWritableFileStream extends WritableStream {
   close: () => Promise<void>;
 }
 
+/**
+ * 在需要签名或授权时，完成配置加密并向 SDK 提交签名决策。
+ */
+const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSignatureFlowResult): Promise<boolean> => {
+  const needSignature = !!result.needSignature;
+  const requireAuthorization = !!result.requireAuthorization;
+  const shouldApplySignature = needSignature || requireAuthorization;
+
+  if (!shouldApplySignature) {
+    console.log('无需签名与授权，跳过配置加密与签名写入步骤');
+    return true;
+  }
+
+  const signatureId = result.signatureId;
+
+  if (!signatureId) {
+    const translated = $t('keyToneAlbumPage.notify.selectSignatureFirst');
+    const message =
+      translated && translated !== 'keyToneAlbumPage.notify.selectSignatureFirst' ? translated : '请先选择签名后再导出';
+    q.notify({ type: 'warning', message });
+    return false;
+  }
+
+  if (requireAuthorization) {
+    const trimmedEmail = result.contactEmail?.trim();
+    if (!trimmedEmail) {
+      const translated = $t('exportFlow.contact.emailRequired');
+      const message =
+        translated && translated !== 'exportFlow.contact.emailRequired' ? translated : '请填写联系邮箱以便作者授权';
+      q.notify({ type: 'warning', message });
+      return false;
+    }
+  }
+
+  console.log('[SignatureFlow] 准备写入签名配置', {
+    albumPath,
+    needSignature,
+    requireAuthorization,
+    signatureId: result.signatureId,
+  });
+
+  try {
+    const encryptResult = await EncryptAlbumConfig(albumPath);
+    console.log('专辑配置加密结果:', encryptResult);
+    if (encryptResult.already_encrypted) {
+      console.log('配置已加密，跳过重复操作');
+    } else if (encryptResult.encrypted) {
+      console.log('配置加密成功');
+    }
+  } catch (encryptError) {
+    console.error('加密专辑配置失败:', encryptError);
+    q.notify({
+      type: 'negative',
+      message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
+    });
+    return false;
+  }
+
+  try {
+    await ApplySignatureConfig({
+      albumPath,
+      needSignature,
+      requireAuthorization,
+      signatureId,
+      contactEmail: result.contactEmail?.trim() || undefined,
+      contactAdditional: result.contactAdditional?.trim() || undefined,
+    });
+    console.log('签名配置已提交给 SDK');
+  } catch (applyError) {
+    console.error('提交签名配置失败:', applyError);
+    q.notify({
+      type: 'negative',
+      message: '提交签名配置失败: ' + (applyError instanceof Error ? applyError.message : String(applyError)),
+    });
+    return false;
+  }
+
+  return true;
+};
+
 // 降级方案 - 使用传统的下载方式
 const exportAlbumLegacy = async () => {
   try {
-    // 步骤1：检查是否需要签名，如果需要则先加密配置
+    // 步骤1：检查签名/授权诉求，必要时加密并调用 SDK 路由
     const result = exportFlow.getResult();
     const albumPath = setting_store.mainHome.selectedKeyTonePkg;
     if (!albumPath) {
       throw new Error('未选择任何键音专辑');
     }
-    if (result && result.needSignature) {
-      console.log('降级导出：需要签名，正在加密专辑配置...', albumPath);
-      try {
-        const encryptResult = await EncryptAlbumConfig(albumPath);
-        console.log('降级导出：专辑配置加密结果:', encryptResult);
-      } catch (encryptError) {
-        console.error('降级导出：加密专辑配置失败:', encryptError);
-        q.notify({
-          type: 'negative',
-          message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
-        });
-        return; // 加密失败则终止导出流程
-      }
+    if (!result) {
+      throw new Error('导出结果缺失，请重新触发签名流程');
+    }
+
+    const prepared = await ensureSignatureConfigApplied(albumPath, result);
+    if (!prepared) {
+      return; // 错误提示由 helper 负责
     }
 
     // 步骤2：获取专辑名称
@@ -662,27 +740,10 @@ const handleExportSignatureFlowComplete = async () => {
       throw new Error('未选择任何键音专辑');
     }
 
-    // 步骤1：如果需要签名，先调用加密 API
-    if (result.needSignature) {
-      console.log('需要签名，正在加密专辑配置...', albumPath);
-      try {
-        const encryptResult = await EncryptAlbumConfig(albumPath);
-        console.log('专辑配置加密结果:', encryptResult);
-        if (encryptResult.already_encrypted) {
-          console.log('配置已加密，跳过重复操作');
-        } else if (encryptResult.encrypted) {
-          console.log('配置加密成功');
-        }
-      } catch (encryptError) {
-        console.error('加密专辑配置失败:', encryptError);
-        q.notify({
-          type: 'negative',
-          message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
-        });
-        return; // 加密失败则终止导出流程
-      }
-    } else {
-      console.log('无需签名，跳过配置加密步骤');
+    // 步骤1：按需加密并将签名/授权配置交给 SDK
+    const prepared = await ensureSignatureConfigApplied(albumPath, result);
+    if (!prepared) {
+      return;
     }
 
     // 步骤2：获取专辑名称

@@ -1130,6 +1130,59 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	keytonePkgRouters.POST("/apply_signature_config", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath            string `json:"albumPath" binding:"required"`
+			NeedSignature        bool   `json:"needSignature"`
+			RequireAuthorization bool   `json:"requireAuthorization"`
+			SignatureID          string `json:"signatureId" binding:"required"`
+			ContactEmail         string `json:"contactEmail"`
+			ContactAdditional    string `json:"contactAdditional"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的签名配置请求体",
+			})
+			return
+		}
+
+		if strings.TrimSpace(req.AlbumPath) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: albumPath 不能为空",
+			})
+			return
+		}
+
+		if (req.NeedSignature || req.RequireAuthorization) && strings.TrimSpace(req.SignatureID) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 选择签名后才能导出",
+			})
+			return
+		}
+
+		if req.RequireAuthorization && strings.TrimSpace(req.ContactEmail) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 需要授权时必须提供联系邮箱",
+			})
+			return
+		}
+
+		logger.Info("收到签名配置应用请求",
+			"albumPath", req.AlbumPath,
+			"needSignature", req.NeedSignature,
+			"requireAuthorization", req.RequireAuthorization,
+			"signatureId", req.SignatureID,
+			"contactEmail", req.ContactEmail,
+			"contactAdditional", req.ContactAdditional,
+		)
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+			"success": true,
+		})
+	})
+
 	keytonePkgRouters.POST("/export_album", func(ctx *gin.Context) {
 		type Arg struct {
 			AlbumPath string `json:"albumPath"`
