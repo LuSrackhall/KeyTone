@@ -1177,9 +1177,29 @@ func keytonePkgRouters(r *gin.Engine) {
 			"contactAdditional", req.ContactAdditional,
 		)
 
+		// 调用签名应用函数
+		qualificationCode, err := audioPackageConfig.ApplySignatureToAlbum(
+			req.AlbumPath,
+			req.SignatureID,
+			req.RequireAuthorization,
+			req.ContactEmail,
+			req.ContactAdditional,
+		)
+
+		if err != nil {
+			logger.Error("签名应用失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 签名应用失败: " + err.Error(),
+			})
+			return
+		}
+
+		logger.Info("签名应用成功", "qualificationCode", qualificationCode)
+
 		ctx.JSON(http.StatusOK, gin.H{
-			"message": "ok",
-			"success": true,
+			"message":           "ok",
+			"success":           true,
+			"qualificationCode": qualificationCode,
 		})
 	})
 
