@@ -51,6 +51,11 @@ type AuthorizationMetadata struct {
 	// AuthorizedList 已授权的资格码列表
 	// 存储被授权者的资格码（签名ID的SHA256哈希）
 	AuthorizedList []string `json:"authorizedList"`
+
+	// DirectExportAuthor 直接导出作者的资格码
+	// 记录每次导出时的签名者，用于前端展示
+	// 每次导出时更新为当前导出者的资格码
+	DirectExportAuthor string `json:"directExportAuthor"`
 }
 
 // AlbumSignatureEntry 专辑配置中的签名条目结构
@@ -214,26 +219,7 @@ func ApplySignatureToAlbum(
 		}
 	}
 
-	// 步骤7：构建专辑签名对象
-	albumSigEntry := AlbumSignatureEntry{
-		Name:          sigData.Name,
-		Intro:         sigData.Intro,
-		CardImagePath: cardImageRelPath,
-	}
-
-	// 根据用户选择决定是否包含authorization字段
-	if requireAuthorization {
-		albumSigEntry.Authorization = &AuthorizationMetadata{
-			RequireAuthorization: true,
-			ContactEmail:         contactEmail,
-			ContactAdditional:    contactAdditional,
-			AuthorizedList:       []string{}, // 初始化为空数组
-		}
-		logger.Debug("签名包含授权信息", "contactEmail", contactEmail)
-	}
-
-	// 步骤8：读取或创建专辑配置的signature字段
-	// 加载专辑配置（如果尚未加载）
+	// 步骤7：加载专辑配置，检查是否已有签名
 	LoadConfig(albumPath, false)
 	if Viper == nil {
 		return "", fmt.Errorf("加载专辑配置失败")
@@ -241,6 +227,8 @@ func ApplySignatureToAlbum(
 
 	// 读取现有的signature字段（可能已加密）
 	var albumSignatureMap map[string]AlbumSignatureEntry
+	var isFirstExport bool = true
+	var originalAuthorEntry *AlbumSignatureEntry
 	existingSignatureValue := GetValue("signature")
 
 	if existingSignatureValue != nil {
@@ -256,6 +244,17 @@ func ApplySignatureToAlbum(
 				if err := json.Unmarshal([]byte(decryptedSigJSON), &albumSignatureMap); err != nil {
 					logger.Warn("解析现有signature JSON失败，将创建新字段", "error", err.Error())
 					albumSignatureMap = make(map[string]AlbumSignatureEntry)
+				} else {
+					isFirstExport = false
+					// 找到原始作者签名（包含authorization字段的那个）
+					for qualCode, entry := range albumSignatureMap {
+						if entry.Authorization != nil {
+							entryCopy := entry
+							originalAuthorEntry = &entryCopy
+							logger.Debug("找到原始作者签名", "qualCode", qualCode)
+							break
+						}
+					}
 				}
 			}
 		} else {
@@ -267,7 +266,48 @@ func ApplySignatureToAlbum(
 		albumSignatureMap = make(map[string]AlbumSignatureEntry)
 	}
 
-	// 添加或更新签名
+	// 步骤8：构建专辑签名对象
+	albumSigEntry := AlbumSignatureEntry{
+		Name:          sigData.Name,
+		Intro:         sigData.Intro,
+		CardImagePath: cardImageRelPath,
+	}
+
+	// 步骤9：处理authorization字段
+	if isFirstExport {
+		// 首次导出：创建原始作者签名，包含authorization对象
+		albumSigEntry.Authorization = &AuthorizationMetadata{
+			RequireAuthorization: requireAuthorization,
+			ContactEmail:         contactEmail,
+			ContactAdditional:    contactAdditional,
+			AuthorizedList:       []string{},        // 初始化为空数组
+			DirectExportAuthor:   qualificationCode, // 设置为当前导出者的资格码
+		}
+		logger.Info("首次导出：创建原始作者签名",
+			"qualificationCode", qualificationCode,
+			"requireAuthorization", requireAuthorization,
+		)
+	} else {
+		// 再次导出：需要更新原始作者签名的directExportAuthor
+		if originalAuthorEntry != nil && originalAuthorEntry.Authorization != nil {
+			// 更新原始作者签名的directExportAuthor
+			for qualCode, entry := range albumSignatureMap {
+				if entry.Authorization != nil {
+					entry.Authorization.DirectExportAuthor = qualificationCode
+					albumSignatureMap[qualCode] = entry
+					logger.Info("更新原始作者签名的directExportAuthor",
+						"originalAuthor", qualCode,
+						"directExportAuthor", qualificationCode,
+					)
+					break
+				}
+			}
+		}
+		// 非原始作者签名不包含authorization字段
+		logger.Info("再次导出：添加贡献者签名", "qualificationCode", qualificationCode)
+	}
+
+	// 添加或更新当前签名
 	albumSignatureMap[qualificationCode] = albumSigEntry
 	logger.Debug("签名已添加到专辑signature map", "count", len(albumSignatureMap))
 

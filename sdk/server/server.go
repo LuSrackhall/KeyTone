@@ -1203,6 +1203,123 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 获取专辑签名信息（前端需求2和4）
+	keytonePkgRouters.POST("/get_album_signature_info", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath string `json:"albumPath" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		signatureInfo, err := audioPackageConfig.GetAlbumSignatureInfo(req.AlbumPath)
+		if err != nil {
+			logger.Error("获取专辑签名信息失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+			"data":    signatureInfo,
+		})
+	})
+
+	// 检查签名是否在专辑中（前端需求3）
+	keytonePkgRouters.POST("/check_signature_in_album", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath   string `json:"albumPath" binding:"required"`
+			SignatureID string `json:"signatureId" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		isInAlbum, qualCode, err := audioPackageConfig.CheckSignatureInAlbum(req.AlbumPath, req.SignatureID)
+		if err != nil {
+			logger.Error("检查签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":           "ok",
+			"isInAlbum":         isInAlbum,
+			"qualificationCode": qualCode,
+		})
+	})
+
+	// 检查签名授权状态（前端需求3）
+	keytonePkgRouters.POST("/check_signature_authorization", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath   string `json:"albumPath" binding:"required"`
+			SignatureID string `json:"signatureId" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		isAuthorized, requireAuth, qualCode, err := audioPackageConfig.CheckSignatureAuthorization(req.AlbumPath, req.SignatureID)
+		if err != nil {
+			logger.Error("检查签名授权失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":              "ok",
+			"isAuthorized":         isAuthorized,
+			"requireAuthorization": requireAuth,
+			"qualificationCode":    qualCode,
+		})
+	})
+
+	// 获取可用于导出的签名列表（前端需求3）
+	keytonePkgRouters.POST("/get_available_signatures", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath string `json:"albumPath" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		signatures, err := audioPackageConfig.GetAvailableSignaturesForExport(req.AlbumPath)
+		if err != nil {
+			logger.Error("获取可用签名列表失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":    "ok",
+			"signatures": signatures,
+		})
+	})
+
 	keytonePkgRouters.POST("/export_album", func(ctx *gin.Context) {
 		type Arg struct {
 			AlbumPath string `json:"albumPath"`

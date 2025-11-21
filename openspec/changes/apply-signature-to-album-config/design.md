@@ -117,9 +117,13 @@ func ApplySignatureToAlbum(
 - 文件名哈希：避免冲突，保持唯一性
 - 相对路径存储：`cardImagePath: "audioFiles/xyz789.jpg"`，便于专辑迁移
 
-### 5. 授权元数据结构
+### 5. 授权元数据结构与三种导出情况
 
-**原始作者签名**（第一次导出）：
+**情况1：首次导出 - 无需签名**
+- 前端直接调用原导出API，不触发签名应用流程
+- 专辑配置不包含signature字段
+
+**情况2：首次导出 - 需要签名且需要授权**
 ```json
 {
   "name": "张三",
@@ -129,12 +133,29 @@ func ApplySignatureToAlbum(
     "requireAuthorization": true,
     "contactEmail": "zhang@example.com",
     "contactAdditional": "微信: zhangsan123",
-    "authorizedList": []  // 初始为空，后续授权后添加
+    "authorizedList": [],  // 初始为空，后续授权后添加
+    "directExportAuthor": "<资格码1>"  // 当前导出者的资格码
   }
 }
 ```
 
-**授权第三方签名**（后续导出）：
+**情况3：首次导出 - 需要签名但无需授权**
+```json
+{
+  "name": "张三",
+  "intro": "键音创作者",
+  "cardImagePath": "audioFiles/card1.jpg",
+  "authorization": {
+    "requireAuthorization": false,
+    "contactEmail": "zhang@example.com",
+    "contactAdditional": "",
+    "authorizedList": [],
+    "directExportAuthor": "<资格码1>"
+  }
+}
+```
+
+**再次导出 - 贡献者签名**（无authorization字段）：
 ```json
 {
   "name": "李四",
@@ -144,10 +165,19 @@ func ApplySignatureToAlbum(
 }
 ```
 
+**再次导出 - 更新directExportAuthor**：
+- 每次导出时，原始作者签名的`authorization.directExportAuthor`更新为当前导出者的资格码
+- 其他签名条目保持不变
+
 **authorizedList更新**：
 - 触发时机：原作者导入授权文件后
 - 存储内容：被授权者的资格码
-- 用途：前端选择签名时提示"已授权"状态
+- 用途：前端选择签名时使能/失能签名选项
+
+**签名作者角色识别**：
+- 原始作者：signature中包含authorization字段的签名（只有一个）
+- 历史贡献作者：signature中的所有其他签名条目
+- 直接导出作者：authorization.directExportAuthor对应的签名
 
 ## 安全性分析
 
@@ -232,6 +262,508 @@ fmt.Printf(`
 - **磁盘IO**：读签名配置、写专辑配置、复制图片（3次操作）
 - **CPU**：加解密操作（AES-GCM + SHA256），<100ms
 
+## API设计
+
+### 端点1: 应用签名配置
+**路径**: `POST /keytone_pkg/apply_signature_config`
+**功能**: 将签名写入专辑配置
+
+**请求体**:
+```json
+{
+  "albumPath": "/path/to/album",
+  "signatureId": "<encrypted_id>",
+  "requireAuthorization": true,
+  "contactEmail": "author@example.com",
+  "contactAdditional": "微信: xxx"
+}
+```
+
+**响应**:
+```json
+{
+  "message": "ok",
+  "success": true,
+  "qualificationCode": "<sha256_hash>"
+}
+```
+
+### 端点2: 获取专辑签名信息
+**路径**: `POST /keytone_pkg/get_album_signature_info`
+**功能**: 读取并解析专辑签名信息（前端需求2和4）
+
+**请求体**:
+```json
+{
+  "albumPath": "/path/to/album"
+}
+```
+
+**响应**:
+```json
+{
+  "message": "ok",
+  "data": {
+    "hasSignature": true,
+    "originalAuthor": {
+      "qualificationCode": "<code>",
+      "name": "张三",
+      "intro": "...",
+      "cardImagePath": "audioFiles/card.jpg",
+      "isOriginalAuthor": true,
+      "requireAuthorization": true,
+      "authorizedList": ["<code2>"]
+    },
+    "contributorAuthors": [
+      {
+        "qualificationCode": "<code2>",
+        "name": "李四",
+        "intro": "...",
+        "isOriginalAuthor": false
+      }
+    ],
+    "directExportAuthor": {
+      "qualificationCode": "<code2>",
+      "name": "李四",
+      "isOriginalAuthor": false
+    },
+    "allSignatures": { ... }
+  }
+}
+```
+
+### 端点3: 检查签名是否在专辑中
+**路径**: `POST /keytone_pkg/check_signature_in_album`
+**功能**: 标记已在专辑中的签名（前端需求3）
+
+**请求体**:
+```json
+{
+  "albumPath": "/path/to/album",
+  "signatureId": "<encrypted_id>"
+}
+```
+
+**响应**:
+```json
+{
+  "message": "ok",
+  "isInAlbum": true,
+  "qualificationCode": "<code>"
+}
+```
+
+### 端点4: 检查签名授权状态
+**路径**: `POST /keytone_pkg/check_signature_authorization`
+**功能**: 检查签名是否有导出授权（前端需求3）
+
+**请求体**:
+```json
+{
+  "albumPath": "/path/to/album",
+  "signatureId": "<encrypted_id>"
+}
+```
+
+**响应**:
+```json
+{
+  "message": "ok",
+  "isAuthorized": true,
+  "requireAuthorization": true,
+  "qualificationCode": "<code>"
+}
+```
+
+### 端点5: 获取可用签名列表
+**路径**: `POST /keytone_pkg/get_available_signatures`
+**功能**: 获取所有可用签名及其状态（前端需求3）
+
+**请求体**:
+```json
+{
+  "albumPath": "/path/to/album"
+}
+```
+
+**响应**:
+```json
+{
+  "message": "ok",
+  "signatures": [
+    {
+      "encryptedId": "<encrypted>",
+      "qualificationCode": "<code>",
+      "name": "张三",
+      "intro": "...",
+      "isInAlbum": true,
+      "isAuthorized": true,
+      "isOriginalAuthor": true
+    },
+    {
+      "encryptedId": "<encrypted2>",
+      "qualificationCode": "<code2>",
+      "name": "李四",
+      "intro": "...",
+      "isInAlbum": false,
+      "isAuthorized": true,
+      "isOriginalAuthor": false
+    }
+  ]
+}
+```
+
+## 前端实现
+
+### 组件架构
+
+所有专辑导出流程相关的组件统一存放在 `frontend/src/components/export-flow/` 目录下，包括：
+- 导出流程对话框（Export*Dialog.vue）
+- 签名选择和管理组件（Signature*Dialog.vue）
+- 流程控制逻辑（useExportSignatureFlow.ts）
+
+#### SignatureAuthorsDialog.vue（需求4）
+**位置**: `frontend/src/components/export-flow/SignatureAuthorsDialog.vue`
+**功能**: 展示专辑签名作者信息
+**使用场景**: 用户查看专辑详情时点击"查看签名信息"
+
+**主要功能**:
+- 调用 `GetAlbumSignatureInfo` 获取签名信息
+- 分区展示：原始作者、直接导出作者、历史贡献作者
+- 显示授权状态徽章
+- 处理无签名、加载中、错误状态
+
+**UI布局**:
+```
+┌─────────────────────────────┐
+│ [★] 原始作者                │
+│  ┌───────────────────────┐  │
+│  │ [图片] 名称            │  │
+│  │        介绍            │  │
+│  │        [需要授权导出]  │  │
+│  └───────────────────────┘  │
+│                             │
+│ [⬇] 直接导出作者            │
+│  ┌───────────────────────┐  │
+│  │ [图片] 名称            │  │
+│  └───────────────────────┘  │
+│                             │
+│ [👥] 历史贡献作者 (2)       │
+│  ┌───────────────────────┐  │
+│  │ [图片] 名称            │  │
+│  └───────────────────────┘  │
+│  ┌───────────────────────┐  │
+│  │ [图片] 名称            │  │
+│  └───────────────────────┘  │
+└─────────────────────────────┘
+```
+
+#### SignatureSelectionDialog.vue（需求3）
+**位置**: `frontend/src/components/export-flow/SignatureSelectionDialog.vue`
+**功能**: 增强的签名选择界面
+**使用场景**: 用户导出专辑时选择签名
+
+**主要功能**:
+- 调用 `GetAvailableSignatures` 获取签名列表
+- 视觉标记：
+  - 已在专辑中：蓝色左边框
+  - 未授权：置灰 + 锁图标
+  - 原始作者：金色星标
+- 筛选功能：仅显示已授权 / 仅显示已在专辑中
+- 点击未授权签名时提示需要授权
+
+**UI布局**:
+```
+┌─────────────────────────────────────────┐
+│ □ 仅显示已授权  □ 仅显示已在专辑中       │
+├─────────────────────────────────────────┤
+│ ┌────────────┐ ┌────────────┐           │
+│ │[★原始作者] │ │[✓已在专辑] │           │
+│ │ 名称       │ │ 名称       │           │
+│ │ 介绍       │ │ 介绍 [✓已选]│           │
+│ └────────────┘ └────────────┘           │
+│ ┌────────────┐                          │
+│ │[🔒需要授权]│ (置灰，不可选)           │
+│ │ 名称       │                          │
+│ └────────────┘                          │
+└─────────────────────────────────────────┘
+```
+
+### 数据流
+
+#### 需求1：删除"无需签名+需要授权"分支
+```
+用户选择导出
+    ↓
+需要签名？
+├─ No → 直接调用ExportAlbum()
+└─ Yes → 进入签名流程
+```
+
+#### 需求2：再次导出时的签名识别（已实现）
+```
+进入导出流程（exportAlbum）
+    ↓
+调用 exportFlow.start({ albumPath })
+    ↓
+GetAlbumSignatureInfo(albumPath)
+    ↓
+专辑已有签名？
+├─ No → state.step = 'confirm-signature' (首次导出流程)
+└─ Yes → 检查授权
+    ↓
+requireAuthorization？
+├─ No → state.step = 'picker' (直接进入签名选择)
+└─ Yes → state.step = 'auth-gate' (授权门控)
+    ↓
+TODO: 检查当前用户是否有授权
+├─ Yes → 进入签名选择
+└─ No → 提示导入授权文件
+```
+
+**实现细节**:
+- `useExportSignatureFlow.start()` 现在接收 `albumPath` 参数
+- 自动调用 `GetAlbumSignatureInfo(albumPath)` 获取签名状态
+- 根据返回的 `hasSignature` 和 `requireAuthorization` 决定流程
+- 错误时默认按首次导出处理
+- 向后兼容旧的测试参数
+
+**代码实现**:
+
+```typescript
+// useExportSignatureFlow.ts
+const start = async (options: ExportSignatureFlowOptions) => {
+  const { albumPath } = options;
+  
+  // 获取专辑签名信息
+  const signatureInfo = await GetAlbumSignatureInfo(albumPath);
+  
+  // 情况1：专辑无签名 → 首次导出流程
+  if (!signatureInfo.hasSignature) {
+    state.value.step = 'confirm-signature';
+    confirmSignatureDialogVisible.value = true;
+    return;
+  }
+  
+  // 情况2：专辑有签名且需要授权
+  if (signatureInfo.originalAuthor?.requireAuthorization) {
+    state.value.step = 'auth-gate';
+    authGateDialogVisible.value = true;
+    return;
+  }
+  
+  // 情况3：专辑有签名但不需要授权 → 直接进入签名选择
+  state.value.step = 'picker';
+  pickerDialogVisible.value = true;
+};
+```
+
+```typescript
+// Keytone_album_page_new.vue
+const exportAlbum = async () => {
+  const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+  
+  if (!albumPath) {
+    q.notify({ type: 'warning', message: '请先选择一个专辑' });
+    return;
+  }
+  
+  // 自动识别三种情况
+  await exportFlow.start({ albumPath });
+};
+```
+
+#### 需求3：签名选择页面增强
+```
+打开SignatureSelectionDialog
+    ↓
+GetAvailableSignatures(albumPath)
+    ↓
+渲染签名卡片
+├─ isInAlbum=true → 蓝色边框
+├─ isAuthorized=false → 置灰 + 锁图标
+├─ isOriginalAuthor=true → 星标
+└─ 用户点击签名
+    ↓
+isAuthorized？
+├─ No → 提示需要授权
+└─ Yes → 选中签名，允许确认
+```
+
+### 类型系统
+
+所有类型定义位于 `frontend/src/types/export-flow.ts`:
+- `SignatureAuthorInfo` - 签名作者基本信息
+- `AlbumSignatureEntry` - 专辑配置中的签名条目（对应SDK）
+- `AlbumSignatureInfo` - 完整的专辑签名信息（API返回）
+- `AvailableSignature` - 可选签名信息（包含状态标记）
+
+### API调用封装
+
+所有API函数位于 `frontend/src/boot/query/keytonePkg-query.ts`:
+- `GetAlbumSignatureInfo(albumPath)` - 需求2、4使用
+- `CheckSignatureInAlbum(albumPath, signatureId)` - 需求3辅助
+- `CheckSignatureAuthorization(albumPath, signatureId)` - 需求3辅助
+- `GetAvailableSignatures(albumPath)` - 需求3主要使用
+
+### 页面集成
+
+#### Keytone_album_page_new.vue
+**集成内容**:
+1. 添加"查看签名信息"按钮（badge图标，amber颜色）
+2. 导入并使用SignatureAuthorsDialog组件
+3. 实现showAlbumSignatureInfo方法，检查专辑选中状态
+
+**代码示例**:
+```vue
+<!-- 按钮 -->
+<q-btn
+  icon="badge"
+  color="amber"
+  @click="showAlbumSignatureInfo"
+/>
+
+<!-- 对话框 -->
+<SignatureAuthorsDialog
+  ref="signatureAuthorsDialogRef"
+  :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+/>
+```
+
+**方法实现**:
+```typescript
+const signatureAuthorsDialogRef = ref<InstanceType<typeof SignatureAuthorsDialog> | null>(null);
+const showAlbumSignatureInfo = () => {
+  if (!setting_store.mainHome.selectedKeyTonePkg) {
+    q.notify({ type: 'warning', message: '请先选择一个专辑' });
+    return;
+  }
+  signatureAuthorsDialogRef.value?.open();
+};
+```
+
+## Bug修复记录
+
+### Bug #1: 无需签名时仍进入授权对话框
+
+**问题描述**：
+用户在导出流程中选择"无需签名"后，仍然会进入"二次创作是否需要授权"的对话框，违反了需求1（删除"无需签名+需要授权"分支）。
+
+**根本原因**：
+`useExportSignatureFlow.ts`中的`handleConfirmSignatureSubmit`函数没有检查`needSignature`标志，无论用户选择什么，都会进入授权流程：
+
+```typescript
+// 错误代码
+const handleConfirmSignatureSubmit = (payload: { needSignature: boolean }) => {
+  state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
+  confirmSignatureDialogVisible.value = false;
+  // 无论最终是否需要签名，都要做二次创作授权判断 ❌
+  state.value.step = 'auth-requirement';
+  authRequirementDialogVisible.value = true;
+};
+```
+
+**修复方案**：
+在`handleConfirmSignatureSubmit`中添加条件判断，如果用户选择"无需签名"，直接将流程状态设为`done`，不进入授权流程：
+
+```typescript
+// 修复后代码
+const handleConfirmSignatureSubmit = (payload: { needSignature: boolean }) => {
+  state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
+  confirmSignatureDialogVisible.value = false;
+  
+  // 如果选择"无需签名"，直接完成，不进入授权流程 ✅
+  if (!payload.needSignature) {
+    state.value.step = 'done';
+    return;
+  }
+
+  // 选择"需要签名"，进入授权判断
+  state.value.step = 'auth-requirement';
+  authRequirementDialogVisible.value = true;
+};
+```
+
+**影响范围**：
+- 文件：`frontend/src/components/export-flow/useExportSignatureFlow.ts`
+- 影响流程：首次导出专辑的签名确认流程
+- 验证方法：选择"无需签名"后应直接完成，不显示任何授权相关对话框
+
+### Bug #2: SignatureAuthorsDialog尺寸过大导致溢出
+
+**问题描述**：
+`SignatureAuthorsDialog`对话框的尺寸（min-width: 600px, max-width: 800px）在固定窗口尺寸的应用中导致界面溢出，无法正常查看内容。
+
+**根本原因**：
+对话框设计时未考虑固定窗口尺寸的约束，使用了较大的固定宽度和较大的字体/图片尺寸。
+
+**修复方案**：
+
+1. **对话框尺寸调整**：
+```vue
+<!-- 修复前 -->
+<q-card style="min-width: 600px; max-width: 800px">
+
+<!-- 修复后 -->
+<q-card style="width: 90vw; max-width: 480px; max-height: 85vh">
+```
+
+2. **添加滚动支持**：
+```vue
+<q-card-section 
+  v-else-if="signatureInfo" 
+  style="max-height: calc(85vh - 100px); overflow-y: auto"
+>
+```
+
+3. **图片尺寸缩小**：
+```vue
+<!-- 修复前 -->
+style="width: 100px; height: 100px"
+
+<!-- 修复后 -->
+style="width: 70px; height: 70px"
+```
+
+4. **字体大小调整**：
+```vue
+<!-- 修复前 -->
+<q-icon size="24px" />
+<span class="text-h6">
+<div class="text-h6">
+
+<!-- 修复后 -->
+<q-icon size="20px" />
+<span class="text-subtitle1">
+<div class="text-subtitle2">
+```
+
+5. **间距优化**：
+```vue
+<!-- 内边距从 q-pa-md 改为 q-pa-sm -->
+<q-card-section class="col q-pa-sm">
+
+<!-- 边距从 q-mt-md 改为 q-mt-sm -->
+class="author-card q-mt-sm"
+
+<!-- 区块间距从 q-mb-lg 改为 q-mb-md -->
+class="author-section q-mb-md"
+```
+
+**影响范围**：
+- 文件：`frontend/src/components/SignatureAuthorsDialog.vue`
+- 改进效果：
+  - 对话框宽度适配小屏幕（最大480px）
+  - 内容区域可滚动，避免溢出
+  - 更紧凑的布局，信息密度更高
+  - 保持可读性的同时节省空间
+
+**验证方法**：
+1. 在固定窗口尺寸下打开对话框
+2. 确认对话框不溢出屏幕
+3. 确认所有内容可通过滚动查看
+4. 确认文字清晰可读，图片不失真
+
 ## 未来扩展
 
 ### 可能的增强
@@ -240,3 +772,5 @@ fmt.Printf(`
 3. **批量签名**：支持一次应用多个签名（联名专辑）
 4. **签名撤销**：从authorizedList移除已授权的资格码
 5. **签名历史**：记录每次签名操作的时间戳和操作者
+6. **签名预览**：在选择前预览签名效果
+7. **离线授权**：支持导入离线授权文件

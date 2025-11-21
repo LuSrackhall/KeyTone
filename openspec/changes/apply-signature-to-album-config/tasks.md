@@ -62,12 +62,145 @@
 - [x] 确认图片复制逻辑与现有音频文件管理一致
 - [x] 检查资格码生成的唯一性和确定性
 
-### 7. 集成测试准备
-- [ ] 手动测试：创建签名 → 应用到专辑 → 检查配置文件
+### 7. 实现directExportAuthor字段
+- [x] 在AuthorizationMetadata结构中添加DirectExportAuthor字段
+- [x] 首次导出时设置directExportAuthor为当前导出者资格码
+- [x] 再次导出时更新原始作者签名的directExportAuthor
+- [x] 非原始作者签名不包含authorization字段
+- [x] 添加相关日志记录
+
+### 8. 实现三种导出情况处理
+- [x] 删除"无需签名+需要授权"分支逻辑（在规格中明确）
+- [x] 情况1：首次导出无需签名 - 跳过签名应用API
+- [x] 情况2：首次导出需要签名且需要授权 - 创建authorization（requireAuthorization=true）
+- [x] 情况3：首次导出需要签名但无需授权 - 创建authorization（requireAuthorization=false）
+- [x] 再次导出时识别原始作者签名并更新directExportAuthor
+- [x] 再次导出时添加贡献者签名（无authorization字段）
+
+### 10. 再次导出流程优化 (Frontend)
+- [ ] 实现再次导出时的提示对话框
+  - [ ] 检测到专辑已有签名且用户选择"需要签名"时触发
+  - [ ] 显示提示内容："该键音专辑原始作者明确了该键音包的二次导出必须实施签名..."
+- [ ] 实现授权导入流程
+  - [ ] 当requireAuthorization=true时，强制先显示授权导入对话框
+  - [ ] 验证通过后才允许进入签名选择
+- [ ] 优化签名选择逻辑
+  - [ ] 允许选择已存在于专辑中的签名
+  - [ ] 当选择已存在签名时，弹出二次确认对话框："是否确认更新签名？"
+  - [ ] 根据用户选择决定是否更新签名内容（name, intro, image）
+  - [ ] 确保始终更新directExportAuthor
+- [x] 适配"无需签名"选项
+  - [x] 若专辑无签名，再次导出时允许用户选择是否签名（同首次导出）
+  - [x] 若专辑有签名，强制进入签名流程（不可选"无需签名"）
+
+### 11. 集成测试
+- [ ] 验证首次导出三种情况
+- [ ] 验证再次导出三种情况
+- [ ] 验证签名更新逻辑（更新内容 vs 不更新内容）
+- [ ] 验证授权限制逻辑
+
+### 10. 前端实现（需求1.2.3）
+- [x] 10.1 在types/export-flow.ts中添加类型定义
+  - [x] SignatureAuthorInfo - 签名作者信息
+  - [x] AlbumSignatureEntry - 专辑签名条目
+  - [x] AlbumSignatureInfo - 专辑签名信息
+  - [x] AvailableSignature - 可用签名信息
+- [x] 10.2 在keytonePkg-query.ts中添加API调用函数
+  - [x] GetAlbumSignatureInfo - 获取专辑签名信息
+  - [x] CheckSignatureInAlbum - 检查签名是否在专辑中
+  - [x] CheckSignatureAuthorization - 检查签名授权状态
+  - [x] GetAvailableSignatures - 获取可用签名列表
+- [x] 10.3 创建SignatureAuthorsDialog.vue组件（需求4）
+  - [x] 位置：frontend/src/components/export-flow/SignatureAuthorsDialog.vue
+  - [x] 展示原始作者信息
+  - [x] 展示直接导出作者信息
+  - [x] 展示历史贡献作者列表
+  - [x] 处理无签名情况
+  - [x] 加载状态和错误处理
+- [x] 10.4 创建SignatureSelectionDialog.vue组件（需求3）
+  - [x] 位置：frontend/src/components/export-flow/SignatureSelectionDialog.vue
+  - [x] 使用GetAvailableSignatures获取签名列表
+  - [x] 标记已在专辑中的签名（蓝色边框）
+  - [x] 使能/失能签名选项（未授权签名置灰）
+  - [x] 显示签名授权状态徽章
+  - [x] 筛选功能（仅显示已授权/已在专辑中）
+  - [x] 未授权签名悬停提示
+
+### 11. 前端页面集成
+- [x] 11.1 在专辑页面添加"查看签名信息"按钮
+  - [x] 添加badge图标按钮
+  - [x] 导入SignatureAuthorsDialog组件
+  - [x] 添加signatureAuthorsDialogRef引用
+  - [x] 实现showAlbumSignatureInfo方法
+  - [x] 检查专辑是否选中
+- [x] 11.2 集成SignatureAuthorsDialog到专辑页面
+  - [x] 传递albumPath属性
+  - [x] 通过ref调用open方法
+- [x] 11.3 更新useExportSignatureFlow
+  - [x] 导入GetAlbumSignatureInfo API
+  - [x] 导入AlbumSignatureInfo类型
+  - [x] 为后续集成做准备
+
+### 12. Bug修复
+- [x] 12.1 修复"无需签名"时仍进入授权对话框的问题
+  - [x] 问题：选择"无需签名"后仍然显示授权要求对话框
+  - [x] 原因：handleConfirmSignatureSubmit中未检查needSignature标志
+  - [x] 修复：在handleConfirmSignatureSubmit中添加条件判断，needSignature=false时直接完成
+  - [x] 文件：useExportSignatureFlow.ts
+- [x] 12.2 修复SignatureAuthorsDialog尺寸过大导致溢出
+  - [x] 问题：对话框宽度600-800px在固定尺寸应用中溢出
+  - [x] 修复：调整对话框尺寸为90vw，最大480px，最大高度85vh
+  - [x] 优化：调整图片尺寸从100px改为70px
+  - [x] 优化：调整字体从text-h6改为text-subtitle2
+  - [x] 优化：减少内边距和间距，添加滚动支持
+  - [x] 文件：SignatureAuthorsDialog.vue
+
+### 13. 再次导出流程集成（三种情况自动识别）
+- [x] 13.1 更新useExportSignatureFlow.ts
+  - [x] 修改ExportSignatureFlowOptions接口，添加albumPath参数
+  - [x] 更新start方法，使用GetAlbumSignatureInfo获取真实签名状态
+  - [x] 实现三种情况自动识别：
+    - [x] 情况1：专辑无签名 → 进入"确认签名"对话框
+    - [x] 情况2：专辑有签名且需要授权 → 进入"授权门控"对话框
+    - [x] 情况3：专辑有签名但不需要授权 → 直接进入"签名选择"对话框
+  - [x] 保留旧参数以向后兼容测试代码
+  - [x] 添加错误处理，失败时默认按首次导出处理
+- [x] 13.2 更新Keytone_album_page_new.vue
+  - [x] 修改exportAlbum方法，传递albumPath参数
+  - [x] 添加专辑路径验证
+  - [x] 保留测试参数以兼容测试对话框
+  - [x] 更新注释说明三种情况的自动识别逻辑
+- [x] 13.3 更新SignaturePickerDialog.vue
+  - [x] 添加albumPath属性
+  - [x] 页面调用时传递albumPath
+  - [x] 为后续集成GetAvailableSignatures做准备
+
+### 14. 组件文件路径重组
+- [x] 14.1 将SignatureAuthorsDialog.vue移动到export-flow目录
+  - [x] 从：frontend/src/components/SignatureAuthorsDialog.vue
+  - [x] 到：frontend/src/components/export-flow/SignatureAuthorsDialog.vue
+  - [x] 原因：该组件专用于专辑导出流程，应与其他导出流程组件放在一起
+- [x] 14.2 将SignatureSelectionDialog.vue移动到export-flow目录
+  - [x] 从：frontend/src/components/SignatureSelectionDialog.vue
+  - [x] 到：frontend/src/components/export-flow/SignatureSelectionDialog.vue
+  - [x] 原因：该组件专用于导出时的签名选择，属于导出流程的一部分
+- [x] 14.3 更新所有导入路径
+  - [x] Keytone_album_page_new.vue：更新导入语句
+  - [x] 规格文档：更新所有路径引用
+
+### 15. 集成测试准备
+- [ ] 手动测试情况1：无需签名导出
+- [ ] 手动测试情况2：首次导出需要签名且需要授权
+- [ ] 手动测试情况3：首次导出需要签名但无需授权
+- [ ] 手动测试再次导出：验证directExportAuthor更新
+- [ ] 手动测试再次导出：验证贡献者签名添加
 - [ ] 验证加密后的signature字段可正确解密
 - [ ] 验证调试日志输出格式正确
 - [ ] 测试授权信息不完整时的错误提示
 - [ ] 测试图片文件缺失时的降级处理
+- [ ] 测试新增的4个API端点功能
+- [ ] 测试"查看签名信息"按钮功能
+- [ ] 测试SignatureAuthorsDialog展示效果
 
 ## 验收标准
 

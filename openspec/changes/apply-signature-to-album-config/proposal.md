@@ -18,8 +18,32 @@
 3. **签名数据提取与加密**：从签名配置中解密获取签名详细信息，按专辑签名字段格式重新加密并写入
 4. **图片资源复制**：将签名引用的名片图片复制到专辑目录，更新路径为专辑内相对路径
 5. **授权元数据处理**：
-   - 原始作者签名：包含`authorization`对象（requireAuthorization、contactEmail、contactAdditional、authorizedList）
+   - 原始作者签名：包含`authorization`对象（requireAuthorization、contactEmail、contactAdditional、authorizedList、directExportAuthor）
    - 非原始作者签名：不包含authorization字段，但可能出现在其他签名的authorizedList中
+   - directExportAuthor：记录直接导出作者的资格码，每次导出时更新为当前签名者
+
+### 三种导出情况
+
+**情况1：专辑无签名**
+- 视为首次导出流程。
+- 用户可以选择"无需签名"（直接导出）或"需要签名"（进入签名流程）。
+
+**情况2：专辑有签名 + 无需授权**
+- 强制要求签名（不可选"无需签名"）。
+- 再次导出流程：
+  - 弹出提示框确认是否继续签名。
+  - 直接进入签名选择页面。
+  - 允许选择已存在签名，并询问是否更新签名内容。
+  - 始终更新 `directExportAuthor`。
+
+**情况3：专辑有签名 + 需要授权**
+- 强制要求签名（不可选"无需签名"）。
+- 再次导出流程：
+  - 弹出提示框确认是否继续签名。
+  - 强制先导入授权文件，验证通过后才可进入签名选择。
+  - 仅允许选择已授权的签名。
+  - 允许选择已存在签名，并询问是否更新签名内容。
+  - 始终更新 `directExportAuthor`。
 
 ### 数据格式
 专辑配置中的签名字段结构（加密存储）：
@@ -34,7 +58,8 @@
         "requireAuthorization": true,
         "contactEmail": "author@example.com",
         "contactAdditional": "补充联系方式",
-        "authorizedList": ["<资格码2>", "<资格码3>"]  // 已授权的第三方签名资格码列表
+        "authorizedList": ["<资格码2>", "<资格码3>"],  // 已授权的第三方签名资格码列表
+        "directExportAuthor": "<资格码4>"  // 直接导出作者的资格码（每次导出更新）
       }
     }
   }
@@ -72,17 +97,96 @@
 - **依赖**：现有签名管理模块（解密签名数据）、音频包配置模块（写入配置）
 
 ### API接口
-完善现有的`POST /keytone_pkg/apply_signature_config`端点：
+
+**端点1**: `POST /keytone_pkg/apply_signature_config` - 应用签名配置
 - **输入**：`albumPath`, `signatureId`, `requireAuthorization`, `contactEmail`, `contactAdditional`
 - **输出**：`{ message: "ok", qualificationCode: "<sha256>" }`
 - **副作用**：专辑配置文件写入signature字段、图片文件复制到专辑目录
 
+**端点2**: `POST /keytone_pkg/get_album_signature_info` - 获取专辑签名信息
+- **输入**：`albumPath`
+- **输出**：包含originalAuthor、contributorAuthors、directExportAuthor的完整签名信息
+- **用途**：前端需求2（再次导出时的签名识别）和需求4（签名作者信息展示）
+
+**端点3**: `POST /keytone_pkg/check_signature_in_album` - 检查签名是否在专辑中
+- **输入**：`albumPath`, `signatureId`
+- **输出**：`{ isInAlbum: boolean, qualificationCode: string }`
+- **用途**：前端需求3（标记已在专辑中的签名）
+
+**端点4**: `POST /keytone_pkg/check_signature_authorization` - 检查签名授权状态
+- **输入**：`albumPath`, `signatureId`
+- **输出**：`{ isAuthorized: boolean, requireAuthorization: boolean, qualificationCode: string }`
+- **用途**：前端需求3（使能/失能签名选项）
+
+**端点5**: `POST /keytone_pkg/get_available_signatures` - 获取可用签名列表
+- **输入**：`albumPath`
+- **输出**：签名列表，包含每个签名的isInAlbum、isAuthorized、isOriginalAuthor状态
+- **用途**：前端需求3（签名选择页面增强）
+
 ## 不在范围内
 
-- 前端导出流程UI实现（已在其他变更中定义）
-- 签名验证逻辑（导入或播放时的校验）
 - 授权文件生成与导入机制
 - 专辑导出打包流程（仅负责配置写入）
+- 前端签名作者信息展示对话框（在前端变更中实现）
+
+## 前端配合需求（已实现）
+
+### 1. 导出流程适配 ✅
+- **实现**: 删除"无需签名+需要授权"分支逻辑
+- **代码**: "无需签名"直接调用原导出API，不触发签名相关API
+- **位置**: 待集成到导出流程中
+
+### 2. 再次导出时的签名识别 ✅
+- **API**: `GetAlbumSignatureInfo(albumPath)`
+- **实现**: 
+  - 读取并解密专辑配置的 signature 字段
+  - 返回原始作者、历史贡献作者、直接导出作者信息
+  - 根据 requireAuthorization 决定是否需要授权验证
+- **类型**: `AlbumSignatureInfo`（frontend/src/types/export-flow.ts）
+- **代码**: frontend/src/boot/query/keytonePkg-query.ts
+- **流程集成**: ✅ 已集成到useExportSignatureFlow.start()
+  - 自动调用GetAlbumSignatureInfo获取签名状态
+  - 三种情况自动识别并跳转到对应对话框
+  - 错误处理：失败时按首次导出处理
+
+### 3. 签名选择页面增强 ✅
+- **API**: `GetAvailableSignatures(albumPath)`
+- **组件**: `SignatureSelectionDialog.vue`
+- **实现功能**:
+  - ✅ 标记已在专辑中的签名（蓝色左边框）
+  - ✅ 根据 authorizedList 使能/失能签名（未授权置灰+锁图标）
+  - ✅ 显示签名的授权状态徽章
+  - ✅ 筛选功能（仅显示已授权/已在专辑中）
+  - ✅ 原始作者标记（金色星标）
+- **位置**: frontend/src/components/export-flow/SignatureSelectionDialog.vue
+
+### 4. 签名作者信息展示 ✅
+- **API**: `GetAlbumSignatureInfo(albumPath)`
+- **组件**: `SignatureAuthorsDialog.vue`
+- **实现功能**:
+  - ✅ 原始作者：signature 字段中包含 authorization 的签名
+  - ✅ 历史贡献作者：signature 字段中的所有其他签名
+  - ✅ 直接导出作者：authorization.directExportAuthor 对应的签名
+  - ✅ 分区展示，带徽章和图标
+  - ✅ 处理无签名、加载中、错误状态
+- **位置**: frontend/src/components/export-flow/SignatureAuthorsDialog.vue
+- **集成状态**: ✅ 已集成到专辑页面，通过"查看签名信息"按钮调用
+
+## Bug修复记录
+
+### Bug #1: 无需签名时仍进入授权对话框 ✅
+- **问题**: 用户选择"无需签名"后仍显示授权要求对话框，违反需求1
+- **修复**: 在useExportSignatureFlow.ts的handleConfirmSignatureSubmit中添加条件判断
+- **结果**: 选择"无需签名"时直接完成导出流程，不进入授权对话框
+
+### Bug #2: SignatureAuthorsDialog尺寸过大 ✅
+- **问题**: 对话框宽度600-800px在固定窗口尺寸应用中溢出
+- **修复**: 
+  - 对话框尺寸调整为90vw，最大480px，最大高度85vh
+  - 图片尺寸从100px缩小为70px
+  - 字体从text-h6调整为text-subtitle2
+  - 添加滚动支持，优化间距
+- **结果**: 对话框完美适配固定窗口尺寸，内容清晰可读
 
 ## 待确认问题
 
@@ -90,3 +194,5 @@
 - **已明确**：资格码使用SHA256(原始签名ID未加密版本)
 - **已明确**：图片复制到`audioFiles`目录，与音频文件共用
 - **已明确**：authorizedList存储资格码而非加密ID
+- **已明确**：directExportAuthor记录直接导出作者，每次导出更新
+- **已明确**：删除"无需签名+需要授权"分支，简化为三种情况

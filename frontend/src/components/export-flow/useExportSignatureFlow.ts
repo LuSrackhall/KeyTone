@@ -3,10 +3,11 @@
  *
  * This composable intentionally lives alongside the export-flow UI components and
  * encodes the production-ready sequence of dialogs (policy → authorization → picker).
- * While the current branch still uses mock data, the flow orchestration and public
- * interface are meant to be reused when wiring the real export logic.
+ * Integrated with real backend APIs for signature management.
  */
 import { ref, computed, Ref } from 'vue';
+import { GetAlbumSignatureInfo } from 'src/boot/query/keytonePkg-query';
+import type { AlbumSignatureInfo } from 'src/types/export-flow';
 
 export interface ExportSignatureFlowResult {
   needSignature: boolean;
@@ -14,11 +15,15 @@ export interface ExportSignatureFlowResult {
   contactEmail?: string;
   contactAdditional?: string;
   signatureId?: string;
+  updateSignatureContent?: boolean;
 }
 
 export interface ExportSignatureFlowOptions {
+  /** 专辑路径，用于获取签名信息 */
+  albumPath: string;
+  /** [已废弃] 使用albumPath自动获取签名状态 */
   albumHasSignature?: boolean;
-  /** 临时测试开关：已有签名且原作者要求授权时为 true，用于触发展示授权门控对话框 */
+  /** [已废弃] 使用albumPath自动获取授权要求 */
   existingSignatureRequireAuthorization?: boolean;
 }
 
@@ -26,6 +31,7 @@ interface State {
   step:
     | 'idle'
     | 'confirm-signature' // 没有任何签名时，先确认是否需要签名
+    | 're-export-warning' // 再次导出时的警告提示
     | 'auth-requirement' // 二次创作是否需要授权（推荐不需要）
     | 'auth-impact-confirm' // 选择需要授权后的二次确认弹窗
     | 'auth-contact' // 需要授权时的联系方式填写
@@ -37,17 +43,19 @@ interface State {
     requireAuthorization?: boolean; // 二次创作是否需要作者授权
     contactEmail?: string; // 邮箱
     contactAdditional?: string; // 额外联系方式
+    updateSignatureContent?: boolean; // 是否更新签名内容
   };
   isAuthorized: boolean;
   selectedSignatureId?: string;
+  signatureInfo?: AlbumSignatureInfo;
+  albumPath?: string;
 }
-
 /**
  * Composable for orchestrating album export signature flow.
  *
  * Flow:
  * 1. No signatures → show policy dialog, then always evaluate authorization requirements
- * 2. Has signatures → skip policy, go to auth check
+ * 2. Has signatures → show re-export warning
  * 3. If require auth & not authorized → show auth gate
  * 4. If need signature → show picker
  * 5. Done → return result
@@ -60,6 +68,7 @@ export function useExportSignatureFlow() {
 
   // Dialog visibility refs
   const confirmSignatureDialogVisible = ref(false);
+  const reExportWarningDialogVisible = ref(false);
   const authRequirementDialogVisible = ref(false);
   const authImpactConfirmDialogVisible = ref(false);
   const authContactDialogVisible = ref(false);
@@ -68,36 +77,69 @@ export function useExportSignatureFlow() {
 
   // Computed properties
   const currentStep = computed(() => state.value.step);
+  const requireAuthorizationForPicker = computed(() => {
+    return state.value.signatureInfo?.originalAuthor?.requireAuthorization ?? false;
+  });
+  const currentAlbumPath = computed(() => state.value.albumPath);
 
   /**
    * Start the export flow.
    * @param options Configuration for the flow
    */
-  const start = async (options: ExportSignatureFlowOptions = {}) => {
-    const { albumHasSignature = false, existingSignatureRequireAuthorization = false } = options;
+  const start = async (options: ExportSignatureFlowOptions) => {
+    const { albumPath, albumHasSignature, existingSignatureRequireAuthorization } = options;
 
     state.value.step = 'idle';
     state.value.flowData = undefined;
     state.value.isAuthorized = false;
     state.value.selectedSignatureId = undefined;
+    state.value.signatureInfo = undefined;
+    state.value.albumPath = albumPath;
 
-    // Step 1: Check if album has signatures
-    if (!albumHasSignature) {
-      // 没有任何签名 → 先询问是否需要签名
+    // 如果提供了旧的参数，使用旧逻辑（向后兼容）
+    // 注意：在生产环境中应避免传递这些参数，以确保使用真实API逻辑
+    if (albumHasSignature !== undefined && existingSignatureRequireAuthorization !== undefined) {
+      console.warn('[ExportFlow] Using legacy/test parameters. This bypasses real signature checks.');
+      // 兼容旧的测试代码
+      if (!albumHasSignature) {
+        state.value.step = 'confirm-signature';
+        confirmSignatureDialogVisible.value = true;
+        return;
+      }
+
+      if (existingSignatureRequireAuthorization) {
+        state.value.step = 'auth-gate';
+        authGateDialogVisible.value = true;
+        return;
+      }
+
+      state.value.step = 'picker';
+      pickerDialogVisible.value = true;
+      return;
+    }
+
+    // 新逻辑：使用真实API获取专辑签名信息
+    try {
+      const signatureInfo = await GetAlbumSignatureInfo(albumPath);
+      state.value.signatureInfo = signatureInfo;
+
+      // 情况1：专辑无签名 → 首次导出流程
+      if (!signatureInfo.hasSignature) {
+        state.value.step = 'confirm-signature';
+        confirmSignatureDialogVisible.value = true;
+        return;
+      }
+
+      // 情况2 & 3：专辑有签名 → 再次导出流程
+      // 显示再次导出警告对话框
+      state.value.step = 're-export-warning';
+      reExportWarningDialogVisible.value = true;
+    } catch (error) {
+      console.error('获取专辑签名信息失败:', error);
+      // 出错时默认按首次导出处理
       state.value.step = 'confirm-signature';
       confirmSignatureDialogVisible.value = true;
-      return;
     }
-
-    // 已有签名：如果要求授权则先显示授权门控；否则直接到签名选择
-    if (existingSignatureRequireAuthorization) {
-      state.value.step = 'auth-gate';
-      authGateDialogVisible.value = true;
-      return;
-    }
-
-    state.value.step = 'picker';
-    pickerDialogVisible.value = true;
   };
 
   // ========== Step: confirm-signature ==========
@@ -105,12 +147,42 @@ export function useExportSignatureFlow() {
     state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
 
     confirmSignatureDialogVisible.value = false;
-    // 无论最终是否需要签名，都要做二次创作授权判断
+
+    // 如果选择"无需签名"，直接完成，不进入授权流程
+    if (!payload.needSignature) {
+      state.value.step = 'done';
+      return;
+    }
+
+    // 选择"需要签名"，进入授权判断
     state.value.step = 'auth-requirement';
     authRequirementDialogVisible.value = true;
   };
   const handleConfirmSignatureCancel = () => {
     confirmSignatureDialogVisible.value = false;
+    state.value.step = 'idle';
+  };
+
+  // ========== Step: re-export-warning ==========
+  const handleReExportConfirm = () => {
+    reExportWarningDialogVisible.value = false;
+
+    // 检查是否需要授权
+    const requireAuthorization = state.value.signatureInfo?.originalAuthor?.requireAuthorization;
+
+    if (requireAuthorization) {
+      // 需要授权，进入授权门控
+      state.value.step = 'auth-gate';
+      authGateDialogVisible.value = true;
+    } else {
+      // 无需授权，直接进入签名选择
+      state.value.step = 'picker';
+      pickerDialogVisible.value = true;
+    }
+  };
+
+  const handleReExportCancel = () => {
+    reExportWarningDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -208,8 +280,12 @@ export function useExportSignatureFlow() {
   /**
    * Handle signature picker dialog selection.
    */
-  const handlePickerSelect = (signatureId: string) => {
+  const handlePickerSelect = (signatureId: string, updateContent = true) => {
     state.value.selectedSignatureId = signatureId;
+    state.value.flowData = {
+      ...(state.value.flowData ?? {}),
+      updateSignatureContent: updateContent,
+    };
     pickerDialogVisible.value = false;
     state.value.step = 'done';
   };
@@ -255,6 +331,7 @@ export function useExportSignatureFlow() {
       contactEmail: state.value.flowData?.contactEmail,
       contactAdditional: state.value.flowData?.contactAdditional,
       signatureId: state.value.selectedSignatureId,
+      updateSignatureContent: state.value.flowData?.updateSignatureContent,
     };
   };
 
@@ -278,7 +355,10 @@ export function useExportSignatureFlow() {
     // State
     state,
     currentStep,
+    requireAuthorizationForPicker,
+    currentAlbumPath,
     confirmSignatureDialogVisible,
+    reExportWarningDialogVisible,
     authRequirementDialogVisible,
     authImpactConfirmDialogVisible,
     authContactDialogVisible,
@@ -289,6 +369,8 @@ export function useExportSignatureFlow() {
     start,
     handleConfirmSignatureSubmit,
     handleConfirmSignatureCancel,
+    handleReExportConfirm,
+    handleReExportCancel,
     handleAuthRequirementSubmit,
     handleAuthRequirementCancel,
     handleAuthImpactBack,

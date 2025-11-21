@@ -8,6 +8,13 @@
       @cancel="handlePolicyCancel"
     />
 
+    <!-- Re-export Warning Dialog -->
+    <export-reexport-warning-dialog
+      :visible="reExportWarningDialogVisible"
+      @confirm="handleReExportConfirm"
+      @cancel="handleReExportCancel"
+    />
+
     <!-- Authorization Gate Dialog -->
     <export-authorization-gate-dialog
       :visible="authGateDialogVisible"
@@ -20,8 +27,10 @@
     <signature-picker-dialog
       :visible="pickerDialogVisible"
       :signatures="mockSignatures"
-      @select="handlePickerSelect"
-      @createNew="handlePickerCreateNew"
+      :album-path="currentAlbumPath"
+      :require-authorization="requireAuthorizationForPicker"
+      @select="handlePickerSelectWrapper"
+      @createNew="handlePickerCreateNewWrapper"
       @cancel="handlePickerCancel"
     />
 
@@ -80,6 +89,7 @@ import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useExportSignatureFlow } from './useExportSignatureFlow';
 import ExportSignaturePolicyDialog from '@/components/export-flow/ExportSignaturePolicyDialog.vue';
+import ExportReexportWarningDialog from '@/components/export-flow/ExportReexportWarningDialog.vue';
 import ExportAuthorizationGateDialog from '@/components/export-flow/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from '@/components/export-flow/SignaturePickerDialog.vue';
 
@@ -115,12 +125,17 @@ const mockSignatures: Signature[] = [
 const { notify } = useQuasar();
 const {
   currentStep,
+  requireAuthorizationForPicker,
+  currentAlbumPath,
   confirmSignatureDialogVisible: policyDialogVisible,
+  reExportWarningDialogVisible,
   authGateDialogVisible,
   pickerDialogVisible,
   start,
   handleConfirmSignatureSubmit: handlePolicySubmit,
   handleConfirmSignatureCancel: handlePolicyCancel,
+  handleReExportConfirm,
+  handleReExportCancel,
   handleAuthGateAuthorized,
   handleAuthGateCancel,
   handlePickerSelect,
@@ -158,12 +173,12 @@ const handlePolicySubmitWrapper = (data: any) => {
   }
 };
 
-const handlePickerSelectWrapper = (signatureId: string) => {
-  handlePickerSelect(signatureId);
+const handlePickerSelectWrapper = (signatureId: string, updateContent: boolean) => {
+  handlePickerSelect(signatureId, updateContent);
   flowResult.value = getResult();
   notify({
     type: 'positive',
-    message: `Export flow completed: Signature ${signatureId} selected`,
+    message: `Export flow completed: Signature ${signatureId} selected (Update: ${updateContent})`,
     position: 'top',
   });
 };

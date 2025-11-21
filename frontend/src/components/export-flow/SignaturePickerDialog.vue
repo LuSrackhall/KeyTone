@@ -77,7 +77,7 @@
               flat
               bordered
               :class="['signature-card cursor-pointer', selectedId === sig.id ? 'selected' : '']"
-              @click="selectSignature(sig.id)"
+              @click="handleSignatureClick(sig.id)"
               style="display: flex; align-items: center; min-height: 70px"
             >
               <!-- Left: Image Area (fixed 60px) -->
@@ -136,10 +136,30 @@
           color="primary"
           size="sm"
           :disable="!selectedId"
-          @click="onConfirm"
+          @click="onConfirmClick"
         />
       </q-card-actions>
     </q-card>
+
+    <!-- Update Confirmation Dialog -->
+    <q-dialog v-model="updateConfirmDialogVisible" persistent>
+      <q-card style="min-width: 300px">
+        <q-card-section>
+          <div class="text-h6">更新签名确认</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          选择的签名已存在于专辑中，是否确认更新签名内容（名称、介绍、图片）？
+          <div class="text-caption text-grey q-mt-sm">注意：如果是原始作者签名，更新不会影响授权信息。</div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="取消" color="primary" v-close-popup />
+          <q-btn flat label="不更新" color="primary" v-close-popup @click="handleUpdateConfirm(false)" />
+          <q-btn flat label="更新" color="primary" v-close-popup @click="handleUpdateConfirm(true)" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-dialog>
 </template>
 
@@ -148,21 +168,26 @@ import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSignatureStore } from 'src/stores/signature-store';
 import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'boot/query/signature-query';
+import { GetAvailableSignaturesForExport, CheckSignatureInAlbum } from 'src/boot/query/keytonePkg-query';
+import type { AvailableSignature } from 'src/types/export-flow';
 
 interface Signature {
   id: string;
   name: string;
   intro?: string;
   image?: string;
+  isAuthorized?: boolean; // Added for filtering
 }
 
 interface SignaturePickerDialogProps {
   visible: boolean;
   signatures?: Signature[];
+  albumPath?: string; // 专辑路径，用于获取签名状态
+  requireAuthorization?: boolean; // 是否仅允许选择已授权的签名
 }
 
 interface SignaturePickerDialogEmits {
-  (e: 'select', signatureId: string): void;
+  (e: 'select', signatureId: string, updateContent: boolean): void;
   (e: 'createNew'): void;
   (e: 'cancel'): void;
 }
@@ -170,6 +195,8 @@ interface SignaturePickerDialogEmits {
 const props = withDefaults(defineProps<SignaturePickerDialogProps>(), {
   visible: false,
   signatures: () => [],
+  albumPath: '',
+  requireAuthorization: false,
 });
 
 const emit = defineEmits<SignaturePickerDialogEmits>();
@@ -184,6 +211,7 @@ const loading = ref(false);
 const localSignatures = ref<Signature[]>([]);
 const imageUrls = ref<Map<string, string>>(new Map()); // cardImage path -> blob URL
 const blobUrls = ref<Set<string>>(new Set()); // Track blob URLs for cleanup
+const updateConfirmDialogVisible = ref(false);
 
 // Determine which signatures to use (real data or fallback to props)
 const effectiveSignatures = computed(() => {
@@ -195,12 +223,19 @@ const effectiveSignatures = computed(() => {
 
 // Filter signatures based on search query (only by name)
 const filteredSignatures = computed(() => {
+  let result = effectiveSignatures.value;
+
+  // Filter by authorization if required
+  if (props.requireAuthorization) {
+    result = result.filter((sig) => sig.isAuthorized);
+  }
+
   if (!searchQuery.value) {
-    return effectiveSignatures.value;
+    return result;
   }
 
   const query = searchQuery.value.toLowerCase();
-  return effectiveSignatures.value.filter((sig) => sig.name.toLowerCase().includes(query));
+  return result.filter((sig) => sig.name.toLowerCase().includes(query));
 });
 
 /**
@@ -215,6 +250,19 @@ async function loadSignaturesRealtime() {
     if (!encryptedSignatures) {
       console.warn('[SignaturePicker] Failed to fetch signatures');
       return;
+    }
+
+    // 1.5 Get authorization status if albumPath is provided
+    const authMap = new Map<string, boolean>();
+    if (props.albumPath) {
+      try {
+        const availableSigs = await GetAvailableSignaturesForExport(props.albumPath);
+        availableSigs.forEach((sig: AvailableSignature) => {
+          authMap.set(sig.encryptedId, sig.isAuthorized);
+        });
+      } catch (err) {
+        console.error('[SignaturePicker] Failed to fetch available signatures:', err);
+      }
     }
 
     // 2. Decrypt and build signature list
@@ -249,6 +297,7 @@ async function loadSignaturesRealtime() {
           name: signatureData.name,
           intro: signatureData.intro,
           image: signatureData.cardImage ? await getImageUrlForSignature(signatureData.cardImage) : undefined,
+          isAuthorized: props.albumPath ? authMap.get(encryptedId) ?? false : true,
         };
 
         tempSignatures.push(signature);
@@ -374,7 +423,7 @@ watch(isVisible, (newVal) => {
 });
 
 // Handlers
-const selectSignature = (id: string) => {
+const handleSignatureClick = (id: string) => {
   // Toggle: 若点击已选项则取消选择，否则选中
   if (selectedId.value === id) {
     selectedId.value = '';
@@ -387,10 +436,32 @@ const onCreateNew = () => {
   emit('createNew');
 };
 
-const onConfirm = () => {
+const onConfirmClick = async () => {
   if (!selectedId.value) return;
-  emit('select', selectedId.value);
+
+  // Check if signature is in album
+  if (props.albumPath) {
+    try {
+      const result = await CheckSignatureInAlbum(props.albumPath, selectedId.value);
+      if (result.isInAlbum) {
+        updateConfirmDialogVisible.value = true;
+        return;
+      }
+    } catch (err) {
+      console.error('CheckSignatureInAlbum failed:', err);
+    }
+  }
+
+  // Not in album or check failed, proceed with default (update=true)
+  emit('select', selectedId.value, true);
   isVisible.value = false;
+};
+
+const handleUpdateConfirm = (update: boolean) => {
+  if (!selectedId.value) return;
+  emit('select', selectedId.value, update);
+  isVisible.value = false;
+  updateConfirmDialogVisible.value = false;
 };
 
 const onCancel = () => {

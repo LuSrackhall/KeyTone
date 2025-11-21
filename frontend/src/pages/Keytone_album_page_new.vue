@@ -83,6 +83,27 @@
               dense
               round
               size="xs"
+              icon="badge"
+              color="amber"
+              :disable="!setting_store.mainHome.selectedKeyTonePkg"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="showAlbumSignatureInfo"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                查看签名信息
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
               icon="delete"
               color="negative"
               :disable="!setting_store.mainHome.selectedKeyTonePkg"
@@ -288,6 +309,12 @@
       @submit="exportFlow.handleConfirmSignatureSubmit"
       @cancel="exportFlow.handleConfirmSignatureCancel"
     />
+    <!-- 1.5) 再次导出警告（已有签名专辑导出时展示） -->
+    <export-reexport-warning-dialog
+      :visible="exportFlow.reExportWarningDialogVisible.value"
+      @confirm="exportFlow.handleReExportConfirm"
+      @cancel="exportFlow.handleReExportCancel"
+    />
     <!-- 2) 是否需要授权（默认无需授权，推荐） -->
     <export-authorization-requirement-dialog
       :visible="exportFlow.authRequirementDialogVisible.value"
@@ -316,12 +343,19 @@
     <!-- 6) 选择签名（带创建按钮） -->
     <signature-picker-dialog
       :visible="exportFlow.pickerDialogVisible.value"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
       @select="exportFlow.handlePickerSelect"
       @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"
     />
     <!-- 真实的创建签名对话框（已存在的组件） -->
     <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />
+
+    <!-- 签名作者信息对话框 -->
+    <SignatureAuthorsDialog
+      ref="signatureAuthorsDialogRef"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+    />
 
     <!-- 测试环境对话框：配置导出流程测试场景 -->
     <ExportSignatureFlowTestDialog
@@ -343,6 +377,7 @@ import KeytoneAlbum from 'src/components/Keytone_album.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ExportSignatureConfirmDialog from 'src/components/export-flow/ExportSignatureConfirmDialog.vue';
+import ExportReexportWarningDialog from 'src/components/export-flow/ExportReexportWarningDialog.vue';
 import ExportAuthorizationRequirementDialog from 'src/components/export-flow/ExportAuthorizationRequirementDialog.vue';
 import ExportAuthorizationImpactConfirmDialog from 'src/components/export-flow/ExportAuthorizationImpactConfirmDialog.vue';
 import ExportAuthorizationContactDialog from 'src/components/export-flow/ExportAuthorizationContactDialog.vue';
@@ -350,6 +385,8 @@ import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuth
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
 import ExportSignatureFlowTestDialog from 'src/components/export-flow/ExportSignatureFlowTestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
+import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
+import SignatureSelectionDialog from 'src/components/export-flow/SignatureSelectionDialog.vue';
 import {
   useExportSignatureFlow,
   type ExportSignatureFlowResult,
@@ -446,6 +483,20 @@ const onOpenCreateSignature = () => {
 const onSignatureFormSuccess = () => {
   // 真实创建成功后，业务上应刷新签名列表；此处作为演示，给出提示
   q.notify({ type: 'positive', message: $t('signature.page.createSuccess') || 'Signature created' });
+};
+
+// 签名信息对话框控制
+const signatureAuthorsDialogRef = ref<InstanceType<typeof SignatureAuthorsDialog> | null>(null);
+const showAlbumSignatureInfo = () => {
+  if (!setting_store.mainHome.selectedKeyTonePkg) {
+    q.notify({
+      type: 'warning',
+      message: '请先选择一个专辑',
+      position: 'top',
+    });
+    return;
+  }
+  signatureAuthorsDialogRef.value?.open();
 };
 
 // 实现删除专辑的逻辑
@@ -644,22 +695,31 @@ const exportAlbumLegacy = async () => {
 // 导出键音专辑 - 使用签名与授权流程
 /**
  * 导出流程的入口
- * 此处会根据测试配置的状态决定是否进入各个对话框步骤
+ * 根据专辑的实际签名状态决定进入哪个对话框步骤
  *
  * @comment
- *   - 从测试环境读取 albumHasSignature 与 requireAuthorization 的配置
- *   - 若 albumHasSignature=false，则首先弹"确认签名"对话框
- *   - 若 albumHasSignature=true 且 requireAuthorization=true，则先弹"授权门控"对话框
- *   - 否则直接进入"签名选择"对话框
+ * 三种情况的自动识别：
+ * 1. 专辑无签名 → 显示"确认签名"对话框
+ * 2. 专辑有签名且需要授权 → 显示"授权门控"对话框
+ * 3. 专辑有签名但不需要授权 → 直接进入"签名选择"对话框
  */
 const exportAlbum = async () => {
-  // 从测试配置或真实专辑元数据读取当前专辑状态
-  const hasExistingSignature = albumHasSignature.value; // TODO: 接入真实专辑元数据
-  const requiresAuth = testRequireAuthorization.value; // TODO: 接入真实专辑配置
+  const albumPath = setting_store.mainHome.selectedKeyTonePkg;
 
+  if (!albumPath) {
+    q.notify({
+      type: 'warning',
+      message: '请先选择一个专辑',
+    });
+    return;
+  }
+
+  // 使用真实API获取签名信息，自动判断流程
   await exportFlow.start({
-    albumHasSignature: hasExistingSignature,
-    existingSignatureRequireAuthorization: requiresAuth,
+    albumPath,
+    // 移除测试参数，强制使用真实API逻辑
+    // albumHasSignature: albumHasSignature.value,
+    // existingSignatureRequireAuthorization: testRequireAuthorization.value,
   });
 };
 
