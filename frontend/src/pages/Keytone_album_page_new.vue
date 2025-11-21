@@ -161,27 +161,6 @@
                 {{ $t('keyToneAlbumPage.help') }}
               </q-tooltip>
             </q-btn>
-
-            <!-- 验收测试：导出流程测试环境配置（仅 UI/交互验证使用） -->
-            <q-btn
-              flat
-              dense
-              round
-              size="xs"
-              icon="science"
-              color="info"
-              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
-              @click="showTestDialog = true"
-            >
-              <q-tooltip
-                anchor="bottom middle"
-                self="top middle"
-                :offset="[0, 8]"
-                class="rounded-lg text-[0.8rem] px-3 py-1.2"
-              >
-                {{ $t('exportFlow.test.openDialog') }}
-              </q-tooltip>
-            </q-btn>
           </div>
 
           <!-- 键音专辑选择器 -->
@@ -356,14 +335,6 @@
       ref="signatureAuthorsDialogRef"
       :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
     />
-
-    <!-- 测试环境对话框：配置导出流程测试场景 -->
-    <ExportSignatureFlowTestDialog
-      v-model:visible="showTestDialog"
-      :album-has-signature="testAlbumHasSignature"
-      :require-authorization="testRequireAuthorization"
-      @apply="onTestDialogApply"
-    />
   </div>
 </template>
 
@@ -383,7 +354,6 @@ import ExportAuthorizationImpactConfirmDialog from 'src/components/export-flow/E
 import ExportAuthorizationContactDialog from 'src/components/export-flow/ExportAuthorizationContactDialog.vue';
 import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
-import ExportSignatureFlowTestDialog from 'src/components/export-flow/ExportSignatureFlowTestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
 import SignatureSelectionDialog from 'src/components/export-flow/SignatureSelectionDialog.vue';
@@ -435,45 +405,7 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 
 // Export Signature Flow 初始化
 const exportFlow = useExportSignatureFlow();
-const albumHasSignature = ref(false);
 const authorContact = ref('contact@example.com');
-
-// 测试环境对话框控制
-const showTestDialog = ref(false);
-const testAlbumHasSignature = ref(false);
-const testRequireAuthorization = ref(false);
-
-/**
- * 测试环境对话框应用配置
- * 这里将用户在测试对话框中选择的状态应用到导出流程中
- *
- * @param config - 测试配置状态
- * @comment
- *   - albumHasSignature: 模拟当前专辑是否已有过任何签名
- *   - requireAuthorization: 模拟当前专辑的原作者是否选择了"二次创作需要授权"
- *
- * 流程对应关系：
- *   1. 无签名专辑（albumHasSignature=false）
- *      - 导出时会先弹"确认签名"对话框（确认是否需要添加签名）
- *      - 若选"无需签名"→ 直接完成
- *      - 若选"需要签名" → 进入"授权要求"对话框
- *
- *   2. 有签名专辑（albumHasSignature=true）
- *      - 不弹"确认签名"对话框
- *      - 若 requireAuthorization=true → 先弹"授权门控"（导入授权文件）→ 再弹"选择签名"
- *      - 若 requireAuthorization=false → 直接弹"选择签名"
- */
-const onTestDialogApply = (config: { albumHasSignature: boolean; requireAuthorization: boolean }) => {
-  testAlbumHasSignature.value = config.albumHasSignature;
-  testRequireAuthorization.value = config.requireAuthorization;
-  albumHasSignature.value = config.albumHasSignature;
-
-  q.notify({
-    type: 'info',
-    message: `Test Config Applied: HasSignature=${config.albumHasSignature}, RequireAuth=${config.requireAuthorization}`,
-    position: 'top',
-  });
-};
 
 // 真实创建签名对话框控制（已存在组件）
 const showSignatureFormDialog = ref(false);

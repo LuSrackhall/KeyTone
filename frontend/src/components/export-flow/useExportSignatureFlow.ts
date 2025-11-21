@@ -21,10 +21,6 @@ export interface ExportSignatureFlowResult {
 export interface ExportSignatureFlowOptions {
   /** 专辑路径，用于获取签名信息 */
   albumPath: string;
-  /** [已废弃] 使用albumPath自动获取签名状态 */
-  albumHasSignature?: boolean;
-  /** [已废弃] 使用albumPath自动获取授权要求 */
-  existingSignatureRequireAuthorization?: boolean;
 }
 
 interface State {
@@ -87,7 +83,7 @@ export function useExportSignatureFlow() {
    * @param options Configuration for the flow
    */
   const start = async (options: ExportSignatureFlowOptions) => {
-    const { albumPath, albumHasSignature, existingSignatureRequireAuthorization } = options;
+    const { albumPath } = options;
 
     state.value.step = 'idle';
     state.value.flowData = undefined;
@@ -95,28 +91,6 @@ export function useExportSignatureFlow() {
     state.value.selectedSignatureId = undefined;
     state.value.signatureInfo = undefined;
     state.value.albumPath = albumPath;
-
-    // 如果提供了旧的参数，使用旧逻辑（向后兼容）
-    // 注意：在生产环境中应避免传递这些参数，以确保使用真实API逻辑
-    if (albumHasSignature !== undefined && existingSignatureRequireAuthorization !== undefined) {
-      console.warn('[ExportFlow] Using legacy/test parameters. This bypasses real signature checks.');
-      // 兼容旧的测试代码
-      if (!albumHasSignature) {
-        state.value.step = 'confirm-signature';
-        confirmSignatureDialogVisible.value = true;
-        return;
-      }
-
-      if (existingSignatureRequireAuthorization) {
-        state.value.step = 'auth-gate';
-        authGateDialogVisible.value = true;
-        return;
-      }
-
-      state.value.step = 'picker';
-      pickerDialogVisible.value = true;
-      return;
-    }
 
     // 新逻辑：使用真实API获取专辑签名信息
     try {
