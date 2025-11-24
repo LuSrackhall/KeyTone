@@ -558,6 +558,7 @@ const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSig
       signatureId,
       contactEmail: result.contactEmail?.trim() || undefined,
       contactAdditional: result.contactAdditional?.trim() || undefined,
+      updateSignatureContent: result.updateSignatureContent, // 传递更新标志
     });
     console.log('签名配置已提交给 SDK');
   } catch (applyError) {

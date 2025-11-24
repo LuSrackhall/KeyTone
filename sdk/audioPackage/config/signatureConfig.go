@@ -96,6 +96,7 @@ type AlbumSignatureEntry struct {
 //   - requireAuthorization: 是否需要二次导出授权
 //   - contactEmail: 联系邮箱（requireAuthorization=true时必需）
 //   - contactAdditional: 补充联系信息（可选）
+//   - updateSignatureContent: 是否更新签名内容（Name, Intro, CardImage）
 //
 // 返回值：
 //   - qualificationCode: 生成的资格码（SHA256哈希，64字符）
@@ -109,6 +110,7 @@ type AlbumSignatureEntry struct {
 //	    true,
 //	    "author@example.com",
 //	    "微信: author123",
+//	    true,
 //	)
 func ApplySignatureToAlbum(
 	albumPath string,
@@ -116,11 +118,13 @@ func ApplySignatureToAlbum(
 	requireAuthorization bool,
 	contactEmail string,
 	contactAdditional string,
+	updateSignatureContent bool,
 ) (string, error) {
 	logger.Info("开始应用签名到专辑配置",
 		"albumPath", albumPath,
 		"encryptedSignatureID", encryptedSignatureID,
 		"requireAuthorization", requireAuthorization,
+		"updateSignatureContent", updateSignatureContent,
 	)
 
 	// 步骤1：参数验证
@@ -228,7 +232,6 @@ func ApplySignatureToAlbum(
 	// 读取现有的signature字段（可能已加密）
 	var albumSignatureMap map[string]AlbumSignatureEntry
 	var isFirstExport bool = true
-	var originalAuthorEntry *AlbumSignatureEntry
 	existingSignatureValue := GetValue("signature")
 
 	if existingSignatureValue != nil {
@@ -249,8 +252,6 @@ func ApplySignatureToAlbum(
 					// 找到原始作者签名（包含authorization字段的那个）
 					for qualCode, entry := range albumSignatureMap {
 						if entry.Authorization != nil {
-							entryCopy := entry
-							originalAuthorEntry = &entryCopy
 							logger.Debug("找到原始作者签名", "qualCode", qualCode)
 							break
 						}
@@ -267,15 +268,40 @@ func ApplySignatureToAlbum(
 	}
 
 	// 步骤8：构建专辑签名对象
-	albumSigEntry := AlbumSignatureEntry{
-		Name:          sigData.Name,
-		Intro:         sigData.Intro,
-		CardImagePath: cardImageRelPath,
+	var albumSigEntry AlbumSignatureEntry
+	existingEntry, exists := albumSignatureMap[qualificationCode]
+
+	if exists && !updateSignatureContent {
+		// 存在且不更新内容：保留原有基本信息
+		// 注意：这里我们显式保留Authorization，以防它是原始作者签名
+		albumSigEntry = AlbumSignatureEntry{
+			Name:          existingEntry.Name,
+			Intro:         existingEntry.Intro,
+			CardImagePath: existingEntry.CardImagePath,
+			Authorization: existingEntry.Authorization,
+		}
+		logger.Info("保留现有签名内容", "qualificationCode", qualificationCode)
+	} else {
+		// 不存在 或 需要更新内容：使用新数据
+		albumSigEntry = AlbumSignatureEntry{
+			Name:          sigData.Name,
+			Intro:         sigData.Intro,
+			CardImagePath: cardImageRelPath,
+			// Authorization 暂时为空，下方逻辑会处理保留或新建
+		}
+		if exists {
+			// 如果是更新，且原条目有Authorization，必须保留它！
+			// 这是修复Bug 1的关键：防止更新内容时丢失授权信息
+			albumSigEntry.Authorization = existingEntry.Authorization
+			logger.Info("更新签名内容，保留原有Authorization", "qualificationCode", qualificationCode)
+		}
 	}
 
-	// 步骤9：处理authorization字段
+	// 步骤9：处理authorization字段逻辑
 	if isFirstExport {
 		// 首次导出：创建原始作者签名，包含authorization对象
+		// 注意：如果exists为true且isFirstExport为true（理论上不应发生，除非手动修改了配置），
+		// 这里会覆盖上面的Authorization，这是符合预期的（首次导出重新初始化授权）
 		albumSigEntry.Authorization = &AuthorizationMetadata{
 			RequireAuthorization: requireAuthorization,
 			ContactEmail:         contactEmail,
@@ -289,12 +315,21 @@ func ApplySignatureToAlbum(
 		)
 	} else {
 		// 再次导出：需要更新原始作者签名的directExportAuthor
-		if originalAuthorEntry != nil && originalAuthorEntry.Authorization != nil {
-			// 更新原始作者签名的directExportAuthor
+
+		// 1. 如果当前签名是原始作者签名（即它拥有Authorization字段）
+		if albumSigEntry.Authorization != nil {
+			// 更新 DirectExportAuthor
+			albumSigEntry.Authorization.DirectExportAuthor = qualificationCode
+			logger.Info("更新自身(原始作者)的DirectExportAuthor", "qualificationCode", qualificationCode)
+		} else {
+			// 2. 如果当前签名不是原始作者，需要找到原始作者并更新其 DirectExportAuthor
+			// 注意：originalAuthorEntry 是之前查找的副本，我们需要直接操作 map
+			foundOriginal := false
 			for qualCode, entry := range albumSignatureMap {
 				if entry.Authorization != nil {
 					entry.Authorization.DirectExportAuthor = qualificationCode
 					albumSignatureMap[qualCode] = entry
+					foundOriginal = true
 					logger.Info("更新原始作者签名的directExportAuthor",
 						"originalAuthor", qualCode,
 						"directExportAuthor", qualificationCode,
@@ -302,9 +337,13 @@ func ApplySignatureToAlbum(
 					break
 				}
 			}
+			if !foundOriginal {
+				logger.Warn("再次导出但未找到原始作者签名，无法更新DirectExportAuthor")
+			}
 		}
+
 		// 非原始作者签名不包含authorization字段
-		logger.Info("再次导出：添加贡献者签名", "qualificationCode", qualificationCode)
+		logger.Info("再次导出：处理签名条目", "qualificationCode", qualificationCode)
 	}
 
 	// 添加或更新当前签名

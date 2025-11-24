@@ -8,6 +8,7 @@ export interface ApplySignatureConfigPayload {
   signatureId: string; // 选定的签名 ID（调用此路由时必填）
   contactEmail?: string; // 联系人邮箱（需要授权时必填）
   contactAdditional?: string; // 联系人补充信息（可选）
+  updateSignatureContent?: boolean; // 是否更新签名内容（Name, Intro, CardImage）
 }
 
 /**

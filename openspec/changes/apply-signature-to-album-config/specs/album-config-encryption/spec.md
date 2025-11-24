@@ -221,18 +221,18 @@ Normative: The system SHALL support three distinct export scenarios for both ini
 
 ### Requirement: 签名更新与直接导出作者
 
-Normative: When re-exporting, the `directExportAuthor` field in the original author's authorization object SHALL always be updated to the current exporter's qualification code. When updating an existing signature, the system SHALL allow updating content (name, intro, image) while preserving authorization metadata for the original author.
+Normative: When re-exporting, the `directExportAuthor` field in the original author's authorization object SHALL always be updated to the current exporter's qualification code. When updating an existing signature, the system SHALL allow updating content (name, intro, image) while preserving authorization metadata for the original author. The API SHALL accept an `updateSignatureContent` flag to control this behavior.
 
 #### Scenario: 更新已存在的签名内容
 
-- **GIVEN** 用户选择了一个已存在于专辑中的签名，并确认更新
+- **GIVEN** 用户选择了一个已存在于专辑中的签名，并确认更新 (updateSignatureContent=true)
 - **WHEN** 系统应用签名
 - **THEN** 使用当前本地签名配置中的name、intro、cardImagePath覆盖专辑中的对应字段
-- **AND** 如果是原始作者签名，保留原有的authorization对象（包括requireAuthorization, authorizedList等），但更新directExportAuthor
+- **AND** 如果是原始作者签名，**必须**保留原有的authorization对象（包括requireAuthorization, authorizedList等），但更新directExportAuthor
 
 #### Scenario: 选择已存在签名但不更新
 
-- **GIVEN** 用户选择了一个已存在于专辑中的签名，但在确认对话框中选择"不更新"
+- **GIVEN** 用户选择了一个已存在于专辑中的签名，但在确认对话框中选择"不更新" (updateSignatureContent=false)
 - **WHEN** 系统应用签名
 - **THEN** 保持专辑中该签名的name、intro、cardImagePath不变
 - **BUT** 仍然更新原始作者签名中的authorization.directExportAuthor为当前导出者的资格码

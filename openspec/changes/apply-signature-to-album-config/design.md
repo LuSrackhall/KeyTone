@@ -275,9 +275,16 @@ fmt.Printf(`
   "signatureId": "<encrypted_id>",
   "requireAuthorization": true,
   "contactEmail": "author@example.com",
-  "contactAdditional": "微信: xxx"
+  "contactAdditional": "微信: xxx",
+  "updateSignatureContent": true
 }
 ```
+
+**参数说明**:
+- `updateSignatureContent`: (boolean) 是否更新签名内容。
+  - `true`: 使用新签名数据覆盖专辑中的 Name, Intro, CardImage。
+  - `false`: 保留专辑中原有的 Name, Intro, CardImage。
+  - 无论取值如何，若原签名包含 Authorization，必须保留；且必须更新 DirectExportAuthor。
 
 **响应**:
 ```json

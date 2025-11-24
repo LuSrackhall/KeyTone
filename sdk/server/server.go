@@ -1132,12 +1132,13 @@ func keytonePkgRouters(r *gin.Engine) {
 
 	keytonePkgRouters.POST("/apply_signature_config", func(ctx *gin.Context) {
 		var req struct {
-			AlbumPath            string `json:"albumPath" binding:"required"`
-			NeedSignature        bool   `json:"needSignature"`
-			RequireAuthorization bool   `json:"requireAuthorization"`
-			SignatureID          string `json:"signatureId" binding:"required"`
-			ContactEmail         string `json:"contactEmail"`
-			ContactAdditional    string `json:"contactAdditional"`
+			AlbumPath              string `json:"albumPath" binding:"required"`
+			NeedSignature          bool   `json:"needSignature"`
+			RequireAuthorization   bool   `json:"requireAuthorization"`
+			SignatureID            string `json:"signatureId" binding:"required"`
+			ContactEmail           string `json:"contactEmail"`
+			ContactAdditional      string `json:"contactAdditional"`
+			UpdateSignatureContent bool   `json:"updateSignatureContent"` // 新增字段
 		}
 
 		if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1184,6 +1185,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			req.RequireAuthorization,
 			req.ContactEmail,
 			req.ContactAdditional,
+			req.UpdateSignatureContent,
 		)
 
 		if err != nil {

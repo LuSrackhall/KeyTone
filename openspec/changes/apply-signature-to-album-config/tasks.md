@@ -205,6 +205,17 @@
 
 ## 验收标准
 
+### 12. Bug修复与优化
+- [x] 修复：再次导出时更新原始作者签名导致Authorization字段丢失
+  - [x] 修改`ApplySignatureToAlbum`函数，增加`updateSignatureContent`参数
+  - [x] 实现保留原有Authorization字段的逻辑
+  - [x] 实现根据`updateSignatureContent`决定是否更新基本信息
+- [x] 修复：选择"不更新"签名时仍然更新了内容
+  - [x] 前端传递`updateSignatureContent`标志
+  - [x] 后端根据标志跳过内容更新
+- [x] 优化：确保DirectExportAuthor始终更新
+  - [x] 无论是否更新内容，始终更新原始作者签名的DirectExportAuthor
+
 ### 功能完整性
 - [x] 可成功将签名数据写入专辑配置
 - [x] 资格码生成正确（SHA256哈希）
