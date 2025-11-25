@@ -205,24 +205,6 @@ func ApplySignatureToAlbum(
 	qualificationCode := signature.GenerateQualificationCode(originalSignatureID)
 	logger.Info("资格码生成成功", "qualificationCode", qualificationCode)
 
-	// 步骤6：处理签名名片图片复制
-	var cardImageRelPath string
-	if sigData.CardImage != "" {
-		relPath, err := copySignatureCardImageToAlbum(
-			sigData.CardImage,
-			albumPath,
-			qualificationCode,
-		)
-		if err != nil {
-			// 图片复制失败不中止流程，记录警告即可
-			logger.Warn("签名图片复制失败，将跳过图片", "error", err.Error())
-			cardImageRelPath = ""
-		} else {
-			cardImageRelPath = relPath
-			logger.Info("签名图片复制成功", "relativePath", cardImageRelPath)
-		}
-	}
-
 	// 步骤7：加载专辑配置，检查是否已有签名
 	LoadConfig(albumPath, false)
 	if Viper == nil {
@@ -267,9 +249,68 @@ func ApplySignatureToAlbum(
 		albumSignatureMap = make(map[string]AlbumSignatureEntry)
 	}
 
+	// 检查当前签名是否已存在
+	existingEntry, exists := albumSignatureMap[qualificationCode]
+
+	// 步骤6 (调整顺序)：处理签名名片图片复制
+	// 逻辑：
+	// 1. 如果是"不更新"模式且签名已存在 -> 跳过图片复制，沿用旧路径
+	// 2. 否则 -> 复制新图片，并尝试删除旧图片（如果存在）
+	var cardImageRelPath string
+	shouldProcessImage := true
+
+	if exists && !updateSignatureContent {
+		shouldProcessImage = false
+		cardImageRelPath = existingEntry.CardImagePath
+		logger.Info("不更新签名内容，跳过图片复制", "path", cardImageRelPath)
+	}
+
+	if shouldProcessImage {
+		if sigData.CardImage != "" {
+			relPath, err := copySignatureCardImageToAlbum(
+				sigData.CardImage,
+				albumPath,
+				qualificationCode,
+			)
+			if err != nil {
+				// 图片复制失败不中止流程，记录警告即可
+				logger.Warn("签名图片复制失败，将跳过图片", "error", err.Error())
+				cardImageRelPath = ""
+			} else {
+				cardImageRelPath = relPath
+				logger.Info("签名图片复制成功", "relativePath", cardImageRelPath)
+
+				// 尝试删除旧图片（如果存在且路径不同）
+				// 注意：copySignatureCardImageToAlbum 生成的文件名包含时间戳，所以路径通常会不同
+				if exists && existingEntry.CardImagePath != "" && existingEntry.CardImagePath != cardImageRelPath {
+					oldFullPath := filepath.Join(albumPath, existingEntry.CardImagePath)
+					// 简单的安全检查：确保路径在专辑目录下
+					if strings.HasPrefix(oldFullPath, albumPath) {
+						if err := os.Remove(oldFullPath); err != nil {
+							logger.Warn("删除旧签名图片失败", "path", oldFullPath, "error", err.Error())
+						} else {
+							logger.Info("已删除旧签名图片", "path", oldFullPath)
+						}
+					}
+				}
+			}
+		} else {
+			// 新签名没有图片，如果旧签名有图片，也应该删除旧图片
+			if exists && existingEntry.CardImagePath != "" {
+				oldFullPath := filepath.Join(albumPath, existingEntry.CardImagePath)
+				if strings.HasPrefix(oldFullPath, albumPath) {
+					if err := os.Remove(oldFullPath); err != nil {
+						logger.Warn("删除旧签名图片失败", "path", oldFullPath, "error", err.Error())
+					} else {
+						logger.Info("已删除旧签名图片(新签名无图片)", "path", oldFullPath)
+					}
+				}
+			}
+		}
+	}
+
 	// 步骤8：构建专辑签名对象
 	var albumSigEntry AlbumSignatureEntry
-	existingEntry, exists := albumSignatureMap[qualificationCode]
 
 	if exists && !updateSignatureContent {
 		// 存在且不更新内容：保留原有基本信息

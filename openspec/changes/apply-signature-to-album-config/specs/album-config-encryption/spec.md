@@ -229,12 +229,14 @@ Normative: When re-exporting, the `directExportAuthor` field in the original aut
 - **WHEN** 系统应用签名
 - **THEN** 使用当前本地签名配置中的name、intro、cardImagePath覆盖专辑中的对应字段
 - **AND** 如果是原始作者签名，**必须**保留原有的authorization对象（包括requireAuthorization, authorizedList等），但更新directExportAuthor
+- **AND** 如果签名包含新的图片，系统将复制新图片到专辑目录，并**删除**旧的图片文件（如果存在且路径不同），避免垃圾文件堆积。
 
 #### Scenario: 选择已存在签名但不更新
 
 - **GIVEN** 用户选择了一个已存在于专辑中的签名，但在确认对话框中选择"不更新" (updateSignatureContent=false)
 - **WHEN** 系统应用签名
 - **THEN** 保持专辑中该签名的name、intro、cardImagePath不变
+- **AND** 系统**跳过**图片复制操作，不产生新的图片文件。
 - **BUT** 仍然更新原始作者签名中的authorization.directExportAuthor为当前导出者的资格码
 
 #### Scenario: 始终更新直接导出作者

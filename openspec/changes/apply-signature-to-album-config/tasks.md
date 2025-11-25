@@ -213,6 +213,12 @@
 - [x] 修复：选择"不更新"签名时仍然更新了内容
   - [x] 前端传递`updateSignatureContent`标志
   - [x] 后端根据标志跳过内容更新
+- [x] 修复：选择"不更新"签名时仍然复制了图片文件
+  - [x] 调整`ApplySignatureToAlbum`逻辑，先检查现有签名
+  - [x] 若`!updateSignatureContent`且签名存在，跳过图片复制
+- [x] 修复：更新签名时未删除旧图片文件
+  - [x] 在复制新图片成功后，检查并删除旧图片
+  - [x] 避免垃圾文件堆积
 - [x] 优化：确保DirectExportAuthor始终更新
   - [x] 无论是否更新内容，始终更新原始作者签名的DirectExportAuthor
 
