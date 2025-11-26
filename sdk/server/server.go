@@ -1528,7 +1528,7 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		// 清除sdk中的已选择键音包
 		// TIPS: 若后续需要实现删除任意键音包, 则需要进行判断, 若删除的键音包中存在当前已选择的键音包, 才需要清除。
-		audioPackageConfig.Viper = nil
+		audioPackageConfig.ClearConfig()
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",

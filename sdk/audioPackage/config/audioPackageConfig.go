@@ -122,7 +122,7 @@ func loadConfigFromCore(configPath string, stub *coreStubMetadata) error {
 	logger.Info("音频包通过 core 文件解密加载成功", "album", albumUUID)
 	diffAndUpdateDefaultConfig()
 	setEncryptionState(encryptionModeCore, configPath, coreFile, filepath.Join(configPath, "package.json"))
-	attachConfigWatcher()
+	// 注意：attachConfigWatcher() 由调用者在锁释放后执行，避免死锁
 	return nil
 }
 
@@ -130,6 +130,10 @@ func attachConfigWatcher() {
 	Viper.OnConfigChange(func(e fsnotify.Event) {
 		go func(Clients_sse_stores *sync.Map) {
 			viperRWMutex.RLock()
+			if Viper == nil {
+				viperRWMutex.RUnlock()
+				return
+			}
 			stores := &Store{
 				Key:   "get_all_value",
 				Value: Viper.AllSettings(),
@@ -199,9 +203,18 @@ func migrateConfigFile(configPath string) error {
 }
 
 func LoadConfig(configPath string, isCreate bool) {
-	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。(但在监听文件之前, 就需要解锁, 因为后续的操作不再此临界区范围内, 否则将可能导致死锁。)
-	viperRWMutex.RLock()
-	defer viperRWMutex.RUnlock()
+	// Viper重新初始化的过程, 是属于临界区的, 因此需要加锁。
+	// 注意：attachConfigWatcher() 必须在锁释放后调用，以避免潜在死锁。
+	// 使用 shouldAttachWatcher 标记来延迟 watcher 的附加。
+	var shouldAttachWatcher bool
+	defer func() {
+		if shouldAttachWatcher {
+			attachConfigWatcher()
+		}
+	}()
+
+	viperRWMutex.Lock()
+	defer viperRWMutex.Unlock()
 	if Viper != nil {
 		Viper.StopWatch()
 		Viper = nil
@@ -225,6 +238,8 @@ func LoadConfig(configPath string, isCreate bool) {
 		if err := loadConfigFromCore(configPath, stubMeta); err != nil {
 			logger.Error("core 文件加载失败", "err", err.Error())
 			Viper = nil
+		} else {
+			shouldAttachWatcher = true
 		}
 		return
 	}
@@ -319,7 +334,7 @@ func LoadConfig(configPath string, isCreate bool) {
 				// 增量写默认项
 				diffAndUpdateDefaultConfig()
 				setEncryptionState(encryptionModeLegacyHex, configPath, "", pkgPath)
-				attachConfigWatcher()
+				shouldAttachWatcher = true
 				// 在每次明确写入后执行回写加密（在SetValue完成后触发已存在），此处确保首次加载时也能写回一次（不强制）
 				// 不主动覆写源文件以避免无改动写入；实际回写在 SetValue 调用中实现
 				return
@@ -339,7 +354,7 @@ func LoadConfig(configPath string, isCreate bool) {
 		if currentEncState.Mode == "" {
 			setEncryptionState(encryptionModePlain, configPath, "", pkgPath)
 		}
-		attachConfigWatcher()
+		shouldAttachWatcher = true
 	}
 
 }
@@ -562,5 +577,15 @@ func diffAndUpdateDefaultConfig() {
 	settingDefaultConfig()
 	if err := Viper.WriteConfig(); err != nil {
 		logger.Error("diff并增量更新默认音频包配置至现有音频包配置文件时发生致命错误", "err", err.Error())
+	}
+}
+
+// ClearConfig 清除当前的 Viper 配置实例
+// 这是一个线程安全的操作，会获取写锁
+func ClearConfig() {
+	viperRWMutex.Lock()
+	defer viperRWMutex.Unlock()
+	if Viper != nil {
+		Viper = nil
 	}
 }
