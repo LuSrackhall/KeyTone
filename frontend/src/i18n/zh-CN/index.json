@@ -423,6 +423,12 @@
       "confirm": "确认",
       "cancel": "取消"
     },
+    "signatureUpdateConfirm": {
+      "title": "更新签名确认",
+      "message": "所选签名与专辑中已存在的该签名内容有变更。是否确认更新该签名的信息（介绍、图片）？",
+      "update": "更新",
+      "noUpdate": "不更新"
+    },
     "notify": {
       "contactCopied": "联系方式已复制",
       "authFileImported": "授权文件已导入"

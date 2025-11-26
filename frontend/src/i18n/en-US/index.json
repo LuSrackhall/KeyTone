@@ -431,6 +431,12 @@
       "confirm": "Confirm",
       "cancel": "Cancel"
     },
+    "signatureUpdateConfirm": {
+      "title": "Update Signature Confirmation",
+      "message": "The selected signature has changes compared to the one already in the album. Do you want to update the signature details (intro, image)?",
+      "update": "Update",
+      "noUpdate": "Don't Update"
+    },
     "notify": {
       "contactCopied": "Contact info copied",
       "authFileImported": "Auth file imported"

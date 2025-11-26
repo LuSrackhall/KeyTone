@@ -204,7 +204,7 @@ Normative: The system SHALL support three distinct export scenarios for both ini
 - **GIVEN** 专辑已有签名且requireAuthorization=false，用户确认提示对话框
 - **WHEN** 进入签名选择流程
 - **THEN** 直接进入签名选择界面。用户可以选择新签名或已存在于专辑中的签名。
-- **AND** 如果选择已存在的签名，弹出二次确认对话框："选择的签名已存在于专辑中，是否确认更新签名？"。
+- **AND** 如果选择已存在的签名，弹出二次确认对话框："所选签名与专辑中已存在的该签名内容有变更。是否确认更新该签名的信息（介绍、图片）？"。
 - **AND** 如果确认更新，且该签名是原始作者签名，仅更新name、intro、cardImagePath，保持authorization字段不变。
 - **AND** 无论选择何种签名，导出时directExportAuthor更新为当前签名者的资格码。
 

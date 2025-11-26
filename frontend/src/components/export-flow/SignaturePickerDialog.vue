@@ -145,18 +145,29 @@
     <q-dialog v-model="updateConfirmDialogVisible" persistent>
       <q-card style="min-width: 300px">
         <q-card-section>
-          <div class="text-h6">更新签名确认</div>
+          <div class="text-h6">{{ $t('exportFlow.signatureUpdateConfirm.title') }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          选择的签名已存在于专辑中，是否确认更新签名内容（名称、介绍、图片）？
-          <div class="text-caption text-grey q-mt-sm">注意：如果是原始作者签名，更新不会影响授权信息。</div>
+          {{ $t('exportFlow.signatureUpdateConfirm.message') }}
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="取消" color="primary" v-close-popup />
-          <q-btn flat label="不更新" color="primary" v-close-popup @click="handleUpdateConfirm(false)" />
-          <q-btn flat label="更新" color="primary" v-close-popup @click="handleUpdateConfirm(true)" />
+          <q-btn flat :label="$t('exportFlow.common.cancel')" color="primary" v-close-popup />
+          <q-btn
+            flat
+            :label="$t('exportFlow.signatureUpdateConfirm.noUpdate')"
+            color="primary"
+            v-close-popup
+            @click="handleUpdateConfirm(false)"
+          />
+          <q-btn
+            flat
+            :label="$t('exportFlow.signatureUpdateConfirm.update')"
+            color="primary"
+            v-close-popup
+            @click="handleUpdateConfirm(true)"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
