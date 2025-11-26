@@ -341,7 +341,7 @@ fmt.Printf(`
 
 ### 端点3: 检查签名是否在专辑中
 **路径**: `POST /keytone_pkg/check_signature_in_album`
-**功能**: 标记已在专辑中的签名（前端需求3）
+**功能**: 检查签名是否存在，并检测内容是否变更
 
 **请求体**:
 ```json
@@ -356,7 +356,8 @@ fmt.Printf(`
 {
   "message": "ok",
   "isInAlbum": true,
-  "qualificationCode": "<code>"
+  "qualificationCode": "<code>",
+  "hasChanges": true  // 新增字段：指示签名内容是否有变更
 }
 ```
 

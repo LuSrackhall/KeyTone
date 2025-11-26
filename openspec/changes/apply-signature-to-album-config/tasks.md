@@ -221,6 +221,10 @@
   - [x] 避免垃圾文件堆积
 - [x] 优化：确保DirectExportAuthor始终更新
   - [x] 无论是否更新内容，始终更新原始作者签名的DirectExportAuthor
+- [x] 优化：智能更新检测
+  - [x] 修改`CheckSignatureInAlbum`，增加`hasChanges`返回值
+  - [x] 后端实现字段比对（Name, Intro）和图片SHA256比对
+  - [x] 前端仅在`hasChanges=true`时显示更新确认对话框
 
 ### 功能完整性
 - [x] 可成功将签名数据写入专辑配置

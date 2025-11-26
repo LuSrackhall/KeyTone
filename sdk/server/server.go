@@ -1247,7 +1247,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		isInAlbum, qualCode, err := audioPackageConfig.CheckSignatureInAlbum(req.AlbumPath, req.SignatureID)
+		isInAlbum, qualCode, hasChanges, err := audioPackageConfig.CheckSignatureInAlbum(req.AlbumPath, req.SignatureID)
 		if err != nil {
 			logger.Error("检查签名失败", "error", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -1260,6 +1260,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			"message":           "ok",
 			"isInAlbum":         isInAlbum,
 			"qualificationCode": qualCode,
+			"hasChanges":        hasChanges,
 		})
 	})
 

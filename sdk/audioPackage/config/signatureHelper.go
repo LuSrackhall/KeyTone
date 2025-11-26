@@ -23,8 +23,13 @@ import (
 	"KeyTone/config"
 	"KeyTone/logger"
 	"KeyTone/signature"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 )
 
 // AlbumSignatureInfo 专辑签名信息（前端使用）
@@ -191,7 +196,8 @@ func GetAlbumSignatureInfo(albumPath string) (*AlbumSignatureInfo, error) {
 //
 // 功能说明：
 //   - 比对当前用户签名的资格码与专辑中已有的签名
-//   - 用于前端需求3：标记已在专辑中的签名
+//   - 检查签名内容（Name, Intro, CardImage）是否发生变更
+//   - 用于前端需求3：标记已在专辑中的签名，并智能提示更新
 //
 // 参数：
 //   - albumPath: 专辑目录的绝对路径
@@ -200,12 +206,13 @@ func GetAlbumSignatureInfo(albumPath string) (*AlbumSignatureInfo, error) {
 // 返回值：
 //   - isInAlbum: 签名是否已在专辑中
 //   - qualificationCode: 签名的资格码
+//   - hasChanges: 签名内容是否有变更
 //   - error: 错误信息
-func CheckSignatureInAlbum(albumPath string, encryptedSignatureID string) (bool, string, error) {
+func CheckSignatureInAlbum(albumPath string, encryptedSignatureID string) (bool, string, bool, error) {
 	// 解密签名ID获取原始UUID
 	originalSignatureID, err := signature.DecryptWithKeyA(encryptedSignatureID)
 	if err != nil {
-		return false, "", fmt.Errorf("解密签名ID失败: %w", err)
+		return false, "", false, fmt.Errorf("解密签名ID失败: %w", err)
 	}
 
 	// 生成资格码
@@ -214,18 +221,127 @@ func CheckSignatureInAlbum(albumPath string, encryptedSignatureID string) (bool,
 	// 获取专辑签名信息
 	signatureInfo, err := GetAlbumSignatureInfo(albumPath)
 	if err != nil {
-		return false, qualificationCode, fmt.Errorf("获取专辑签名信息失败: %w", err)
+		return false, qualificationCode, false, fmt.Errorf("获取专辑签名信息失败: %w", err)
 	}
 
 	// 检查资格码是否存在
-	_, exists := signatureInfo.AllSignatures[qualificationCode]
+	existingEntry, exists := signatureInfo.AllSignatures[qualificationCode]
+	if !exists {
+		return false, qualificationCode, false, nil
+	}
+
+	// 如果存在，检查内容是否变更
+	// 1. 获取本地签名数据
+	signatureMapValue := config.GetValue("signature")
+	if signatureMapValue == nil {
+		return true, qualificationCode, false, nil // 无法获取本地签名，默认无变更
+	}
+	signatureMap, ok := signatureMapValue.(map[string]interface{})
+	if !ok {
+		return true, qualificationCode, false, nil
+	}
+	entryData, exists := signatureMap[encryptedSignatureID]
+	if !exists {
+		return true, qualificationCode, false, nil
+	}
+
+	// 提取并解密本地签名数据
+	var encryptedValueStr string
+	if entry, ok := entryData.(map[string]interface{}); ok {
+		if value, ok := entry["value"].(string); ok {
+			encryptedValueStr = value
+		}
+	} else if str, ok := entryData.(string); ok {
+		encryptedValueStr = str
+	}
+
+	decryptedValueJSON, err := signature.DecryptValueWithDynamicKey(encryptedValueStr, encryptedSignatureID)
+	if err != nil {
+		logger.Warn("解密本地签名数据失败，无法比对变更", "error", err.Error())
+		return true, qualificationCode, false, nil
+	}
+
+	var localSigData signature.SignatureData
+	if err := json.Unmarshal([]byte(decryptedValueJSON), &localSigData); err != nil {
+		logger.Warn("解析本地签名数据失败，无法比对变更", "error", err.Error())
+		return true, qualificationCode, false, nil
+	}
+
+	// 2. 比对字段
+	hasChanges := false
+
+	// 比对 Name
+	if localSigData.Name != existingEntry.Name {
+		hasChanges = true
+		logger.Debug("签名名称变更", "old", existingEntry.Name, "new", localSigData.Name)
+	}
+
+	// 比对 Intro
+	if !hasChanges && localSigData.Intro != existingEntry.Intro {
+		hasChanges = true
+		logger.Debug("签名介绍变更", "old", existingEntry.Intro, "new", localSigData.Intro)
+	}
+
+	// 比对图片 (SHA256)
+	if !hasChanges {
+		// 情况A: 本地有图片，专辑无图片 -> 变更
+		if localSigData.CardImage != "" && existingEntry.CardImagePath == "" {
+			hasChanges = true
+			logger.Debug("新增签名图片")
+		}
+		// 情况B: 本地无图片，专辑有图片 -> 变更
+		if localSigData.CardImage == "" && existingEntry.CardImagePath != "" {
+			hasChanges = true
+			logger.Debug("移除签名图片")
+		}
+		// 情况C: 都有图片 -> 比对文件哈希
+		if localSigData.CardImage != "" && existingEntry.CardImagePath != "" {
+			// 计算本地图片哈希
+			localHash, err := calculateFileHash(localSigData.CardImage)
+			if err != nil {
+				logger.Warn("计算本地图片哈希失败", "error", err.Error())
+				// 无法比对，保守起见认为有变更
+				hasChanges = true
+			} else {
+				// 计算专辑图片哈希
+				albumImgPath := filepath.Join(albumPath, existingEntry.CardImagePath)
+				albumHash, err := calculateFileHash(albumImgPath)
+				if err != nil {
+					logger.Warn("计算专辑图片哈希失败", "error", err.Error())
+					hasChanges = true
+				} else {
+					if localHash != albumHash {
+						hasChanges = true
+						logger.Debug("签名图片内容变更", "localHash", localHash, "albumHash", albumHash)
+					}
+				}
+			}
+		}
+	}
 
 	logger.Debug("检查签名是否在专辑中",
 		"qualificationCode", qualificationCode,
 		"exists", exists,
+		"hasChanges", hasChanges,
 	)
 
-	return exists, qualificationCode, nil
+	return exists, qualificationCode, hasChanges, nil
+}
+
+// calculateFileHash 计算文件的SHA256哈希
+func calculateFileHash(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 // CheckSignatureAuthorization 检查签名是否有导出授权

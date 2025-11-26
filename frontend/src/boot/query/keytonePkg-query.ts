@@ -1,5 +1,10 @@
 import { api } from 'boot/axios';
-import type { ApplySignatureConfigPayload, AlbumSignatureInfo, AvailableSignature } from 'src/types/export-flow';
+import type {
+  ApplySignatureConfigPayload,
+  AlbumSignatureInfo,
+  AvailableSignature,
+  CheckSignatureInAlbumResult,
+} from 'src/types/export-flow';
 
 export async function SendFileToServer(file: File) {
   const formData = new FormData();
@@ -610,7 +615,7 @@ export async function GetAlbumSignatureInfo(albumPath: string): Promise<AlbumSig
 export async function CheckSignatureInAlbum(
   albumPath: string,
   signatureId: string
-): Promise<{ isInAlbum: boolean; qualificationCode: string }> {
+): Promise<CheckSignatureInAlbumResult> {
   return await api
     .post('/keytone_pkg/check_signature_in_album', { albumPath, signatureId })
     .then((response) => {
@@ -619,6 +624,7 @@ export async function CheckSignatureInAlbum(
         return {
           isInAlbum: response.data.isInAlbum,
           qualificationCode: response.data.qualificationCode,
+          hasChanges: response.data.hasChanges,
         };
       }
       throw new Error('检查签名失败');

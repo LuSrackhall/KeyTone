@@ -444,8 +444,17 @@ const onConfirmClick = async () => {
     try {
       const result = await CheckSignatureInAlbum(props.albumPath, selectedId.value);
       if (result.isInAlbum) {
-        updateConfirmDialogVisible.value = true;
-        return;
+        // 智能检测：只有当内容有变更时才弹出确认框
+        if (result.hasChanges) {
+          updateConfirmDialogVisible.value = true;
+          return;
+        } else {
+          // 内容无变更，直接选择"不更新"模式
+          console.log('Signature content unchanged, skipping update confirmation');
+          emit('select', selectedId.value, false);
+          isVisible.value = false;
+          return;
+        }
       }
     } catch (err) {
       console.error('CheckSignatureInAlbum failed:', err);

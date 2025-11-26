@@ -63,3 +63,12 @@ export interface AvailableSignature {
   isAuthorized: boolean; // 是否有导出授权
   isOriginalAuthor: boolean; // 是否为原始作者
 }
+
+/**
+ * 检查签名在专辑中状态的返回结果
+ */
+export interface CheckSignatureInAlbumResult {
+  isInAlbum: boolean;
+  qualificationCode: string;
+  hasChanges?: boolean; // 签名内容是否有变更
+}

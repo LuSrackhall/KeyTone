@@ -223,6 +223,14 @@ Normative: The system SHALL support three distinct export scenarios for both ini
 
 Normative: When re-exporting, the `directExportAuthor` field in the original author's authorization object SHALL always be updated to the current exporter's qualification code. When updating an existing signature, the system SHALL allow updating content (name, intro, image) while preserving authorization metadata for the original author. The API SHALL accept an `updateSignatureContent` flag to control this behavior.
 
+#### Scenario: 智能更新检测
+
+- **GIVEN** 用户选择了一个已存在于专辑中的签名
+- **WHEN** 系统检查签名状态
+- **THEN** 系统对比本地签名配置与专辑内签名的 Name, Intro 和 CardImage（通过SHA256哈希比对）
+- **AND** 仅当检测到实际内容变更时，才弹出"更新确认"对话框
+- **AND** 如果内容完全一致，系统自动选择"不更新"模式，跳过确认对话框，直接进行后续流程（仅更新DirectExportAuthor）
+
 #### Scenario: 更新已存在的签名内容
 
 - **GIVEN** 用户选择了一个已存在于专辑中的签名，并确认更新 (updateSignatureContent=true)
