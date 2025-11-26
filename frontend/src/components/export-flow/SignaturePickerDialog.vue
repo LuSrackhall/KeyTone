@@ -443,8 +443,8 @@ watch(
       searchQuery.value = '';
       selectedId.value = '';
 
-      // Load real data if not already loaded and no prop signatures provided
-      if (localSignatures.value.length === 0 && (!props.signatures || props.signatures.length === 0)) {
+      // Always load real data if no prop signatures provided to ensure status (isOriginalAuthor, isInAlbum) is up to date
+      if (!props.signatures || props.signatures.length === 0) {
         await loadSignaturesRealtime();
       }
     }
