@@ -420,6 +420,8 @@
       "selectHint": "点击选择签名",
       "noImage": "暂无图片",
       "noIntro": "暂无介绍",
+      "originalAuthor": "原始作者",
+      "contributor": "贡献作者",
       "confirm": "确认",
       "cancel": "取消"
     },

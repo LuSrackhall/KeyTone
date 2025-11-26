@@ -102,14 +102,30 @@
               <!-- Middle: Info Area (flex-grow) -->
               <div class="col flex flex-col justify-center q-py-2xs q-px-sm" style="min-width: 0">
                 <!-- Name: single line with horizontal scroll -->
-                <div class="name-container text-caption text-weight-bold" style="font-size: 0.9rem">
-                  <div class="scrollable-x">{{ sig.name }}</div>
+                <div class="name-container text-caption text-weight-bold flex items-center" style="font-size: 0.9rem">
+                  <div class="scrollable-x q-mr-xs">{{ sig.name }}</div>
                 </div>
                 <!-- Intro: max 2 lines with horizontal scroll -->
                 <div class="intro-container text-caption text-grey q-mt-2xs" style="font-size: 0.75rem; min-width: 0">
                   <div class="scrollable-x line-clamp-2">
                     {{ sig.intro || $t('exportFlow.pickerDialog.noIntro') }}
                   </div>
+                </div>
+                <div class="name-container text-caption text-weight-bold flex items-center" style="font-size: 0.9rem">
+                  <q-badge
+                    v-if="sig.isOriginalAuthor"
+                    color="purple"
+                    text-color="white"
+                    :label="$t('exportFlow.pickerDialog.originalAuthor')"
+                    class="text-xs"
+                  />
+                  <q-badge
+                    v-else-if="sig.isInAlbum"
+                    color="teal"
+                    text-color="white"
+                    :label="$t('exportFlow.pickerDialog.contributor')"
+                    class="text-xs"
+                  />
                 </div>
               </div>
 
@@ -188,6 +204,8 @@ interface Signature {
   intro?: string;
   image?: string;
   isAuthorized?: boolean; // Added for filtering
+  isOriginalAuthor?: boolean; // Added for UI tag
+  isInAlbum?: boolean; // Added for UI tag
 }
 
 interface SignaturePickerDialogProps {
@@ -265,11 +283,16 @@ async function loadSignaturesRealtime() {
 
     // 1.5 Get authorization status if albumPath is provided
     const authMap = new Map<string, boolean>();
+    const originalAuthorMap = new Map<string, boolean>();
+    const inAlbumMap = new Map<string, boolean>();
+
     if (props.albumPath) {
       try {
         const availableSigs = await GetAvailableSignaturesForExport(props.albumPath);
         availableSigs.forEach((sig: AvailableSignature) => {
           authMap.set(sig.encryptedId, sig.isAuthorized);
+          originalAuthorMap.set(sig.encryptedId, sig.isOriginalAuthor);
+          inAlbumMap.set(sig.encryptedId, sig.isInAlbum);
         });
       } catch (err) {
         console.error('[SignaturePicker] Failed to fetch available signatures:', err);
@@ -309,6 +332,8 @@ async function loadSignaturesRealtime() {
           intro: signatureData.intro,
           image: signatureData.cardImage ? await getImageUrlForSignature(signatureData.cardImage) : undefined,
           isAuthorized: props.albumPath ? authMap.get(encryptedId) ?? false : true,
+          isOriginalAuthor: props.albumPath ? originalAuthorMap.get(encryptedId) ?? false : false,
+          isInAlbum: props.albumPath ? inAlbumMap.get(encryptedId) ?? false : false,
         };
 
         tempSignatures.push(signature);

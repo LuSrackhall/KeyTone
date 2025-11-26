@@ -428,6 +428,8 @@
       "selectHint": "Click to select signature",
       "noImage": "No image",
       "noIntro": "No introduction",
+      "originalAuthor": "Original Author",
+      "contributor": "Contributor",
       "confirm": "Confirm",
       "cancel": "Cancel"
     },
