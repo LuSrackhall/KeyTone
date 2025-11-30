@@ -133,7 +133,7 @@ func ApplySignatureToAlbum(
     "requireAuthorization": true,
     "contactEmail": "zhang@example.com",
     "contactAdditional": "微信: zhangsan123",
-    "authorizedList": [],  // 初始为空，后续授权后添加
+    "authorizedList": ["<资格码1>"],  // 原始作者自身的资格码（天然拥有导出授权）
     "directExportAuthor": "<资格码1>",  // 当前导出者的资格码
     "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成）
   }
@@ -150,7 +150,7 @@ func ApplySignatureToAlbum(
     "requireAuthorization": false,
     "contactEmail": "zhang@example.com",
     "contactAdditional": "",
-    "authorizedList": [],
+    "authorizedList": [],  // 无需授权时保持为空
     "directExportAuthor": "<资格码1>",
     "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成，无论是否需要授权都会存储）
   }
@@ -170,10 +170,13 @@ func ApplySignatureToAlbum(
 **再次导出 - 更新directExportAuthor**：
 - 每次导出时，原始作者签名的`authorization.directExportAuthor`更新为当前导出者的资格码
 - 其他签名条目保持不变
+- **authorizedList不受再次导出影响**，保持原有值不变
 
-**authorizedList更新**：
-- 触发时机：原作者导入授权文件后
-- 存储内容：被授权者的资格码
+**authorizedList初始化与更新**：
+- 初始化时机：首次导出
+  - `requireAuthorization=true`时：包含原始作者自身资格码`["<资格码1>"]`
+  - `requireAuthorization=false`时：空数组`[]`
+- 后续更新：仅通过原作者导入授权文件添加被授权者资格码
 - 用途：前端选择签名时使能/失能签名选项
 
 **签名作者角色识别**：

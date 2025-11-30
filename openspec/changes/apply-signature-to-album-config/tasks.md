@@ -286,3 +286,15 @@
   - [x] 更新 proposal.md：数据格式、API接口说明、authorizationUUID字段说明
   - [x] 更新 design.md：添加 AuthorizationUUID 字段设计章节
   - [x] 更新 tasks.md：添加本任务清单
+
+### 17. authorizedList 初始化包含原始作者资格码
+- [x] 17.1 更新 SDK 代码逻辑
+  - [x] 在 `signatureConfig.go` 的首次导出逻辑中
+  - [x] 当 `requireAuthorization=true` 时，将原始作者资格码加入 `authorizedList`
+  - [x] 当 `requireAuthorization=false` 时，保持空数组
+  - [x] 添加详细的中文注释说明逻辑
+- [x] 17.2 更新规格文档
+  - [x] 更新 spec.md (album-config-encryption)：更新授权元数据管理需求和场景
+  - [x] 更新 design.md：更新数据格式示例和authorizedList说明
+  - [x] 更新 proposal.md：添加authorizedList字段说明章节
+  - [x] 更新 tasks.md：添加本任务清单

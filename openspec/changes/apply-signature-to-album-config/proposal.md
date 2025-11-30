@@ -58,7 +58,7 @@
         "requireAuthorization": true,
         "contactEmail": "author@example.com",
         "contactAdditional": "补充联系方式",
-        "authorizedList": ["<资格码2>", "<资格码3>"],  // 已授权的第三方签名资格码列表
+        "authorizedList": ["<资格码1>", "<资格码2>", "<资格码3>"],  // 已授权的资格码列表（包含原始作者自身+已授权的第三方）
         "directExportAuthor": "<资格码4>",  // 直接导出作者的资格码（每次导出更新）
         "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成）
       }
@@ -66,6 +66,19 @@
   }
 }
 ```
+
+### authorizedList 字段说明
+
+**初始化逻辑**：
+- 首次导出且选择"需要授权"（`requireAuthorization=true`）时：
+  - `authorizedList` 初始化为 `["<原始作者资格码>"]`
+  - 原始作者作为授权创建者，天然拥有导出授权
+- 首次导出且选择"无需授权"（`requireAuthorization=false`）时：
+  - `authorizedList` 初始化为空数组 `[]`
+
+**更新逻辑**：
+- 再次导出不会修改 `authorizedList`，保持原有值不变
+- 仅通过未来的"授权导入"功能添加新的第三方资格码
 
 ### authorizationUUID 字段说明
 

@@ -375,11 +375,25 @@ func ApplySignatureToAlbum(
 		//   - 首次导出时必须由前端传入（nanoid生成）
 		//   - 无论requireAuthorization为true还是false都会存储
 		//   - 用于未来签名授权导出/导入功能的身份校验
+		//
+		// AuthorizedList说明：
+		//   - 若requireAuthorization=true，将原始作者资格码加入列表
+		//     （原始作者作为授权创建者，天然拥有导出授权）
+		//   - 若requireAuthorization=false，保持空数组
+		//   - 再次导出不会修改此列表，仅通过未来的"授权导入"功能添加新资格码
+		var authorizedList []string
+		if requireAuthorization {
+			// 需要授权时，原始作者自身的资格码加入授权列表
+			authorizedList = []string{qualificationCode}
+		} else {
+			authorizedList = []string{}
+		}
+
 		albumSigEntry.Authorization = &AuthorizationMetadata{
 			RequireAuthorization: requireAuthorization,
 			ContactEmail:         contactEmail,
 			ContactAdditional:    contactAdditional,
-			AuthorizedList:       []string{},        // 初始化为空数组
+			AuthorizedList:       authorizedList,    // 若需要授权则包含原始作者资格码
 			DirectExportAuthor:   qualificationCode, // 设置为当前导出者的资格码
 			AuthorizationUUID:    authorizationUUID, // 授权标识UUID（前端nanoid生成）
 		}
@@ -387,6 +401,7 @@ func ApplySignatureToAlbum(
 			"qualificationCode", qualificationCode,
 			"requireAuthorization", requireAuthorization,
 			"authorizationUUID", authorizationUUID,
+			"authorizedListLength", len(authorizedList),
 		)
 	} else {
 		// 再次导出：需要更新原始作者签名的directExportAuthor

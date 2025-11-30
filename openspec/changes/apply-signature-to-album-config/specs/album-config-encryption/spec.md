@@ -22,19 +22,31 @@ Normative: The album configuration SHALL support a `signature` field containing 
 
 ### Requirement: 授权元数据管理
 
-Normative: Original author signatures SHALL include an `authorization` object with requireAuthorization boolean, contactEmail string, contactAdditional optional string, authorizedList array of qualification codes, and directExportAuthor string storing the current exporter's qualification code; non-author signatures SHALL NOT include this object.
+Normative: Original author signatures SHALL include an `authorization` object with requireAuthorization boolean, contactEmail string, contactAdditional optional string, authorizedList array of qualification codes (initialized with original author's qualification code when requireAuthorization=true), and directExportAuthor string storing the current exporter's qualification code; non-author signatures SHALL NOT include this object.
 
-#### Scenario: 原始作者签名包含授权信息
+#### Scenario: 原始作者签名包含授权信息（需要授权）
 
 - **GIVEN** 用户导出自己创建的专辑并选择"需要授权"
 - **WHEN** 系统写入签名数据
-- **THEN** authorization对象包含requireAuthorization=true，有效的contactEmail，可选的contactAdditional，authorizedList初始化为空数组[]，directExportAuthor设置为当前签名者的资格码，authorizationUUID为前端生成的nanoid标识
+- **THEN** authorization对象包含requireAuthorization=true，有效的contactEmail，可选的contactAdditional，authorizedList初始化包含原始作者自身的资格码["<原始作者资格码>"]，directExportAuthor设置为当前签名者的资格码，authorizationUUID为前端生成的nanoid标识
+
+#### Scenario: 原始作者签名包含授权信息（无需授权）
+
+- **GIVEN** 用户导出自己创建的专辑并选择"无需授权"
+- **WHEN** 系统写入签名数据
+- **THEN** authorization对象包含requireAuthorization=false，authorizedList初始化为空数组[]
 
 #### Scenario: 授权列表更新
 
 - **GIVEN** 原作者导入授权文件批准第三方导出
 - **WHEN** 系统处理授权
 - **THEN** 原作者签名的authorizedList数组新增被授权者的资格码，保持其他字段不变
+
+#### Scenario: 再次导出不修改授权列表
+
+- **GIVEN** 专辑已有签名且authorizedList包含若干资格码
+- **WHEN** 用户再次导出专辑
+- **THEN** authorizedList保持不变，不会重复添加资格码
 
 #### Scenario: 非原始作者签名不含授权字段
 
