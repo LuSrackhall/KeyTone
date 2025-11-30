@@ -276,6 +276,44 @@ func ApplySignatureToAlbum(
 		albumSignatureMap = make(map[string]AlbumSignatureEntry)
 	}
 
+	// 步骤6（安全校验）：再次导出时检查授权
+	// 说明：
+	//   - 首次导出时任何签名都可以应用
+	//   - 再次导出时，如果原始作者要求授权（requireAuthorization=true），
+	//     则只有在 authorizedList 中的签名才能被应用
+	//   - 此校验防止用户通过修改前端绕过授权限制
+	if !isFirstExport {
+		// 查找原始作者签名
+		var originalAuthorAuth *AuthorizationMetadata
+		for _, entry := range albumSignatureMap {
+			if entry.Authorization != nil {
+				originalAuthorAuth = entry.Authorization
+				break
+			}
+		}
+
+		if originalAuthorAuth != nil && originalAuthorAuth.RequireAuthorization {
+			// 需要授权，检查当前签名的资格码是否在授权列表中
+			isAuthorized := false
+			for _, authorizedQualCode := range originalAuthorAuth.AuthorizedList {
+				if qualificationCode == authorizedQualCode {
+					isAuthorized = true
+					break
+				}
+			}
+
+			if !isAuthorized {
+				logger.Warn("签名未获得授权，拒绝应用",
+					"qualificationCode", qualificationCode,
+					"authorizedList", originalAuthorAuth.AuthorizedList,
+				)
+				return "", fmt.Errorf("该签名未获得原始作者授权，无法应用到此专辑。请先获取授权后再试")
+			}
+
+			logger.Info("签名授权校验通过", "qualificationCode", qualificationCode)
+		}
+	}
+
 	// 检查当前签名是否已存在
 	existingEntry, exists := albumSignatureMap[qualificationCode]
 

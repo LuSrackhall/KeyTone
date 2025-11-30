@@ -228,6 +228,54 @@ AuthorizationUUID string `json:"authorizationUUID,omitempty"`
    - 缓解措施：整个signature字段AES-GCM加密
 3. **图片文件篡改**：替换签名名片图片
    - 当前限制：无文件完整性校验（未来可考虑哈希验证）
+4. **绕过前端授权限制**：用户修改前端组件状态尝试应用未授权签名
+   - 缓解措施：后端SDK在ApplySignatureToAlbum中进行强制授权校验
+
+### 后端授权校验
+
+**校验时机**：再次导出时（isFirstExport=false）
+
+**校验逻辑**：
+```go
+// 再次导出时检查授权
+if !isFirstExport {
+    // 查找原始作者签名
+    var originalAuthorAuth *AuthorizationMetadata
+    for _, entry := range albumSignatureMap {
+        if entry.Authorization != nil {
+            originalAuthorAuth = entry.Authorization
+            break
+        }
+    }
+
+    if originalAuthorAuth != nil && originalAuthorAuth.RequireAuthorization {
+        // 需要授权，检查当前签名的资格码是否在授权列表中
+        isAuthorized := false
+        for _, authorizedQualCode := range originalAuthorAuth.AuthorizedList {
+            if qualificationCode == authorizedQualCode {
+                isAuthorized = true
+                break
+            }
+        }
+
+        if !isAuthorized {
+            return "", fmt.Errorf("该签名未获得原始作者授权，无法应用到此专辑")
+        }
+    }
+}
+```
+
+**校验规则**：
+- 首次导出时任何签名都可以应用
+- 再次导出时，如果原始作者要求授权（requireAuthorization=true），只有在authorizedList中的签名才能被应用
+- 再次导出时，如果原始作者不要求授权（requireAuthorization=false），所有签名都可以应用
+
+### 前端禁用显示
+
+**显示逻辑**：
+- 需要授权的专辑再次导出时，未授权签名显示为禁用状态
+- 禁用状态特征：置灰、不可点击、显示"未授权"标签和锁图标
+- 授权签名正常显示，可以被选择
 
 ### 加密层次
 ```
@@ -251,6 +299,8 @@ AuthorizationUUID string `json:"authorizationUUID,omitempty"`
    - 返回：`error: "专辑配置加载失败"`
 5. **授权信息不完整**：requireAuthorization=true但contactEmail为空
    - 返回：`error: "需要授权时必须提供联系邮箱"`
+6. **签名未授权**：再次导出时签名资格码不在authorizedList中
+   - 返回：`error: "该签名未获得原始作者授权，无法应用到此专辑"`
 
 ## 调试与可观测性
 

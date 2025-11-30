@@ -323,6 +323,7 @@
     <signature-picker-dialog
       :visible="exportFlow.pickerDialogVisible.value"
       :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+      :require-authorization="exportFlow.requireAuthorizationForPicker.value"
       @select="exportFlow.handlePickerSelect"
       @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"

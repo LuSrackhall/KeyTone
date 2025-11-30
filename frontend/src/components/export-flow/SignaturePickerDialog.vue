@@ -76,14 +76,25 @@
             <q-card
               flat
               bordered
-              :class="['signature-card cursor-pointer', selectedId === sig.id ? 'selected' : '']"
+              :class="[
+                'signature-card',
+                selectedId === sig.id ? 'selected' : '',
+                isSignatureDisabled(sig) ? 'disabled-card' : 'cursor-pointer',
+              ]"
               @click="handleSignatureClick(sig.id)"
               style="display: flex; align-items: center; min-height: 70px"
             >
               <!-- Left: Image Area (fixed 60px) -->
               <div
                 class="flex-shrink-0 flex items-center justify-center"
-                style="width: 60px; height: 60px; background-color: #f5f5f5; border-radius: 4px; margin: 0 8px"
+                :style="{
+                  width: '60px',
+                  height: '60px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
+                  margin: '0 8px',
+                  opacity: isSignatureDisabled(sig) ? 0.5 : 1,
+                }"
               >
                 <img
                   v-if="sig.image"
@@ -100,7 +111,10 @@
               </div>
 
               <!-- Middle: Info Area (flex-grow) -->
-              <div class="col flex flex-col justify-center q-py-2xs q-px-sm" style="min-width: 0">
+              <div
+                class="col flex flex-col justify-center q-py-2xs q-px-sm"
+                :style="{ minWidth: 0, opacity: isSignatureDisabled(sig) ? 0.5 : 1 }"
+              >
                 <!-- Name: single line with horizontal scroll -->
                 <div class="name-container text-caption text-weight-bold flex items-center" style="font-size: 0.9rem">
                   <div class="scrollable-x q-mr-xs">{{ sig.name }}</div>
@@ -126,6 +140,14 @@
                     :label="$t('exportFlow.pickerDialog.contributor')"
                     class="text-xs"
                   />
+                  <!-- 未授权标签 -->
+                  <q-badge
+                    v-if="isSignatureDisabled(sig)"
+                    color="grey"
+                    text-color="white"
+                    :label="$t('exportFlow.pickerDialog.unauthorized')"
+                    class="text-xs q-ml-xs"
+                  />
                 </div>
               </div>
 
@@ -137,6 +159,14 @@
               >
                 <div class="selection-glow"></div>
                 <q-icon name="check_circle" size="20px" color="positive" class="selection-icon" />
+              </div>
+              <!-- Right: Lock icon for disabled signatures -->
+              <div
+                v-else-if="isSignatureDisabled(sig)"
+                class="flex-shrink-0"
+                style="margin-left: 8px; margin-right: 8px"
+              >
+                <q-icon name="lock" size="20px" color="grey" />
               </div>
             </q-card>
           </div>
@@ -251,13 +281,9 @@ const effectiveSignatures = computed(() => {
 });
 
 // Filter signatures based on search query (only by name)
+// 不再根据授权状态过滤，而是显示所有签名但禁用未授权的
 const filteredSignatures = computed(() => {
-  let result = effectiveSignatures.value;
-
-  // Filter by authorization if required
-  if (props.requireAuthorization) {
-    result = result.filter((sig) => sig.isAuthorized);
-  }
+  const result = effectiveSignatures.value;
 
   if (!searchQuery.value) {
     return result;
@@ -266,6 +292,18 @@ const filteredSignatures = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return result.filter((sig) => sig.name.toLowerCase().includes(query));
 });
+
+/**
+ * 判断签名是否应该被禁用（需要授权但未授权的签名）
+ */
+function isSignatureDisabled(sig: Signature): boolean {
+  // 如果不需要授权检查，所有签名都可用
+  if (!props.requireAuthorization) {
+    return false;
+  }
+  // 需要授权检查时，未授权的签名应该被禁用
+  return !sig.isAuthorized;
+}
 
 /**
  * Load real signature data from store
@@ -460,6 +498,15 @@ watch(isVisible, (newVal) => {
 
 // Handlers
 const handleSignatureClick = (id: string) => {
+  // 查找签名对象
+  const sig = filteredSignatures.value.find((s) => s.id === id);
+  if (!sig) return;
+
+  // 如果签名被禁用（需要授权但未授权），不允许选择
+  if (isSignatureDisabled(sig)) {
+    return;
+  }
+
   // Toggle: 若点击已选项则取消选择，否则选中
   if (selectedId.value === id) {
     selectedId.value = '';
@@ -543,7 +590,7 @@ const onCancel = () => {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
-    &:hover {
+    &:hover:not(.disabled-card) {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       transform: translateY(-1px);
     }
@@ -551,6 +598,18 @@ const onCancel = () => {
     &.selected {
       border: 2px solid var(--q-primary) !important;
       box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1), 0 4px 16px rgba(33, 150, 243, 0.15);
+    }
+
+    // 禁用状态的签名卡片样式
+    &.disabled-card {
+      cursor: not-allowed;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.08);
+
+      &:hover {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transform: none;
+      }
     }
 
     // Content area optimization

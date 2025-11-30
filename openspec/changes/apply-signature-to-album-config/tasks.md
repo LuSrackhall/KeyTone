@@ -298,3 +298,28 @@
   - [x] 更新 design.md：更新数据格式示例和authorizedList说明
   - [x] 更新 proposal.md：添加authorizedList字段说明章节
   - [x] 更新 tasks.md：添加本任务清单
+
+### 18. 再次导出授权校验与前端禁用显示
+- [x] 18.1 后端授权校验
+  - [x] 在 `signatureConfig.go` 的 `ApplySignatureToAlbum` 函数中添加授权校验
+  - [x] 再次导出时检查签名资格码是否在 authorizedList 中
+  - [x] 未授权签名返回错误，拒绝应用
+  - [x] 首次导出和不需要授权时跳过校验
+  - [x] 添加详细的中文注释说明校验逻辑
+- [x] 18.2 前端传递 requireAuthorization prop
+  - [x] 在 `Keytone_album_page_new.vue` 中传递 `require-authorization` 给 `SignaturePickerDialog`
+  - [x] 使用 `exportFlow.requireAuthorizationForPicker.value`
+- [x] 18.3 前端签名禁用显示
+  - [x] 在 `SignaturePickerDialog.vue` 中移除授权过滤逻辑
+  - [x] 添加 `isSignatureDisabled` 函数判断签名是否应被禁用
+  - [x] 禁用的签名显示为置灰状态，不可点击
+  - [x] 添加"未授权"标签和锁图标
+  - [x] 添加禁用卡片样式（.disabled-card）
+- [x] 18.4 添加 i18n 翻译
+  - [x] 在 en-US/index.json 添加 "unauthorized": "Unauthorized"
+  - [x] 在 zh-CN/index.json 添加 "unauthorized": "未授权"
+- [x] 18.5 更新规格文档
+  - [x] 更新 spec.md：添加再次导出授权校验需求和签名选择界面显示需求
+  - [x] 更新 design.md：添加后端授权校验和前端禁用显示章节
+  - [x] 更新 proposal.md：添加安全措施章节
+  - [x] 更新 tasks.md：添加本任务清单

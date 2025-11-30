@@ -88,7 +88,7 @@ Normative: Original author signatures SHALL include an `authorizationUUID` field
 
 ### Requirement: API端点 - 应用签名配置
 
-Normative: The `/keytone_pkg/apply_signature_config` endpoint SHALL accept albumPath, signatureId, requireAuthorization, contactEmail, contactAdditional, updateSignatureContent, and authorizationUUID parameters, validate authorization completeness, apply the signature, and return the generated qualification code.
+Normative: The `/keytone_pkg/apply_signature_config` endpoint SHALL accept albumPath, signatureId, requireAuthorization, contactEmail, contactAdditional, updateSignatureContent, and authorizationUUID parameters, validate authorization completeness and authorization status for re-exports, apply the signature, and return the generated qualification code.
 
 #### Scenario: API请求成功应用签名
 
@@ -107,6 +107,60 @@ Normative: The `/keytone_pkg/apply_signature_config` endpoint SHALL accept album
 - **GIVEN** 前端发送的signatureId在签名配置中找不到
 - **WHEN** SDK尝试读取签名数据
 - **THEN** 返回404错误和`{ message: "error: 签名不存在或已被删除" }`
+
+#### Scenario: API请求未授权签名被拒绝
+
+- **GIVEN** 专辑已有签名且原始作者要求授权
+- **WHEN** 用户尝试应用未在authorizedList中的签名
+- **THEN** 返回错误和`{ message: "error: 该签名未获得原始作者授权，无法应用到此专辑" }`
+
+---
+
+### Requirement: 再次导出授权校验
+
+Normative: When re-exporting an album with requireAuthorization=true, the system SHALL verify that the signature's qualification code exists in the authorizedList before allowing the signature to be applied; unauthorized signatures SHALL be rejected with an error.
+
+#### Scenario: 授权签名可以被应用
+
+- **GIVEN** 专辑原始作者要求授权，且签名资格码在authorizedList中
+- **WHEN** 用户选择该签名进行导出
+- **THEN** 签名成功应用到专辑配置
+
+#### Scenario: 未授权签名被拒绝
+
+- **GIVEN** 专辑原始作者要求授权，但签名资格码不在authorizedList中
+- **WHEN** 用户尝试应用该签名
+- **THEN** 系统返回错误，拒绝应用该签名
+
+#### Scenario: 无需授权时所有签名可用
+
+- **GIVEN** 专辑原始作者不要求授权（requireAuthorization=false）
+- **WHEN** 用户选择任意签名进行导出
+- **THEN** 签名成功应用到专辑配置
+
+#### Scenario: 首次导出时所有签名可用
+
+- **GIVEN** 专辑没有签名（首次导出）
+- **WHEN** 用户选择任意签名进行导出
+- **THEN** 签名成功应用到专辑配置
+
+---
+
+### Requirement: 签名选择界面授权状态显示
+
+Normative: The signature picker dialog SHALL display all signatures but visually disable (greyed out, non-clickable) those not in the authorizedList when requireAuthorization=true; disabled signatures SHALL show an "Unauthorized" badge and lock icon.
+
+#### Scenario: 授权签名显示为可选择
+
+- **GIVEN** 专辑需要授权且签名在authorizedList中
+- **WHEN** 前端显示签名选择列表
+- **THEN** 该签名显示为正常可点击状态
+
+#### Scenario: 未授权签名显示为禁用
+
+- **GIVEN** 专辑需要授权但签名不在authorizedList中
+- **WHEN** 前端显示签名选择列表
+- **THEN** 该签名显示为置灰状态，带有"未授权"标签和锁图标，点击无响应
 
 ---
 

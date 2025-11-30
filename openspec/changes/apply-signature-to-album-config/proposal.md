@@ -131,6 +131,8 @@
 - **新增**：`sdk/audioPackage/config/signatureConfig.go`（签名应用逻辑）
 - **新增**：`sdk/signature/album.go`（专辑签名专用加密函数）
 - **修改**：`sdk/server/server.go`（完善`/keytone_pkg/apply_signature_config` API实现）
+- **修改**：`frontend/src/components/export-flow/SignaturePickerDialog.vue`（签名禁用显示）
+- **修改**：`frontend/src/pages/Keytone_album_page_new.vue`（传递requireAuthorization prop）
 - **依赖**：现有签名管理模块（解密签名数据）、音频包配置模块（写入配置）
 
 ### API接口
@@ -140,6 +142,7 @@
   - `authorizationUUID`: 首次导出时由前端nanoid生成，再次导出时传空字符串（SDK沿用已存储的UUID）
 - **输出**：`{ message: "ok", qualificationCode: "<sha256>" }`
 - **副作用**：专辑配置文件写入signature字段、图片文件复制到专辑目录
+- **安全校验**：再次导出时验证签名资格码是否在authorizedList中（如需要授权）
 
 **端点2**: `POST /keytone_pkg/get_album_signature_info` - 获取专辑签名信息
 - **输入**：`albumPath`
@@ -160,6 +163,19 @@
 - **输入**：`albumPath`
 - **输出**：签名列表，包含每个签名的isInAlbum、isAuthorized、isOriginalAuthor状态
 - **用途**：前端需求3（签名选择页面增强）
+
+## 安全措施
+
+### 后端授权校验
+再次导出需要授权的专辑时，SDK在`ApplySignatureToAlbum`函数中进行强制校验：
+- 检查签名资格码是否在authorizedList中
+- 未授权签名直接返回错误，拒绝应用
+- 防止用户通过修改前端组件状态绕过限制
+
+### 前端禁用显示
+签名选择对话框根据授权状态显示签名：
+- 授权签名：正常显示，可点击选择
+- 未授权签名：置灰显示，不可点击，带"未授权"标签和锁图标
 
 ## 不在范围内
 
