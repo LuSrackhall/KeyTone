@@ -254,3 +254,35 @@
 - 任务4依赖任务1、2、3完成（调用所有新增函数）
 - 任务5依赖任务4完成（在API实现中添加日志）
 - 任务6、7依赖所有实现任务完成
+
+## 后续增强：AuthorizationUUID 字段支持
+
+### 16. 新增 AuthorizationUUID 字段存储
+- [x] 16.1 更新 SDK AuthorizationMetadata 结构
+  - [x] 在 `signatureConfig.go` 中添加 `AuthorizationUUID` 字段
+  - [x] 添加详细的中文注释说明字段用途和未来功能
+  - [x] 使用 `omitempty` 标签以兼容旧数据
+- [x] 16.2 更新 ApplySignatureToAlbum 函数签名
+  - [x] 添加 `authorizationUUID string` 参数
+  - [x] 首次导出时将 authorizationUUID 写入 authorization 对象
+  - [x] 更新函数注释说明参数用途
+- [x] 16.3 更新 server.go API 路由
+  - [x] 在请求结构体中添加 `AuthorizationUUID` 字段
+  - [x] 添加参数说明注释
+  - [x] 将参数传递给 ApplySignatureToAlbum 函数
+- [x] 16.4 更新前端类型定义
+  - [x] 在 `export-flow.ts` 的 `ApplySignatureConfigPayload` 中添加 `authorizationUUID` 字段
+  - [x] 在 `AlbumSignatureEntry.authorization` 中添加 `authorizationUUID` 字段
+  - [x] 添加详细的 JSDoc 注释说明字段用途
+- [x] 16.5 更新前端导出流程
+  - [x] 在 `useExportSignatureFlow.ts` 中导入 `nanoid`
+  - [x] 在 `ExportSignatureFlowResult` 接口中添加 `authorizationUUID` 字段
+  - [x] 在 `State.flowData` 中添加 `authorizationUUID` 字段
+  - [x] 在 `handleConfirmSignatureSubmit` 中生成 authorizationUUID（首次导出时）
+  - [x] 在 `getResult` 中返回 authorizationUUID
+- [x] 16.6 更新前端 API 调用
+  - [x] 在 `Keytone_album_page_new.vue` 的 `ApplySignatureConfig` 调用中传递 `authorizationUUID`
+- [x] 16.7 更新规格文档
+  - [x] 更新 proposal.md：数据格式、API接口说明、authorizationUUID字段说明
+  - [x] 更新 design.md：添加 AuthorizationUUID 字段设计章节
+  - [x] 更新 tasks.md：添加本任务清单

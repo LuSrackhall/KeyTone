@@ -1138,7 +1138,11 @@ func keytonePkgRouters(r *gin.Engine) {
 			SignatureID            string `json:"signatureId" binding:"required"`
 			ContactEmail           string `json:"contactEmail"`
 			ContactAdditional      string `json:"contactAdditional"`
-			UpdateSignatureContent bool   `json:"updateSignatureContent"` // 新增字段
+			UpdateSignatureContent bool   `json:"updateSignatureContent"`
+			// AuthorizationUUID 授权标识UUID
+			// 首次导出时由前端nanoid生成并传入，用于未来签名授权导出/导入功能
+			// 再次导出时可传空字符串，SDK会沿用已存储的UUID
+			AuthorizationUUID string `json:"authorizationUUID"`
 		}
 
 		if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1176,6 +1180,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			"signatureId", req.SignatureID,
 			"contactEmail", req.ContactEmail,
 			"contactAdditional", req.ContactAdditional,
+			"authorizationUUID", req.AuthorizationUUID,
 		)
 
 		// 调用签名应用函数
@@ -1186,6 +1191,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			req.ContactEmail,
 			req.ContactAdditional,
 			req.UpdateSignatureContent,
+			req.AuthorizationUUID, // 授权标识UUID（首次导出时前端nanoid生成）
 		)
 
 		if err != nil {

@@ -134,7 +134,8 @@ func ApplySignatureToAlbum(
     "contactEmail": "zhang@example.com",
     "contactAdditional": "微信: zhangsan123",
     "authorizedList": [],  // 初始为空，后续授权后添加
-    "directExportAuthor": "<资格码1>"  // 当前导出者的资格码
+    "directExportAuthor": "<资格码1>",  // 当前导出者的资格码
+    "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成）
   }
 }
 ```
@@ -150,7 +151,8 @@ func ApplySignatureToAlbum(
     "contactEmail": "zhang@example.com",
     "contactAdditional": "",
     "authorizedList": [],
-    "directExportAuthor": "<资格码1>"
+    "directExportAuthor": "<资格码1>",
+    "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成，无论是否需要授权都会存储）
   }
 }
 ```
@@ -178,6 +180,41 @@ func ApplySignatureToAlbum(
 - 原始作者：signature中包含authorization字段的签名（只有一个）
 - 历史贡献作者：signature中的所有其他签名条目
 - 直接导出作者：authorization.directExportAuthor对应的签名
+
+### 6. AuthorizationUUID 字段设计
+
+**字段定义**：
+```go
+// AuthorizationUUID 授权标识UUID
+// 用于未来签名授权导出/导入功能的身份校验
+AuthorizationUUID string `json:"authorizationUUID,omitempty"`
+```
+
+**生成时机**：
+- 首次导出选择"需要签名"时由前端 `nanoid` 生成
+- 无论选择"需要授权"还是"无需授权"都会生成此UUID
+- 再次导出时沿用已存储的UUID，SDK忽略前端传入的空值
+
+**未来用途 - 签名授权导出/导入功能**（本次变更仅存储，不实现具体逻辑）：
+
+授权是"签名+专辑"的特定授权，而非通用签名授权：
+
+1. **授权申请文件生成**（从专辑导出流程发起）：
+   - 包含字段1：签名解密后原始key的后11位 + authorizationUUID全部字符的组合码的SHA256值
+   - 包含字段2：专辑原始作者UUID的SHA256值的后7位的SHA256值
+
+2. **授权文件生成**（原始作者导入申请文件后）：
+   - 原始作者选择对应原始签名完成授权
+   - 授权文件中：删除原作者UUID的SHA256后7位的SHA256，改为前11位的SHA256值
+
+3. **授权验证**：
+   - 通过authorizationUUID参与的组合哈希校验授权文件的有效性
+   - 确保授权仅对特定专辑+签名组合生效
+
+**设计理由**：
+- 提前存储UUID为未来功能做准备
+- 首次导出时生成确保唯一性
+- 再次导出时沿用保证授权关系稳定性
 
 ## 安全性分析
 

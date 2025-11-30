@@ -559,6 +559,8 @@ const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSig
       contactEmail: result.contactEmail?.trim() || undefined,
       contactAdditional: result.contactAdditional?.trim() || undefined,
       updateSignatureContent: result.updateSignatureContent, // 传递更新标志
+      // 授权标识UUID：首次导出时由nanoid生成，再次导出时为undefined（SDK沿用已存储的UUID）
+      authorizationUUID: result.authorizationUUID,
     });
     console.log('签名配置已提交给 SDK');
   } catch (applyError) {

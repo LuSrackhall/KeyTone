@@ -8,6 +8,7 @@
 import { ref, computed, Ref } from 'vue';
 import { GetAlbumSignatureInfo } from 'src/boot/query/keytonePkg-query';
 import type { AlbumSignatureInfo } from 'src/types/export-flow';
+import { nanoid } from 'nanoid';
 
 export interface ExportSignatureFlowResult {
   needSignature: boolean;
@@ -16,6 +17,19 @@ export interface ExportSignatureFlowResult {
   contactAdditional?: string;
   signatureId?: string;
   updateSignatureContent?: boolean;
+  /**
+   * 授权标识UUID
+   *
+   * 【生成时机】
+   * - 首次导出选择"需要签名"时由前端 nanoid 生成
+   * - 无论选择"需要授权"还是"无需授权"都会生成此UUID
+   * - 再次导出时传空字符串，SDK会沿用已存储的UUID
+   *
+   * 【未来用途 - 签名授权导出/导入功能】
+   * 授权是"签名+专辑"的特定授权，而非通用签名授权。
+   * 用于授权申请文件和授权文件的生成校验。
+   */
+  authorizationUUID?: string;
 }
 
 export interface ExportSignatureFlowOptions {
@@ -40,6 +54,12 @@ interface State {
     contactEmail?: string; // 邮箱
     contactAdditional?: string; // 额外联系方式
     updateSignatureContent?: boolean; // 是否更新签名内容
+    /**
+     * 授权标识UUID
+     * - 首次导出时由nanoid生成（用户选择"需要签名"时）
+     * - 再次导出时为空，SDK沿用已存储的UUID
+     */
+    authorizationUUID?: string;
   };
   isAuthorized: boolean;
   selectedSignatureId?: string;
@@ -118,7 +138,16 @@ export function useExportSignatureFlow() {
 
   // ========== Step: confirm-signature ==========
   const handleConfirmSignatureSubmit = (payload: { needSignature: boolean }) => {
-    state.value.flowData = { ...(state.value.flowData ?? {}), needSignature: payload.needSignature };
+    // 首次导出选择"需要签名"时，生成授权标识UUID
+    // 此UUID无论后续选择"需要授权"还是"无需授权"都会被存储
+    // 用于未来签名授权导出/导入功能的身份校验
+    const authorizationUUID = payload.needSignature ? nanoid() : undefined;
+
+    state.value.flowData = {
+      ...(state.value.flowData ?? {}),
+      needSignature: payload.needSignature,
+      authorizationUUID,
+    };
 
     confirmSignatureDialogVisible.value = false;
 
@@ -299,6 +328,8 @@ export function useExportSignatureFlow() {
    */
   const getResult = (): ExportSignatureFlowResult => {
     const needSignature = state.value.flowData?.needSignature ?? true;
+    // 首次导出时 authorizationUUID 由 nanoid 生成（在 handleConfirmSignatureSubmit 中）
+    // 再次导出时 authorizationUUID 为 undefined，SDK 会沿用已存储的 UUID
     return {
       needSignature,
       requireAuthorization: state.value.flowData?.requireAuthorization,
@@ -306,6 +337,7 @@ export function useExportSignatureFlow() {
       contactAdditional: state.value.flowData?.contactAdditional,
       signatureId: state.value.selectedSignatureId,
       updateSignatureContent: state.value.flowData?.updateSignatureContent,
+      authorizationUUID: state.value.flowData?.authorizationUUID,
     };
   };
 

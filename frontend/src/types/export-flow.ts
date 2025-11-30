@@ -9,6 +9,19 @@ export interface ApplySignatureConfigPayload {
   contactEmail?: string; // 联系人邮箱（需要授权时必填）
   contactAdditional?: string; // 联系人补充信息（可选）
   updateSignatureContent?: boolean; // 是否更新签名内容（Name, Intro, CardImage）
+  /**
+   * 授权标识UUID
+   *
+   * 【生成时机】
+   * - 首次导出选择"需要签名"时由前端 nanoid 生成
+   * - 无论选择"需要授权"还是"无需授权"都会生成此UUID
+   * - 再次导出时传空字符串，SDK会沿用已存储的UUID
+   *
+   * 【未来用途 - 签名授权导出/导入功能】
+   * 授权是"签名+专辑"的特定授权，而非通用签名授权。
+   * 用于授权申请文件和授权文件的生成校验。
+   */
+  authorizationUUID?: string;
 }
 
 /**
@@ -37,6 +50,19 @@ export interface AlbumSignatureEntry {
     contactAdditional?: string;
     authorizedList: string[];
     directExportAuthor: string;
+    /**
+     * 授权标识UUID
+     *
+     * 【生成时机】
+     * - 首次导出选择"需要签名"时由前端 nanoid 生成
+     * - 无论选择"需要授权"还是"无需授权"都会生成此UUID
+     * - 再次导出时沿用已存储的UUID
+     *
+     * 【未来用途 - 签名授权导出/导入功能】
+     * 授权是"签名+专辑"的特定授权，而非通用签名授权。
+     * 用于授权申请文件和授权文件的生成校验。
+     */
+    authorizationUUID?: string;
   };
 }
 

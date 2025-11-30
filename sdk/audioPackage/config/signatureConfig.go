@@ -56,6 +56,29 @@ type AuthorizationMetadata struct {
 	// 记录每次导出时的签名者，用于前端展示
 	// 每次导出时更新为当前导出者的资格码
 	DirectExportAuthor string `json:"directExportAuthor"`
+
+	// AuthorizationUUID 授权标识UUID
+	//
+	// 【生成时机】
+	//   - 首次导出选择"需要签名"时由前端 nanoid 生成
+	//   - 无论选择"需要授权"还是"无需授权"都会生成此UUID
+	//   - 再次导出时沿用已存储的UUID，不重新生成
+	//
+	// 【未来用途 - 签名授权导出/导入功能】
+	//   授权是"签名+专辑"的特定授权，而非通用签名授权。
+	//
+	//   1. 授权申请文件生成（从专辑导出流程发起）：
+	//      - 包含字段1：签名解密后原始key的后11位 + 本UUID全部字符的组合码的SHA256值
+	//      - 包含字段2：专辑原始作者UUID的SHA256值的后7位的SHA256值
+	//
+	//   2. 授权文件生成（原始作者导入申请文件后）：
+	//      - 原始作者选择对应原始签名完成授权
+	//      - 授权文件中：删除原作者UUID的SHA256后7位的SHA256，改为前11位的SHA256值
+	//
+	//   3. 授权验证：
+	//      - 通过本UUID参与的组合哈希校验授权文件的有效性
+	//      - 确保授权仅对特定专辑+签名组合生效
+	AuthorizationUUID string `json:"authorizationUUID,omitempty"`
 }
 
 // AlbumSignatureEntry 专辑配置中的签名条目结构
@@ -97,6 +120,7 @@ type AlbumSignatureEntry struct {
 //   - contactEmail: 联系邮箱（requireAuthorization=true时必需）
 //   - contactAdditional: 补充联系信息（可选）
 //   - updateSignatureContent: 是否更新签名内容（Name, Intro, CardImage）
+//   - authorizationUUID: 授权标识UUID（首次导出时由前端nanoid生成，再次导出时传空字符串以沿用旧值）
 //
 // 返回值：
 //   - qualificationCode: 生成的资格码（SHA256哈希，64字符）
@@ -111,6 +135,7 @@ type AlbumSignatureEntry struct {
 //	    "author@example.com",
 //	    "微信: author123",
 //	    true,
+//	    "nanoid_generated_uuid",
 //	)
 func ApplySignatureToAlbum(
 	albumPath string,
@@ -119,12 +144,14 @@ func ApplySignatureToAlbum(
 	contactEmail string,
 	contactAdditional string,
 	updateSignatureContent bool,
+	authorizationUUID string,
 ) (string, error) {
 	logger.Info("开始应用签名到专辑配置",
 		"albumPath", albumPath,
 		"encryptedSignatureID", encryptedSignatureID,
 		"requireAuthorization", requireAuthorization,
 		"updateSignatureContent", updateSignatureContent,
+		"authorizationUUID", authorizationUUID,
 	)
 
 	// 步骤1：参数验证
@@ -343,16 +370,23 @@ func ApplySignatureToAlbum(
 		// 首次导出：创建原始作者签名，包含authorization对象
 		// 注意：如果exists为true且isFirstExport为true（理论上不应发生，除非手动修改了配置），
 		// 这里会覆盖上面的Authorization，这是符合预期的（首次导出重新初始化授权）
+		//
+		// AuthorizationUUID说明：
+		//   - 首次导出时必须由前端传入（nanoid生成）
+		//   - 无论requireAuthorization为true还是false都会存储
+		//   - 用于未来签名授权导出/导入功能的身份校验
 		albumSigEntry.Authorization = &AuthorizationMetadata{
 			RequireAuthorization: requireAuthorization,
 			ContactEmail:         contactEmail,
 			ContactAdditional:    contactAdditional,
 			AuthorizedList:       []string{},        // 初始化为空数组
 			DirectExportAuthor:   qualificationCode, // 设置为当前导出者的资格码
+			AuthorizationUUID:    authorizationUUID, // 授权标识UUID（前端nanoid生成）
 		}
 		logger.Info("首次导出：创建原始作者签名",
 			"qualificationCode", qualificationCode,
 			"requireAuthorization", requireAuthorization,
+			"authorizationUUID", authorizationUUID,
 		)
 	} else {
 		// 再次导出：需要更新原始作者签名的directExportAuthor

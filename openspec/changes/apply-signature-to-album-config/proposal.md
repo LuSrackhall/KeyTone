@@ -59,12 +59,36 @@
         "contactEmail": "author@example.com",
         "contactAdditional": "补充联系方式",
         "authorizedList": ["<资格码2>", "<资格码3>"],  // 已授权的第三方签名资格码列表
-        "directExportAuthor": "<资格码4>"  // 直接导出作者的资格码（每次导出更新）
+        "directExportAuthor": "<资格码4>",  // 直接导出作者的资格码（每次导出更新）
+        "authorizationUUID": "<nanoid生成的UUID>"  // 授权标识UUID（首次导出时生成）
       }
     }
   }
 }
 ```
+
+### authorizationUUID 字段说明
+
+**生成时机**：
+- 首次导出选择"需要签名"时由前端 `nanoid` 生成
+- 无论选择"需要授权"还是"无需授权"都会生成此UUID
+- 再次导出时沿用已存储的UUID，不重新生成
+
+**未来用途 - 签名授权导出/导入功能**（本次变更仅存储，不实现具体逻辑）：
+
+授权是"签名+专辑"的特定授权，而非通用签名授权：
+
+1. **授权申请文件生成**（从专辑导出流程发起）：
+   - 包含字段1：签名解密后原始key的后11位 + authorizationUUID全部字符的组合码的SHA256值
+   - 包含字段2：专辑原始作者UUID的SHA256值的后7位的SHA256值
+
+2. **授权文件生成**（原始作者导入申请文件后）：
+   - 原始作者选择对应原始签名完成授权
+   - 授权文件中：删除原作者UUID的SHA256后7位的SHA256，改为前11位的SHA256值
+
+3. **授权验证**：
+   - 通过authorizationUUID参与的组合哈希校验授权文件的有效性
+   - 确保授权仅对特定专辑+签名组合生效
 
 ### 加密方案
 - **签名加密密钥**：固定常量`KeyToneAlbumSignatureEncryptionKey`（32字节）
@@ -99,7 +123,8 @@
 ### API接口
 
 **端点1**: `POST /keytone_pkg/apply_signature_config` - 应用签名配置
-- **输入**：`albumPath`, `signatureId`, `requireAuthorization`, `contactEmail`, `contactAdditional`
+- **输入**：`albumPath`, `signatureId`, `requireAuthorization`, `contactEmail`, `contactAdditional`, `updateSignatureContent`, `authorizationUUID`
+  - `authorizationUUID`: 首次导出时由前端nanoid生成，再次导出时传空字符串（SDK沿用已存储的UUID）
 - **输出**：`{ message: "ok", qualificationCode: "<sha256>" }`
 - **副作用**：专辑配置文件写入signature字段、图片文件复制到专辑目录
 
