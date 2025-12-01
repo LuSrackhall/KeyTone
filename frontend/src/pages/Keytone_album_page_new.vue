@@ -327,6 +327,7 @@
       @select="exportFlow.handlePickerSelect"
       @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"
+      @importAuth="exportFlow.openAuthGateFromPicker"
     />
     <!-- 真实的创建签名对话框（已存在的组件） -->
     <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />

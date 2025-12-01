@@ -323,3 +323,28 @@
   - [x] 更新 design.md：添加后端授权校验和前端禁用显示章节
   - [x] 更新 proposal.md：添加安全措施章节
   - [x] 更新 tasks.md：添加本任务清单
+
+### 19. 再次导出流程优化 - 跳过授权门控
+- [x] 19.1 修改流程逻辑
+  - [x] 修改 `useExportSignatureFlow.ts` 中的 `handleReExportConfirm`
+  - [x] 无论是否需要授权，都直接进入签名选择页面
+  - [x] 添加新的 step 类型 `auth-gate-from-picker`
+- [x] 19.2 添加 `openAuthGateFromPicker` 方法
+  - [x] 从签名选择页面打开授权门控对话框
+  - [x] 修改 `handleAuthGateCancel` 处理返回签名选择页面的逻辑
+  - [x] 导出新方法供外部调用
+- [x] 19.3 更新 SignaturePickerDialog 组件
+  - [x] 添加"导入授权"按钮（仅在 `requireAuthorization=true` 时显示）
+  - [x] 添加 `importAuth` emit 事件
+  - [x] 添加 `onImportAuth` 处理函数
+- [x] 19.4 更新 Keytone_album_page_new.vue
+  - [x] 添加 `@importAuth` 事件处理
+  - [x] 调用 `exportFlow.openAuthGateFromPicker`
+- [x] 19.5 添加 i18n 翻译
+  - [x] 在 en-US/index.json 添加 "importAuth": "Import Auth"
+  - [x] 在 zh-CN/index.json 添加 "importAuth": "导入授权"
+- [x] 19.6 更新规格文档
+  - [x] 更新 spec.md：添加再次导出流程优化需求和场景
+  - [x] 更新 design.md：添加再次导出流程优化章节
+  - [x] 更新 proposal.md：添加再次导出流程优化说明
+  - [x] 更新 tasks.md：添加本任务清单

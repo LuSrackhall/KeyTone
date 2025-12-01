@@ -46,6 +46,7 @@ interface State {
     | 'auth-impact-confirm' // 选择需要授权后的二次确认弹窗
     | 'auth-contact' // 需要授权时的联系方式填写
     | 'auth-gate' // 已有签名且原作者要求授权时的授权门控
+    | 'auth-gate-from-picker' // 从签名选择页面打开的授权门控（用于导入授权文件）
     | 'picker' // 选择签名
     | 'done';
   flowData?: {
@@ -170,18 +171,11 @@ export function useExportSignatureFlow() {
   const handleReExportConfirm = () => {
     reExportWarningDialogVisible.value = false;
 
-    // 检查是否需要授权
-    const requireAuthorization = state.value.signatureInfo?.originalAuthor?.requireAuthorization;
-
-    if (requireAuthorization) {
-      // 需要授权，进入授权门控
-      state.value.step = 'auth-gate';
-      authGateDialogVisible.value = true;
-    } else {
-      // 无需授权，直接进入签名选择
-      state.value.step = 'picker';
-      pickerDialogVisible.value = true;
-    }
+    // 优化：无论是否需要授权，都直接进入签名选择
+    // 用户只能选择已授权的签名（如果requireAuthorization=true）
+    // 如果需要导入授权，可以在签名选择页面点击"导入授权"按钮
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
   };
 
   const handleReExportCancel = () => {
@@ -267,17 +261,34 @@ export function useExportSignatureFlow() {
     state.value.isAuthorized = true;
     authGateDialogVisible.value = false;
 
-    // After auth, proceed to picker
+    // After auth, proceed to picker (or return to picker if opened from picker)
     state.value.step = 'picker';
     pickerDialogVisible.value = true;
   };
 
   /**
    * Handle auth gate dialog cancel.
+   * 如果是从签名选择页面打开的授权门控，取消时应该返回签名选择页面
    */
   const handleAuthGateCancel = () => {
     authGateDialogVisible.value = false;
-    state.value.step = 'idle';
+    // 如果当前是从签名选择页面触发的授权门控，返回签名选择页面
+    if (state.value.step === 'auth-gate-from-picker') {
+      state.value.step = 'picker';
+      pickerDialogVisible.value = true;
+    } else {
+      state.value.step = 'idle';
+    }
+  };
+
+  /**
+   * Open auth gate dialog from signature picker.
+   * 从签名选择页面打开授权门控（用于导入授权文件）
+   */
+  const openAuthGateFromPicker = () => {
+    pickerDialogVisible.value = false;
+    state.value.step = 'auth-gate-from-picker';
+    authGateDialogVisible.value = true;
   };
 
   /**
@@ -385,6 +396,7 @@ export function useExportSignatureFlow() {
     handleAuthContactCancel,
     handleAuthGateAuthorized,
     handleAuthGateCancel,
+    openAuthGateFromPicker,
     handlePickerSelect,
     handlePickerCreateNew,
     handleSignatureCreated,

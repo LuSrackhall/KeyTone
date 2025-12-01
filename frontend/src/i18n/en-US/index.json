@@ -424,6 +424,7 @@
       "noResults": "No matching signatures found",
       "emptyState": "No signatures",
       "createSignature": "Create Signature",
+      "importAuth": "Import Auth",
       "createHint": "Click to create new signature",
       "selectHint": "Click to select signature",
       "noImage": "No image",

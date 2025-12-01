@@ -8,14 +8,14 @@
       <div class="sticky-top">
         <!-- Header -->
         <q-card-section class="bg-primary text-white q-pa-sm">
-          <div class="text-subtitle1">{{ $t('exportFlow.pickerDialog.title') }}</div>
+          <div class="text-subtitle1">{{ t('exportFlow.pickerDialog.title') }}</div>
         </q-card-section>
 
         <!-- Search Bar -->
         <q-card-section class="q-pa-sm">
           <!-- Description -->
           <div class="text-caption q-mb-sm">
-            {{ $t('exportFlow.pickerDialog.description') }}
+            {{ t('exportFlow.pickerDialog.description') }}
           </div>
 
           <!-- Search Input -->
@@ -24,18 +24,28 @@
               v-model="searchQuery"
               filled
               dense
-              :placeholder="$t('exportFlow.pickerDialog.search')"
+              :placeholder="t('exportFlow.pickerDialog.search')"
               icon="search"
               clearable
               size="sm"
             />
-            <div class="q-mt-xs flex justify-end">
+            <div class="q-mt-xs flex justify-end q-gutter-x-sm">
+              <!-- 导入授权按钮：仅在需要授权的再次导出时显示 -->
+              <q-btn
+                v-if="requireAuthorization"
+                size="xs"
+                flat
+                color="secondary"
+                icon="key"
+                :label="t('exportFlow.pickerDialog.importAuth')"
+                @click="onImportAuth"
+              />
               <q-btn
                 size="xs"
                 flat
                 color="primary"
                 icon="add"
-                :label="$t('exportFlow.pickerDialog.createSignature')"
+                :label="t('exportFlow.pickerDialog.createSignature')"
                 @click="onCreateNew"
               />
             </div>
@@ -48,12 +58,12 @@
         <div v-if="filteredSignatures.length === 0 && !searchQuery" class="text-center q-pa-md">
           <q-icon name="mail" size="32px" color="grey-5" />
           <div class="text-caption text-grey q-mt-sm">
-            {{ $t('exportFlow.pickerDialog.emptyState') }}
+            {{ t('exportFlow.pickerDialog.emptyState') }}
           </div>
           <q-btn
             flat
             color="primary"
-            :label="$t('exportFlow.pickerDialog.createSignature')"
+            :label="t('exportFlow.pickerDialog.createSignature')"
             icon="add"
             size="xs"
             class="q-mt-md"
@@ -65,7 +75,7 @@
         <div v-else-if="filteredSignatures.length === 0 && searchQuery" class="text-center q-pa-md">
           <q-icon name="search_off" size="32px" color="grey-5" />
           <div class="text-caption text-grey q-mt-sm">
-            {{ $t('exportFlow.pickerDialog.noResults') }}
+            {{ t('exportFlow.pickerDialog.noResults') }}
           </div>
         </div>
 
@@ -122,7 +132,7 @@
                 <!-- Intro: max 2 lines with horizontal scroll -->
                 <div class="intro-container text-caption text-grey q-mt-2xs" style="font-size: 0.75rem; min-width: 0">
                   <div class="scrollable-x line-clamp-2">
-                    {{ sig.intro || $t('exportFlow.pickerDialog.noIntro') }}
+                    {{ sig.intro || t('exportFlow.pickerDialog.noIntro') }}
                   </div>
                 </div>
                 <div class="name-container text-caption text-weight-bold flex items-center" style="font-size: 0.9rem">
@@ -130,14 +140,14 @@
                     v-if="sig.isOriginalAuthor"
                     color="purple"
                     text-color="white"
-                    :label="$t('exportFlow.pickerDialog.originalAuthor')"
+                    :label="t('exportFlow.pickerDialog.originalAuthor')"
                     class="text-xs"
                   />
                   <q-badge
                     v-else-if="sig.isInAlbum"
                     color="teal"
                     text-color="white"
-                    :label="$t('exportFlow.pickerDialog.contributor')"
+                    :label="t('exportFlow.pickerDialog.contributor')"
                     class="text-xs"
                   />
                   <!-- 未授权标签 -->
@@ -145,7 +155,7 @@
                     v-if="isSignatureDisabled(sig)"
                     color="grey"
                     text-color="white"
-                    :label="$t('exportFlow.pickerDialog.unauthorized')"
+                    :label="t('exportFlow.pickerDialog.unauthorized')"
                     class="text-xs q-ml-xs"
                   />
                 </div>
@@ -175,10 +185,10 @@
 
       <!-- Actions (Sticky Bottom) -->
       <q-card-actions align="right" class="q-pa-sm q-gutter-xs sticky-bottom">
-        <q-btn flat :label="$t('exportFlow.pickerDialog.cancel')" color="primary" size="sm" @click="onCancel" />
+        <q-btn flat :label="t('exportFlow.pickerDialog.cancel')" color="primary" size="sm" @click="onCancel" />
         <q-btn
           unelevated
-          :label="$t('exportFlow.pickerDialog.confirm')"
+          :label="t('exportFlow.pickerDialog.confirm')"
           color="primary"
           size="sm"
           :disable="!selectedId"
@@ -191,25 +201,25 @@
     <q-dialog v-model="updateConfirmDialogVisible" persistent>
       <q-card style="min-width: 300px">
         <q-card-section>
-          <div class="text-h6">{{ $t('exportFlow.signatureUpdateConfirm.title') }}</div>
+          <div class="text-h6">{{ t('exportFlow.signatureUpdateConfirm.title') }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          {{ $t('exportFlow.signatureUpdateConfirm.message') }}
+          {{ t('exportFlow.signatureUpdateConfirm.message') }}
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat :label="$t('exportFlow.common.cancel')" color="primary" v-close-popup />
+          <q-btn flat :label="t('exportFlow.common.cancel')" color="primary" v-close-popup />
           <q-btn
             flat
-            :label="$t('exportFlow.signatureUpdateConfirm.noUpdate')"
+            :label="t('exportFlow.signatureUpdateConfirm.noUpdate')"
             color="primary"
             v-close-popup
             @click="handleUpdateConfirm(false)"
           />
           <q-btn
             flat
-            :label="$t('exportFlow.signatureUpdateConfirm.update')"
+            :label="t('exportFlow.signatureUpdateConfirm.update')"
             color="primary"
             v-close-popup
             @click="handleUpdateConfirm(true)"
@@ -249,6 +259,7 @@ interface SignaturePickerDialogEmits {
   (e: 'select', signatureId: string, updateContent: boolean): void;
   (e: 'createNew'): void;
   (e: 'cancel'): void;
+  (e: 'importAuth'): void; // 从签名选择页面打开授权门控
 }
 
 const props = withDefaults(defineProps<SignaturePickerDialogProps>(), {
@@ -259,7 +270,7 @@ const props = withDefaults(defineProps<SignaturePickerDialogProps>(), {
 });
 
 const emit = defineEmits<SignaturePickerDialogEmits>();
-useI18n(); // Initialize i18n, $t available in template
+const { t } = useI18n(); // 解构出 t 函数供模板使用
 const signatureStore = useSignatureStore();
 
 // UI State
@@ -271,6 +282,7 @@ const localSignatures = ref<Signature[]>([]);
 const imageUrls = ref<Map<string, string>>(new Map()); // cardImage path -> blob URL
 const blobUrls = ref<Set<string>>(new Set()); // Track blob URLs for cleanup
 const updateConfirmDialogVisible = ref(false);
+const isImportingAuth = ref(false); // 标记是否正在导入授权，避免触发 cancel 事件
 
 // Determine which signatures to use (real data or fallback to props)
 const effectiveSignatures = computed(() => {
@@ -492,6 +504,11 @@ watch(
 // Watch isVisible to sync with parent
 watch(isVisible, (newVal) => {
   if (!newVal) {
+    // 如果是导入授权操作，不触发 cancel 事件
+    if (isImportingAuth.value) {
+      isImportingAuth.value = false;
+      return;
+    }
     emit('cancel');
   }
 });
@@ -517,6 +534,11 @@ const handleSignatureClick = (id: string) => {
 
 const onCreateNew = () => {
   emit('createNew');
+};
+
+const onImportAuth = () => {
+  isImportingAuth.value = true; // 标记正在导入授权，避免触发 cancel
+  emit('importAuth');
 };
 
 const onConfirmClick = async () => {

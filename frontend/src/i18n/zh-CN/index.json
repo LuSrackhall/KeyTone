@@ -416,6 +416,7 @@
       "noResults": "未找到匹配的签名",
       "emptyState": "暂无签名",
       "createSignature": "创建签名",
+      "importAuth": "导入授权",
       "createHint": "点击创建新签名",
       "selectHint": "点击选择签名",
       "noImage": "暂无图片",

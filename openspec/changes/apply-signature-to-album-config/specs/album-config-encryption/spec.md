@@ -148,7 +148,7 @@ Normative: When re-exporting an album with requireAuthorization=true, the system
 
 ### Requirement: 签名选择界面授权状态显示
 
-Normative: The signature picker dialog SHALL display all signatures but visually disable (greyed out, non-clickable) those not in the authorizedList when requireAuthorization=true; disabled signatures SHALL show an "Unauthorized" badge and lock icon.
+Normative: The signature picker dialog SHALL display all signatures but visually disable (greyed out, non-clickable) those not in the authorizedList when requireAuthorization=true; disabled signatures SHALL show an "Unauthorized" badge and lock icon; the dialog SHALL include an "Import Auth" button (visible only when requireAuthorization=true) to allow users to import authorization files.
 
 #### Scenario: 授权签名显示为可选择
 
@@ -161,6 +161,36 @@ Normative: The signature picker dialog SHALL display all signatures but visually
 - **GIVEN** 专辑需要授权但签名不在authorizedList中
 - **WHEN** 前端显示签名选择列表
 - **THEN** 该签名显示为置灰状态，带有"未授权"标签和锁图标，点击无响应
+
+#### Scenario: 导入授权按钮显示
+
+- **GIVEN** 专辑需要授权（requireAuthorization=true）
+- **WHEN** 前端显示签名选择对话框
+- **THEN** 对话框显示"导入授权"按钮，点击后打开授权门控对话框
+
+#### Scenario: 导入授权按钮隐藏
+
+- **GIVEN** 专辑不需要授权（requireAuthorization=false）或首次导出
+- **WHEN** 前端显示签名选择对话框
+- **THEN** 对话框不显示"导入授权"按钮
+
+---
+
+### Requirement: 再次导出流程优化
+
+Normative: When re-exporting an album, the system SHALL skip the authorization gate dialog and proceed directly to the signature picker; users can import authorization files via the "Import Auth" button in the signature picker if needed.
+
+#### Scenario: 再次导出直接进入签名选择
+
+- **GIVEN** 用户对已有签名的专辑进行再次导出
+- **WHEN** 用户确认再次导出
+- **THEN** 系统直接显示签名选择对话框，而非授权门控对话框
+
+#### Scenario: 从签名选择页面导入授权
+
+- **GIVEN** 用户在签名选择页面点击"导入授权"按钮
+- **WHEN** 用户成功导入授权文件
+- **THEN** 系统返回签名选择页面，新授权的签名变为可选状态
 
 ---
 
