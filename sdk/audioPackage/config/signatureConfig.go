@@ -574,3 +574,113 @@ func copySignatureCardImageToAlbum(
 
 	return relativePath, nil
 }
+
+// AddToAuthorizedList 将资格码添加到专辑的授权列表
+//
+// 功能说明：
+//  1. 读取并解密专辑配置的signature字段
+//  2. 找到原始作者签名（包含authorization字段的签名）
+//  3. 将新资格码添加到authorizedList
+//  4. 重新加密并保存
+//
+// 参数：
+//   - albumPath: 专辑目录的绝对路径
+//   - qualificationCode: 要添加的资格码
+//
+// 返回值：
+//   - error: 错误信息
+func AddToAuthorizedList(albumPath string, qualificationCode string) error {
+	logger.Info("开始添加资格码到授权列表",
+		"albumPath", albumPath,
+		"qualificationCode", qualificationCode,
+	)
+
+	// 步骤1：参数验证
+	if strings.TrimSpace(albumPath) == "" {
+		return fmt.Errorf("专辑路径不能为空")
+	}
+	if strings.TrimSpace(qualificationCode) == "" {
+		return fmt.Errorf("资格码不能为空")
+	}
+
+	// 验证专辑目录存在
+	if info, err := os.Stat(albumPath); err != nil || !info.IsDir() {
+		return fmt.Errorf("专辑目录不存在或无效: %v", err)
+	}
+
+	// 步骤2：加载专辑配置
+	LoadConfig(albumPath, false)
+	if Viper == nil {
+		return fmt.Errorf("加载专辑配置失败")
+	}
+
+	// 步骤3：读取并解密signature字段
+	existingSignatureValue := GetValue("signature")
+	if existingSignatureValue == nil {
+		return fmt.Errorf("专辑未包含签名信息")
+	}
+
+	encryptedSigStr, ok := existingSignatureValue.(string)
+	if !ok {
+		return fmt.Errorf("签名数据格式错误")
+	}
+
+	decryptedSigJSON, err := signature.DecryptAlbumSignatureField(encryptedSigStr)
+	if err != nil {
+		return fmt.Errorf("解密签名字段失败: %w", err)
+	}
+
+	var albumSignatureMap map[string]AlbumSignatureEntry
+	if err := json.Unmarshal([]byte(decryptedSigJSON), &albumSignatureMap); err != nil {
+		return fmt.Errorf("解析签名JSON失败: %w", err)
+	}
+
+	// 步骤4：找到原始作者签名并添加资格码
+	foundOriginalAuthor := false
+	for qualCode, entry := range albumSignatureMap {
+		if entry.Authorization != nil {
+			foundOriginalAuthor = true
+
+			// 检查是否已存在
+			for _, existingCode := range entry.Authorization.AuthorizedList {
+				if existingCode == qualificationCode {
+					logger.Info("资格码已在授权列表中，无需重复添加",
+						"qualificationCode", qualificationCode,
+					)
+					return nil
+				}
+			}
+
+			// 添加新资格码
+			entry.Authorization.AuthorizedList = append(entry.Authorization.AuthorizedList, qualificationCode)
+			albumSignatureMap[qualCode] = entry
+
+			logger.Info("资格码已添加到授权列表",
+				"originalAuthor", qualCode,
+				"newQualificationCode", qualificationCode,
+				"authorizedListLength", len(entry.Authorization.AuthorizedList),
+			)
+			break
+		}
+	}
+
+	if !foundOriginalAuthor {
+		return fmt.Errorf("未找到原始作者签名，无法添加授权")
+	}
+
+	// 步骤5：重新加密并保存
+	albumSignatureJSON, err := json.MarshalIndent(albumSignatureMap, "", "  ")
+	if err != nil {
+		return fmt.Errorf("序列化签名数据失败: %w", err)
+	}
+
+	encryptedAlbumSignature, err := signature.EncryptAlbumSignatureField(string(albumSignatureJSON))
+	if err != nil {
+		return fmt.Errorf("加密签名字段失败: %w", err)
+	}
+
+	SetValue("signature", encryptedAlbumSignature)
+	logger.Info("授权列表已成功更新")
+
+	return nil
+}

@@ -27,6 +27,18 @@
       <div class="flex justify-between items-center">
         <h1 class="text-h5 q-my-none">{{ $t('signature.page.title') }}</h1>
         <div class="q-gutter-md">
+          <q-btn
+            flat
+            dense
+            round
+            icon="verified_user"
+            @click="showAuthGrantDialog"
+            size="md"
+            color="teal"
+            :title="$t('signature.page.authGrant')"
+          >
+            <q-tooltip>{{ $t('signature.page.authGrant') }}</q-tooltip>
+          </q-btn>
           <q-btn flat dense round icon="input" @click="showImportDialog" size="md" :title="$t('signature.page.import')">
             <q-tooltip>{{ $t('signature.page.import') }}</q-tooltip>
           </q-btn>
@@ -182,6 +194,13 @@
 
     <!-- 签名表单对话框 -->
     <SignatureFormDialog v-model="showFormDialog" :signature="selectedSignature" @success="handleFormSuccess" />
+
+    <!-- 授权受理对话框 -->
+    <AuthGrantDialog
+      :visible="showAuthGrantDialogVisible"
+      @done="handleAuthGrantDone"
+      @cancel="handleAuthGrantCancel"
+    />
 
     <!-- 导入对话框 -->
     <q-dialog v-model="showImportDialogVisible" backdrop-filter="blur(4px)">
@@ -356,6 +375,7 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
+import AuthGrantDialog from 'src/components/signature/AuthGrantDialog.vue';
 import ContextMenu from 'src/components/ContextMenu.vue';
 import ContextMenuItem from 'src/components/ContextMenuItem.vue';
 import { useSignatureStore } from 'src/stores/signature-store';
@@ -443,6 +463,9 @@ const selectedSignature = ref<Signature | null>(null);
 
 // 导入对话框显示状态
 const showImportDialogVisible = ref(false);
+
+// 授权受理对话框显示状态
+const showAuthGrantDialogVisible = ref(false);
 
 // 导入文件 - 绑定文件选择器
 const importFile = ref<File | null>(null);
@@ -1133,6 +1156,21 @@ async function handleExport() {
 function showImportDialog() {
   importFile.value = null;
   showImportDialogVisible.value = true;
+}
+
+/** 打开授权受理对话框 */
+function showAuthGrantDialog() {
+  showAuthGrantDialogVisible.value = true;
+}
+
+/** 处理授权受理对话框完成 */
+function handleAuthGrantDone() {
+  showAuthGrantDialogVisible.value = false;
+}
+
+/** 处理授权受理对话框取消 */
+function handleAuthGrantCancel() {
+  showAuthGrantDialogVisible.value = false;
 }
 
 /** 导入签名 */

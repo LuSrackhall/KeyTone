@@ -458,6 +458,35 @@ func encryptData(data string, key []byte) (string, error) {
 	return hex.EncodeToString(ciphertext), nil
 }
 
+// encryptDataDeterministic 使用AES-GCM对数据进行确定性对称加密（使用固定Nonce）
+// 注意：仅用于需要确定性结果的场景（如哈希输入），安全性低于随机Nonce
+func encryptDataDeterministic(data string, key []byte) (string, error) {
+	// 确保密钥长度正确（16, 24, 或 32 字节）
+	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
+		return "", fmt.Errorf("加密密钥长度错误: 应为 16, 24 或 32 字节，实际为 %d 字节", len(key))
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	// 使用固定nonce（全0）
+	nonce := make([]byte, gcm.NonceSize())
+	// 默认为0，无需填充
+
+	// 加密数据
+	ciphertext := gcm.Seal(nonce, nonce, []byte(data), nil)
+
+	// 返回16进制编码的密文
+	return hex.EncodeToString(ciphertext), nil
+}
+
 // EncryptData 使用AES-GCM对数据进行对称加密（导出函数，供其他包使用）
 func EncryptData(data string, key []byte) (string, error) {
 	return encryptData(data, key)

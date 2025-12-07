@@ -29,8 +29,18 @@
               clearable
               size="sm"
             />
-            <div class="q-mt-xs flex justify-end q-gutter-x-sm">
-              <!-- 导入授权按钮：仅在需要授权的再次导出时显示 -->
+            <div class="q-mt-xs flex items-center" :class="requireAuthorization ? 'justify-between' : 'justify-end'">
+              <!-- 授权申请按钮：仅在需要授权的再次导出时显示（左侧）-->
+              <q-btn
+                v-if="requireAuthorization"
+                size="xs"
+                flat
+                color="deep-purple"
+                icon="mail_outline"
+                :label="t('exportFlow.pickerDialog.authRequest')"
+                @click="onAuthRequest"
+              />
+              <!-- 导入授权按钮：仅在需要授权的再次导出时显示（中间）-->
               <q-btn
                 v-if="requireAuthorization"
                 size="xs"
@@ -40,6 +50,7 @@
                 :label="t('exportFlow.pickerDialog.importAuth')"
                 @click="onImportAuth"
               />
+              <!-- 创建签名按钮（右侧）-->
               <q-btn
                 size="xs"
                 flat
@@ -260,6 +271,7 @@ interface SignaturePickerDialogEmits {
   (e: 'createNew'): void;
   (e: 'cancel'): void;
   (e: 'importAuth'): void; // 从签名选择页面打开授权门控
+  (e: 'authRequest'): void; // 打开授权申请流程
 }
 
 const props = withDefaults(defineProps<SignaturePickerDialogProps>(), {
@@ -539,6 +551,11 @@ const onCreateNew = () => {
 const onImportAuth = () => {
   isImportingAuth.value = true; // 标记正在导入授权，避免触发 cancel
   emit('importAuth');
+};
+
+const onAuthRequest = () => {
+  isImportingAuth.value = true; // 复用标记，避免触发 cancel
+  emit('authRequest');
 };
 
 const onConfirmClick = async () => {

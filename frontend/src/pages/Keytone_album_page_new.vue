@@ -315,7 +315,12 @@
     <!-- 5) 已有签名且需要授权 → 授权门控（导入授权文件） -->
     <export-authorization-gate-dialog
       :visible="exportFlow.authGateDialogVisible.value"
-      :author-contact="authorContact"
+      :contact-email="authorContactEmail"
+      :contact-additional="authorContactAdditional"
+      :authorizationUUID="authorizationUUID"
+      :requester-encrypted-signature-id="requesterEncryptedSignatureID"
+      :original-author-qualification-code="originalAuthorQualificationCode"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
       @authorized="exportFlow.handleAuthGateAuthorized"
       @cancel="exportFlow.handleAuthGateCancel"
     />
@@ -328,6 +333,19 @@
       @createNew="onOpenCreateSignature"
       @cancel="exportFlow.handlePickerCancel"
       @importAuth="exportFlow.openAuthGateFromPicker"
+      @authRequest="exportFlow.openAuthRequestFromPicker"
+    />
+    <!-- 7) 授权申请对话框 -->
+    <auth-request-dialog
+      :visible="exportFlow.authRequestDialogVisible.value"
+      :signatures="authRequestSignatures"
+      :contact-email="authorContactEmail"
+      :contact-additional="authorContactAdditional"
+      :authorizationUUID="authorizationUUID"
+      :original-author-qualification-code="originalAuthorQualificationCode"
+      @done="exportFlow.handleAuthRequestDone"
+      @cancel="exportFlow.handleAuthRequestCancel"
+      @createSignature="onOpenCreateSignature"
     />
     <!-- 真实的创建签名对话框（已存在的组件） -->
     <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />
@@ -345,9 +363,8 @@ import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
-import { computed, nextTick, useTemplateRef } from 'vue';
+import { computed, nextTick, useTemplateRef, ref, watch, onMounted, onUnmounted } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ExportSignatureConfirmDialog from 'src/components/export-flow/ExportSignatureConfirmDialog.vue';
 import ExportReexportWarningDialog from 'src/components/export-flow/ExportReexportWarningDialog.vue';
@@ -356,6 +373,7 @@ import ExportAuthorizationImpactConfirmDialog from 'src/components/export-flow/E
 import ExportAuthorizationContactDialog from 'src/components/export-flow/ExportAuthorizationContactDialog.vue';
 import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
+import AuthRequestDialog from 'src/components/export-flow/AuthRequestDialog.vue';
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
 import SignatureSelectionDialog from 'src/components/export-flow/SignatureSelectionDialog.vue';
@@ -374,8 +392,10 @@ import {
   ImportAlbumAsNew,
   LoadConfig,
   GetAlbumMeta,
+  GetAvailableSignaturesForExport,
   type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
+import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'src/boot/query/signature-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -407,16 +427,158 @@ const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTo
 
 // Export Signature Flow 初始化
 const exportFlow = useExportSignatureFlow();
-const authorContact = ref('contact@example.com');
+
+// 原始作者联系方式 - 从专辑签名信息中获取
+const authorContactEmail = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.contactEmail || '';
+});
+
+const authorContactAdditional = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.contactAdditional || '';
+});
+
+// 授权申请所需签名列表 - 复用 SignaturePickerDialog 加载的签名
+// 这个数据需要从 picker 对话框共享或单独获取
+const authRequestSignaturesData = ref<
+  Array<{
+    id: string;
+    name: string;
+    intro?: string;
+    image?: string;
+    isAuthorized?: boolean;
+  }>
+>([]);
+
+// 授权申请所需的计算属性
+const authRequestSignatures = computed(() => {
+  return authRequestSignaturesData.value;
+});
+
+// 加载授权申请所需的签名数据
+async function loadAuthRequestSignatures() {
+  if (!setting_store.mainHome.selectedKeyTonePkg) return;
+
+  try {
+    // 获取可用签名及其授权状态
+    const availableSignatures = await GetAvailableSignaturesForExport(setting_store.mainHome.selectedKeyTonePkg);
+    const encryptedSignatures = await getSignaturesList();
+
+    // 构建授权状态映射
+    const authMap = new Map<string, boolean>();
+    availableSignatures.forEach((sig) => {
+      authMap.set(sig.encryptedId, sig.isAuthorized);
+    });
+
+    // 解密签名并构建列表
+    const signatures: typeof authRequestSignaturesData.value = [];
+    for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+      try {
+        let encryptedValue: string;
+        if (typeof entry === 'string') {
+          encryptedValue = entry;
+        } else if (typeof entry === 'object' && entry !== null) {
+          encryptedValue = (entry as { value?: string }).value || '';
+        } else {
+          continue;
+        }
+        if (!encryptedValue) continue;
+
+        const decryptedJson = await decryptSignatureData(encryptedValue, encryptedId);
+        if (!decryptedJson) continue;
+
+        const signatureData = JSON.parse(decryptedJson);
+
+        // 获取图片URL
+        let imageUrl: string | undefined;
+        if (signatureData.cardImage) {
+          try {
+            const result = await getSignatureImage(signatureData.cardImage);
+            if (result && result instanceof Blob) {
+              imageUrl = URL.createObjectURL(result);
+            }
+          } catch (err) {
+            console.error('[AuthRequest] Error fetching image:', err);
+          }
+        }
+
+        signatures.push({
+          id: encryptedId,
+          name: signatureData.name,
+          intro: signatureData.intro,
+          image: imageUrl,
+          isAuthorized: authMap.get(encryptedId) ?? false,
+        });
+      } catch (err) {
+        console.error(`[AuthRequest] Error processing signature ${encryptedId}:`, err);
+      }
+    }
+
+    authRequestSignaturesData.value = signatures;
+  } catch (err) {
+    console.error('[AuthRequest] Error loading signatures:', err);
+    authRequestSignaturesData.value = [];
+  }
+}
+
+// 当授权申请对话框打开时，加载签名数据
+watch(
+  () => exportFlow.authRequestDialogVisible.value,
+  async (visible) => {
+    if (visible) {
+      await loadAuthRequestSignatures();
+    }
+  }
+);
+
+const authorizationUUID = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  // 从 allSignatures 中通过原始作者的资格码找到对应条目，获取 authorizationUUID
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.authorizationUUID || '';
+});
+
+const originalAuthorQualificationCode = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  // 返回原始作者的资格码
+  return signatureInfo.originalAuthor.qualificationCode || '';
+});
+
+const requesterEncryptedSignatureID = computed(() => {
+  // 在授权门控对话框中，我们需要传递当前用户选择的签名ID（加密的）
+  // 这个ID通常在签名选择器中选择，或者在授权门控对话框中选择（如果支持的话）
+  // 目前的流程是：签名选择器 -> 发现未授权 -> 弹出授权门控
+  // 所以我们可以从 exportFlow 的状态中获取当前选择的签名ID
+  // 但是 exportFlow.state.value.selectedSignatureId 可能为空（如果是在选择器中点击"导入授权"）
+  // 如果为空，我们可能需要让用户在授权门控对话框中选择签名，或者默认使用第一个签名
+  // 暂时返回空字符串，由 ExportAuthorizationGateDialog 处理选择逻辑（如果需要）
+  // 或者，我们可以假设用户在签名选择器中已经选择了一个签名，然后点击了"导入授权"
+  // 但实际上"导入授权"是一个单独的按钮，不依赖于选中签名
+  // 因此，ExportAuthorizationGateDialog 可能需要自己处理签名选择，或者我们在这里提供一个默认值
+  return '';
+});
 
 // 真实创建签名对话框控制（已存在组件）
 const showSignatureFormDialog = ref(false);
 const onOpenCreateSignature = () => {
   showSignatureFormDialog.value = true;
 };
-const onSignatureFormSuccess = () => {
-  // 真实创建成功后，业务上应刷新签名列表；此处作为演示，给出提示
-  q.notify({ type: 'positive', message: $t('signature.page.createSuccess') || 'Signature created' });
+const onSignatureFormSuccess = async () => {
+  // 签名创建成功后，如果授权申请对话框是打开的，刷新签名列表
+  if (exportFlow.authRequestDialogVisible.value) {
+    await loadAuthRequestSignatures();
+  }
+  // 注意：SignatureFormDialog 组件内部已经显示了创建成功的提示，这里不再重复显示
 };
 
 // 签名信息对话框控制

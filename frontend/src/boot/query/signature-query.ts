@@ -497,3 +497,304 @@ export async function updateSignatureSort(sortOrder: Array<{ id: string; sortTim
       return false;
     });
 }
+
+// ========================================
+// 授权申请和授权文件相关 API
+// ========================================
+
+/**
+ * 授权申请文件解析结果类型
+ */
+export interface ParsedAuthRequest {
+  authorizationUUIDHash: string;
+  requesterSignatureIDSuffix: string;
+  originalAuthorQualCodeHash: string;
+  requesterSignatureName: string;
+}
+
+/**
+ * 匹配的签名信息
+ */
+export interface MatchedSignature {
+  encryptedId: string;
+  qualificationCode: string;
+  name: string;
+}
+
+/**
+ * 生成授权申请文件
+ * Generate authorization request file
+ *
+ * @param authorizationUUID - 专辑的 authorizationUUID
+ * @param requesterEncryptedSignatureID - 请求方签名的加密ID
+ * @param originalAuthorQualificationCode - 原始作者签名的资格码
+ * @param requesterSignatureName - 请求方签名的名称
+ * @returns 授权申请文件内容（Base64编码的字节数组）
+ */
+export async function generateAuthRequest(
+  authorizationUUID: string,
+  requesterEncryptedSignatureID: string,
+  originalAuthorQualificationCode: string,
+  requesterSignatureName: string
+): Promise<Uint8Array | false> {
+  return await api
+    .post('/signature/generate-auth-request', {
+      authorizationUUID,
+      requesterEncryptedSignatureID,
+      originalAuthorQualificationCode,
+      requesterSignatureName,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->generateAuthRequest 请求已成功执行');
+      if (req.data.success && req.data.data?.fileContent) {
+        // 后端返回的是 Base64 编码的字节数组，需要解码
+        const base64Content = req.data.data.fileContent;
+        const binaryString = atob(base64Content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      } else {
+        console.error('Failed to generate auth request:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('generateAuthRequest 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 解析授权申请文件
+ * Parse authorization request file
+ *
+ * @param fileContent - 授权申请文件内容（Uint8Array）
+ * @returns 解析后的授权申请数据
+ */
+export async function parseAuthRequest(fileContent: Uint8Array): Promise<ParsedAuthRequest | false> {
+  // 将 Uint8Array 转换为 Base64
+  let binary = '';
+  for (let i = 0; i < fileContent.length; i++) {
+    binary += String.fromCharCode(fileContent[i]);
+  }
+  const base64Content = btoa(binary);
+
+  return await api
+    .post('/signature/parse-auth-request', {
+      fileContent: base64Content,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->parseAuthRequest 请求已成功执行');
+      if (req.data.success && req.data.data) {
+        return req.data.data as ParsedAuthRequest;
+      } else {
+        console.error('Failed to parse auth request:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('parseAuthRequest 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 验证授权申请文件的原始作者签名是否在本地签名列表中
+ * Verify if the original author signature in auth request is in local signature list
+ *
+ * @param originalAuthorQualCodeHash - 原始作者资格码的SHA256值（从解析结果获取）
+ * @returns 是否有权限及匹配的签名列表
+ */
+export async function verifyAuthRequestOwner(
+  originalAuthorQualCodeHash: string
+): Promise<{ hasPermission: boolean; matchedSignatures: MatchedSignature[] } | false> {
+  return await api
+    .post('/signature/verify-auth-request-owner', {
+      originalAuthorQualCodeHash,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->verifyAuthRequestOwner 请求已成功执行');
+      if (req.data.success && req.data.data) {
+        return req.data.data as { hasPermission: boolean; matchedSignatures: MatchedSignature[] };
+      } else {
+        console.error('Failed to verify auth request owner:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('verifyAuthRequestOwner 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 生成签名授权文件
+ * Generate signature authorization grant file
+ *
+ * @param authorizationUUIDHash - 专辑authorizationUUID的SHA256值
+ * @param requesterSignatureIDSuffix - 请求方签名ID后10位（已解密）
+ * @param originalAuthorEncryptedSignatureID - 原始作者签名的加密ID
+ * @returns 授权文件内容（Uint8Array）
+ */
+export async function generateAuthGrant(
+  authorizationUUIDHash: string,
+  requesterSignatureIDSuffix: string,
+  originalAuthorEncryptedSignatureID: string
+): Promise<Uint8Array | false> {
+  return await api
+    .post('/signature/generate-auth-grant', {
+      authorizationUUIDHash,
+      requesterSignatureIDSuffix,
+      originalAuthorEncryptedSignatureID,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->generateAuthGrant 请求已成功执行');
+      if (req.data.success && req.data.data?.fileContent) {
+        // 后端返回的是 Base64 编码的字节数组，需要解码
+        const base64Content = req.data.data.fileContent;
+        const binaryString = atob(base64Content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      } else {
+        console.error('Failed to generate auth grant:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('generateAuthGrant 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 验证并导入签名授权文件
+ * Verify and import signature authorization grant file
+ *
+ * @param fileContent - 授权文件内容（Uint8Array）
+ * @param authorizationUUID - 当前专辑的authorizationUUID
+ * @param requesterEncryptedSignatureID - 请求方签名的加密ID
+ * @param originalAuthorQualificationCode - 原始作者签名的资格码
+ * @returns 验证是否通过
+ */
+export async function verifyAndImportAuthGrant(
+  fileContent: Uint8Array,
+  authorizationUUID: string,
+  requesterEncryptedSignatureID: string,
+  originalAuthorQualificationCode: string
+): Promise<{ valid: boolean; requesterQualificationCode?: string } | false> {
+  // 将 Uint8Array 转换为 Base64
+  let binary = '';
+  for (let i = 0; i < fileContent.length; i++) {
+    binary += String.fromCharCode(fileContent[i]);
+  }
+  const base64Content = btoa(binary);
+
+  return await api
+    .post('/signature/verify-import-auth-grant', {
+      fileContent: base64Content,
+      authorizationUUID,
+      requesterEncryptedSignatureID,
+      originalAuthorQualificationCode,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->verifyAndImportAuthGrant 请求已成功执行');
+      if (req.data.success && req.data.data) {
+        return req.data.data as { valid: boolean; requesterQualificationCode?: string };
+      } else {
+        console.error('Failed to verify auth grant:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('verifyAndImportAuthGrant 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
+ * 将资格码添加到专辑的授权列表
+ * Add qualification code to album's authorized list
+ *
+ * @param albumPath - 专辑路径
+ * @param qualificationCode - 要添加的资格码
+ * @returns 是否添加成功
+ */
+export async function addToAuthorizedList(albumPath: string, qualificationCode: string): Promise<boolean> {
+  return await api
+    .post('/signature/add-to-authorized-list', {
+      albumPath,
+      qualificationCode,
+    })
+    .then((req) => {
+      console.debug('status=', req.status, '->addToAuthorizedList 请求已成功执行');
+      if (req.data.success) {
+        return true;
+      } else {
+        console.error('Failed to add to authorized list:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('addToAuthorizedList 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      console.groupEnd();
+      return false;
+    });
+}

@@ -20,9 +20,12 @@
 package server
 
 import (
+	audioPackageConfig "KeyTone/audioPackage/config"
 	"KeyTone/config"
 	"KeyTone/logger"
 	"KeyTone/signature"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -716,6 +719,408 @@ func signatureRouters(r *gin.Engine) {
 				"encryptedId": encryptedID,
 				"name":        exportData.Name,
 			},
+		})
+	})
+
+	// ========================================
+	// 授权申请和授权文件相关端点
+	// ========================================
+
+	// 生成授权申请文件
+	signatureRouter.POST("/signature/generate-auth-request", func(ctx *gin.Context) {
+		var req struct {
+			AuthorizationUUID               string `json:"authorizationUUID"`
+			RequesterEncryptedSignatureID   string `json:"requesterEncryptedSignatureID"`
+			OriginalAuthorQualificationCode string `json:"originalAuthorQualificationCode"`
+			RequesterSignatureName          string `json:"requesterSignatureName"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		// 参数验证
+		if req.AuthorizationUUID == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: authorizationUUID",
+			})
+			return
+		}
+		if req.RequesterEncryptedSignatureID == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: requesterEncryptedSignatureID",
+			})
+			return
+		}
+		if req.OriginalAuthorQualificationCode == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: originalAuthorQualificationCode",
+			})
+			return
+		}
+		if req.RequesterSignatureName == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: requesterSignatureName",
+			})
+			return
+		}
+
+		// 生成授权申请文件
+		fileContent, err := signature.GenerateAuthRequest(
+			req.AuthorizationUUID,
+			req.RequesterEncryptedSignatureID,
+			req.OriginalAuthorQualificationCode,
+			req.RequesterSignatureName,
+		)
+		if err != nil {
+			logger.Error("生成授权申请文件失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "生成授权申请文件失败: " + err.Error(),
+			})
+			return
+		}
+
+		// 返回二进制文件内容（Base64编码）
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "授权申请文件生成成功",
+			"data": gin.H{
+				"fileContent": fileContent, // []byte 会被自动编码为 Base64
+			},
+		})
+	})
+
+	// 解析授权申请文件
+	signatureRouter.POST("/signature/parse-auth-request", func(ctx *gin.Context) {
+		var req struct {
+			FileContent []byte `json:"fileContent"` // Base64 编码的文件内容
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		if len(req.FileContent) == 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: fileContent",
+			})
+			return
+		}
+
+		// 解析授权申请文件
+		parsed, err := signature.ParseAuthRequest(req.FileContent)
+		if err != nil {
+			logger.Error("解析授权申请文件失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "解析授权申请文件失败: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "授权申请文件解析成功",
+			"data":    parsed,
+		})
+	})
+
+	// 验证授权申请文件中的原始作者签名是否在本地签名列表中
+	signatureRouter.POST("/signature/verify-auth-request-owner", func(ctx *gin.Context) {
+		var req struct {
+			OriginalAuthorQualCodeHash string `json:"originalAuthorQualCodeHash"` // 从解析结果获取
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		if req.OriginalAuthorQualCodeHash == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: originalAuthorQualCodeHash",
+			})
+			return
+		}
+
+		// 遍历本地签名列表，检查是否有签名的资格码SHA256匹配
+		signatureMapValue := config.GetValue("signature")
+		if signatureMapValue == nil {
+			ctx.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data": gin.H{
+					"hasPermission":     false,
+					"matchedSignatures": []interface{}{},
+				},
+			})
+			return
+		}
+
+		signatureMap, ok := signatureMapValue.(map[string]interface{})
+		if !ok {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "签名配置数据格式错误",
+			})
+			return
+		}
+
+		var matchedSignatures []map[string]string
+		for encryptedID := range signatureMap {
+			// 解密签名ID获取原始ID
+			originalID, err := signature.DecryptWithKeyA(encryptedID)
+			if err != nil {
+				continue
+			}
+
+			// 计算资格码
+			qualCode := signature.GenerateQualificationCode(originalID)
+
+			// 计算资格码的SHA256
+			qualCodeHashBytes := sha256.Sum256([]byte(qualCode))
+			qualCodeHash := hex.EncodeToString(qualCodeHashBytes[:])
+
+			// 比较
+			if qualCodeHash == req.OriginalAuthorQualCodeHash {
+				// 获取签名名称
+				var sigName string
+				if entry, ok := signatureMap[encryptedID].(map[string]interface{}); ok {
+					if value, ok := entry["value"].(string); ok {
+						decryptedValue, err := signature.DecryptValueWithDynamicKey(value, encryptedID)
+						if err == nil {
+							var sigData signature.SignatureData
+							if json.Unmarshal([]byte(decryptedValue), &sigData) == nil {
+								sigName = sigData.Name
+							}
+						}
+					}
+				}
+
+				matchedSignatures = append(matchedSignatures, map[string]string{
+					"encryptedId":       encryptedID,
+					"qualificationCode": qualCode,
+					"name":              sigName,
+				})
+			}
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"hasPermission":     len(matchedSignatures) > 0,
+				"matchedSignatures": matchedSignatures,
+			},
+		})
+	})
+
+	// 生成签名授权文件
+	signatureRouter.POST("/signature/generate-auth-grant", func(ctx *gin.Context) {
+		var req struct {
+			AuthorizationUUIDHash              string `json:"authorizationUUIDHash"`
+			RequesterSignatureIDSuffix         string `json:"requesterSignatureIDSuffix"`
+			OriginalAuthorEncryptedSignatureID string `json:"originalAuthorEncryptedSignatureID"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		// 参数验证
+		if req.AuthorizationUUIDHash == "" || req.RequesterSignatureIDSuffix == "" || req.OriginalAuthorEncryptedSignatureID == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数",
+			})
+			return
+		}
+
+		// 生成授权文件
+		fileContent, err := signature.GenerateAuthGrant(
+			req.AuthorizationUUIDHash,
+			req.RequesterSignatureIDSuffix,
+			req.OriginalAuthorEncryptedSignatureID,
+		)
+		if err != nil {
+			logger.Error("生成签名授权文件失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "生成签名授权文件失败: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "签名授权文件生成成功",
+			"data": gin.H{
+				"fileContent": fileContent,
+			},
+		})
+	})
+
+	// 验证并导入签名授权文件
+	signatureRouter.POST("/signature/verify-import-auth-grant", func(ctx *gin.Context) {
+		var req struct {
+			FileContent                     []byte `json:"fileContent"`
+			AuthorizationUUID               string `json:"authorizationUUID"`
+			RequesterEncryptedSignatureID   string `json:"requesterEncryptedSignatureID"`
+			OriginalAuthorQualificationCode string `json:"originalAuthorQualificationCode"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		// 参数验证
+		if len(req.FileContent) == 0 || req.AuthorizationUUID == "" || req.OriginalAuthorQualificationCode == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数",
+			})
+			return
+		}
+
+		var valid bool
+		var requesterQualificationCode string
+		var err error
+
+		// 如果提供了请求方签名ID，直接验证
+		if req.RequesterEncryptedSignatureID != "" {
+			valid, requesterQualificationCode, err = signature.VerifyAndImportAuthGrant(
+				req.FileContent,
+				req.AuthorizationUUID,
+				req.RequesterEncryptedSignatureID,
+				req.OriginalAuthorQualificationCode,
+			)
+		} else {
+			// 如果未提供请求方签名ID，尝试遍历本地所有签名进行匹配
+			signatureMap := config.GetValue("signature")
+			if signatureMap == nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"message": "本地没有签名，无法验证授权",
+				})
+				return
+			}
+
+			found := false
+			if m, ok := signatureMap.(map[string]interface{}); ok {
+				for encryptedID := range m {
+					// 尝试使用当前签名ID进行验证
+					v, code, e := signature.VerifyAndImportAuthGrant(
+						req.FileContent,
+						req.AuthorizationUUID,
+						encryptedID,
+						req.OriginalAuthorQualificationCode,
+					)
+
+					// 如果验证成功，记录结果并跳出循环
+					if e == nil && v {
+						valid = true
+						requesterQualificationCode = code
+						found = true
+						break
+					}
+				}
+			}
+
+			if !found {
+				err = io.EOF // 使用 EOF 作为未找到匹配签名的标记，或者自定义错误
+				if err == io.EOF {
+					// 构造一个具体的错误信息
+					err = &os.PathError{Op: "verify", Path: "signatures", Err: os.ErrNotExist}
+					// 或者直接返回错误响应
+					ctx.JSON(http.StatusBadRequest, gin.H{
+						"success": false,
+						"message": "验证失败：未在本地找到与授权文件匹配的签名",
+					})
+					return
+				}
+			}
+		}
+
+		if err != nil {
+			logger.Error("验证签名授权文件失败", "error", err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "验证签名授权文件失败: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "签名授权验证成功",
+			"data": gin.H{
+				"valid":                      valid,
+				"requesterQualificationCode": requesterQualificationCode,
+			},
+		})
+	})
+
+	// 将资格码添加到专辑的授权列表
+	signatureRouter.POST("/signature/add-to-authorized-list", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath         string `json:"albumPath"`
+			QualificationCode string `json:"qualificationCode"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "请求参数格式错误: " + err.Error(),
+			})
+			return
+		}
+
+		if req.AlbumPath == "" || req.QualificationCode == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "缺少必填参数: albumPath 或 qualificationCode",
+			})
+			return
+		}
+
+		// 调用添加授权的函数
+		err := audioPackageConfig.AddToAuthorizedList(req.AlbumPath, req.QualificationCode)
+		if err != nil {
+			logger.Error("添加授权到列表失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "添加授权失败: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "授权添加成功",
 		})
 	})
 

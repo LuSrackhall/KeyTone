@@ -47,6 +47,7 @@ interface State {
     | 'auth-contact' // 需要授权时的联系方式填写
     | 'auth-gate' // 已有签名且原作者要求授权时的授权门控
     | 'auth-gate-from-picker' // 从签名选择页面打开的授权门控（用于导入授权文件）
+    | 'auth-request' // 授权申请流程（用于申请签名授权）
     | 'picker' // 选择签名
     | 'done';
   flowData?: {
@@ -90,6 +91,7 @@ export function useExportSignatureFlow() {
   const authImpactConfirmDialogVisible = ref(false);
   const authContactDialogVisible = ref(false);
   const authGateDialogVisible = ref(false);
+  const authRequestDialogVisible = ref(false);
   const pickerDialogVisible = ref(false);
 
   // Computed properties
@@ -292,6 +294,36 @@ export function useExportSignatureFlow() {
   };
 
   /**
+   * Open auth request dialog from signature picker.
+   * 从签名选择页面打开授权申请流程
+   */
+  const openAuthRequestFromPicker = () => {
+    pickerDialogVisible.value = false;
+    state.value.step = 'auth-request';
+    authRequestDialogVisible.value = true;
+  };
+
+  /**
+   * Handle auth request dialog done.
+   * 授权申请完成后返回签名选择页面
+   */
+  const handleAuthRequestDone = () => {
+    authRequestDialogVisible.value = false;
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
+  };
+
+  /**
+   * Handle auth request dialog cancel.
+   * 授权申请取消后返回签名选择页面
+   */
+  const handleAuthRequestCancel = () => {
+    authRequestDialogVisible.value = false;
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
+  };
+
+  /**
    * Handle signature picker dialog selection.
    */
   const handlePickerSelect = (signatureId: string, updateContent = true) => {
@@ -365,6 +397,7 @@ export function useExportSignatureFlow() {
     authImpactConfirmDialogVisible.value = false;
     authContactDialogVisible.value = false;
     authGateDialogVisible.value = false;
+    authRequestDialogVisible.value = false;
     pickerDialogVisible.value = false;
   };
 
@@ -380,6 +413,7 @@ export function useExportSignatureFlow() {
     authImpactConfirmDialogVisible,
     authContactDialogVisible,
     authGateDialogVisible,
+    authRequestDialogVisible,
     pickerDialogVisible,
 
     // Methods
@@ -397,6 +431,9 @@ export function useExportSignatureFlow() {
     handleAuthGateAuthorized,
     handleAuthGateCancel,
     openAuthGateFromPicker,
+    openAuthRequestFromPicker,
+    handleAuthRequestDone,
+    handleAuthRequestCancel,
     handlePickerSelect,
     handlePickerCreateNew,
     handleSignatureCreated,
