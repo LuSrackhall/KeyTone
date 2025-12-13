@@ -422,12 +422,13 @@ const { t: $t } = useI18n();
 const signatureStore = useSignatureStore();
 
 // 系统类型判断
-const isMacOS = computed(() => {
+const isMacOS = ref(getMacOSStatus());
+function getMacOSStatus() {
   if (process.env.MODE === 'electron') {
-    return process.platform === 'darwin' || navigator.platform === 'MacIntel';
+    return window.myWindowAPI.getMacOSStatus();
   }
-  return navigator.platform === 'MacIntel';
-});
+  return false;
+}
 
 // ========== 列表数据状态 ==========
 
