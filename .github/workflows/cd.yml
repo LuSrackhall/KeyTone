@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-13, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
     outputs:
       # region ------------Windows start
@@ -210,14 +210,14 @@ jobs:
       # region
 
       - name: Build Application (MacOS x64)
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-15'
         shell: bash
         run: | # 指定此run为多个命令依次执行
           cd sdk
           make mac
 
       - name: Find the generated installer (MacOS x64)
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-15'
         working-directory: frontend/dist/electron/Packaged
         shell: bash
         run: |
@@ -230,7 +230,7 @@ jobs:
           echo "INSTALLER_NAME_X64_DMG=$INSTALLER_NAME_X64_DMG" >> $GITHUB_ENV
 
       - name: Calculate File Hashes (MacOS x64)
-        if: matrix.os == 'macos-13'
+        if: matrix.os == 'macos-15'
         shell: bash
         run: |
           SHA256_X64_DMG=$(shasum -a 256 frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_DMG }} | awk '{print $1}')
@@ -472,7 +472,7 @@ jobs:
   # build_linux_arm64: # TIPS: github actions 的官方运行器暂不提供arm架构下的, win和linux系统环境。 如有需要, 只能自定义运行器。
   ######################################################################################################### build macos
   # build_macos_x64:
-  #   runs-on: macos-13 # 指定虚拟机
+  #   runs-on: macos-15 # 指定虚拟机
   # build_macos_arm64:
   #   runs-on: macos-latest # 指定虚拟机 macos14
   ######################################################################################################### build macos
