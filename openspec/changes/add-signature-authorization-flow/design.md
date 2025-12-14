@@ -62,6 +62,21 @@
 | AuthKeyN | KT_AuthFlowFieldEncryptKey_N03  | 预留             |
 | AuthKeyY | KT_AuthFlowCodePartialEncrypt04 | 加密资格码前15位 |
 
+### 密钥管理与构建注入
+
+- **混淆工具**：`tools/key-obfuscator/main.go`，用于离线生成混淆后的 Hex 值。
+- **本地开发/构建**：
+  - 配置文件：`sdk/private_keys.env`（从 template 复制，不提交 git）。
+  - 自动化脚本：`sdk/setup_build_env.sh`。
+    - 功能：读取私钥 -> 调用混淆工具 -> 导出 `EXTRA_LDFLAGS` 环境变量。
+    - 用法：`source sdk/setup_build_env.sh`（仅当前终端生效）。
+  - 构建支持：
+    - `sdk/makefile`：已更新支持读取 `EXTRA_LDFLAGS`。
+    - `frontend/src-electron/debug.sh`：已更新支持读取 `EXTRA_LDFLAGS`（用于 `quasar dev` 调试）。
+- **GitHub Actions**：
+  - 在 Secrets 中配置一个 `EXTRA_LDFLAGS` 变量，包含所有 `-X ...` 注入参数（使用混淆后的 Hex 值）。
+  - Workflow 直接使用该 Secret，无需运行 setup 脚本。
+
 ### 授权申请文件生成流程
 
 ```

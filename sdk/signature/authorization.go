@@ -28,8 +28,54 @@ import (
 )
 
 // ==============================
-// 授权相关密钥常量定义
+// 授权相关密钥变量定义
+// 注意：这些变量不再是 const，而是 var，以便在编译时通过 -ldflags 进行注入
+// 注入的值应为经过 XOR 混淆后的 Hex 字符串
 // ==============================
+
+// xorMask 用于混淆密钥的掩码，必须与 tools/key-obfuscator/main.go 中的一致
+var xorMask = []byte{0x55, 0xAA, 0x33, 0xCC, 0x99, 0x66, 0x11, 0xEE, 0x77, 0xBB, 0x22, 0xDD, 0x88, 0x44, 0xFF, 0x00}
+
+// 定义默认的开源密钥常量，用于运行时比对
+const (
+	DefaultKeyF = "PLACEHOLDER_KEY_F_REPLACE_ME_32B"
+	DefaultKeyK = "PLACEHOLDER_KEY_K_REPLACE_ME_32B"
+	DefaultKeyY = "PLACEHOLDER_KEY_Y_REPLACE_ME_32B"
+	DefaultKeyN = "PLACEHOLDER_KEY_N_REPLACE_ME_32B"
+)
+
+// deobfuscateKey 解混淆密钥
+// 注意：此函数仅处理注入的混淆值（Hex -> XOR -> Plaintext）
+// 如果注入的是非 Hex 的明文（异常情况），则直接返回补齐后的明文
+func deobfuscateKey(obfuscatedHex string) []byte {
+	// 1. 尝试解析 Hex 字符串
+	obfuscated, err := hex.DecodeString(obfuscatedHex)
+	if err != nil {
+		// 解析失败，说明注入的不是 Hex 字符串（可能是用户错误注入了明文）
+		// 直接作为明文处理，补齐或截断到 32 字节
+		key := []byte(obfuscatedHex)
+		if len(key) < 32 {
+			for len(key) < 32 {
+				key = append(key, 0)
+			}
+		}
+		return key[:32]
+	}
+
+	// 2. 执行 XOR 解混淆
+	realKey := make([]byte, len(obfuscated))
+	for i, b := range obfuscated {
+		realKey[i] = b ^ xorMask[i%len(xorMask)]
+	}
+
+	// 3. 长度补齐或截断
+	if len(realKey) < 32 {
+		for len(realKey) < 32 {
+			realKey = append(realKey, 0)
+		}
+	}
+	return realKey[:32]
+}
 
 // KeyToneAuthRequestEncryptionKeyF 密钥F：用于授权申请文件中字段级加密
 // 用途：
@@ -37,32 +83,32 @@ import (
 //   - 加密原始作者签名的SHA256值
 //
 // 安全等级：标准
-// 长度: 32字节
-const KeyToneAuthRequestEncryptionKeyF = "PLACEHOLDER_KEY_F_REPLACE_ME_32B"
+// 建议长度: 32字节 (不足自动补齐)
+var KeyToneAuthRequestEncryptionKeyF = DefaultKeyF // 默认开源密钥（明文）
 
 // KeyToneAuthRequestEncryptionKeyK 密钥K：用于授权申请文件的整体加密
 // 用途：
 //   - 对授权申请文件内容进行整体加密
 //
 // 安全等级：高
-// 长度: 32字节
-const KeyToneAuthRequestEncryptionKeyK = "PLACEHOLDER_KEY_K_REPLACE_ME_32B"
+// 建议长度: 32字节 (不足自动补齐)
+var KeyToneAuthRequestEncryptionKeyK = DefaultKeyK // 默认开源密钥（明文）
 
 // KeyToneAuthGrantEncryptionKeyY 密钥Y：用于授权文件中原始作者签名资格码前缀加密
 // 用途：
 //   - 加密原始作者签名资格码的前15位
 //
 // 安全等级：高
-// 长度: 32字节
-const KeyToneAuthGrantEncryptionKeyY = "PLACEHOLDER_KEY_Y_REPLACE_ME_32B"
+// 建议长度: 32字节 (不足自动补齐)
+var KeyToneAuthGrantEncryptionKeyY = DefaultKeyY // 默认开源密钥（明文）
 
 // KeyToneAuthGrantEncryptionKeyN 密钥N：用于授权文件的最终加密
 // 用途：
 //   - 对授权文件的最终组合哈希进行加密
 //
 // 安全等级：高
-// 长度: 32字节
-const KeyToneAuthGrantEncryptionKeyN = "PLACEHOLDER_KEY_N_REPLACE_ME_32B"
+// 建议长度: 32字节 (不足自动补齐)
+var KeyToneAuthGrantEncryptionKeyN = DefaultKeyN // 默认开源密钥（明文）
 
 // ==============================
 // 密钥获取函数
@@ -71,49 +117,45 @@ const KeyToneAuthGrantEncryptionKeyN = "PLACEHOLDER_KEY_N_REPLACE_ME_32B"
 // GetKeyF 获取密钥F (32字节)
 // 用途：授权申请文件中的字段级加密
 func GetKeyF() []byte {
-	key := []byte(KeyToneAuthRequestEncryptionKeyF)
-	if len(key) < 32 {
-		for len(key) < 32 {
-			key = append(key, 0)
-		}
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneAuthRequestEncryptionKeyF == DefaultKeyF {
+		return []byte(DefaultKeyF)
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑
+	return deobfuscateKey(KeyToneAuthRequestEncryptionKeyF)
 }
 
 // GetKeyK 获取密钥K (32字节)
 // 用途：授权申请文件的整体加密
 func GetKeyK() []byte {
-	key := []byte(KeyToneAuthRequestEncryptionKeyK)
-	if len(key) < 32 {
-		for len(key) < 32 {
-			key = append(key, 0)
-		}
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneAuthRequestEncryptionKeyK == DefaultKeyK {
+		return []byte(DefaultKeyK)
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑
+	return deobfuscateKey(KeyToneAuthRequestEncryptionKeyK)
 }
 
 // GetKeyY 获取密钥Y (32字节)
 // 用途：授权文件中原始作者签名资格码前缀加密
 func GetKeyY() []byte {
-	key := []byte(KeyToneAuthGrantEncryptionKeyY)
-	if len(key) < 32 {
-		for len(key) < 32 {
-			key = append(key, 0)
-		}
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneAuthGrantEncryptionKeyY == DefaultKeyY {
+		return []byte(DefaultKeyY)
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑
+	return deobfuscateKey(KeyToneAuthGrantEncryptionKeyY)
 }
 
 // GetKeyN 获取密钥N (32字节)
 // 用途：授权文件的最终加密
 func GetKeyN() []byte {
-	key := []byte(KeyToneAuthGrantEncryptionKeyN)
-	if len(key) < 32 {
-		for len(key) < 32 {
-			key = append(key, 0)
-		}
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneAuthGrantEncryptionKeyN == DefaultKeyN {
+		return []byte(DefaultKeyN)
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑
+	return deobfuscateKey(KeyToneAuthGrantEncryptionKeyN)
 }
 
 // ==============================

@@ -80,17 +80,15 @@
    - 完善授权文件导入逻辑
    - 调用验证 API 并更新授权列表
 
-### 加密密钥设计
+### 加密密钥设计与混淆注入
 
-```go
-// 授权流程专用加密密钥
-const (
-    AuthKeyF = "KT_AuthFlowFieldEncryptKey_F01"  // 加密请求方签名ID
-    AuthKeyK = "KT_AuthFlowFieldEncryptKey_K02"  // 预留
-    AuthKeyN = "KT_AuthFlowFieldEncryptKey_N03"  // 预留
-    AuthKeyY = "KT_AuthFlowCodePartialEncrypt04" // 加密资格码前15位
-)
-```
+- **代码实现**：密钥在代码中以 `var` 形式存放，运行时通过 XOR 解混淆；默认值为开源占位符。
+- **构建注入**：通过 `-ldflags -X ...` 注入混淆后的 Hex 值。
+- **本地工作流**：
+  - 使用 `sdk/setup_build_env.sh` 脚本自动处理 `private_keys.env` 中的明文密钥，并在当前终端导出 `EXTRA_LDFLAGS`。
+  - 支持 `make` 构建和 `quasar dev` 调试（通过 `debug.sh` 透传）。
+- **CI 工作流**：
+  - GitHub Actions 中直接配置 `EXTRA_LDFLAGS` Secret（预先混淆好的值），无需运行脚本。
 
 ### 数据格式
 

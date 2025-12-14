@@ -24,6 +24,14 @@
 - [x] 1.4 修复加密逻辑缺陷
   - [x] 修正 `GenerateAuthGrant` 和 `VerifyAndImportAuthGrant` 中的非确定性加密问题，改为使用固定Nonce的确定性加密
 
+- [x] 1.5 密钥安全管理
+  - [x] 将 `sdk/signature/authorization.go` 中的密钥常量改为变量，支持 ldflags 注入
+  - [x] 更新 `.gitignore` 忽略私有密钥配置文件
+  - [x] 实现密钥混淆工具 `tools/key-obfuscator`
+  - [x] 在 `sdk/signature/authorization.go` 中实现运行时 XOR 解混淆逻辑
+  - [x] 创建 `sdk/private_keys.template.env` 模板文件
+  - [x] 创建 `sdk/setup_build_env.sh` 自动化脚本，用于本地开发/构建时自动混淆并注入环境变量
+
 ### Phase 2: HTTP API 端点
 
 - [x] 2.1 更新 `sdk/server/signature_handlers.go`
