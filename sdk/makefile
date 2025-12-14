@@ -29,20 +29,36 @@
 # 因为接下来, 每个平台以及每个cpu架构的指令集依赖, 都将是原生构建。
 # 也正因为如此, 我们才能拥有如此简洁的makefile
 
+
+# 允许通过环境变量覆盖/追加 ldflags，便于注入混淆后的密钥
+# ?= 语法说明：条件赋值。
+# 仅当变量 BASE_LDFLAGS 未被定义时，才将其赋值为 -s -w。
+# 如果用户在执行 make 时已经设置了该变量（如 make BASE_LDFLAGS="..."），则使用用户设置的值。
+# -s: 省略符号表和调试信息，减小二进制体积
+# -w: 省略 DWARF 符号表，减小二进制体积
+BASE_LDFLAGS ?= -s -w
+
+# EXTRA_LDFLAGS 用于接收外部注入的额外链接参数（如密钥注入）
+# 默认为空。
+# make 会自动继承 shell 中的环境变量，因此如果在执行 make 前 export EXTRA_LDFLAGS="..."，
+# 这里就会自动获取到该值，无需手动传递。
+EXTRA_LDFLAGS ?=
+
+
 .PHONY: win # make win
 # win: spa
 win:
 	go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.1
 	goversioninfo -platform-specific=true -icon="../frontend/src-electron/icons/icon.ico"  -manifest="resource\goversioninfo.exe.manifest"
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe"
+	go build  -ldflags '$(BASE_LDFLAGS) $(EXTRA_LDFLAGS)' -o "../frontend/dist/key_tone_sdk/KeyTone.exe"
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
 
 .PHONY: linux # make linux
 linux:
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
+	go build  -ldflags '$(BASE_LDFLAGS) $(EXTRA_LDFLAGS)' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk
 
 .PHONY: mac # make mac
 mac:
-	go build  -ldflags '-s -w' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
+	go build  -ldflags '$(BASE_LDFLAGS) $(EXTRA_LDFLAGS)' -o "../frontend/dist/key_tone_sdk/KeyTone.exe" main.go
 	cd ../frontend && quasar build -m electron && rm -rf dist/key_tone_sdk

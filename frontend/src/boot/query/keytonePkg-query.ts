@@ -1,4 +1,10 @@
 import { api } from 'boot/axios';
+import type {
+  ApplySignatureConfigPayload,
+  AlbumSignatureInfo,
+  AvailableSignature,
+  CheckSignatureInAlbumResult,
+} from 'src/types/export-flow';
 
 export async function SendFileToServer(file: File) {
   const formData = new FormData();
@@ -524,6 +530,158 @@ export async function GetAlbumMeta(file: File): Promise<AlbumMeta> {
   }
 }
 
+// 加密专辑配置（仅在需要签名时调用）
+export async function EncryptAlbumConfig(albumPath: string): Promise<{
+  message: string;
+  encrypted?: boolean;
+  already_encrypted?: boolean;
+}> {
+  if (!albumPath) {
+    throw new Error('缺少 albumPath');
+  }
+  return await api
+    .post('/keytone_pkg/encrypt_album_config', { albumPath })
+    .then((response) => {
+      console.debug('status=', response.status, '->EncryptAlbumConfig 请求已成功执行并返回');
+      if (response.status === 200) {
+        return response.data;
+      }
+      throw new Error('加密配置失败');
+    })
+    .catch((error) => {
+      console.group('EncryptAlbumConfig 请求执行失败');
+      console.error('加密专辑配置失败:', error);
+      if (error.response?.data?.message) {
+        console.error('服务器返回:', error.response.data.message);
+      }
+      console.groupEnd();
+      throw error;
+    });
+}
+
+// 将签名/授权决策发送到 SDK，供后续写入专辑配置
+export async function ApplySignatureConfig(payload: ApplySignatureConfigPayload): Promise<boolean> {
+  return await api
+    .post('/keytone_pkg/apply_signature_config', payload)
+    .then((response) => {
+      console.debug('status=', response.status, '->ApplySignatureConfig 请求已成功执行并返回->', response.data);
+      if (response.status === 200) {
+        return true;
+      }
+      throw new Error('应用签名配置失败');
+    })
+    .catch((error) => {
+      console.group('ApplySignatureConfig 请求执行失败');
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      throw error;
+    });
+}
+
+/**
+ * 获取专辑签名信息
+ * 用于前端需求2（再次导出时的签名识别）和需求4（签名作者信息展示）
+ */
+export async function GetAlbumSignatureInfo(albumPath: string): Promise<AlbumSignatureInfo> {
+  return await api
+    .post('/keytone_pkg/get_album_signature_info', { albumPath })
+    .then((response) => {
+      console.debug('GetAlbumSignatureInfo 成功:', response.data);
+      if (response.status === 200 && response.data.message === 'ok') {
+        return response.data.data;
+      }
+      throw new Error('获取专辑签名信息失败');
+    })
+    .catch((error) => {
+      console.error('GetAlbumSignatureInfo 失败:', error);
+      throw error;
+    });
+}
+
+/**
+ * 检查签名是否在专辑中
+ * 用于前端需求3（标记已在专辑中的签名）
+ */
+export async function CheckSignatureInAlbum(
+  albumPath: string,
+  signatureId: string
+): Promise<CheckSignatureInAlbumResult> {
+  return await api
+    .post('/keytone_pkg/check_signature_in_album', { albumPath, signatureId })
+    .then((response) => {
+      console.debug('CheckSignatureInAlbum 成功:', response.data);
+      if (response.status === 200 && response.data.message === 'ok') {
+        return {
+          isInAlbum: response.data.isInAlbum,
+          qualificationCode: response.data.qualificationCode,
+          hasChanges: response.data.hasChanges,
+        };
+      }
+      throw new Error('检查签名失败');
+    })
+    .catch((error) => {
+      console.error('CheckSignatureInAlbum 失败:', error);
+      throw error;
+    });
+}
+
+/**
+ * 检查签名授权状态
+ * 用于前端需求3（使能/失能签名选项）
+ */
+export async function CheckSignatureAuthorization(
+  albumPath: string,
+  signatureId: string
+): Promise<{ isAuthorized: boolean; requireAuthorization: boolean; qualificationCode: string }> {
+  return await api
+    .post('/keytone_pkg/check_signature_authorization', { albumPath, signatureId })
+    .then((response) => {
+      console.debug('CheckSignatureAuthorization 成功:', response.data);
+      if (response.status === 200 && response.data.message === 'ok') {
+        return {
+          isAuthorized: response.data.isAuthorized,
+          requireAuthorization: response.data.requireAuthorization,
+          qualificationCode: response.data.qualificationCode,
+        };
+      }
+      throw new Error('检查签名授权失败');
+    })
+    .catch((error) => {
+      console.error('CheckSignatureAuthorization 失败:', error);
+      throw error;
+    });
+}
+
+/**
+ * 获取可用于导出的签名列表
+ * 用于前端需求3（签名选择页面增强）
+ */
+export async function GetAvailableSignatures(albumPath: string): Promise<AvailableSignature[]> {
+  return await api
+    .post('/keytone_pkg/get_available_signatures', { albumPath })
+    .then((response) => {
+      console.debug('GetAvailableSignatures 成功:', response.data);
+      if (response.status === 200 && response.data.message === 'ok') {
+        return response.data.signatures;
+      }
+      throw new Error('获取可用签名列表失败');
+    })
+    .catch((error) => {
+      console.error('GetAvailableSignatures 失败:', error);
+      throw error;
+    });
+}
+
 // 导出专辑，直接返回zip文件内容
 export async function ExportAlbum(albumPath: string): Promise<Blob> {
   return await api
@@ -644,14 +802,14 @@ export async function ImportAlbumAsNew(file: File, newAlbumId: string): Promise<
       },
     })
     .then((response) => {
-      console.debug('status=', response.status, '->ImportAlbumOverwrite 请求已成功执行并返回->', response.data);
+      console.debug('status=', response.status, '->ImportAlbumAsNew 请求已成功执行并返回->', response.data);
       if (response.data.message === 'ok') {
         return true;
       }
       return false;
     })
     .catch((error) => {
-      console.group('ImportAlbumOverwrite 请求执行失败');
+      console.group('ImportAlbumAsNew 请求执行失败');
       if (error.response) {
         console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
         console.error('Error status:', error.response.status);
@@ -672,4 +830,16 @@ export async function ImportAlbumAsNew(file: File, newAlbumId: string): Promise<
       console.groupEnd();
       return false;
     });
+}
+
+/**
+ * 获取可用于导出的签名列表
+ */
+export async function GetAvailableSignaturesForExport(albumPath: string): Promise<AvailableSignature[]> {
+  return await api.post('/keytone_pkg/get_available_signatures', { albumPath }).then((response) => {
+    if (response.status === 200 && response.data.message === 'ok') {
+      return response.data.signatures;
+    }
+    throw new Error('获取可用签名列表失败');
+  });
 }

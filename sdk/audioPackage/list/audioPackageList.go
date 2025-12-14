@@ -20,13 +20,59 @@
 package audioPackageList
 
 import (
-	"KeyTone/logger"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+
+	apconfig "KeyTone/audioPackage/config"
+	apenc "KeyTone/audioPackage/enc"
+	"KeyTone/logger"
 
 	"github.com/spf13/viper"
 )
+
+// migrateConfigFile 自动检测并迁移旧的 config.json 为 package.json
+// 用于支持从旧版本到新版本的平滑升级
+func migrateConfigFile(configPath string) error {
+	oldConfigPath := filepath.Join(configPath, "config.json")
+	newConfigPath := filepath.Join(configPath, "package.json")
+
+	// 检查新的配置文件是否已存在
+	if _, err := os.Stat(newConfigPath); err == nil {
+		// 新文件已存在，检查旧文件是否也存在
+		if _, err := os.Stat(oldConfigPath); err == nil {
+			// 新旧文件都存在，这是一个异常情况，记录警告但不处理
+			logger.Warn("检测到 config.json 和 package.json 同时存在，将保留 package.json", "path", configPath)
+			return nil
+		}
+		// 新文件存在，旧文件不存在，无需迁移
+		return nil
+	} else if !os.IsNotExist(err) {
+		// 其他错误（如权限问题）
+		logger.Error("检查新配置文件时出错", "path", newConfigPath, "error", err.Error())
+		return err
+	}
+
+	// 检查旧的配置文件是否存在
+	if _, err := os.Stat(oldConfigPath); err == nil {
+		// 旧文件存在，执行迁移
+		if err := os.Rename(oldConfigPath, newConfigPath); err != nil {
+			logger.Error("迁移配置文件失败", "from", oldConfigPath, "to", newConfigPath, "error", err.Error())
+			return err
+		}
+		logger.Info("配置文件成功迁移", "from", "config.json", "to", "package.json", "path", configPath)
+		return nil
+	} else if !os.IsNotExist(err) {
+		// 其他错误
+		logger.Error("检查旧配置文件时出错", "path", oldConfigPath, "error", err.Error())
+		return err
+	}
+
+	// 新旧文件都不存在，无需迁移
+	return nil
+}
 
 // 用于获取键音包根目录中, 所有键音包的完整路径的列表。
 func GetAudioPackageList(rootDir string) ([]string, error) {
@@ -53,22 +99,60 @@ func GetAudioPackageName(configPath string) any {
 		Viper = nil
 	}()
 
-	// 设置配置文件名称和类型
-	Viper.SetConfigName("config")
+	// 尝试迁移旧的 config.json 文件为 package.json
+	if err := migrateConfigFile(configPath); err != nil {
+		logger.Warn("配置文件迁移检查失败，继续使用现有配置", "error", err.Error())
+	}
+
 	Viper.SetConfigType("json")
 
-	// 添加配置文件路径
-	Viper.AddConfigPath(configPath)
+	var plainJSON string
+	stubInfo, pkgRaw, err := apconfig.ReadCoreStubInfo(configPath)
+	if err != nil {
+		logger.Error("读取指示 JSON 失败", "err", err.Error())
+		return nil
+	}
 
-	// 读取配置文件
-	if err := Viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// 否则为正常的加载, 默认不会创建配置文件, 以识别出有问题的键音包
-			logger.Error("未找到正确的音频包配置", "path", configPath)
-		} else {
-			// 其他错误
-			logger.Error("读取音频包配置时发生致命错误", "err", err.Error())
+	albumUUID := filepath.Base(configPath)
+
+	if stubInfo != nil {
+		corePath := filepath.Join(configPath, stubInfo.Core)
+		cipherBytes, err := os.ReadFile(corePath)
+		if err != nil {
+			logger.Error("读取 core 文件失败", "err", err.Error())
+			return nil
 		}
+		plain, err := apenc.DecryptConfigBytes(cipherBytes, albumUUID)
+		if err != nil {
+			logger.Error("解密 core 文件失败", "err", err.Error())
+			return nil
+		}
+		plainJSON = plain
+	} else {
+		if pkgRaw == nil {
+			pkgPath := filepath.Join(configPath, "package.json")
+			pkgRaw, err = os.ReadFile(pkgPath)
+			if err != nil {
+				logger.Error("读取音频包配置时发生致命错误", "err", err.Error())
+				return nil
+			}
+		}
+
+		if apenc.IsLikelyHexCipher(pkgRaw) {
+			plain, decErr := apenc.DecryptConfigHex(strings.TrimSpace(string(pkgRaw)), albumUUID)
+			if decErr != nil {
+				logger.Error("旧版密文解密失败", "err", decErr.Error())
+				return nil
+			}
+			plainJSON = plain
+		} else {
+			plainJSON = string(pkgRaw)
+		}
+	}
+
+	if err := Viper.ReadConfig(strings.NewReader(plainJSON)); err != nil {
+		logger.Error("解析音频包配置失败", "err", err.Error())
+		return nil
 	}
 
 	// 从加载的配置文件中, 读取 package_name 字段
@@ -77,11 +161,62 @@ func GetAudioPackageName(configPath string) any {
 	return Viper.Get("package_name")
 }
 
-// 更新专辑配置文件中的 UUID
-func UpdateAlbumUUID(albumPath string, newUUID string) error {
+// UpdateAlbumUUID 更新专辑配置文件中的 UUID，必要时处理加密 core 文件。
+// originalUUID 用于解密旧密文；若为空则回退为当前目录名。
+func UpdateAlbumUUID(albumPath string, newUUID string, originalUUID string) error {
+	stubInfo, _, err := apconfig.ReadCoreStubInfo(albumPath)
+	if err != nil {
+		return err
+	}
+
+	if originalUUID == "" {
+		originalUUID = filepath.Base(albumPath)
+	}
+
+	albumUUID := filepath.Base(albumPath)
+
+	if stubInfo != nil {
+		corePath := filepath.Join(albumPath, stubInfo.Core)
+		cipherBytes, err := os.ReadFile(corePath)
+		if err != nil {
+			return err
+		}
+		plain, err := apenc.DecryptConfigBytes(cipherBytes, originalUUID)
+		if err != nil {
+			// 兼容旧行为：尝试使用目录名再次解密
+			if fallback, fallbackErr := apenc.DecryptConfigBytes(cipherBytes, albumUUID); fallbackErr == nil {
+				plain = fallback
+			} else {
+				return err
+			}
+		}
+		var data map[string]any
+		if err := json.Unmarshal([]byte(plain), &data); err != nil {
+			return err
+		}
+		data["audio_pkg_uuid"] = newUUID
+		updated, err := json.MarshalIndent(data, "", "  ")
+		if err != nil {
+			return err
+		}
+		cipherBytes, err = apenc.EncryptConfigBytes(string(updated), newUUID)
+		if err != nil {
+			return err
+		}
+		tmpCore := corePath + ".tmp"
+		if err := os.WriteFile(tmpCore, cipherBytes, 0644); err != nil {
+			return err
+		}
+		if err := os.Rename(tmpCore, corePath); err != nil {
+			_ = os.Remove(tmpCore)
+			return err
+		}
+		return apconfig.WriteCoreStubFile(albumPath)
+	}
+
 	// 加载配置文件
 	v := viper.New()
-	v.SetConfigName("config")
+	v.SetConfigName("package")
 	v.SetConfigType("json")
 	v.AddConfigPath(albumPath)
 

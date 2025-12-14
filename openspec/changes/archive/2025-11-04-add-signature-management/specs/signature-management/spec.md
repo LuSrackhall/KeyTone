@@ -32,8 +32,8 @@ Normative: The system SHALL provide a dialog to create a signature with required
 **Then**：系统应该：
 
 - 验证输入数据（名称非空、图片格式和大小符合要求）
-- 将图片转为 Base64（如果有）
-- 调用后端 `/signature/create` API
+ - 以 `multipart/form-data` 上传原始图片文件（如果有）
+ - 调用后端 `/signature/create` API，并由后端在 `ConfigPath/signature` 下落盘保存文件
 - 后端生成签名 ID 和保护码（前端无需处理）
 - 后端保存图片文件并加密存储签名数据
 - **配置文件更新后，现有 SSE 机制自动推送全量配置数据**（无需额外实现）
@@ -192,7 +192,7 @@ Normative: The system SHALL allow editing intro and card image while keeping nam
 **Then**：系统应该：
 
 - 验证修改后的数据
-- 将新图片转为 Base64（如果有）
+ - 以 `multipart/form-data` 上传新的图片文件（如果有）
 - 调用后端 `/signature/update` API
 - 后端保存新图片并更新加密存储的签名数据
 - **配置文件更新后，现有 SSE 机制自动推送全量配置数据**（无需额外实现）
@@ -231,7 +231,7 @@ Normative: The system SHALL require confirmation before deletion; the client MUS
 **Then**：系统应该：
 
 - 从签名管理器中移除该签名
-- 调用 `DELETE /signature/delete/:id` API
+- 调用 `POST /signature/delete` API，负载为 `{ id: <encryptedId> }`
 - 后端删除加密存储的签名数据
 - **配置文件更新后，现有 SSE 机制自动推送全量配置数据**（无需额外实现）
 - 显示删除成功提示
@@ -305,7 +305,7 @@ Normative: The client SHALL fetch the encrypted list via GET /signature/list; wh
 
 ### Requirement: 用户导出签名
 
-Normative: The client SHALL request export via POST /signature/export with the encryptedId; the backend MUST return a .ktsign binary stream with KeyB-encrypted internal JSON; the client MUST save only upon user confirmation.
+ Normative: The client SHALL request export via POST /signature/export with the encryptedId; the backend MUST return a .ktsign binary stream whose payload is the KeyB-encrypted JSON export (cardImage encoded as a lowercase hex string); the client MUST save only upon user confirmation.
 
 #### Scenario: 用户导出签名
 
@@ -324,7 +324,7 @@ Normative: The client SHALL request export via POST /signature/export with the e
 **Then**：系统应该：
 
 - 调用后端 `POST /signature/export` API，负载为 { encryptedId }
-- 后端根据存储数据构建导出内容（内部 JSON），并使用密钥B进行对称加密，最终返回二进制作为下载流（Content-Type: application/octet-stream）
+ - 后端根据存储数据构建导出内容（内部 JSON），并使用密钥B进行对称加密，最终返回经 AES-GCM 加密后以十六进制编码的字节流（Content-Type: application/octet-stream）
 - 前端接收文件流并保存至用户选择的位置
 - 显示导出成功提示
 
@@ -343,10 +343,10 @@ Normative: The client SHALL request export via POST /signature/export with the e
 
 **Acceptance Criteria**：
 
-- ✅ 导出的文件是有效的 JSON 格式
-- ✅ 包含完整的签名数据（ID、名称、介绍）
-- ✅ 图片以 Base64 格式嵌入（格式：data:image/png;base64,...）
-- ✅ 校验和正确计算
+- ✅ 导出的文件内容经密钥B解密后是有效的 JSON 格式
+- ✅ JSON 内包含完整的签名数据（ID、名称、介绍、图片文件名）
+- ✅ 图片二进制作为十六进制字符串嵌入（可为空字符串）
+- ✅ AES-GCM 校验通过（解密失败即视为校验失败）
 - ✅ 只有在用户确认保存后才显示成功提示
 - ✅ 支持旧浏览器降级方案
 
@@ -384,9 +384,9 @@ Normative: The client SHALL upload a .ktsign file via multipart to POST /signatu
 
 **Then**：系统应该：
 
-- 前端调用 `/signature/import` 并设置 `overwrite: true`
+- 前端调用 `/signature/import-confirm` 并设置 `overwrite: true`
 - 后端用新数据覆盖旧签名
-- 后端将 Base64 图片解码并保存
+- 后端将十六进制图片字符串解码为二进制后保存
 - 后端生成新的保护码
 - 后端加密并保存到配置文件
 - **配置文件更新后，现有 SSE 机制自动推送全量配置数据**（无需额外实现）

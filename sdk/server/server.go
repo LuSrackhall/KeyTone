@@ -21,6 +21,7 @@ package server
 
 import (
 	audioPackageConfig "KeyTone/audioPackage/config"
+	"KeyTone/audioPackage/enc"
 	audioPackageList "KeyTone/audioPackage/list"
 	"KeyTone/config"
 	"KeyTone/keyEvent"
@@ -48,11 +49,16 @@ import (
 )
 
 const (
-	KeytoneMagicNumber   = "KTAF"                 // KeyTone Album Format
-	KeytoneVersion       = "1.0.0"                // 当前版本号
-	KeytoneFileSignature = "KTALBUM"              // 文件签名
-	KeytoneFileVersion   = 1                      // 文件版本
-	KeytoneEncryptKey    = "KeyTone2024SecretKey" // 简单的对称加密密钥
+	KeytoneMagicNumber   = "KTAF"    // KeyTone Album Format
+	KeytoneVersion       = "1.0.0"   // 当前版本号
+	KeytoneFileSignature = "KTALBUM" // 文件签名
+	KeytoneFileVersion   = 1         // 文件版本（已废弃，仅用于向后兼容）
+
+	// 版本化加密密钥
+	KeytoneEncryptKeyV1      = "KeyTone2024SecretKey"                  // v1 密钥（旧版本，用于向后兼容）
+	KeytoneEncryptKeyV2      = "KeyTone2025AlbumSecureEncryptionKeyV2" // v2 密钥（当前版本）
+	KeytoneEncryptKeyCurrent = KeytoneEncryptKeyV2                     // 当前使用的密钥版本
+	KeytoneEncryptKey        = KeytoneEncryptKeyV1                     // 已废弃：向后兼容，请使用 KeytoneEncryptKeyV1
 )
 
 // KeytoneAlbumMeta 用于存储专辑元数据
@@ -103,10 +109,13 @@ func isValidAlbumStructure(albumPath string) error {
 		return fmt.Errorf("专辑目录名不符合规范")
 	}
 
-	// 检查 config.json 是否存在
-	configPath := filepath.Join(albumPath, "config.json")
+	// 检查 package.json || config.json 是否存在
+	configPath := filepath.Join(albumPath, "package.json")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return fmt.Errorf("缺少必要的配置文件 config.json")
+		configPath = filepath.Join(albumPath, "config.json")
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			return fmt.Errorf("缺少必要的配置文件 package.json 或 config.json")
+		}
 	}
 
 	return nil
@@ -221,14 +230,12 @@ func processImportedFile(src io.Reader, header KeytoneFileHeader, tempZipPath st
 		return &ImportError{Message: "读取文件数据失败:" + err.Error()}
 	}
 
-	// 解密数据
-	zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-	// 验证校验和
-	checksum := sha256.Sum256(zipData)
-	if checksum != header.Checksum {
-		return &ImportError{Message: "文件校验失败，文件可能已损坏"}
+	// 解密数据（支持多版本密钥）
+	zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+	if err != nil {
+		return &ImportError{Message: err.Error()}
 	}
+	logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 	// 保存解密后的数据到临时zip文件
 	if err := os.WriteFile(tempZipPath, zipData, 0644); err != nil {
@@ -321,6 +328,59 @@ func xorCrypt(data []byte, key string) []byte {
 		result[i] = data[i] ^ keyBytes[i%len(keyBytes)]
 	}
 	return result
+}
+
+// getEncryptKeyByVersion 根据版本号获取对应的加密密钥
+// 参数:
+//   - version: 文件版本号
+//
+// 返回:
+//   - string: 对应的加密密钥
+func getEncryptKeyByVersion(version uint8) string {
+	switch version {
+	case 1:
+		return KeytoneEncryptKeyV1
+	case 2:
+		return KeytoneEncryptKeyV2
+	default:
+		// 未知版本，返回当前密钥
+		logger.Warn("未知的文件版本号，使用当前密钥", "version", version)
+		return KeytoneEncryptKeyCurrent
+	}
+}
+
+// decryptAlbumData 解密专辑数据，支持多版本密钥回退
+// 参数:
+//   - encryptedData: 加密的数据
+//   - header: 文件头结构
+//
+// 返回:
+//   - []byte: 解密后的数据
+//   - uint8: 实际使用的密钥版本
+//   - error: 错误信息
+func decryptAlbumData(encryptedData []byte, header KeytoneFileHeader) ([]byte, uint8, error) {
+	// 首先根据版本号选择密钥
+	decryptKey := getEncryptKeyByVersion(header.Version)
+	zipData := xorCrypt(encryptedData, decryptKey)
+
+	// 验证校验和
+	checksum := sha256.Sum256(zipData)
+	if checksum == header.Checksum {
+		return zipData, header.Version, nil
+	}
+
+	// 如果校验失败且版本不是v1，尝试使用v1密钥回退
+	if header.Version != 1 {
+		logger.Warn("使用版本密钥解密失败，尝试v1密钥回退", "version", header.Version)
+		zipData = xorCrypt(encryptedData, KeytoneEncryptKeyV1)
+		checksum = sha256.Sum256(zipData)
+		if checksum == header.Checksum {
+			logger.Info("使用v1密钥成功解密", "file_version", header.Version)
+			return zipData, 1, nil
+		}
+	}
+
+	return nil, 0, fmt.Errorf("文件校验失败，文件可能已损坏或使用了不支持的加密版本")
 }
 
 func ServerRun() {
@@ -939,6 +999,336 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 独立加密 API：前端在选择"需要签名"时调用，根据传入的专辑路径加密配置文件
+	keytonePkgRouters.POST("/encrypt_album_config", func(ctx *gin.Context) {
+		type Arg struct {
+			AlbumPath string `json:"albumPath"`
+		}
+
+		var arg Arg
+		if err := ctx.ShouldBindJSON(&arg); err != nil || strings.TrimSpace(arg.AlbumPath) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 请求体必须包含 albumPath",
+			})
+			return
+		}
+
+		albumPath := arg.AlbumPath
+		// 校验目录是否存在
+		info, err := os.Stat(albumPath)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 专辑目录不存在或无法访问:" + err.Error(),
+			})
+			return
+		}
+		if !info.IsDir() {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: albumPath 必须是目录",
+			})
+			return
+		}
+
+		pkgPath := filepath.Join(albumPath, "package.json")
+		stubInfo, pkgRaw, err := audioPackageConfig.ReadCoreStubInfo(albumPath)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 读取指示 JSON 失败:" + err.Error(),
+			})
+			return
+		}
+		if stubInfo != nil {
+			corePath := filepath.Join(albumPath, stubInfo.Core)
+			if _, err := os.Stat(corePath); err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: core 文件缺失:" + err.Error(),
+				})
+				return
+			}
+			logger.Info("专辑配置已加密，跳过重复操作", "album", albumPath)
+			ctx.JSON(http.StatusOK, gin.H{
+				"message":           "ok",
+				"already_encrypted": true,
+			})
+			return
+		}
+
+		if pkgRaw == nil {
+			pkgRaw, err = os.ReadFile(pkgPath)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 读取配置文件失败:" + err.Error(),
+				})
+				return
+			}
+		}
+
+		albumUUID := filepath.Base(albumPath)
+		plainJSON := strings.TrimSpace(string(pkgRaw))
+		migrated := false
+		if enc.IsLikelyHexCipher(pkgRaw) {
+			decoded, decErr := enc.DecryptConfigHex(plainJSON, albumUUID)
+			if decErr != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 旧版密文解密失败:" + decErr.Error(),
+				})
+				return
+			}
+			plainJSON = decoded
+			migrated = true
+		} else {
+			if err := enc.ValidateJSONFast(plainJSON); err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"message": "error: 配置内容不是有效的 JSON",
+				})
+				return
+			}
+		}
+
+		cipherBytes, err := enc.EncryptConfigBytes(plainJSON, albumUUID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 加密配置失败:" + err.Error(),
+			})
+			return
+		}
+
+		corePath := filepath.Join(albumPath, audioPackageConfig.CoreFileName)
+		tmpCore := corePath + ".tmp"
+		if err := os.WriteFile(tmpCore, cipherBytes, 0644); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入 core 临时文件失败:" + err.Error(),
+			})
+			return
+		}
+		if err := os.Rename(tmpCore, corePath); err != nil {
+			_ = os.Remove(tmpCore)
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 重命名 core 临时文件失败:" + err.Error(),
+			})
+			return
+		}
+
+		if err := audioPackageConfig.WriteCoreStubFile(albumPath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 写入指示 JSON 失败:" + err.Error(),
+			})
+			return
+		}
+
+		logger.Info("专辑配置加密成功", "album", albumPath, "migrated", migrated)
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":   "ok",
+			"encrypted": true,
+			"migrated":  migrated,
+		})
+
+		audioPackageConfig.LoadConfig(albumPath, false)
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":   "ok",
+			"encrypted": true,
+		})
+	})
+
+	keytonePkgRouters.POST("/apply_signature_config", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath              string `json:"albumPath" binding:"required"`
+			NeedSignature          bool   `json:"needSignature"`
+			RequireAuthorization   bool   `json:"requireAuthorization"`
+			SignatureID            string `json:"signatureId" binding:"required"`
+			ContactEmail           string `json:"contactEmail"`
+			ContactAdditional      string `json:"contactAdditional"`
+			UpdateSignatureContent bool   `json:"updateSignatureContent"`
+			// AuthorizationUUID 授权标识UUID
+			// 首次导出时由前端nanoid生成并传入，用于未来签名授权导出/导入功能
+			// 再次导出时可传空字符串，SDK会沿用已存储的UUID
+			AuthorizationUUID string `json:"authorizationUUID"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的签名配置请求体",
+			})
+			return
+		}
+
+		if strings.TrimSpace(req.AlbumPath) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: albumPath 不能为空",
+			})
+			return
+		}
+
+		if (req.NeedSignature || req.RequireAuthorization) && strings.TrimSpace(req.SignatureID) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 选择签名后才能导出",
+			})
+			return
+		}
+
+		if req.RequireAuthorization && strings.TrimSpace(req.ContactEmail) == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 需要授权时必须提供联系邮箱",
+			})
+			return
+		}
+
+		logger.Info("收到签名配置应用请求",
+			"albumPath", req.AlbumPath,
+			"needSignature", req.NeedSignature,
+			"requireAuthorization", req.RequireAuthorization,
+			"signatureId", req.SignatureID,
+			"contactEmail", req.ContactEmail,
+			"contactAdditional", req.ContactAdditional,
+			"authorizationUUID", req.AuthorizationUUID,
+		)
+
+		// 调用签名应用函数
+		qualificationCode, err := audioPackageConfig.ApplySignatureToAlbum(
+			req.AlbumPath,
+			req.SignatureID,
+			req.RequireAuthorization,
+			req.ContactEmail,
+			req.ContactAdditional,
+			req.UpdateSignatureContent,
+			req.AuthorizationUUID, // 授权标识UUID（首次导出时前端nanoid生成）
+		)
+
+		if err != nil {
+			logger.Error("签名应用失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 签名应用失败: " + err.Error(),
+			})
+			return
+		}
+
+		logger.Info("签名应用成功", "qualificationCode", qualificationCode)
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":           "ok",
+			"success":           true,
+			"qualificationCode": qualificationCode,
+		})
+	})
+
+	// 获取专辑签名信息（前端需求2和4）
+	keytonePkgRouters.POST("/get_album_signature_info", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath string `json:"albumPath" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		signatureInfo, err := audioPackageConfig.GetAlbumSignatureInfo(req.AlbumPath)
+		if err != nil {
+			logger.Error("获取专辑签名信息失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "ok",
+			"data":    signatureInfo,
+		})
+	})
+
+	// 检查签名是否在专辑中（前端需求3）
+	keytonePkgRouters.POST("/check_signature_in_album", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath   string `json:"albumPath" binding:"required"`
+			SignatureID string `json:"signatureId" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		isInAlbum, qualCode, hasChanges, err := audioPackageConfig.CheckSignatureInAlbum(req.AlbumPath, req.SignatureID)
+		if err != nil {
+			logger.Error("检查签名失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":           "ok",
+			"isInAlbum":         isInAlbum,
+			"qualificationCode": qualCode,
+			"hasChanges":        hasChanges,
+		})
+	})
+
+	// 检查签名授权状态（前端需求3）
+	keytonePkgRouters.POST("/check_signature_authorization", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath   string `json:"albumPath" binding:"required"`
+			SignatureID string `json:"signatureId" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		isAuthorized, requireAuth, qualCode, err := audioPackageConfig.CheckSignatureAuthorization(req.AlbumPath, req.SignatureID)
+		if err != nil {
+			logger.Error("检查签名授权失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":              "ok",
+			"isAuthorized":         isAuthorized,
+			"requireAuthorization": requireAuth,
+			"qualificationCode":    qualCode,
+		})
+	})
+
+	// 获取可用于导出的签名列表（前端需求3）
+	keytonePkgRouters.POST("/get_available_signatures", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath string `json:"albumPath" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		signatures, err := audioPackageConfig.GetAvailableSignaturesForExport(req.AlbumPath)
+		if err != nil {
+			logger.Error("获取可用签名列表失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message":    "ok",
+			"signatures": signatures,
+		})
+	})
+
 	keytonePkgRouters.POST("/export_album", func(ctx *gin.Context) {
 		type Arg struct {
 			AlbumPath string `json:"albumPath"`
@@ -1090,12 +1480,12 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 计算校验和
 		checksum := sha256.Sum256(zipData)
 
-		// 加密 zip 数据
-		encryptedData := xorCrypt(zipData, KeytoneEncryptKey)
+		// 加密 zip 数据（使用当前版本密钥 v2）
+		encryptedData := xorCrypt(zipData, KeytoneEncryptKeyCurrent)
 
-		// 创建文件头
+		// 创建文件头（使用版本号 2）
 		header := KeytoneFileHeader{
-			Version:  KeytoneFileVersion,
+			Version:  2, // 使用 v2 版本号
 			DataSize: uint64(len(encryptedData)),
 			Checksum: checksum,
 		}
@@ -1144,7 +1534,7 @@ func keytonePkgRouters(r *gin.Engine) {
 
 		// 清除sdk中的已选择键音包
 		// TIPS: 若后续需要实现删除任意键音包, 则需要进行判断, 若删除的键音包中存在当前已选择的键音包, 才需要清除。
-		audioPackageConfig.Viper = nil
+		audioPackageConfig.ClearConfig()
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",
@@ -1259,6 +1649,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		// 使用新的专辑ID创建目标路径
+		originalAlbumID := filepath.Base(albumPath)
 		targetPath := filepath.Join(audioPackageConfig.AudioPackagePath, newAlbumId)
 
 		// 复制到目标路径
@@ -1270,7 +1661,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		}
 
 		// 更新配置文件中的UUID
-		if err := audioPackageList.UpdateAlbumUUID(targetPath, newAlbumId); err != nil {
+		if err := audioPackageList.UpdateAlbumUUID(targetPath, newAlbumId, originalAlbumID); err != nil {
 			// 如果更新失败，清理已复制的文件夹
 			os.RemoveAll(targetPath)
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -1342,17 +1733,15 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 解密数据
-		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-		// 验证校验和
-		checksum := sha256.Sum256(zipData)
-		if checksum != header.Checksum {
+		// 解密数据（支持多版本密钥）
+		zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "error: 文件校验失败，文件可能已损坏",
+				"message": "error: " + err.Error(),
 			})
 			return
 		}
+		logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 		// 创建临时文件保存 zip 数据
 		tempDir, err := os.MkdirTemp("", "keytone_import_*")
@@ -1583,17 +1972,15 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 解密数据
-		zipData := xorCrypt(encryptedData, KeytoneEncryptKey)
-
-		// 验证校验和
-		checksum := sha256.Sum256(zipData)
-		if checksum != header.Checksum {
+		// 解密数据（支持多版本密钥）
+		zipData, usedVersion, err := decryptAlbumData(encryptedData, header)
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"message": "error: 文件校验失败，文件可能已损坏",
+				"message": "error: " + err.Error(),
 			})
 			return
 		}
+		logger.Info("专辑数据解密成功", "file_version", header.Version, "used_key_version", usedVersion)
 
 		// 创建临时zip文件
 		tempFile, err := os.CreateTemp("", "keytone_meta_*.zip")

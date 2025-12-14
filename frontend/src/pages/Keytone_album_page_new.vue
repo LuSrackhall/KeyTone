@@ -83,6 +83,27 @@
               dense
               round
               size="xs"
+              icon="badge"
+              color="amber"
+              :disable="!setting_store.mainHome.selectedKeyTonePkg"
+              class="w-6.5 h-6.5 opacity-60 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 backdrop-blur hover:opacity-100 hover:-translate-y-px hover:bg-white/15 disabled:opacity-30 disabled:transform-none disabled:cursor-not-allowed"
+              @click="showAlbumSignatureInfo"
+            >
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                :offset="[0, 8]"
+                class="rounded-lg text-[0.8rem] px-3 py-1.2"
+              >
+                查看签名信息
+              </q-tooltip>
+            </q-btn>
+
+            <q-btn
+              flat
+              dense
+              round
+              size="xs"
               icon="delete"
               color="negative"
               :disable="!setting_store.mainHome.selectedKeyTonePkg"
@@ -259,6 +280,81 @@
         </div>
       </div>
     </div>
+
+    <!-- Export Signature Flow Dialogs -->
+    <!-- 1) 是否需要签名（仅无签名专辑导出时展示） -->
+    <export-signature-confirm-dialog
+      :visible="exportFlow.confirmSignatureDialogVisible.value"
+      @submit="exportFlow.handleConfirmSignatureSubmit"
+      @cancel="exportFlow.handleConfirmSignatureCancel"
+    />
+    <!-- 1.5) 再次导出警告（已有签名专辑导出时展示） -->
+    <export-reexport-warning-dialog
+      :visible="exportFlow.reExportWarningDialogVisible.value"
+      @confirm="exportFlow.handleReExportConfirm"
+      @cancel="exportFlow.handleReExportCancel"
+    />
+    <!-- 2) 是否需要授权（默认无需授权，推荐） -->
+    <export-authorization-requirement-dialog
+      :visible="exportFlow.authRequirementDialogVisible.value"
+      @submit="exportFlow.handleAuthRequirementSubmit"
+      @cancel="exportFlow.handleAuthRequirementCancel"
+    />
+    <!-- 3) 授权的二次确认提示 -->
+    <export-authorization-impact-confirm-dialog
+      :visible="exportFlow.authImpactConfirmDialogVisible.value"
+      @confirm="exportFlow.handleAuthImpactConfirm"
+      @back="exportFlow.handleAuthImpactBack"
+    />
+    <!-- 4) 填写授权联系方式（必填） -->
+    <export-authorization-contact-dialog
+      :visible="exportFlow.authContactDialogVisible.value"
+      @submit="exportFlow.handleAuthContactSubmit"
+      @cancel="exportFlow.handleAuthContactCancel"
+    />
+    <!-- 5) 已有签名且需要授权 → 授权门控（导入授权文件） -->
+    <export-authorization-gate-dialog
+      :visible="exportFlow.authGateDialogVisible.value"
+      :contact-email="authorContactEmail"
+      :contact-additional="authorContactAdditional"
+      :authorizationUUID="authorizationUUID"
+      :requester-encrypted-signature-id="requesterEncryptedSignatureID"
+      :original-author-qualification-code="originalAuthorQualificationCode"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+      @authorized="exportFlow.handleAuthGateAuthorized"
+      @cancel="exportFlow.handleAuthGateCancel"
+    />
+    <!-- 6) 选择签名（带创建按钮） -->
+    <signature-picker-dialog
+      :visible="exportFlow.pickerDialogVisible.value"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+      :require-authorization="exportFlow.requireAuthorizationForPicker.value"
+      @select="exportFlow.handlePickerSelect"
+      @createNew="onOpenCreateSignature"
+      @cancel="exportFlow.handlePickerCancel"
+      @importAuth="exportFlow.openAuthGateFromPicker"
+      @authRequest="exportFlow.openAuthRequestFromPicker"
+    />
+    <!-- 7) 授权申请对话框 -->
+    <auth-request-dialog
+      :visible="exportFlow.authRequestDialogVisible.value"
+      :signatures="authRequestSignatures"
+      :contact-email="authorContactEmail"
+      :contact-additional="authorContactAdditional"
+      :authorizationUUID="authorizationUUID"
+      :original-author-qualification-code="originalAuthorQualificationCode"
+      @done="exportFlow.handleAuthRequestDone"
+      @cancel="exportFlow.handleAuthRequestCancel"
+      @createSignature="onOpenCreateSignature"
+    />
+    <!-- 真实的创建签名对话框（已存在的组件） -->
+    <SignatureFormDialog v-model="showSignatureFormDialog" :signature="null" @success="onSignatureFormSuccess" />
+
+    <!-- 签名作者信息对话框 -->
+    <SignatureAuthorsDialog
+      ref="signatureAuthorsDialogRef"
+      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+    />
   </div>
 </template>
 
@@ -267,21 +363,39 @@ import { QSelect, useQuasar } from 'quasar';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { nanoid } from 'nanoid';
-import { computed, nextTick, useTemplateRef } from 'vue';
+import { computed, nextTick, useTemplateRef, ref, watch, onMounted, onUnmounted } from 'vue';
 import KeytoneAlbum from 'src/components/Keytone_album.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ExportSignatureConfirmDialog from 'src/components/export-flow/ExportSignatureConfirmDialog.vue';
+import ExportReexportWarningDialog from 'src/components/export-flow/ExportReexportWarningDialog.vue';
+import ExportAuthorizationRequirementDialog from 'src/components/export-flow/ExportAuthorizationRequirementDialog.vue';
+import ExportAuthorizationImpactConfirmDialog from 'src/components/export-flow/ExportAuthorizationImpactConfirmDialog.vue';
+import ExportAuthorizationContactDialog from 'src/components/export-flow/ExportAuthorizationContactDialog.vue';
+import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuthorizationGateDialog.vue';
+import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
+import AuthRequestDialog from 'src/components/export-flow/AuthRequestDialog.vue';
+import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
+import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
+import SignatureSelectionDialog from 'src/components/export-flow/SignatureSelectionDialog.vue';
+import {
+  useExportSignatureFlow,
+  type ExportSignatureFlowResult,
+} from 'src/components/export-flow/useExportSignatureFlow';
 import {
   DeleteAlbum,
   GetAudioPackageName,
   ExportAlbum,
+  EncryptAlbumConfig,
+  ApplySignatureConfig,
   ImportAlbum,
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
   LoadConfig,
   GetAlbumMeta,
+  GetAvailableSignaturesForExport,
   type AlbumMeta,
 } from 'src/boot/query/keytonePkg-query';
+import { getSignaturesList, decryptSignatureData, getSignatureImage } from 'src/boot/query/signature-query';
 
 // 扩展HTMLInputElement类型以支持webkitdirectory属性
 declare global {
@@ -310,6 +424,176 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+// Export Signature Flow 初始化
+const exportFlow = useExportSignatureFlow();
+
+// 原始作者联系方式 - 从专辑签名信息中获取
+const authorContactEmail = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.contactEmail || '';
+});
+
+const authorContactAdditional = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.contactAdditional || '';
+});
+
+// 授权申请所需签名列表 - 复用 SignaturePickerDialog 加载的签名
+// 这个数据需要从 picker 对话框共享或单独获取
+const authRequestSignaturesData = ref<
+  Array<{
+    id: string;
+    name: string;
+    intro?: string;
+    image?: string;
+    isAuthorized?: boolean;
+  }>
+>([]);
+
+// 授权申请所需的计算属性
+const authRequestSignatures = computed(() => {
+  return authRequestSignaturesData.value;
+});
+
+// 加载授权申请所需的签名数据
+async function loadAuthRequestSignatures() {
+  if (!setting_store.mainHome.selectedKeyTonePkg) return;
+
+  try {
+    // 获取可用签名及其授权状态
+    const availableSignatures = await GetAvailableSignaturesForExport(setting_store.mainHome.selectedKeyTonePkg);
+    const encryptedSignatures = await getSignaturesList();
+
+    // 构建授权状态映射
+    const authMap = new Map<string, boolean>();
+    availableSignatures.forEach((sig) => {
+      authMap.set(sig.encryptedId, sig.isAuthorized);
+    });
+
+    // 解密签名并构建列表
+    const signatures: typeof authRequestSignaturesData.value = [];
+    for (const [encryptedId, entry] of Object.entries(encryptedSignatures)) {
+      try {
+        let encryptedValue: string;
+        if (typeof entry === 'string') {
+          encryptedValue = entry;
+        } else if (typeof entry === 'object' && entry !== null) {
+          encryptedValue = (entry as { value?: string }).value || '';
+        } else {
+          continue;
+        }
+        if (!encryptedValue) continue;
+
+        const decryptedJson = await decryptSignatureData(encryptedValue, encryptedId);
+        if (!decryptedJson) continue;
+
+        const signatureData = JSON.parse(decryptedJson);
+
+        // 获取图片URL
+        let imageUrl: string | undefined;
+        if (signatureData.cardImage) {
+          try {
+            const result = await getSignatureImage(signatureData.cardImage);
+            if (result && result instanceof Blob) {
+              imageUrl = URL.createObjectURL(result);
+            }
+          } catch (err) {
+            console.error('[AuthRequest] Error fetching image:', err);
+          }
+        }
+
+        signatures.push({
+          id: encryptedId,
+          name: signatureData.name,
+          intro: signatureData.intro,
+          image: imageUrl,
+          isAuthorized: authMap.get(encryptedId) ?? false,
+        });
+      } catch (err) {
+        console.error(`[AuthRequest] Error processing signature ${encryptedId}:`, err);
+      }
+    }
+
+    authRequestSignaturesData.value = signatures;
+  } catch (err) {
+    console.error('[AuthRequest] Error loading signatures:', err);
+    authRequestSignaturesData.value = [];
+  }
+}
+
+// 当授权申请对话框打开时，加载签名数据
+watch(
+  () => exportFlow.authRequestDialogVisible.value,
+  async (visible) => {
+    if (visible) {
+      await loadAuthRequestSignatures();
+    }
+  }
+);
+
+const authorizationUUID = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  // 从 allSignatures 中通过原始作者的资格码找到对应条目，获取 authorizationUUID
+  const originalAuthorCode = signatureInfo.originalAuthor.qualificationCode;
+  const entry = signatureInfo.allSignatures?.[originalAuthorCode];
+  return entry?.authorization?.authorizationUUID || '';
+});
+
+const originalAuthorQualificationCode = computed(() => {
+  const signatureInfo = exportFlow.state.value.signatureInfo;
+  if (!signatureInfo?.originalAuthor) return '';
+  // 返回原始作者的资格码
+  return signatureInfo.originalAuthor.qualificationCode || '';
+});
+
+const requesterEncryptedSignatureID = computed(() => {
+  // 在授权门控对话框中，我们需要传递当前用户选择的签名ID（加密的）
+  // 这个ID通常在签名选择器中选择，或者在授权门控对话框中选择（如果支持的话）
+  // 目前的流程是：签名选择器 -> 发现未授权 -> 弹出授权门控
+  // 所以我们可以从 exportFlow 的状态中获取当前选择的签名ID
+  // 但是 exportFlow.state.value.selectedSignatureId 可能为空（如果是在选择器中点击"导入授权"）
+  // 如果为空，我们可能需要让用户在授权门控对话框中选择签名，或者默认使用第一个签名
+  // 暂时返回空字符串，由 ExportAuthorizationGateDialog 处理选择逻辑（如果需要）
+  // 或者，我们可以假设用户在签名选择器中已经选择了一个签名，然后点击了"导入授权"
+  // 但实际上"导入授权"是一个单独的按钮，不依赖于选中签名
+  // 因此，ExportAuthorizationGateDialog 可能需要自己处理签名选择，或者我们在这里提供一个默认值
+  return '';
+});
+
+// 真实创建签名对话框控制（已存在组件）
+const showSignatureFormDialog = ref(false);
+const onOpenCreateSignature = () => {
+  showSignatureFormDialog.value = true;
+};
+const onSignatureFormSuccess = async () => {
+  // 签名创建成功后，如果授权申请对话框是打开的，刷新签名列表
+  if (exportFlow.authRequestDialogVisible.value) {
+    await loadAuthRequestSignatures();
+  }
+  // 注意：SignatureFormDialog 组件内部已经显示了创建成功的提示，这里不再重复显示
+};
+
+// 签名信息对话框控制
+const signatureAuthorsDialogRef = ref<InstanceType<typeof SignatureAuthorsDialog> | null>(null);
+const showAlbumSignatureInfo = () => {
+  if (!setting_store.mainHome.selectedKeyTonePkg) {
+    q.notify({
+      type: 'warning',
+      message: '请先选择一个专辑',
+      position: 'top',
+    });
+    return;
+  }
+  signatureAuthorsDialogRef.value?.open();
+};
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -372,18 +656,116 @@ interface FileSystemWritableFileStream extends WritableStream {
   close: () => Promise<void>;
 }
 
+/**
+ * 在需要签名或授权时，完成配置加密并向 SDK 提交签名决策。
+ */
+const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSignatureFlowResult): Promise<boolean> => {
+  const needSignature = !!result.needSignature;
+  const requireAuthorization = !!result.requireAuthorization;
+  const shouldApplySignature = needSignature || requireAuthorization;
+
+  if (!shouldApplySignature) {
+    console.log('无需签名与授权，跳过配置加密与签名写入步骤');
+    return true;
+  }
+
+  const signatureId = result.signatureId;
+
+  if (!signatureId) {
+    const translated = $t('keyToneAlbumPage.notify.selectSignatureFirst');
+    const message =
+      translated && translated !== 'keyToneAlbumPage.notify.selectSignatureFirst' ? translated : '请先选择签名后再导出';
+    q.notify({ type: 'warning', message });
+    return false;
+  }
+
+  if (requireAuthorization) {
+    const trimmedEmail = result.contactEmail?.trim();
+    if (!trimmedEmail) {
+      const translated = $t('exportFlow.contact.emailRequired');
+      const message =
+        translated && translated !== 'exportFlow.contact.emailRequired' ? translated : '请填写联系邮箱以便作者授权';
+      q.notify({ type: 'warning', message });
+      return false;
+    }
+  }
+
+  console.log('[SignatureFlow] 准备写入签名配置', {
+    albumPath,
+    needSignature,
+    requireAuthorization,
+    signatureId: result.signatureId,
+  });
+
+  try {
+    const encryptResult = await EncryptAlbumConfig(albumPath);
+    console.log('专辑配置加密结果:', encryptResult);
+    if (encryptResult.already_encrypted) {
+      console.log('配置已加密，跳过重复操作');
+    } else if (encryptResult.encrypted) {
+      console.log('配置加密成功');
+    }
+  } catch (encryptError) {
+    console.error('加密专辑配置失败:', encryptError);
+    q.notify({
+      type: 'negative',
+      message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
+    });
+    return false;
+  }
+
+  try {
+    await ApplySignatureConfig({
+      albumPath,
+      needSignature,
+      requireAuthorization,
+      signatureId,
+      contactEmail: result.contactEmail?.trim() || undefined,
+      contactAdditional: result.contactAdditional?.trim() || undefined,
+      updateSignatureContent: result.updateSignatureContent, // 传递更新标志
+      // 授权标识UUID：首次导出时由nanoid生成，再次导出时为undefined（SDK沿用已存储的UUID）
+      authorizationUUID: result.authorizationUUID,
+    });
+    console.log('签名配置已提交给 SDK');
+  } catch (applyError) {
+    console.error('提交签名配置失败:', applyError);
+    q.notify({
+      type: 'negative',
+      message: '提交签名配置失败: ' + (applyError instanceof Error ? applyError.message : String(applyError)),
+    });
+    return false;
+  }
+
+  return true;
+};
+
 // 降级方案 - 使用传统的下载方式
 const exportAlbumLegacy = async () => {
   try {
-    // 获取专辑名称
-    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
+    // 步骤1：检查签名/授权诉求，必要时加密并调用 SDK 路由
+    const result = exportFlow.getResult();
+    const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+    if (!albumPath) {
+      throw new Error('未选择任何键音专辑');
+    }
+    if (!result) {
+      throw new Error('导出结果缺失，请重新触发签名流程');
+    }
+
+    const prepared = await ensureSignatureConfigApplied(albumPath, result);
+    if (!prepared) {
+      return; // 错误提示由 helper 负责
+    }
+
+    // 步骤2：获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(albumPath);
     if (!albumNameResponse || albumNameResponse.message !== 'ok') {
       throw new Error('获取专辑名称失败');
     }
     const albumName = albumNameResponse.name;
 
-    // 调用导出函数获取zip文件blob
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
+    // 步骤3：调用导出函数获取zip文件blob
+    const blob = await ExportAlbum(albumPath);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -409,62 +791,35 @@ const exportAlbumLegacy = async () => {
   }
 };
 
-// 导出键音专辑 - 使用 File System Access API
+// 导出键音专辑 - 使用签名与授权流程
+/**
+ * 导出流程的入口
+ * 根据专辑的实际签名状态决定进入哪个对话框步骤
+ *
+ * @comment
+ * 三种情况的自动识别：
+ * 1. 专辑无签名 → 显示"确认签名"对话框
+ * 2. 专辑有签名且需要授权 → 显示"授权门控"对话框
+ * 3. 专辑有签名但不需要授权 → 直接进入"签名选择"对话框
+ */
 const exportAlbum = async () => {
-  // 检查 API 是否可用
-  if (typeof window.showSaveFilePicker !== 'function') {
-    console.log('Browser does not support File System Access API, falling back to legacy export');
-    return exportAlbumLegacy();
-  }
+  const albumPath = setting_store.mainHome.selectedKeyTonePkg;
 
-  try {
-    // 获取专辑名称
-    const albumNameResponse = await GetAudioPackageName(setting_store.mainHome.selectedKeyTonePkg);
-    if (!albumNameResponse || albumNameResponse.message !== 'ok') {
-      throw new Error('获取专辑名称失败');
-    }
-    const albumName = albumNameResponse.name;
-
-    // 获取导出数据
-    const blob = await ExportAlbum(setting_store.mainHome.selectedKeyTonePkg);
-
-    try {
-      // 打开系统的保存文件对话框
-      const handle = await window.showSaveFilePicker({
-        suggestedName: `${albumName}.ktalbum`,
-        types: [
-          {
-            description: $t('keyToneAlbumPage.notify.fileDescription'),
-            accept: { 'application/octet-stream': ['.ktalbum'] },
-          },
-        ],
-      });
-
-      // 写入文件
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-
-      // 文件成功保存后再通知
-      q.notify({
-        type: 'positive',
-        message: $t('keyToneAlbumPage.notify.exportSuccess'),
-      });
-    } catch (err) {
-      // 用户取消选择文件时不显示错误
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      throw err;
-    }
-  } catch (error) {
-    console.error('导出专辑失败:', error);
+  if (!albumPath) {
     q.notify({
-      type: 'negative',
-      message:
-        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+      type: 'warning',
+      message: '请先选择一个专辑',
     });
+    return;
   }
+
+  // 使用真实API获取签名信息，自动判断流程
+  await exportFlow.start({
+    albumPath,
+    // 移除测试参数，强制使用真实API逻辑
+    // albumHasSignature: albumHasSignature.value,
+    // existingSignatureRequireAuthorization: testRequireAuthorization.value,
+  });
 };
 
 const blur = () => {
@@ -520,6 +875,95 @@ const setupScrollListeners = () => {
     }
   }, 100);
 };
+
+// 处理签名流程完成
+const handleExportSignatureFlowComplete = async () => {
+  const result = exportFlow.getResult();
+
+  if (!result) {
+    console.log('Export flow cancelled');
+    return;
+  }
+
+  console.log('Export signature flow completed with result:', result);
+
+  // 检查 API 是否可用
+  if (typeof window.showSaveFilePicker !== 'function') {
+    console.log('Browser does not support File System Access API, falling back to legacy export');
+    return exportAlbumLegacy();
+  }
+
+  try {
+    const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+    if (!albumPath) {
+      throw new Error('未选择任何键音专辑');
+    }
+
+    // 步骤1：按需加密并将签名/授权配置交给 SDK
+    const prepared = await ensureSignatureConfigApplied(albumPath, result);
+    if (!prepared) {
+      return;
+    }
+
+    // 步骤2：获取专辑名称
+    const albumNameResponse = await GetAudioPackageName(albumPath);
+    if (!albumNameResponse || albumNameResponse.message !== 'ok') {
+      throw new Error('获取专辑名称失败');
+    }
+    const albumName = albumNameResponse.name;
+
+    // 步骤3：获取导出数据
+    const blob = await ExportAlbum(albumPath);
+
+    try {
+      // 打开系统的保存文件对话框
+      const handle = await window.showSaveFilePicker({
+        suggestedName: `${albumName}.ktalbum`,
+        types: [
+          {
+            description: $t('keyToneAlbumPage.notify.fileDescription'),
+            accept: { 'application/octet-stream': ['.ktalbum'] },
+          },
+        ],
+      });
+
+      // 写入文件
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+
+      // 文件成功保存后再通知
+      q.notify({
+        type: 'positive',
+        message: $t('keyToneAlbumPage.notify.exportSuccess'),
+      });
+    } catch (err) {
+      // 用户取消选择文件时不显示错误
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      throw err;
+    }
+  } catch (error) {
+    console.error('导出专辑失败:', error);
+    q.notify({
+      type: 'negative',
+      message:
+        $t('keyToneAlbumPage.notify.exportFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+    });
+  }
+};
+
+// 监听签名流程完成
+watch(
+  () => exportFlow.currentStep.value,
+  (newStep) => {
+    if (newStep === 'done') {
+      handleExportSignatureFlowComplete();
+      exportFlow.reset();
+    }
+  }
+);
 
 // 监听键音包变化
 watch(

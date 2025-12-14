@@ -7,6 +7,9 @@
 /sdk/log.jsonl
 /sdk/temporaryDebug
 
+# Private Keys
+private_keys.env
+
 *.syso
 
 .DS_Store
