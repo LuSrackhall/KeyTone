@@ -12,6 +12,10 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
+    # 注意：GitHub Secrets 不会“自动变成环境变量”。
+    # 必须在 workflow 里显式把 secrets.EXTRA_LDFLAGS 映射到 env.EXTRA_LDFLAGS，make 才能继承到。
+    env:
+      EXTRA_LDFLAGS: ${{ secrets.EXTRA_LDFLAGS }}
     outputs:
       # region ------------Windows start
       # ----------------------------------------------------------------------------------------X64
