@@ -77,7 +77,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4 # 安装nodejs
         with:
-          node-version: "18" # 指定nodejs 版本
+          node-version: "20" # 指定nodejs 版本
 
       - name: Install Quasar CLI
         run: npm install -g @quasar/cli # 安装quasar/cli
