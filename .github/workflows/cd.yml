@@ -10,7 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-15, macos-latest]
+        os: [windows-latest, windows-11-arm, ubuntu-latest, macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
     # 注意：GitHub Secrets 不会“自动变成环境变量”。
     # 必须在 workflow 里显式把 secrets.EXTRA_LDFLAGS 映射到 env.EXTRA_LDFLAGS，make 才能继承到。
@@ -24,6 +24,10 @@ jobs:
       SHA256_X64_SETUP_EXE: ${{ env.SHA256_X64_SETUP_EXE }}
       MD5_X64_SETUP_EXE: ${{ env.MD5_X64_SETUP_EXE }}
       # ----------------------------------------------------------------------------------------arm64
+      INSTALLER_NAME_ARM64_SETUP_EXE: ${{ env.INSTALLER_NAME_ARM64_SETUP_EXE }}
+      INSTALLER_NAME_ARM64_ZIP: ${{ env.INSTALLER_NAME_ARM64_ZIP }}
+      SHA256_ARM64_SETUP_EXE: ${{ env.SHA256_ARM64_SETUP_EXE }}
+      MD5_ARM64_SETUP_EXE: ${{ env.MD5_ARM64_SETUP_EXE }}
       # endregion
       # -------------------Windows end
 
@@ -135,11 +139,41 @@ jobs:
 
       # ------------------------------------------------------/////////////////////
 
-      # - name: Build Application (Windows arm64)
+      - name: Build Application (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: bash # 我不喜欢powershell(即使是在windows下) # 这个指定, 应该会让我们使用git-bash。
+        run: |
+          cd sdk
+          make win
 
-      # - name: Find the generated installer (Windows arm64)
+      - name: Find the generated installer (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        working-directory: frontend/dist/electron/Packaged
+        shell: bash
+        run: |
+          # ----------------------------------------------------------------------------------------INSTALLER_NAME_ARM64_SETUP_EXE
+          INSTALLER_NAME_ARM64_SETUP_EXE=$(basename $(find -name 'KeyTone-*-win*exe'))
+          if [ "$INSTALLER_NAME_ARM64_SETUP_EXE" != "$(echo $INSTALLER_NAME_ARM64_SETUP_EXE | sed 's/win[^.]*\./win-arm64./')" ]; then
+            mv -f $INSTALLER_NAME_ARM64_SETUP_EXE $(echo $INSTALLER_NAME_ARM64_SETUP_EXE | sed 's/win[^.]*\./win-arm64./')
+            INSTALLER_NAME_ARM64_SETUP_EXE=$(echo $INSTALLER_NAME_ARM64_SETUP_EXE | sed 's/win[^.]*\./win-arm64./')
+          fi
+          echo "INSTALLER_NAME_ARM64_SETUP_EXE=$INSTALLER_NAME_ARM64_SETUP_EXE" >> $GITHUB_ENV
+          # ---------------------------------------------------------------------------------------------------ZIP start
+          INSTALLER_NAME_NO_EXE=$(echo $INSTALLER_NAME_ARM64_SETUP_EXE | sed 's/\.exe$//')
+          INSTALLER_NAME_ARM64_ZIP=$(echo ${INSTALLER_NAME_NO_EXE}_exe.zip)
+          echo "INSTALLER_NAME_ARM64_ZIP=$INSTALLER_NAME_ARM64_ZIP" >> $GITHUB_ENV
+          choco install zip -y
+          zip -j -9 ${INSTALLER_NAME_ARM64_ZIP} ${INSTALLER_NAME_ARM64_SETUP_EXE}
+          # -----------------------------------------------------------------------------------------------------ZIP end
 
-      # - name: Calculate File Hashes (Windows arm64)
+      - name: Calculate File Hashes (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: bash
+        run: |
+          SHA256_ARM64_SETUP_EXE=$(sha256sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_SETUP_EXE }} | awk '{print $1}')
+          MD5_ARM64_SETUP_EXE=$(md5sum frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_SETUP_EXE }} | awk '{print $1}')
+          echo "SHA256_ARM64_SETUP_EXE=$SHA256_ARM64_SETUP_EXE" >> $GITHUB_ENV
+          echo "MD5_ARM64_SETUP_EXE=$MD5_ARM64_SETUP_EXE" >> $GITHUB_ENV
 
       # endregion
       ################################################# Win end   ######################################################
@@ -293,6 +327,8 @@ jobs:
           path: |
             frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_SETUP_EXE }}
             frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_X64_ZIP }}
+            frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_SETUP_EXE }}
+            frontend/dist/electron/Packaged/${{ env.INSTALLER_NAME_ARM64_ZIP }}
 
   release:
     runs-on: ubuntu-latest
@@ -329,6 +365,10 @@ jobs:
 
             * `${{ needs.build.outputs.SHA256_X64_SETUP_EXE }}`
 
+            `${{ needs.build.outputs.INSTALLER_NAME_ARM64_SETUP_EXE }}` is:
+
+            * `${{ needs.build.outputs.SHA256_ARM64_SETUP_EXE }}`
+
             `${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}` is:
 
             * `${{ needs.build.outputs.SHA256_X64_TARGZ }}`
@@ -354,6 +394,10 @@ jobs:
             `${{ needs.build.outputs.INSTALLER_NAME_X64_SETUP_EXE }}` is:
 
             * `${{ needs.build.outputs.MD5_X64_SETUP_EXE }}`
+
+            `${{ needs.build.outputs.INSTALLER_NAME_ARM64_SETUP_EXE }}` is:
+
+            * `${{ needs.build.outputs.MD5_ARM64_SETUP_EXE }}`
 
             `${{ needs.build.outputs.INSTALLER_NAME_X64_TARGZ }}` is:
 
@@ -401,6 +445,26 @@ jobs:
           asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
           asset_name: ${{ needs.build.outputs.INSTALLER_NAME_X64_ZIP }}
           asset_content_type: application/zip # asset_content_type 的作用是指定上传文件的 MIME 类型。在这个例子中，它被设置为 application/zip，这是一种通用的压缩文件类型。这样做的目的是告诉 GitHub 这个文件的类型，以便在下载时正确处理它。
+
+      - name: Upload Build Artifact to Release (Windows arm64) (SETUP_EXE)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_ARM64_SETUP_EXE }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_ARM64_SETUP_EXE }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Build Artifact ZIP to Release (Windows arm64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/${{ needs.build.outputs.INSTALLER_NAME_ARM64_ZIP }}
+          asset_name: ${{ needs.build.outputs.INSTALLER_NAME_ARM64_ZIP }}
+          asset_content_type: application/zip
 
       # endregion
       # -------------------Windows end
@@ -469,7 +533,7 @@ jobs:
   ######################################################################################################### build win
   # build_windows_x64:
   #   runs-on: windows-latest # 指定虚拟机
-  # build_windows_arm64: # TIPS: github actions 的官方运行器暂不提供arm架构下的, win和linux系统环境。 如有需要, 只能自定义运行器。
+  # build_windows_arm64: # TIPS: GitHub-hosted runners 已提供 Windows arm64：runs-on: windows-11-arm
   ######################################################################################################### build linux
   # build_linux_x64:
   #   runs-on: linux-latest # 指定虚拟机
