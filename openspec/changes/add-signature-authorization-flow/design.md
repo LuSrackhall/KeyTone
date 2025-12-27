@@ -8,7 +8,7 @@
 
 ### 模块依赖关系
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         前端 (Vue/TypeScript)                     │
 ├─────────────────────────────────────────────────────────────────┤
@@ -77,9 +77,15 @@
   - 在 Secrets 中配置一个 `EXTRA_LDFLAGS` 变量，包含所有 `-X ...` 注入参数（使用混淆后的 Hex 值）。
   - Workflow 直接使用该 Secret，无需运行 setup 脚本。
 
+## 前端交互细节
+
+- 授权受理对话框（AuthGrantDialog）审核步骤：
+  - “申请方”字段文案调整为“申请方名称”，对应请求文件中的 `requesterSignatureName`。
+  - “您的签名”区域展示完整签名列表项（图片（若有）+名称+介绍）；若匹配多个则先选择再展示所选项。
+
 ### 授权申请文件生成流程
 
-```
+```text
 输入：
   - authorizationUUID: 专辑的授权标识UUID
   - originalAuthorQualificationCode: 原始作者的资格码
@@ -100,7 +106,7 @@
 
 ### 授权文件生成流程
 
-```
+```text
 输入：
   - authorizationUUIDHash: 从申请文件获取
   - requesterSignatureIDSuffix: 从申请文件获取
@@ -123,7 +129,7 @@
 
 ### 授权验证流程
 
-```
+```text
 输入：
   - authFile: 授权文件内容
   - authorizationUUID: 专辑的授权标识UUID
@@ -240,7 +246,8 @@
 
 **Props**:
 - `visible: boolean` - 对话框可见性
-- `signatures: Signature[]` - 本地签名列表
+- `localSignatures: Signature[]` - 本地已解密签名列表（用于展示完整签名列表项）
+- `getImageUrl: (imagePath: string) => string` - 图片路径转预览 URL（复用签名管理页的缓存逻辑）
 
 **Emits**:
 - `done` - 流程完成
@@ -256,6 +263,7 @@
 ### POST /signature/generate-auth-request
 
 **请求**:
+
 ```json
 {
   "authorizationUUID": "string",
@@ -266,6 +274,7 @@
 ```
 
 **响应**:
+
 ```json
 {
   "success": true,
@@ -278,6 +287,7 @@
 ### POST /signature/parse-auth-request
 
 **请求**:
+
 ```json
 {
   "fileContent": [二进制数组],
@@ -286,6 +296,7 @@
 ```
 
 **响应**:
+
 ```json
 {
   "success": true,
@@ -300,6 +311,7 @@
 ### POST /signature/generate-auth-grant
 
 **请求**:
+
 ```json
 {
   "authorizationUUIDHash": "string",
@@ -309,6 +321,7 @@
 ```
 
 **响应**:
+
 ```json
 {
   "success": true,
@@ -321,6 +334,7 @@
 ### POST /signature/verify-import-auth-grant
 
 **请求**:
+
 ```json
 {
   "fileContent": [二进制数组],
@@ -331,6 +345,7 @@
 ```
 
 **响应**:
+
 ```json
 {
   "success": true,
@@ -344,6 +359,7 @@
 ### POST /signature/add-to-authorized-list
 
 **请求**:
+
 ```json
 {
   "albumPath": "string",
@@ -352,6 +368,7 @@
 ```
 
 **响应**:
+
 ```json
 {
   "success": true,
@@ -361,7 +378,7 @@
 
 ## 调试日志格式
 
-```
+```text
 [授权申请生成] 开始
   - authorizationUUID: xxx
   - 变换: SHA256 → 取后10位

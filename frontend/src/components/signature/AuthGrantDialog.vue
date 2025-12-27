@@ -87,19 +87,42 @@
             <div v-if="matchedSignatures.length === 0" class="text-caption text-negative">
               {{ t('signature.authGrant.noMatchingSignature') }}
             </div>
-            <div v-else-if="matchedSignatures.length === 1" class="text-body2">
-              {{ matchedSignatures[0].name }}
-            </div>
-            <q-select
-              v-else
-              v-model="selectedMatchedSignatureId"
-              :options="matchedSignatureOptions"
-              emit-value
-              map-options
-              dense
-              outlined
-              :label="t('signature.authGrant.selectSignature')"
-            />
+            <template v-else>
+              <q-select
+                v-if="matchedSignatures.length > 1"
+                v-model="selectedMatchedSignatureId"
+                :options="matchedSignatureOptions"
+                emit-value
+                map-options
+                dense
+                outlined
+                :label="t('signature.authGrant.selectSignature')"
+              />
+
+              <!-- 选中的签名详情：展示完整签名列表项（图片+名称+介绍），若本地没有则回退名称 -->
+              <q-card
+                v-if="matchedSignatures.length === 1 || selectedMatchedSignatureId"
+                flat
+                bordered
+                class="bg-grey-1 q-mt-sm"
+              >
+                <q-item dense>
+                  <q-item-section avatar v-if="selectedLocalSignature?.cardImage">
+                    <q-avatar size="36px">
+                      <q-img :src="props.getImageUrl(String(selectedLocalSignature.cardImage))" />
+                    </q-avatar>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ selectedLocalSignature?.name || selectedMatchedSignatureFallback?.name || '' }}
+                    </q-item-label>
+                    <q-item-label caption v-if="selectedLocalSignature?.intro">
+                      {{ selectedLocalSignature.intro }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-card>
+            </template>
           </div>
 
           <!-- Warning -->
@@ -176,6 +199,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import type { Signature } from 'src/types/signature';
 import {
   parseAuthRequest,
   verifyAuthRequestOwner,
@@ -186,6 +210,12 @@ import {
 
 interface AuthGrantDialogProps {
   visible: boolean;
+
+  // 签名管理页本地已解密的签名列表（用于展示完整签名卡片）
+  localSignatures?: Signature[];
+
+  // 解析签名图片路径 -> 预览 URL（由父组件复用既有缓存逻辑提供）
+  getImageUrl?: (imagePath: string) => string;
 }
 
 interface AuthGrantDialogEmits {
@@ -195,6 +225,8 @@ interface AuthGrantDialogEmits {
 
 const props = withDefaults(defineProps<AuthGrantDialogProps>(), {
   visible: false,
+  localSignatures: () => [],
+  getImageUrl: () => '',
 });
 
 const emit = defineEmits<AuthGrantDialogEmits>();
@@ -226,6 +258,25 @@ const matchedSignatureOptions = computed(() => {
     label: sig.name,
     value: sig.encryptedId,
   }));
+});
+
+const selectedDisplayEncryptedId = computed(() => {
+  if (matchedSignatures.value.length === 1) {
+    return matchedSignatures.value[0].encryptedId;
+  }
+  return selectedMatchedSignatureId.value;
+});
+
+const selectedLocalSignature = computed(() => {
+  const encryptedId = selectedDisplayEncryptedId.value;
+  if (!encryptedId) return null;
+  return props.localSignatures.find((s) => s.id === encryptedId) || null;
+});
+
+const selectedMatchedSignatureFallback = computed(() => {
+  const encryptedId = selectedDisplayEncryptedId.value;
+  if (!encryptedId) return null;
+  return matchedSignatures.value.find((s) => s.encryptedId === encryptedId) || null;
 });
 
 // Watch

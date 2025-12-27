@@ -504,7 +504,7 @@
       "parseError": "解析授权申请文件失败",
       "noPermission": "您没有权限受理此申请。请确保您的签名列表中存在对应的签名。",
       "albumId": "专辑标识（哈希值）",
-      "requester": "申请方",
+      "requester": "申请方名称",
       "yourSignature": "您的签名",
       "noMatchingSignature": "未在您的签名列表中找到匹配的签名",
       "selectSignature": "选择用于授权的签名",

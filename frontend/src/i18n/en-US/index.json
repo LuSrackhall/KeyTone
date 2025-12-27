@@ -512,7 +512,7 @@
       "parseError": "Failed to parse authorization request file",
       "noPermission": "You don't have permission to handle this request. Make sure you have the corresponding signature in your list.",
       "albumId": "Album ID (Hash)",
-      "requester": "Requester",
+      "requester": "Requester Name",
       "yourSignature": "Your Signature",
       "noMatchingSignature": "No matching signature found in your list",
       "selectSignature": "Select signature to authorize with",

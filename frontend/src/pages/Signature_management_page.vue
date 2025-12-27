@@ -198,6 +198,8 @@
     <!-- 授权受理对话框 -->
     <AuthGrantDialog
       :visible="showAuthGrantDialogVisible"
+      :local-signatures="signatureList"
+      :get-image-url="getImageUrl"
       @done="handleAuthGrantDone"
       @cancel="handleAuthGrantCancel"
     />
