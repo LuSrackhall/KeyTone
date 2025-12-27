@@ -158,5 +158,5 @@ Normative: The signature management UI SHALL allow original authors to import au
 
 - **GIVEN** 用户在签名管理页面打开“授权受理”对话框并成功导入 `.ktauthreq`
 - **WHEN** 用户进入审核步骤
-- **THEN** 系统显示“申请方名称”（对应申请文件中的 requesterSignatureName）
-- **AND** 系统在“您的签名”区域展示完整签名列表项（图片（若有）+名称+介绍）；若匹配多个签名，则用户选择后展示所选项
+- **THEN** 系统显示"申请方名称"（对应申请文件中的 requesterSignatureName），支持横向滚动（滚动条样式与签名列表一致）以防长文本溢出
+- **AND** 系统在"您的签名"区域展示完整签名列表项（图片（若有）+名称+介绍），名称和介绍支持横向滚动（滚动条样式与签名列表一致）；若匹配多个签名，则用户选择后展示所选项

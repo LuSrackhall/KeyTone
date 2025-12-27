@@ -76,7 +76,18 @@
             <div class="text-overline text-grey" style="font-size: 0.7rem">
               {{ t('signature.authGrant.requester') }}
             </div>
-            <div class="text-body2 text-weight-medium">{{ parsedRequest.requesterSignatureName }}</div>
+            <div
+              class="text-body2 text-weight-medium"
+              :class="[
+                /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                // 添加细微滚动条（与签名列表保持一致）
+                'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+              ]"
+              style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+            >
+              {{ parsedRequest.requesterSignatureName }}
+            </div>
           </div>
 
           <!-- Matched Signatures (original author's signatures that match) -->
@@ -105,18 +116,37 @@
                 flat
                 bordered
                 class="bg-grey-1 q-mt-sm"
+                style="overflow: hidden"
               >
-                <q-item dense>
+                <q-item dense style="overflow: hidden">
                   <q-item-section avatar v-if="selectedLocalSignature?.cardImage">
                     <q-avatar size="36px">
                       <q-img :src="props.getImageUrl(String(selectedLocalSignature.cardImage))" />
                     </q-avatar>
                   </q-item-section>
-                  <q-item-section>
-                    <q-item-label>
+                  <q-item-section style="overflow: hidden; min-width: 0">
+                    <q-item-label
+                      :class="[
+                        /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                        'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                        // 添加细微滚动条（与签名列表保持一致）
+                        'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                      ]"
+                      style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                    >
                       {{ selectedLocalSignature?.name || selectedMatchedSignatureFallback?.name || '' }}
                     </q-item-label>
-                    <q-item-label caption v-if="selectedLocalSignature?.intro">
+                    <q-item-label
+                      caption
+                      v-if="selectedLocalSignature?.intro"
+                      :class="[
+                        /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                        'max-w-full !overflow-x-auto whitespace-nowrap !mt-1.5',
+                        // 添加细微滚动条（与签名列表保持一致）
+                        'h-4.4 [&::-webkit-scrollbar]:h-0.3 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                      ]"
+                      style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                    >
                       {{ selectedLocalSignature.intro }}
                     </q-item-label>
                   </q-item-section>

@@ -88,9 +88,29 @@
                   />
                   <q-icon v-else name="person" size="40px" color="grey-4" />
                 </div>
-                <div class="col">
-                  <div class="text-body2 text-weight-medium">{{ sig.name }}</div>
-                  <div class="text-caption text-grey truncate">
+                <div class="col" style="overflow: hidden; min-width: 0">
+                  <div
+                    class="text-body2 text-weight-medium"
+                    :class="[
+                      /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                      'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                      // 添加细微滚动条（与签名列表保持一致）
+                      'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                    ]"
+                    style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                  >
+                    {{ sig.name }}
+                  </div>
+                  <div
+                    class="text-caption text-grey"
+                    :class="[
+                      /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                      'max-w-full !overflow-x-auto whitespace-nowrap !mt-1.5',
+                      // 添加细微滚动条（与签名列表保持一致）
+                      'h-4.4 [&::-webkit-scrollbar]:h-0.3 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                    ]"
+                    style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                  >
                     {{ sig.intro || t('exportFlow.authRequestDialog.noIntro') }}
                   </div>
                 </div>
@@ -128,9 +148,29 @@
                     <q-icon name="person" size="24px" color="grey-5" />
                   </div>
                 </div>
-                <div class="col">
-                  <div class="text-body2 text-weight-medium">{{ selectedSignatureName }}</div>
-                  <div class="text-caption text-grey ellipsis-2-lines" style="line-height: 1.3">
+                <div class="col" style="overflow: hidden; min-width: 0">
+                  <div
+                    class="text-body2 text-weight-medium"
+                    :class="[
+                      /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                      'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                      // 添加细微滚动条（与签名列表保持一致）
+                      'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                    ]"
+                    style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                  >
+                    {{ selectedSignatureName }}
+                  </div>
+                  <div
+                    class="text-caption text-grey"
+                    :class="[
+                      /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                      'max-w-full !overflow-x-auto whitespace-nowrap !mt-1.5',
+                      // 添加细微滚动条（与签名列表保持一致）
+                      'h-4.4 [&::-webkit-scrollbar]:h-0.3 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                    ]"
+                    style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                  >
                     {{ selectedSignature?.intro || t('exportFlow.authRequestDialog.noIntro') }}
                   </div>
                 </div>

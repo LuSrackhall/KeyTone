@@ -66,6 +66,7 @@
   - [x] 联系方式分开展示（邮箱+备用联系方式）
   - [x] 操作说明添加沟通提示
   - [x] 导出申请使用 File System Access API（showSaveFilePicker），用户确认保存后再提示成功，取消则不提示；不支持时回退下载链接
+  - [x] 签名列表项名称/介绍长文本支持横向滚动（滚动条样式与签名列表一致），避免对话框溢出
 
 - [x] 4.2 更新 `SignaturePickerDialog.vue`
   - [x] 添加"授权申请"按钮
@@ -87,6 +88,7 @@
   - [x] 实现步骤 3：完成提示
   - [x] 添加导出 .ktauth 文件功能
   - [x] 导出授权使用 File System Access API（showSaveFilePicker），用户确认保存后再提示成功，取消则不提示；不支持时回退下载链接
+  - [x] 申请方名称/签名名称/介绍长文本支持横向滚动（滚动条样式与签名列表一致），避免对话框溢出
 
 - [x] 5.2 更新 `Signature_management_page.vue`
   - [x] 添加"授权受理"按钮

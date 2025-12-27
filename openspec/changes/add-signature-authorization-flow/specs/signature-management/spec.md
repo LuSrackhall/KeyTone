@@ -29,8 +29,8 @@ Normative: The system SHALL allow original authors to import authorization reque
 - **GIVEN** 原始作者在签名管理页面
 - **WHEN** 用户点击"授权受理"并导入 .ktauthreq 文件
 - **THEN** 系统调用 `POST /signature/parse-auth-request` 解析文件，并在审核步骤显示：
-  - 申请信息中的“申请方名称”
-  - 匹配到的本地签名（以完整签名列表项展示：图片（若有）+名称+介绍；若匹配多个则先选择再展示所选项）
+  - 申请信息中的"申请方名称"（支持横向滚动，滚动条样式与签名列表一致，以防溢出）
+  - 匹配到的本地签名（以完整签名列表项展示：图片（若有）+名称+介绍；名称和介绍支持横向滚动，滚动条样式与签名列表一致；若匹配多个则先选择再展示所选项）
 
 #### Scenario: 生成授权文件
 
