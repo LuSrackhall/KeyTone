@@ -145,6 +145,8 @@ The project requires the following development environment:
    quasar dev -m electron
    ```
 
+For details about build differences and encrypted output compatibility, see [BUILD_COMPATIBILITY.md](./BUILD_COMPATIBILITY.md).
+
 ## Roadmap
 
 At this stage, our hybrid architecture selects Electron as the client framework due to its ability to quickly and reliably implement complex cross-platform functionalities. Although Electron applications are larger in size, this does **not pose a long-term bottleneck for the KeyTone project architecture**. From the project’s outset, our technical roadmap has included the evaluation and integration of lighter Go desktop frameworks, such as Wails. Wails achieves a smaller size by using the system’s native WebView instead of bundling an entire browser engine like Electron. [We will adopt Wails 3 upon its release](https://github.com/LuSrackhall/KeyTone/issues/69), fully addressing the size issue.

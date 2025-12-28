@@ -147,6 +147,8 @@ KeyTone 赋予你自由创作的舞台，让每一次按键敲击都成为独一
    quasar dev -m electron
    ```
 
+有关不同构建版本之间差异以及加密产物兼容性的详细说明，请参阅[BUILD_COMPATIBILITY.zh-CN.md](./BUILD_COMPATIBILITY.zh-CN.md)。
+
 ## 路线图
 
 现阶段，我们的混合架构选择 Electron 作为界面层，因其能**快速、稳定地实现复杂的跨平台功能**。虽然 Electron 应用体积较大，但这 **并非KeyTone项目架构的长期瓶颈**。从项目启动之初，我们的技术路线图中就包括了对更轻量级Go桌面框架（如Wails）的评估与整合。Wails 通过使用系统的原生 WebView 来实现更小的体积，而不是像 Electron 那样捆绑整个浏览器引擎。[我们会在 Wails 3 正式发布后将其引入本项目](https://github.com/LuSrackhall/KeyTone/issues/69)，以全面解决体积问题。
