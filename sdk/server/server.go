@@ -1239,6 +1239,50 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 读取专辑内文件（用于展示签名图片等）
+	keytonePkgRouters.POST("/get_album_file", func(ctx *gin.Context) {
+		var req struct {
+			AlbumPath    string `json:"albumPath" binding:"required"`
+			RelativePath string `json:"relativePath" binding:"required"` // 相对于专辑目录的路径，如 "audioFiles/xxx.jpg"
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 无效的请求参数",
+			})
+			return
+		}
+
+		// 构建完整文件路径
+		fullPath := filepath.Join(req.AlbumPath, req.RelativePath)
+
+		// 安全检查：确保请求的文件在专辑目录内
+		cleanAlbumPath := filepath.Clean(req.AlbumPath)
+		cleanFullPath := filepath.Clean(fullPath)
+		if !strings.HasPrefix(cleanFullPath, cleanAlbumPath) {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": "error: 非法的文件路径",
+			})
+			return
+		}
+
+		// 读取文件
+		fileData, err := os.ReadFile(fullPath)
+		if err != nil {
+			logger.Error("读取专辑内文件失败", "path", fullPath, "error", err.Error())
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"message": "error: 文件不存在或无法读取",
+			})
+			return
+		}
+
+		// 检测文件类型
+		contentType := http.DetectContentType(fileData)
+
+		// 返回文件内容
+		ctx.Data(http.StatusOK, contentType, fileData)
+	})
+
 	// 检查签名是否在专辑中（前端需求3）
 	keytonePkgRouters.POST("/check_signature_in_album", func(ctx *gin.Context) {
 		var req struct {

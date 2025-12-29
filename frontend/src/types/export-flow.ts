@@ -28,7 +28,8 @@ export interface ApplySignatureConfigPayload {
  * 签名作者信息
  */
 export interface SignatureAuthorInfo {
-  qualificationCode: string; // 资格码（签名ID的SHA256哈希）
+  qualificationCode: string; // 资格码（用于内部数据关联，如查找allSignatures）
+  qualificationFingerprint: string; // 资格码指纹（用于前端展示，由SDK计算）
   name: string; // 签名名称
   intro: string; // 个人介绍
   cardImagePath: string; // 名片图片路径
@@ -50,6 +51,11 @@ export interface AlbumSignatureEntry {
     contactAdditional?: string;
     authorizedList: string[];
     directExportAuthor: string;
+    /**
+     * 直接导出作者的资格码指纹
+     * TIPS: 用于前端展示，由SDK动态计算，保护原始资格码不泄漏
+     */
+    directExportAuthorFingerprint?: string;
     /**
      * 授权标识UUID
      *

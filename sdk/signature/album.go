@@ -150,3 +150,36 @@ func GenerateQualificationCode(signatureID string) string {
 	// 转换为十六进制字符串（64字符）
 	return hex.EncodeToString(hash[:])
 }
+
+// GenerateQualificationFingerprint 根据资格码生成资格码指纹
+//
+// TIPS: 资格码指纹用于在保护原始资格码不泄漏的前提下，保证签名的可追溯性。
+// 计算方式：将资格码去除第2位（索引1）和第11位（索引10）字符后，计算SHA256哈希。
+//
+// 用途：
+//   - 在前端展示时替代原始资格码，防止资格码泄漏
+//   - 保持签名的可追溯性，相同资格码总是生成相同指纹
+//
+// 参数：
+//   - qualificationCode: 资格码（64字符十六进制字符串）
+//
+// 返回值：
+//   - string: 资格码指纹（64字符十六进制字符串）
+//
+// 安全性：
+//   - 去除特定位置字符后再哈希，增加逆向难度
+//   - 前端只接触指纹，不接触原始资格码
+func GenerateQualificationFingerprint(qualificationCode string) string {
+	if len(qualificationCode) < 12 {
+		return qualificationCode // 无效输入时返回原值
+	}
+
+	// TIPS: 去除第2位（索引1）和第11位（索引10）字符
+	// 索引:  0  1  2  3  4  5  6  7  8  9 10 11 ...
+	// 去除:     ^                       ^
+	modified := qualificationCode[0:1] + qualificationCode[2:10] + qualificationCode[11:]
+
+	// 计算SHA256哈希
+	hash := sha256.Sum256([]byte(modified))
+	return hex.EncodeToString(hash[:])
+}

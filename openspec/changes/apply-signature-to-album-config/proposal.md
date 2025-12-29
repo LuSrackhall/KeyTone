@@ -221,7 +221,8 @@
   - ✅ 原始作者标记（金色星标）
 - **位置**: frontend/src/components/export-flow/SignatureSelectionDialog.vue
 
-### 4. 签名作者信息展示 ✅
+### 4. 签名作者信息展示 ✅ (已重构)
+
 - **API**: `GetAlbumSignatureInfo(albumPath)`
 - **组件**: `SignatureAuthorsDialog.vue`
 - **实现功能**:
@@ -230,24 +231,63 @@
   - ✅ 直接导出作者：authorization.directExportAuthor 对应的签名
   - ✅ 分区展示，带徽章和图标
   - ✅ 处理无签名、加载中、错误状态
+  - ✅ **[重构新增]** 联系方式展示（邮箱、其他联系方式）
+  - ✅ **[重构新增]** 授权标识UUID展示
+  - ✅ **[重构新增]** 直接导出作者资格码展示
+  - ✅ **[重构新增]** 已授权签名列表展开/折叠
+  - ✅ **[重构新增]** 所有关键信息一键复制
+  - ✅ **[重构新增]** 签名统计摘要
+  - ✅ **[重构新增]** 横向滚动条样式与签名列表一致
 - **位置**: frontend/src/components/export-flow/SignatureAuthorsDialog.vue
 - **集成状态**: ✅ 已集成到专辑页面，通过"查看签名信息"按钮调用
+- **重构详情**: 参见 `openspec/changes/refactor-signature-info-dialog/`
 
 ## Bug修复记录
 
 ### Bug #1: 无需签名时仍进入授权对话框 ✅
+
 - **问题**: 用户选择"无需签名"后仍显示授权要求对话框，违反需求1
 - **修复**: 在useExportSignatureFlow.ts的handleConfirmSignatureSubmit中添加条件判断
 - **结果**: 选择"无需签名"时直接完成导出流程，不进入授权对话框
 
 ### Bug #2: SignatureAuthorsDialog尺寸过大 ✅
+
 - **问题**: 对话框宽度600-800px在固定窗口尺寸应用中溢出
-- **修复**: 
+- **修复**:
   - 对话框尺寸调整为90vw，最大480px，最大高度85vh
   - 图片尺寸从100px缩小为70px
   - 字体从text-h6调整为text-subtitle2
   - 添加滚动支持，优化间距
 - **结果**: 对话框完美适配固定窗口尺寸，内容清晰可读
+
+### Bug #3: SignatureAuthorsDialog信息展示不完整 ✅
+
+- **问题**: 对话框未展示联系方式、授权UUID、已授权列表等重要信息
+- **修复**:
+  - 完整重构组件，采用分区卡片式布局
+  - 从 allSignatures 读取完整授权元数据
+  - 添加复制功能和展开/折叠支持
+- **结果**: 所有签名相关信息完整展示，结构清晰
+- **详情**: 参见 `openspec/changes/refactor-signature-info-dialog/`
+
+### Bug #4: SignatureAuthorsDialog签名图片无法展示 ✅
+
+- **问题**: 使用 `file://` 协议在 Electron 中有安全限制，图片无法加载
+- **修复**:
+  - 新增 SDK 端点 `get_album_file` 用于读取专辑内文件
+  - 新增前端 API `GetAlbumFile`
+  - 使用 Blob URL 缓存机制
+  - 对话框关闭时自动释放资源
+- **结果**: 签名图片正常加载显示
+
+### Bug #5: 资格码展示存在隐私泄漏风险 ✅
+
+- **问题**: 直接展示资格码可能导致签名身份信息泄漏
+- **修复**:
+  - 改为展示"资格码指纹"
+  - TIPS: 计算方式为资格码去除第2位（索引1）和第11位（索引10）字符后的SHA256哈希
+  - 更新所有 UI 标签和复制功能
+- **结果**: 在保护资格码不泄漏的前提下，保证签名的可追溯性
 
 ## 待确认问题
 
@@ -257,3 +297,4 @@
 - **已明确**：authorizedList存储资格码而非加密ID
 - **已明确**：directExportAuthor记录直接导出作者，每次导出更新
 - **已明确**：删除"无需签名+需要授权"分支，简化为三种情况
+- **已明确**：资格码指纹计算方式为去除第2位和第11位字符后的SHA256

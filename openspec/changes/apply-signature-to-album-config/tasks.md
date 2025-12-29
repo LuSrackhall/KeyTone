@@ -114,13 +114,22 @@
   - [x] CheckSignatureInAlbum - 检查签名是否在专辑中
   - [x] CheckSignatureAuthorization - 检查签名授权状态
   - [x] GetAvailableSignatures - 获取可用签名列表
-- [x] 10.3 创建SignatureAuthorsDialog.vue组件（需求4）
+- [x] 10.3 创建SignatureAuthorsDialog.vue组件（需求4）- 已重构
   - [x] 位置：frontend/src/components/export-flow/SignatureAuthorsDialog.vue
   - [x] 展示原始作者信息
   - [x] 展示直接导出作者信息
   - [x] 展示历史贡献作者列表
   - [x] 处理无签名情况
   - [x] 加载状态和错误处理
+  - [x] **[重构新增]** 联系方式展示（邮箱、其他联系方式）
+  - [x] **[重构新增]** 授权标识UUID展示
+  - [x] **[重构新增]** 直接导出作者资格码展示
+  - [x] **[重构新增]** 已授权签名列表展开/折叠
+  - [x] **[重构新增]** 所有关键信息一键复制
+  - [x] **[重构新增]** 签名统计摘要
+  - [x] **[重构新增]** 横向滚动条样式与签名列表一致
+  - [x] **[重构新增]** 错误状态带重试按钮
+  - [x] 重构详情：参见 `openspec/changes/refactor-signature-info-dialog/`
 - [x] 10.4 创建SignatureSelectionDialog.vue组件（需求3）
   - [x] 位置：frontend/src/components/export-flow/SignatureSelectionDialog.vue
   - [x] 使用GetAvailableSignatures获取签名列表

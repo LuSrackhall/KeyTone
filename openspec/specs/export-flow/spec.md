@@ -329,3 +329,61 @@ Normative: The dialog layout SHALL optimize spacing between search/create area a
 - **WHEN** 观察列表底部空白区域
 - **THEN** 移除原先主内容区域硬编码的 `padding-bottom: 100px`，改为自适应布局，仅保留必要的下方操作栏空间
 
+---
+
+### Requirement: 专辑签名信息对话框
+
+Normative: The `SignatureAuthorsDialog` SHALL 完整展示专辑中所有签名的详细信息，包括原始作者、直接导出作者、历史贡献作者；对话框 MUST 显示"资格码指纹"而非原始资格码，以保护资格码不泄漏的前提下保证签名的可追溯性；原始作者区块 MUST 显示联系方式（邮箱、其他联系方式）、授权状态、授权标识UUID、最近导出者资格码指纹及已授权签名列表；所有关键信息 MUST 支持一键复制；签名图片 MUST 通过 `GetAlbumFile` API 从专辑目录读取；所有用户可见文本 SHALL 使用 i18n 翻译键（`exportFlow.signatureInfoDialog.*`）。
+
+#### Scenario: 查看有签名专辑信息
+
+- **GIVEN** 用户在专辑页面点击"查看签名信息"按钮
+- **WHEN** 对话框加载专辑签名数据成功
+- **THEN** 对话框以分区卡片形式展示：
+  - 原始作者区块（琥珀色）：签名卡片、资格码指纹、联系方式、授权状态、授权UUID、最近导出者资格码指纹、已授权列表（可展开）
+  - 直接导出作者区块（蓝色）：仅在与原始作者不同时显示
+  - 历史贡献作者区块（绿色）：列表形式展示
+  - 签名统计摘要
+
+#### Scenario: 查看无签名专辑
+
+- **GIVEN** 用户在专辑页面点击"查看签名信息"按钮
+- **WHEN** 专辑不包含任何签名
+- **THEN** 对话框显示空态提示："此专辑尚未包含任何签名"及引导说明
+
+#### Scenario: 复制签名信息
+
+- **GIVEN** 对话框展示签名详情
+- **WHEN** 用户点击任意复制按钮（资格码指纹/邮箱/UUID等）
+- **THEN** 对应信息被复制到剪贴板，并显示成功通知
+
+#### Scenario: 加载失败处理
+
+- **GIVEN** 对话框尝试加载签名信息
+- **WHEN** API 请求失败
+- **THEN** 对话框显示错误信息并提供"重试"按钮
+
+#### Scenario: 横向滚动条样式一致性
+
+- **GIVEN** 签名名称或介绍文本过长
+- **WHEN** 需要横向滚动查看完整内容
+- **THEN** 横向滚动条样式与签名管理页签名列表保持一致（细滚动条样式）
+
+#### Scenario: 签名图片加载
+
+- **GIVEN** 对话框加载专辑签名数据
+- **WHEN** 签名包含名片图片路径
+- **THEN** 通过 `GetAlbumFile` API 读取专辑目录中的图片文件并显示
+
+---
+
+### Requirement: 资格码指纹计算
+
+Normative: 资格码指纹 SHALL 在SDK端计算并返回给前端，前端不应接触原始资格码的计算逻辑；计算方式为：将资格码去除第2位（索引1）和第11位（索引10）字符后，计算 SHA256 哈希。此设计用于保护原始资格码不泄漏，同时保证签名的可追溯性。
+
+#### Scenario: 资格码指纹生成
+
+- **GIVEN** SDK 需要向前端返回签名信息
+- **WHEN** 构建 `SignatureAuthorInfo` 结构
+- **THEN** SDK 计算资格码指纹并填充 `qualificationFingerprint` 字段，前端直接使用该值展示
+

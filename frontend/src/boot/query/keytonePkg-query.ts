@@ -609,6 +609,29 @@ export async function GetAlbumSignatureInfo(albumPath: string): Promise<AlbumSig
 }
 
 /**
+ * 读取专辑内的文件（如签名图片）
+ * @param albumPath 专辑路径
+ * @param relativePath 相对于专辑目录的文件路径，如 "audioFiles/xxx.jpg"
+ * @returns 文件Blob，失败时返回null
+ */
+export async function GetAlbumFile(albumPath: string, relativePath: string): Promise<Blob | null> {
+  try {
+    const response = await api.post(
+      '/keytone_pkg/get_album_file',
+      { albumPath, relativePath },
+      { responseType: 'blob' }
+    );
+    if (response.status === 200) {
+      return response.data;
+    }
+    return null;
+  } catch (error) {
+    console.warn('GetAlbumFile 失败:', error);
+    return null;
+  }
+}
+
+/**
  * 检查签名是否在专辑中
  * 用于前端需求3（标记已在专辑中的签名）
  */

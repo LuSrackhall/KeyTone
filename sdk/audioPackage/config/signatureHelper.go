@@ -59,8 +59,12 @@ type AlbumSignatureInfo struct {
 // 说明：
 //   - 用于前端展示签名作者详情
 type SignatureAuthorInfo struct {
-	// QualificationCode 资格码（签名ID的SHA256哈希）
+	// QualificationCode 资格码（签名ID的SHA256哈希）- 用于内部数据关联
 	QualificationCode string `json:"qualificationCode"`
+
+	// QualificationFingerprint 资格码指纹（用于前端展示）
+	// TIPS: 资格码指纹用于在保护原始资格码不泄漏的前提下，保证签名的可追溯性
+	QualificationFingerprint string `json:"qualificationFingerprint"`
 
 	// Name 签名名称
 	Name string `json:"name"`
@@ -141,30 +145,41 @@ func GetAlbumSignatureInfo(albumPath string) (*AlbumSignatureInfo, error) {
 		AllSignatures:      albumSignatureMap,
 	}
 
+	// 为 allSignatures 中的 DirectExportAuthor 计算指纹
+	// TIPS: 这样前端可以直接使用指纹进行展示，无需在前端计算
+	for qualCode, entry := range albumSignatureMap {
+		if entry.Authorization != nil && entry.Authorization.DirectExportAuthor != "" {
+			entry.Authorization.DirectExportAuthorFingerprint = signature.GenerateQualificationFingerprint(entry.Authorization.DirectExportAuthor)
+			albumSignatureMap[qualCode] = entry
+		}
+	}
+
 	// 识别原始作者和贡献者
 	var directExportAuthorQualCode string
 	for qualCode, entry := range albumSignatureMap {
 		if entry.Authorization != nil {
 			// 原始作者签名
 			info.OriginalAuthor = &SignatureAuthorInfo{
-				QualificationCode:    qualCode,
-				Name:                 entry.Name,
-				Intro:                entry.Intro,
-				CardImagePath:        entry.CardImagePath,
-				IsOriginalAuthor:     true,
-				RequireAuthorization: entry.Authorization.RequireAuthorization,
-				AuthorizedList:       entry.Authorization.AuthorizedList,
+				QualificationCode:        qualCode,
+				QualificationFingerprint: signature.GenerateQualificationFingerprint(qualCode),
+				Name:                     entry.Name,
+				Intro:                    entry.Intro,
+				CardImagePath:            entry.CardImagePath,
+				IsOriginalAuthor:         true,
+				RequireAuthorization:     entry.Authorization.RequireAuthorization,
+				AuthorizedList:           entry.Authorization.AuthorizedList,
 			}
 			directExportAuthorQualCode = entry.Authorization.DirectExportAuthor
 			logger.Debug("找到原始作者签名", "qualCode", qualCode, "directExportAuthor", directExportAuthorQualCode)
 		} else {
 			// 贡献者签名
 			info.ContributorAuthors = append(info.ContributorAuthors, SignatureAuthorInfo{
-				QualificationCode: qualCode,
-				Name:              entry.Name,
-				Intro:             entry.Intro,
-				CardImagePath:     entry.CardImagePath,
-				IsOriginalAuthor:  false,
+				QualificationCode:        qualCode,
+				QualificationFingerprint: signature.GenerateQualificationFingerprint(qualCode),
+				Name:                     entry.Name,
+				Intro:                    entry.Intro,
+				CardImagePath:            entry.CardImagePath,
+				IsOriginalAuthor:         false,
 			})
 		}
 	}
@@ -173,11 +188,12 @@ func GetAlbumSignatureInfo(albumPath string) (*AlbumSignatureInfo, error) {
 	if directExportAuthorQualCode != "" {
 		if entry, exists := albumSignatureMap[directExportAuthorQualCode]; exists {
 			info.DirectExportAuthor = &SignatureAuthorInfo{
-				QualificationCode: directExportAuthorQualCode,
-				Name:              entry.Name,
-				Intro:             entry.Intro,
-				CardImagePath:     entry.CardImagePath,
-				IsOriginalAuthor:  (entry.Authorization != nil),
+				QualificationCode:        directExportAuthorQualCode,
+				QualificationFingerprint: signature.GenerateQualificationFingerprint(directExportAuthorQualCode),
+				Name:                     entry.Name,
+				Intro:                    entry.Intro,
+				CardImagePath:            entry.CardImagePath,
+				IsOriginalAuthor:         (entry.Authorization != nil),
 			}
 			logger.Debug("找到直接导出作者", "qualCode", directExportAuthorQualCode)
 		}

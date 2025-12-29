@@ -53,9 +53,14 @@ type AuthorizationMetadata struct {
 	AuthorizedList []string `json:"authorizedList"`
 
 	// DirectExportAuthor 直接导出作者的资格码
-	// 记录每次导出时的签名者，用于前端展示
+	// 记录每次导出时的签名者，用于内部数据关联
 	// 每次导出时更新为当前导出者的资格码
 	DirectExportAuthor string `json:"directExportAuthor"`
+
+	// DirectExportAuthorFingerprint 直接导出作者的资格码指纹
+	// TIPS: 用于前端展示，保护原始资格码不泄漏
+	// 此字段不存储到文件，由 GetAlbumSignatureInfo 动态计算
+	DirectExportAuthorFingerprint string `json:"directExportAuthorFingerprint,omitempty"`
 
 	// AuthorizationUUID 授权标识UUID
 	//
