@@ -47,16 +47,87 @@
 
 > 目标是更清晰地管理“键音专辑编辑器”的功能边界；具体文件拆分以实现阶段为准。
 
-- `frontend/src/components/keytone-album/`
-  - `KeytoneAlbum.vue`（薄壳：持有状态/组合式逻辑/提供上下文；保持外部引用稳定）
-  - `steps/`
-    - `StepLoadAudioFiles.vue`
-    - `StepDefineSounds.vue`
-    - `StepCraftKeySounds.vue`
-    - `StepLinkageEffects.vue`
-  - `dialogs/`（从 step 中抽离出来，便于跨步骤复用/直接拉起）
-  - `composables/`（可选，逐步抽离）
-  - `types.ts`
+```
+frontend/src/components/
+├── Keytone_album.vue              # 原始大组件 → 改造为父组件（薄壳）
+│                                  # 职责：持有所有状态、副作用、provide Context
+│
+└── keytone-album/                 # 新的模块目录
+    │
+    ├── index.ts                   # 模块入口
+    │                              # - 导出类型定义
+    │                              # - 导出主组件（当前指向旧组件，迁移后切换）
+    │                              # - 关联文件: types.ts, ../Keytone_album.vue
+    │
+    ├── types.ts                   # 类型定义文件
+    │                              # - 基础数据类型 (SoundFileInfo, SoundEntry...)
+    │                              # - 操作参数类型 (SaveSoundConfigParams...)
+    │                              # - Context 接口 (KeytoneAlbumContext)
+    │                              # - 注入 Key (KEYTONE_ALBUM_CONTEXT_KEY)
+    │                              # - 关联文件: 被所有 step/dialog 组件引用
+    │
+    ├── steps/                     # Step 子组件目录
+    │   │                          # 职责：只负责 UI 渲染，通过 inject 获取状态
+    │   │
+    │   ├── StepLoadAudioFiles.vue     # Step 1: 加载音频源文件
+    │   │                              # - 显示添加/管理音频文件按钮
+    │   │                              # - 内嵌 AddAudioFileDialog, ManageAudioFilesDialog
+    │   │                              # - 关联文件: types.ts, ../dialogs/*
+    │   │
+    │   ├── StepDefineSounds.vue       # Step 2: 定义声音 [待创建]
+    │   │                              # - 显示创建/编辑声音 UI
+    │   │                              # - 调用 ctx.saveSoundConfig, ctx.previewSound
+    │   │
+    │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音 [待创建]
+    │   │                              # - 显示创建/编辑按键音 UI
+    │   │                              # - 显示依赖警告 (DependencyWarning)
+    │   │
+    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 [待创建]
+    │                                  # - 全局联动设置
+    │                                  # - 单键联动设置
+    │
+    ├── dialogs/                   # Dialog 子组件目录
+    │   │                          # 职责：可复用对话框 UI，可被任意 Step 调用
+    │   │
+    │   ├── AddAudioFileDialog.vue     # 添加音频文件对话框
+    │   │                              # - 文件选择器 (支持拖拽)
+    │   │                              # - 调用 SendFileToServer API
+    │   │                              # - 关联文件: types.ts, keytonePkg-query.ts
+    │   │
+    │   ├── ManageAudioFilesDialog.vue # 管理音频文件对话框
+    │   │                              # - 音频文件列表选择
+    │   │                              # - 重命名/删除功能
+    │   │                              # - 关联文件: types.ts, keytonePkg-query.ts
+    │   │
+    │   └── ... (更多对话框待创建)
+    │
+    └── composables/               # 可复用逻辑 [Phase 4，可选]
+                                   # 职责：抽离纯逻辑（如 SSE 映射、排序、校验）
+```
+
+### 文件关系图
+
+```
+                    ┌─────────────────────┐
+                    │  Keytone_album.vue  │  (父组件)
+                    │  - 持有所有状态      │
+                    │  - provide(ctx)     │
+                    └──────────┬──────────┘
+                               │
+         ┌─────────────────────┼─────────────────────┐
+         │                     │                     │
+         ▼                     ▼                     ▼
+  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+  │ types.ts    │◄─────│ index.ts    │      │ steps/*.vue │
+  │ (类型定义)   │      │ (模块入口)   │      │ (UI组件)    │
+  └──────┬──────┘      └─────────────┘      └──────┬──────┘
+         │                                         │
+         │                                         ▼
+         │                                  ┌─────────────┐
+         └─────────────────────────────────►│dialogs/*.vue│
+                                            │ (对话框组件) │
+                                            └─────────────┘
+```
 
 > 兼容性策略：对外保持 `frontend/src/components/Keytone_album.vue` 的现有路径可继续工作（可通过“包装导出”或保留文件并内部引用新组件实现）。
 
