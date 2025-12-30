@@ -31,6 +31,7 @@
   <div
     v-if="isVisible"
     :style="menuStyle"
+    ref="menuEl"
     class="fixed bg-white rounded-lg z-50 overflow-hidden"
     style="box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.08); backdrop-filter: blur(4px)"
     @click.stop
@@ -44,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 
 interface Props {
   modelValue: boolean;
@@ -55,7 +56,6 @@ interface Props {
 
 // ========== 常量定义 ==========
 const DEFAULT_MENU_WIDTH = 150;
-const DEFAULT_MENU_HEIGHT = 120;
 const MENU_OFFSET = 4; // 距离边界的最小距离
 
 const props = withDefaults(defineProps<Props>(), {
@@ -88,6 +88,8 @@ const isVisible = computed({
 const menuX = ref(props.x);
 const menuY = ref(props.y);
 
+const menuEl = ref<HTMLElement | null>(null);
+
 // 事件监听状态标记
 let resizeListenerActive = false;
 let keydownListenerActive = false;
@@ -115,8 +117,12 @@ const updateMenuPosition = () => {
 
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const menuWidth = props.maxWidth;
-  const menuHeight = DEFAULT_MENU_HEIGHT;
+  const measuredWidth = menuEl.value?.offsetWidth ?? 0;
+  const measuredHeight = menuEl.value?.offsetHeight ?? 0;
+
+  const menuWidth = measuredWidth > 0 ? measuredWidth : props.maxWidth;
+  // 菜单高度依赖 slot 内容，不能写死；未测到时用一个保守的 fallback
+  const menuHeight = measuredHeight > 0 ? measuredHeight : 120;
 
   let x = props.x;
   let y = props.y;
@@ -139,7 +145,8 @@ const updateMenuPosition = () => {
 const handleVisibilityChange = () => {
   if (isVisible.value && !resizeListenerActive) {
     // 菜单打开：添加 resize 监听
-    setTimeout(updateMenuPosition, 0);
+    // 等待 DOM 渲染后再测量高度并校准位置
+    void nextTick().then(() => updateMenuPosition());
     window.addEventListener('resize', updateMenuPosition);
     resizeListenerActive = true;
   } else if (!isVisible.value && resizeListenerActive) {
