@@ -45,6 +45,7 @@ interface State {
     | 'auth-requirement' // 二次创作是否需要授权（推荐不需要）
     | 'auth-impact-confirm' // 选择需要授权后的二次确认弹窗
     | 'auth-contact' // 需要授权时的联系方式填写
+    | 'optional-contact' // 无需授权时的可选联系方式填写
     | 'auth-gate' // 已有签名且原作者要求授权时的授权门控
     | 'auth-gate-from-picker' // 从签名选择页面打开的授权门控（用于导入授权文件）
     | 'auth-request' // 授权申请流程（用于申请签名授权）
@@ -90,6 +91,7 @@ export function useExportSignatureFlow() {
   const authRequirementDialogVisible = ref(false);
   const authImpactConfirmDialogVisible = ref(false);
   const authContactDialogVisible = ref(false);
+  const optionalContactDialogVisible = ref(false);
   const authGateDialogVisible = ref(false);
   const authRequestDialogVisible = ref(false);
   const pickerDialogVisible = ref(false);
@@ -193,9 +195,9 @@ export function useExportSignatureFlow() {
     if (!payload.requireAuthorization) {
       const needSignature = state.value.flowData?.needSignature ?? true;
       if (needSignature) {
-        // 仍需落地签名，继续选择
-        state.value.step = 'picker';
-        pickerDialogVisible.value = true;
+        // 无需授权但需要签名 → 进入可选联系方式填写
+        state.value.step = 'optional-contact';
+        optionalContactDialogVisible.value = true;
       } else {
         // 无需签名且无需授权 → 就地完成
         state.value.step = 'done';
@@ -239,6 +241,29 @@ export function useExportSignatureFlow() {
   };
   const handleAuthContactCancel = () => {
     authContactDialogVisible.value = false;
+    state.value.step = 'idle';
+  };
+
+  // ========== Step: optional-contact ==========
+  const handleOptionalContactSubmit = (payload: { email?: string; additional?: string }) => {
+    state.value.flowData = {
+      ...(state.value.flowData ?? {}),
+      contactEmail: payload.email,
+      contactAdditional: payload.additional,
+    };
+    optionalContactDialogVisible.value = false;
+    // 进入签名选择
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
+  };
+  const handleOptionalContactSkip = () => {
+    optionalContactDialogVisible.value = false;
+    // 直接进入签名选择（不保存联系方式）
+    state.value.step = 'picker';
+    pickerDialogVisible.value = true;
+  };
+  const handleOptionalContactCancel = () => {
+    optionalContactDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -363,6 +388,7 @@ export function useExportSignatureFlow() {
     authRequirementDialogVisible.value = false;
     authImpactConfirmDialogVisible.value = false;
     authContactDialogVisible.value = false;
+    optionalContactDialogVisible.value = false;
     state.value.step = 'idle';
   };
 
@@ -396,6 +422,7 @@ export function useExportSignatureFlow() {
     authRequirementDialogVisible.value = false;
     authImpactConfirmDialogVisible.value = false;
     authContactDialogVisible.value = false;
+    optionalContactDialogVisible.value = false;
     authGateDialogVisible.value = false;
     authRequestDialogVisible.value = false;
     pickerDialogVisible.value = false;
@@ -412,6 +439,7 @@ export function useExportSignatureFlow() {
     authRequirementDialogVisible,
     authImpactConfirmDialogVisible,
     authContactDialogVisible,
+    optionalContactDialogVisible,
     authGateDialogVisible,
     authRequestDialogVisible,
     pickerDialogVisible,
@@ -428,6 +456,9 @@ export function useExportSignatureFlow() {
     handleAuthImpactConfirm,
     handleAuthContactSubmit,
     handleAuthContactCancel,
+    handleOptionalContactSubmit,
+    handleOptionalContactSkip,
+    handleOptionalContactCancel,
     handleAuthGateAuthorized,
     handleAuthGateCancel,
     openAuthGateFromPicker,

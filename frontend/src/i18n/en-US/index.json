@@ -371,6 +371,13 @@
       "additionalPlaceholder": "Add social media, website, or other contact info",
       "hint": "These details are stored with the signature so requesters can reach you"
     },
+    "optionalContact": {
+      "title": "Leave Contact Info (Optional)",
+      "description": "You can optionally provide contact information for others to reach you. This step is optional and can be skipped.",
+      "hint": "Contact info will be stored with the signature for others to view",
+      "skip": "Skip",
+      "continue": "Save & Continue"
+    },
     "policyDialog": {
       "title": "Signature Policy & Requirements",
       "noSignatureTitle": "Set Signature Policy",

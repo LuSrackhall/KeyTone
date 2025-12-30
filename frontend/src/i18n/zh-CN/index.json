@@ -365,6 +365,13 @@
       "additionalPlaceholder": "可补充社交媒体、官网等信息",
       "hint": "这些联系方式将随签名一同保存，供申请授权者查阅"
     },
+    "optionalContact": {
+      "title": "留下联系方式（可选）",
+      "description": "您可以选择留下联系方式，便于他人与您取得联系。此步骤为可选，可直接跳过。",
+      "hint": "联系方式将随签名一同保存，供他人查阅",
+      "skip": "跳过",
+      "continue": "保存并继续"
+    },
     "policyDialog": {
       "title": "签名策略与要求",
       "noSignatureTitle": "设置签名策略",

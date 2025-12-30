@@ -312,6 +312,13 @@
       @submit="exportFlow.handleAuthContactSubmit"
       @cancel="exportFlow.handleAuthContactCancel"
     />
+    <!-- 4.5) 可选联系方式（无需授权时） -->
+    <optional-contact-dialog
+      :visible="exportFlow.optionalContactDialogVisible.value"
+      @submit="exportFlow.handleOptionalContactSubmit"
+      @skip="exportFlow.handleOptionalContactSkip"
+      @cancel="exportFlow.handleOptionalContactCancel"
+    />
     <!-- 5) 已有签名且需要授权 → 授权门控（导入授权文件） -->
     <export-authorization-gate-dialog
       :visible="exportFlow.authGateDialogVisible.value"
@@ -371,6 +378,7 @@ import ExportReexportWarningDialog from 'src/components/export-flow/ExportReexpo
 import ExportAuthorizationRequirementDialog from 'src/components/export-flow/ExportAuthorizationRequirementDialog.vue';
 import ExportAuthorizationImpactConfirmDialog from 'src/components/export-flow/ExportAuthorizationImpactConfirmDialog.vue';
 import ExportAuthorizationContactDialog from 'src/components/export-flow/ExportAuthorizationContactDialog.vue';
+import OptionalContactDialog from 'src/components/export-flow/OptionalContactDialog.vue';
 import ExportAuthorizationGateDialog from 'src/components/export-flow/ExportAuthorizationGateDialog.vue';
 import SignaturePickerDialog from 'src/components/export-flow/SignaturePickerDialog.vue';
 import AuthRequestDialog from 'src/components/export-flow/AuthRequestDialog.vue';
