@@ -175,6 +175,33 @@
                   </div>
                 </div>
               </q-card-section>
+              <!-- 资格码指纹展示 -->
+              <q-separator v-if="selectedSignature?.qualificationFingerprint" />
+              <q-item v-if="selectedSignature?.qualificationFingerprint" dense class="q-pa-xs">
+                <q-item-section avatar style="min-width: 24px">
+                  <q-icon name="fingerprint" color="grey-6" size="16px" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label caption style="font-size: 0.65rem">
+                    {{ t('exportFlow.authRequestDialog.qualificationFingerprint') }}
+                  </q-item-label>
+                  <q-item-label
+                    class="text-caption"
+                    style="font-family: monospace; word-break: break-all; line-height: 1.3; font-size: 0.65rem"
+                  >
+                    {{ selectedSignature.qualificationFingerprint }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    flat
+                    dense
+                    size="xs"
+                    icon="content_copy"
+                    @click="copyText(selectedSignature.qualificationFingerprint, t('exportFlow.authRequestDialog.qualificationFingerprint'))"
+                  />
+                </q-item-section>
+              </q-item>
             </q-card>
           </div>
 
@@ -326,6 +353,8 @@ interface SignatureItem {
   intro?: string;
   image?: string;
   isAuthorized?: boolean;
+  /** 资格码指纹，用于前端展示 */
+  qualificationFingerprint?: string;
 }
 
 interface AuthRequestDialogProps {
@@ -432,17 +461,25 @@ function goToStep2() {
   }
 }
 
-async function copyText(text: string) {
+async function copyText(text: string, label?: string) {
   try {
     await navigator.clipboard.writeText(text);
     $q.notify({
       type: 'positive',
-      message: t('exportFlow.notify.contactCopied'),
+      message: label
+        ? t('exportFlow.authRequestDialog.copySuccess', { label })
+        : t('exportFlow.notify.contactCopied'),
       position: 'top',
       timeout: 2000,
     });
   } catch (err) {
     console.error('Failed to copy:', err);
+    $q.notify({
+      type: 'negative',
+      message: t('exportFlow.authRequestDialog.copyFailed'),
+      position: 'top',
+      timeout: 2000,
+    });
   }
 }
 

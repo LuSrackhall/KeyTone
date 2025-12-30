@@ -331,6 +331,44 @@ export async function exportSignature(encryptedId: string): Promise<Blob | false
 }
 
 /**
+ * 获取签名的资格码指纹
+ * Get signature qualification fingerprint
+ *
+ * @param encryptedId 加密的签名ID
+ * @returns Promise<string | false> 返回资格码指纹，或 false 表示失败
+ */
+export async function getSignatureFingerprint(encryptedId: string): Promise<string | false> {
+  return await api
+    .post('/signature/get-fingerprint', { encryptedId })
+    .then((req) => {
+      console.debug('status=', req.status, '->getSignatureFingerprint 请求已成功执行并返回->', req.data);
+      if (req.data.success && req.data.fingerprint) {
+        return req.data.fingerprint as string;
+      } else {
+        console.error('Failed to get signature fingerprint:', req.data.message);
+        return false;
+      }
+    })
+    .catch((error) => {
+      console.group('getSignatureFingerprint 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}
+
+/**
  * 导入签名从 .ktsign 文件
  * Import signature from .ktsign file
  *
@@ -510,6 +548,8 @@ export interface ParsedAuthRequest {
   requesterSignatureIDSuffix: string;
   originalAuthorQualCodeHash: string;
   requesterSignatureName: string;
+  /** 请求方签名的资格码指纹，便于原始作者核实申请方身份 */
+  requesterQualificationFingerprint: string;
 }
 
 /**
@@ -518,6 +558,8 @@ export interface ParsedAuthRequest {
 export interface MatchedSignature {
   encryptedId: string;
   qualificationCode: string;
+  /** 资格码指纹，用于前端展示，保护原始资格码不泄漏 */
+  qualificationFingerprint: string;
   name: string;
 }
 

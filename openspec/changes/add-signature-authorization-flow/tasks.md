@@ -141,16 +141,52 @@
   - [x] specs/signature-management/spec.md - 签名管理增量
   - [x] specs/export-flow/spec.md - 导出流程增量
 
-### Phase 10: 测试验证
+### Phase 10: 资格码指纹展示 ✅
 
-- [x] 10.1 编译验证
+- [x] 10.1 SDK 端支持
+  - [x] `AvailableSignature` 结构体新增 `qualificationFingerprint` 字段
+  - [x] `verify-auth-request-owner` 接口返回匹配签名的 `qualificationFingerprint`
+  - [x] `AuthRequestData` 结构体新增 `requesterQualificationFingerprint` 字段
+  - [x] `ParsedAuthRequest` 结构体新增 `requesterQualificationFingerprint` 字段
+  - [x] `POST /signature/get-fingerprint` API 新增（获取签名指纹）
+
+- [x] 10.2 前端类型更新
+  - [x] `AvailableSignature` 接口新增 `qualificationFingerprint` 字段
+  - [x] `MatchedSignature` 接口新增 `qualificationFingerprint` 字段
+  - [x] `ParsedAuthRequest` 接口新增 `requesterQualificationFingerprint` 字段
+  - [x] `AuthRequestDialog` 的 `SignatureItem` 接口新增 `qualificationFingerprint` 字段
+
+- [x] 10.3 AuthRequestDialog 组件
+  - [x] Step 2 的已选签名卡片展示资格码指纹
+  - [x] 资格码指纹支持复制到剪贴板
+
+- [x] 10.4 AuthGrantDialog 组件
+  - [x] Step 2 的申请方卡片展示申请方资格码指纹（从申请文件解析）
+  - [x] Step 2 的匹配签名卡片展示资格码指纹
+  - [x] 资格码指纹支持复制到剪贴板
+
+- [x] 10.5 签名管理页面
+  - [x] 右键菜单新增"查看资格码指纹"选项
+  - [x] 弹出对话框展示指纹并支持复制
+  - [x] 新增 `getSignatureFingerprint` API 调用
+
+- [x] 10.6 i18n 国际化
+  - [x] 添加 `qualificationFingerprint` 翻译键
+  - [x] 添加 `requesterFingerprint` 翻译键
+  - [x] 添加复制成功/失败翻译键
+  - [x] 添加右键菜单相关翻译键
+
+### Phase 11: 测试验证
+
+- [x] 11.1 编译验证
   - [x] SDK 编译通过
   - [x] 前端 TypeScript 无类型错误
 
-- [ ] 10.2 端到端测试（待人工测试）
-  - [ ] 授权申请流程测试
-  - [ ] 授权受理流程测试
+- [ ] 11.2 端到端测试（待人工测试）
+  - [ ] 授权申请流程测试（含资格码指纹展示）
+  - [ ] 授权受理流程测试（含申请方和受理方资格码指纹展示）
   - [ ] 授权导入流程测试
+  - [ ] 签名管理页面右键菜单查看指纹测试
   - [ ] 完整流程端到端测试
 
 ## 回滚方案

@@ -431,6 +431,47 @@ func signatureRouters(r *gin.Engine) {
 		ctx.Data(http.StatusOK, "application/octet-stream", binaryData)
 	})
 
+	// 获取签名的资格码指纹
+	signatureRouter.POST("/signature/get-fingerprint", func(ctx *gin.Context) {
+		var req struct {
+			EncryptedID string `json:"encryptedId" binding:"required"`
+		}
+
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "无效的请求参数",
+			})
+			return
+		}
+
+		logger.Info("获取签名资格码指纹", "encryptedID", req.EncryptedID)
+
+		// 解密签名ID获取原始UUID
+		originalSignatureID, err := signature.DecryptWithKeyA(req.EncryptedID)
+		if err != nil {
+			logger.Error("解密签名ID失败", "error", err.Error())
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "解密签名ID失败",
+			})
+			return
+		}
+
+		// 计算资格码
+		qualCode := signature.GenerateQualificationCode(originalSignatureID)
+
+		// 计算指纹
+		fingerprint := signature.GenerateQualificationFingerprint(qualCode)
+
+		logger.Info("签名资格码指纹计算完成", "fingerprint", fingerprint)
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"success":     true,
+			"fingerprint": fingerprint,
+		})
+	})
+
 	// 获取签名列表（加密的key-value对）
 	signatureRouter.GET("/signature/list", func(ctx *gin.Context) {
 		// 从配置中获取所有签名数据
@@ -915,9 +956,10 @@ func signatureRouters(r *gin.Engine) {
 				}
 
 				matchedSignatures = append(matchedSignatures, map[string]string{
-					"encryptedId":       encryptedID,
-					"qualificationCode": qualCode,
-					"name":              sigName,
+					"encryptedId":                encryptedID,
+					"qualificationCode":          qualCode,
+					"qualificationFingerprint":   signature.GenerateQualificationFingerprint(qualCode),
+					"name":                       sigName,
 				})
 			}
 		}

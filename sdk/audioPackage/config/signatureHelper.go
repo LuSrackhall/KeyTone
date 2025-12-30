@@ -462,6 +462,9 @@ type AvailableSignature struct {
 	// QualificationCode 资格码
 	QualificationCode string `json:"qualificationCode"`
 
+	// QualificationFingerprint 资格码指纹（用于前端展示，保护原始资格码不泄漏）
+	QualificationFingerprint string `json:"qualificationFingerprint"`
+
 	// Name 签名名称
 	Name string `json:"name"`
 
@@ -569,13 +572,14 @@ func GetAvailableSignaturesForExport(albumPath string) ([]AvailableSignature, er
 		}
 
 		availableSignatures = append(availableSignatures, AvailableSignature{
-			EncryptedID:       encryptedID,
-			QualificationCode: qualCode,
-			Name:              sigData.Name,
-			Intro:             sigData.Intro,
-			IsInAlbum:         isInAlbum,
-			IsAuthorized:      isAuthorized,
-			IsOriginalAuthor:  isOriginalAuthor,
+			EncryptedID:              encryptedID,
+			QualificationCode:        qualCode,
+			QualificationFingerprint: signature.GenerateQualificationFingerprint(qualCode),
+			Name:                     sigData.Name,
+			Intro:                    sigData.Intro,
+			IsInAlbum:                isInAlbum,
+			IsAuthorized:             isAuthorized,
+			IsOriginalAuthor:         isOriginalAuthor,
 		})
 	}
 

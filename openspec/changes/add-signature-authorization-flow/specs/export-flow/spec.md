@@ -40,7 +40,7 @@ Normative: The AuthRequestDialog component SHALL automatically load signature da
 
 ### Requirement: 授权申请对话框
 
-Normative: The system SHALL provide an AuthRequestDialog component that guides users through a 3-step wizard to generate authorization request files; the dialog MUST display only unauthorized signatures, show the selected signature as a complete card (with image and intro), and provide original author contact information split into email and additional contact.
+Normative: The system SHALL provide an AuthRequestDialog component that guides users through a 3-step wizard to generate authorization request files; the dialog MUST display only unauthorized signatures, show the selected signature as a complete card (with image, intro, and qualification fingerprint), and provide original author contact information split into email and additional contact.
 
 #### Scenario: 授权申请向导步骤1 - 选择签名
 
@@ -52,7 +52,13 @@ Normative: The system SHALL provide an AuthRequestDialog component that guides u
 
 - **GIVEN** 用户已选择一个签名
 - **WHEN** 用户进入步骤2
-- **THEN** 显示已选签名的完整卡片（图片+名称+介绍），分开展示原始作者的邮箱和备用联系方式（各带复制按钮），显示带有"建议先沟通"提示的操作说明，用户点击"导出授权申请"按钮生成 .ktauthreq 文件
+- **THEN** 显示已选签名的完整卡片（图片+名称+介绍+**资格码指纹**），分开展示原始作者的邮箱和备用联系方式（各带复制按钮），显示带有"建议先沟通"提示的操作说明，用户点击"导出授权申请"按钮生成 .ktauthreq 文件
+
+#### Scenario: 展示选中签名的资格码指纹
+
+- **GIVEN** 用户在步骤2 查看已选签名卡片
+- **WHEN** 签名数据包含 `qualificationFingerprint`
+- **THEN** 在签名卡片底部显示资格码指纹（monospace 字体），支持复制到剪贴板
 
 #### Scenario: 授权申请文件保存需先选择路径
 

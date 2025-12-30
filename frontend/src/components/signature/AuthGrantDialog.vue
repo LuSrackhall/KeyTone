@@ -76,18 +76,49 @@
             <div class="text-overline text-grey" style="font-size: 0.7rem">
               {{ t('signature.authGrant.requester') }}
             </div>
-            <div
-              class="text-body2 text-weight-medium"
-              :class="[
-                /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
-                'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
-                // 添加细微滚动条（与签名列表保持一致）
-                'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
-              ]"
-              style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
-            >
-              {{ parsedRequest.requesterSignatureName }}
-            </div>
+            <q-card flat bordered class="bg-grey-1">
+              <q-card-section class="q-pa-sm">
+                <div
+                  class="text-body2 text-weight-medium"
+                  :class="[
+                    /* 对溢出的情况, 采取滚动策略（与签名列表保持一致） */
+                    'max-w-full !overflow-x-auto whitespace-nowrap !text-clip',
+                    // 添加细微滚动条（与签名列表保持一致）
+                    'h-5.5 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400',
+                  ]"
+                  style="overflow-x: auto; overflow-y: hidden; text-overflow: clip; white-space: nowrap"
+                >
+                  {{ parsedRequest.requesterSignatureName }}
+                </div>
+              </q-card-section>
+              <!-- 申请方资格码指纹展示 -->
+              <q-separator v-if="parsedRequest.requesterQualificationFingerprint" />
+              <q-item v-if="parsedRequest.requesterQualificationFingerprint" dense class="q-pa-xs">
+                <q-item-section avatar style="min-width: 24px">
+                  <q-icon name="fingerprint" color="grey-6" size="16px" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label caption style="font-size: 0.65rem">
+                    {{ t('signature.authGrant.requesterFingerprint') }}
+                  </q-item-label>
+                  <q-item-label
+                    class="text-caption"
+                    style="font-family: monospace; word-break: break-all; line-height: 1.3; font-size: 0.65rem"
+                  >
+                    {{ parsedRequest.requesterQualificationFingerprint }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    flat
+                    dense
+                    size="xs"
+                    icon="content_copy"
+                    @click="copyToClipboard(parsedRequest.requesterQualificationFingerprint, t('signature.authGrant.requesterFingerprint'))"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-card>
           </div>
 
           <!-- Matched Signatures (original author's signatures that match) -->
@@ -149,6 +180,33 @@
                     >
                       {{ selectedLocalSignature.intro }}
                     </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <!-- 资格码指纹展示 -->
+                <q-separator />
+                <q-item dense class="q-pa-xs">
+                  <q-item-section avatar style="min-width: 24px">
+                    <q-icon name="fingerprint" color="grey-6" size="16px" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label caption style="font-size: 0.65rem">
+                      {{ t('signature.authGrant.qualificationFingerprint') }}
+                    </q-item-label>
+                    <q-item-label
+                      class="text-caption"
+                      style="font-family: monospace; word-break: break-all; line-height: 1.3; font-size: 0.65rem"
+                    >
+                      {{ selectedMatchedSignatureFingerprint }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn
+                      flat
+                      dense
+                      size="xs"
+                      icon="content_copy"
+                      @click="copyToClipboard(selectedMatchedSignatureFingerprint, t('signature.authGrant.qualificationFingerprint'))"
+                    />
                   </q-item-section>
                 </q-item>
               </q-card>
@@ -308,6 +366,38 @@ const selectedMatchedSignatureFallback = computed(() => {
   if (!encryptedId) return null;
   return matchedSignatures.value.find((s) => s.encryptedId === encryptedId) || null;
 });
+
+/**
+ * 选中签名的资格码指纹
+ */
+const selectedMatchedSignatureFingerprint = computed(() => {
+  const matched = selectedMatchedSignatureFallback.value;
+  return matched?.qualificationFingerprint || '';
+});
+
+/**
+ * 复制到剪贴板
+ */
+function copyToClipboard(text: string, label: string) {
+  navigator.clipboard.writeText(text).then(
+    () => {
+      $q.notify({
+        type: 'positive',
+        message: t('signature.authGrant.copySuccess', { label }),
+        position: 'top',
+        timeout: 1500,
+      });
+    },
+    () => {
+      $q.notify({
+        type: 'negative',
+        message: t('signature.authGrant.copyFailed'),
+        position: 'top',
+        timeout: 1500,
+      });
+    }
+  );
+}
 
 // Watch
 watch(

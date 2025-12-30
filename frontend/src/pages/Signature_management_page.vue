@@ -356,6 +356,17 @@
         {{ $t('signature.page.export') }}
       </ContextMenuItem>
       <ContextMenuItem
+        icon="fingerprint"
+        @click="
+          () => {
+            contextMenuVisible = false;
+            handleViewFingerprint();
+          }
+        "
+      >
+        {{ $t('signature.contextMenu.viewFingerprint') }}
+      </ContextMenuItem>
+      <ContextMenuItem
         icon="delete"
         :is-negative="true"
         :show-divider="false"
@@ -369,6 +380,41 @@
         {{ $t('signature.page.delete') }}
       </ContextMenuItem>
     </ContextMenu>
+
+    <!-- 资格码指纹对话框 -->
+    <q-dialog v-model="showFingerprintDialog" backdrop-filter="blur(4px)">
+      <q-card style="width: 90%; max-width: 400px">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6 flex items-center gap-2">
+            <q-icon name="fingerprint" color="primary" />
+            {{ $t('signature.contextMenu.fingerprintTitle') }}
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section>
+          <div class="text-caption text-grey q-mb-xs">{{ fingerprintDialogSignatureName }}</div>
+          <div
+            class="q-pa-sm bg-grey-2 rounded text-body2"
+            style="font-family: monospace; word-break: break-all; line-height: 1.5"
+          >
+            {{ fingerprintDialogValue }}
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            :label="$t('exportFlow.authRequestDialog.copy')"
+            icon="content_copy"
+            color="primary"
+            @click="copyFingerprintToClipboard"
+          />
+          <q-btn flat :label="$t('signature.form.close')" color="grey" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -390,6 +436,7 @@ import {
   exportSignature,
   importSignature,
   confirmImportSignature,
+  getSignatureFingerprint,
 } from 'boot/query/signature-query';
 import type { Signature } from 'src/types/signature';
 
@@ -469,6 +516,11 @@ const showImportDialogVisible = ref(false);
 
 // 授权受理对话框显示状态
 const showAuthGrantDialogVisible = ref(false);
+
+// 资格码指纹对话框状态
+const showFingerprintDialog = ref(false);
+const fingerprintDialogSignatureName = ref('');
+const fingerprintDialogValue = ref('');
 
 // 导入文件 - 绑定文件选择器
 const importFile = ref<File | null>(null);
@@ -1031,6 +1083,58 @@ async function handleDelete() {
       });
     }
   });
+}
+
+/** 查看签名的资格码指纹 */
+async function handleViewFingerprint() {
+  if (!contextMenuSignature.value) return;
+
+  const signature = contextMenuSignature.value;
+
+  try {
+    // 调用 API 获取指纹
+    const fingerprint = await getSignatureFingerprint(signature.id);
+    if (fingerprint) {
+      fingerprintDialogSignatureName.value = signature.name;
+      fingerprintDialogValue.value = fingerprint;
+      showFingerprintDialog.value = true;
+    } else {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.notify.unexpectedError'),
+        position: 'top',
+      });
+    }
+  } catch (error) {
+    console.error('Failed to get signature fingerprint:', error);
+    q.notify({
+      type: 'negative',
+      message: $t('signature.notify.unexpectedError'),
+      position: 'top',
+    });
+  }
+}
+
+/** 复制资格码指纹到剪贴板 */
+function copyFingerprintToClipboard() {
+  navigator.clipboard.writeText(fingerprintDialogValue.value).then(
+    () => {
+      q.notify({
+        type: 'positive',
+        message: $t('signature.contextMenu.fingerprintCopied'),
+        position: 'top',
+        timeout: 1500,
+      });
+    },
+    () => {
+      q.notify({
+        type: 'negative',
+        message: $t('signature.authGrant.copyFailed'),
+        position: 'top',
+        timeout: 1500,
+      });
+    }
+  );
 }
 
 /** 导出签名 - 降级方案（使用传统的下载方式） */

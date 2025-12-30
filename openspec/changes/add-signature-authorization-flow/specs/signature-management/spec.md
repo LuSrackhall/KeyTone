@@ -22,15 +22,27 @@ Normative: The system SHALL allow users to generate authorization request files 
 
 ### Requirement: 签名授权受理
 
-Normative: The system SHALL allow original authors to import authorization request files, validate them against local signatures, and generate authorization grant files (.ktauth); the system MUST verify that the importing user owns a signature matching the request.
+Normative: The system SHALL allow original authors to import authorization request files, validate them against local signatures, and generate authorization grant files (.ktauth); the system MUST verify that the importing user owns a signature matching the request; the matching signature's qualification fingerprint MUST be displayed for verification.
 
 #### Scenario: 导入授权申请文件
 
 - **GIVEN** 原始作者在签名管理页面
 - **WHEN** 用户点击"授权受理"并导入 .ktauthreq 文件
 - **THEN** 系统调用 `POST /signature/parse-auth-request` 解析文件，并在审核步骤显示：
-  - 申请信息中的"申请方名称"（支持横向滚动，滚动条样式与签名列表一致，以防溢出）
-  - 匹配到的本地签名（以完整签名列表项展示：图片（若有）+名称+介绍；名称和介绍支持横向滚动，滚动条样式与签名列表一致；若匹配多个则先选择再展示所选项）
+  - 申请方信息（名称+**资格码指纹**，指纹从申请文件解析）
+  - 匹配到的本地签名（以完整签名列表项展示：图片（若有）+名称+介绍+**资格码指纹**；名称和介绍支持横向滚动，滚动条样式与签名列表一致；若匹配多个则先选择再展示所选项）
+
+#### Scenario: 展示申请方的资格码指纹
+
+- **GIVEN** 原始作者在授权受理对话框的审核步骤
+- **WHEN** 系统解析申请文件成功
+- **THEN** 在申请方信息卡片底部显示申请方的资格码指纹（从申请文件解析，monospace 字体），支持复制到剪贴板，便于原始作者核实申请方的签名身份
+
+#### Scenario: 展示匹配签名的资格码指纹
+
+- **GIVEN** 原始作者在授权受理对话框的审核步骤
+- **WHEN** 系统找到匹配的本地签名
+- **THEN** 在签名卡片底部显示该签名的资格码指纹（monospace 字体），支持复制到剪贴板，便于原始作者核实自己的签名身份
 
 #### Scenario: 生成授权文件
 
@@ -43,6 +55,18 @@ Normative: The system SHALL allow original authors to import authorization reque
 - **GIVEN** 原始作者导入授权申请文件
 - **WHEN** 本地签名列表中没有匹配的签名
 - **THEN** 系统提示"未找到匹配的签名，无法授权"，禁用授权按钮
+
+---
+
+### Requirement: 签名管理页面右键菜单查看指纹
+
+Normative: The system SHALL provide a context menu option in the signature management page to view the qualification fingerprint of any signature.
+
+#### Scenario: 查看签名指纹
+
+- **GIVEN** 用户在签名管理页面右键点击某个签名
+- **WHEN** 用户选择"查看资格码指纹"菜单项
+- **THEN** 系统弹出对话框展示该签名的资格码指纹，支持复制到剪贴板
 
 ---
 

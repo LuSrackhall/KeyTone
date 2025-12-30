@@ -152,7 +152,7 @@
 
 **Props**:
 - `visible: boolean` - 对话框可见性
-- `signatures: Signature[]` - 签名列表（含授权状态）
+- `signatures: Signature[]` - 签名列表（含授权状态和资格码指纹）
 - `contactEmail: string` - 原始作者邮箱
 - `contactAdditional?: string` - 原始作者备用联系方式
 - `authorizationUUID: string` - 专辑授权UUID
@@ -162,12 +162,18 @@
 - 签名数据加载逻辑提取为独立函数 `loadAuthRequestSignatures()`
 - 当对话框打开时（visible 变为 true），父组件通过 watch 监听自动调用此函数
 - 函数内部调用：
-  - `GetAvailableSignaturesForExport(albumPath)` 获取授权状态
+  - `GetAvailableSignaturesForExport(albumPath)` 获取授权状态和**资格码指纹**
   - `getSignaturesList()` 获取加密签名列表
   - `decryptSignatureData()` 解密签名数据
   - `getSignatureImage()` 获取签名图片
 - 筛选逻辑：仅显示 `isAuthorized=false` 的签名
 - 联系方式从专辑签名配置中获取 `authorization.contactEmail` 和 `authorization.contactAdditional`
+- **资格码指纹**：从 `GetAvailableSignaturesForExport` 返回的 `qualificationFingerprint` 字段获取
+
+**资格码指纹展示**:
+- 在 Step 2 的"已选签名"卡片底部展示资格码指纹
+- 支持复制到剪贴板
+- 便于授权申请方核实自己的签名身份
 
 **签名创建后刷新**:
 - 当用户在授权申请对话框中点击"创建签名"并成功创建后
@@ -182,7 +188,7 @@
 
 **步骤**:
 1. 选择一个未授权的签名
-2. 查看原始作者联系方式（邮箱+备用，各带复制按钮），查看已选签名卡片，阅读操作说明（含沟通提示），导出授权申请文件
+2. 查看原始作者联系方式（邮箱+备用，各带复制按钮），查看已选签名卡片（含资格码指纹），阅读操作说明（含沟通提示），导出授权申请文件
 3. 完成提示
 
 **导出申请文件保存流程**:
@@ -262,7 +268,42 @@
 2. 审核申请信息，选择签名授权
 3. 导出 .ktauth 授权文件
 
+**资格码指纹展示**:
+- 在 Step 2 的"申请方"卡片底部展示申请方的资格码指纹（从申请文件解析）
+- 在 Step 2 的"您的签名"卡片底部展示匹配签名的资格码指纹
+- 支持复制到剪贴板
+- 便于授权受理方核实双方的签名身份
+
+### 签名管理页面右键菜单
+
+**新增菜单项**:
+- "查看资格码指纹"（fingerprint 图标）
+
+**功能**:
+- 点击后弹出对话框展示当前签名的资格码指纹
+- 支持复制到剪贴板
+- 调用 `POST /signature/get-fingerprint` API 获取指纹
+
 ## API 设计
+
+### POST /signature/get-fingerprint
+
+**请求**:
+
+```json
+{
+  "encryptedId": "string"
+}
+```
+
+**响应**:
+
+```json
+{
+  "success": true,
+  "fingerprint": "string"
+}
+```
 
 ### POST /signature/generate-auth-request
 

@@ -94,6 +94,8 @@ export interface AlbumSignatureInfo {
 export interface AvailableSignature {
   encryptedId: string; // 加密的签名ID
   qualificationCode: string; // 资格码
+  /** 资格码指纹，用于前端展示，保护原始资格码不泄漏 */
+  qualificationFingerprint: string;
   name: string; // 签名名称
   intro: string; // 个人介绍
   isInAlbum: boolean; // 是否已在专辑中

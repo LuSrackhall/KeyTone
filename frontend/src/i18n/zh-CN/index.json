@@ -442,6 +442,9 @@
       "step2Description": "查看原始作者联系方式并导出授权申请文件",
       "step3Title": "完成",
       "selectedSignature": "已选签名",
+      "qualificationFingerprint": "资格码指纹",
+      "copySuccess": "{label}已复制到剪贴板",
+      "copyFailed": "复制失败",
       "authorContact": "原始作者联系方式",
       "email": "邮箱",
       "additionalContact": "备用联系方式",
@@ -539,10 +542,14 @@
       "parseError": "解析授权申请文件失败",
       "noPermission": "您没有权限受理此申请。请确保您的签名列表中存在对应的签名。",
       "albumId": "专辑标识（哈希值）",
-      "requester": "申请方名称",
+      "requester": "申请方",
+      "requesterFingerprint": "申请方资格码指纹",
       "yourSignature": "您的签名",
       "noMatchingSignature": "未在您的签名列表中找到匹配的签名",
       "selectSignature": "选择用于授权的签名",
+      "qualificationFingerprint": "资格码指纹",
+      "copySuccess": "{label}已复制到剪贴板",
+      "copyFailed": "复制失败",
       "warning": "授权后，申请方将可以使用其自己的签名导出该专辑。请确保您信任申请方。",
       "approve": "同意并导出",
       "cancel": "取消",
@@ -552,6 +559,11 @@
       "exportSuccess": "授权文件导出成功",
       "exportSuccessHint": "请将授权文件（.ktauth）发送给申请方",
       "exportFailed": "导出授权文件失败"
+    },
+    "contextMenu": {
+      "viewFingerprint": "查看资格码指纹",
+      "fingerprintTitle": "资格码指纹",
+      "fingerprintCopied": "资格码指纹已复制到剪贴板"
     },
     "form": {
       "createTitle": "创建签名",

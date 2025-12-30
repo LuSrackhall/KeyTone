@@ -454,6 +454,8 @@ const authRequestSignaturesData = ref<
     intro?: string;
     image?: string;
     isAuthorized?: boolean;
+    /** 资格码指纹，用于前端展示 */
+    qualificationFingerprint?: string;
   }>
 >([]);
 
@@ -509,12 +511,16 @@ async function loadAuthRequestSignatures() {
           }
         }
 
+        // 查找对应的可用签名以获取资格码指纹
+        const availableSig = availableSignatures.find((s) => s.encryptedId === encryptedId);
+
         signatures.push({
           id: encryptedId,
           name: signatureData.name,
           intro: signatureData.intro,
           image: imageUrl,
           isAuthorized: authMap.get(encryptedId) ?? false,
+          qualificationFingerprint: availableSig?.qualificationFingerprint,
         });
       } catch (err) {
         console.error(`[AuthRequest] Error processing signature ${encryptedId}:`, err);

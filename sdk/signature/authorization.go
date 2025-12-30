@@ -179,6 +179,10 @@ type AuthRequestData struct {
 	// RequesterSignatureName 请求方签名名称（明文）
 	// 方便原始作者了解请求方身份
 	RequesterSignatureName string `json:"requesterSignatureName"`
+
+	// RequesterQualificationFingerprint 请求方签名的资格码指纹（明文）
+	// 便于原始作者核实申请方身份
+	RequesterQualificationFingerprint string `json:"requesterQualificationFingerprint"`
 }
 
 // AuthRequestFile 授权申请文件的最终结构（整体加密后）
@@ -299,12 +303,23 @@ func GenerateAuthRequest(
 		"变换结果(encryptedOriginalQualCodeHash)", encryptedOriginalQualCodeHash,
 	)
 
+	// 步骤3.5：计算请求方签名的资格码指纹
+	requesterQualCode := GenerateQualificationCode(requesterOriginalID)
+	requesterQualFingerprint := GenerateQualificationFingerprint(requesterQualCode)
+
+	logger.Debug("[授权申请-数据链路] 请求方签名ID -> 资格码 -> 指纹",
+		"原始签名ID", requesterOriginalID,
+		"资格码", requesterQualCode,
+		"指纹", requesterQualFingerprint,
+	)
+
 	// 步骤4：组装授权申请数据
 	authRequestData := AuthRequestData{
-		AuthorizationUUIDHash:      authUUIDHashHex,
-		RequesterSignatureIDSuffix: encryptedRequesterIDSuffix,
-		OriginalAuthorQualCodeHash: encryptedOriginalQualCodeHash,
-		RequesterSignatureName:     requesterSignatureName,
+		AuthorizationUUIDHash:             authUUIDHashHex,
+		RequesterSignatureIDSuffix:        encryptedRequesterIDSuffix,
+		OriginalAuthorQualCodeHash:        encryptedOriginalQualCodeHash,
+		RequesterSignatureName:            requesterSignatureName,
+		RequesterQualificationFingerprint: requesterQualFingerprint,
 	}
 
 	// 序列化为JSON
@@ -367,6 +382,10 @@ type ParsedAuthRequest struct {
 
 	// RequesterSignatureName 请求方签名名称
 	RequesterSignatureName string `json:"requesterSignatureName"`
+
+	// RequesterQualificationFingerprint 请求方签名的资格码指纹
+	// 便于原始作者核实申请方身份
+	RequesterQualificationFingerprint string `json:"requesterQualificationFingerprint"`
 }
 
 // ParseAuthRequest 解析授权申请文件
@@ -449,14 +468,16 @@ func ParseAuthRequest(fileContent []byte) (*ParsedAuthRequest, error) {
 
 	// 构建解析结果
 	parsed := &ParsedAuthRequest{
-		AuthorizationUUIDHash:      authRequestData.AuthorizationUUIDHash,
-		RequesterSignatureIDSuffix: requesterIDSuffix,
-		OriginalAuthorQualCodeHash: originalQualCodeHash,
-		RequesterSignatureName:     authRequestData.RequesterSignatureName,
+		AuthorizationUUIDHash:             authRequestData.AuthorizationUUIDHash,
+		RequesterSignatureIDSuffix:        requesterIDSuffix,
+		OriginalAuthorQualCodeHash:        originalQualCodeHash,
+		RequesterSignatureName:            authRequestData.RequesterSignatureName,
+		RequesterQualificationFingerprint: authRequestData.RequesterQualificationFingerprint,
 	}
 
 	logger.Info("授权申请文件解析成功",
 		"请求方签名名称", parsed.RequesterSignatureName,
+		"请求方资格码指纹", parsed.RequesterQualificationFingerprint,
 		"authorizationUUIDHash", parsed.AuthorizationUUIDHash,
 	)
 

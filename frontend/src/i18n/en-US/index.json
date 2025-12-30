@@ -450,6 +450,9 @@
       "step2Description": "View original author's contact info and export authorization request file",
       "step3Title": "Complete",
       "selectedSignature": "Selected Signature",
+      "qualificationFingerprint": "Qualification Fingerprint",
+      "copySuccess": "{label} copied to clipboard",
+      "copyFailed": "Copy failed",
       "authorContact": "Original Author Contact",
       "email": "Email",
       "additionalContact": "Additional Contact",
@@ -547,10 +550,14 @@
       "parseError": "Failed to parse authorization request file",
       "noPermission": "You don't have permission to handle this request. Make sure you have the corresponding signature in your list.",
       "albumId": "Album ID (Hash)",
-      "requester": "Requester Name",
+      "requester": "Requester",
+      "requesterFingerprint": "Requester Fingerprint",
       "yourSignature": "Your Signature",
       "noMatchingSignature": "No matching signature found in your list",
       "selectSignature": "Select signature to authorize with",
+      "qualificationFingerprint": "Qualification Fingerprint",
+      "copySuccess": "{label} copied to clipboard",
+      "copyFailed": "Copy failed",
       "warning": "Authorizing will allow the requester to export the album with their own signature. Make sure you trust the requester.",
       "approve": "Approve & Export",
       "cancel": "Cancel",
@@ -560,6 +567,11 @@
       "exportSuccess": "Authorization file exported successfully",
       "exportSuccessHint": "Please send the authorization file (.ktauth) to the requester",
       "exportFailed": "Failed to export authorization file"
+    },
+    "contextMenu": {
+      "viewFingerprint": "View Fingerprint",
+      "fingerprintTitle": "Qualification Fingerprint",
+      "fingerprintCopied": "Fingerprint copied to clipboard"
     },
     "form": {
       "createTitle": "Create Signature",
