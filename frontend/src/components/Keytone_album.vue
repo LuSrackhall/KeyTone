@@ -3377,17 +3377,25 @@ import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
+import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { 
-  createDependencyValidator, 
+import {
+  createDependencyValidator,
   hasItemDependencyIssues,
   type DependencyIssue,
   type AudioFile,
   type Sound,
-  type KeySound 
+  type KeySound
 } from 'src/utils/dependencyValidator';
 import DependencyWarning from 'src/components/DependencyWarning.vue';
+
+// ============================================================================
+// 导入 Context 类型和注入 Key
+// ============================================================================
+import {
+  KEYTONE_ALBUM_CONTEXT_KEY,
+  type KeytoneAlbumContext
+} from './keytone-album/types';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -3619,10 +3627,10 @@ const options = reactive([
 
 // ============================================================================
 // 自然排序工具函数：解决下拉列表选项乱序问题
-// 
+//
 // 问题：当选项数量很多的时候，列表的排序没有规律，用户难以快速定位所需内容
 // 解决方案：实现字母和数字的自然顺序排序作为默认排序规则
-// 
+//
 // 功能：
 // - 支持字母和数字的混合排序（如：sound1, sound2, sound10 而不是 sound1, sound10, sound2）
 // - 不区分大小写的字母排序
@@ -3633,16 +3641,16 @@ const naturalSort = (a: string, b: string): number => {
   const segmentize = (str: string) => {
     return str.match(/\d+|\D+/g) || [];
   };
-  
+
   const aSegments = segmentize(a.toLowerCase());
   const bSegments = segmentize(b.toLowerCase());
-  
+
   const maxLength = Math.max(aSegments.length, bSegments.length);
-  
+
   for (let i = 0; i < maxLength; i++) {
     const aSegment = aSegments[i] || '';
     const bSegment = bSegments[i] || '';
-    
+
     // 如果两个段都是数字，按数值比较（确保 1, 2, 10 的正确顺序）
     if (/^\d+$/.test(aSegment) && /^\d+$/.test(bSegment)) {
       const diff = parseInt(aSegment, 10) - parseInt(bSegment, 10);
@@ -3653,7 +3661,7 @@ const naturalSort = (a: string, b: string): number => {
       if (aSegment > bSegment) return 1;
     }
   }
-  
+
   return 0;
 };
 
@@ -3876,19 +3884,19 @@ watch(selectedKeySound, (newVal, oldVal) => {
   if (!newVal) {
     return;
   }
-  
+
   // 检查是否是新选择的KeySound（避免重复处理已转换的数据）
   if (oldVal && newVal.keySoundKey === oldVal.keySoundKey) {
     return;
   }
-  
+
   console.debug('观察selectedKeySound=', newVal);
-  
+
   // 创建深拷贝避免修改keySoundList中的原始数据
   const originalKeySound = keySoundList.value.find(ks => ks.keySoundKey === newVal.keySoundKey);
   if (originalKeySound) {
     selectedKeySound.value = JSON.parse(JSON.stringify(originalKeySound));
-    
+
     // 对拷贝的数据进行UI格式转换
     selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
       /**
@@ -3919,7 +3927,7 @@ watch(selectedKeySound, (newVal, oldVal) => {
       }
       return item;
     });
-    
+
     selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
       /**
        * json中的存储格式分别是
@@ -4569,12 +4577,12 @@ const dependencyIssues = ref<DependencyIssue[]>([]);
 const allDependencyIssues = computed(() => {
   const audioFiles = soundFileList.value as AudioFile[];
   const sounds = soundList.value as Sound[];
-  
+
   // Create a copy of keySoundList with original string format for validation
   const keySounds = keySoundList.value.map(keySound => {
     // Create a deep copy to avoid modifying the original
     const keySoundCopy = JSON.parse(JSON.stringify(keySound));
-    
+
     // Restore original string format for dependency validation
     keySoundCopy.keySoundValue.down.value = keySoundCopy.keySoundValue.down.value.map((item: any) => {
       if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
@@ -4591,7 +4599,7 @@ const allDependencyIssues = computed(() => {
       }
       return item;
     });
-    
+
     keySoundCopy.keySoundValue.up.value = keySoundCopy.keySoundValue.up.value.map((item: any) => {
       if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
         return {
@@ -4607,26 +4615,26 @@ const allDependencyIssues = computed(() => {
       }
       return item;
     });
-    
+
     return keySoundCopy;
   }) as KeySound[];
-  
+
   if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
     return [];
   }
 
   const validator = createDependencyValidator(audioFiles, sounds, keySounds);
-  
+
   // Only validate actual saved dependencies, not current UI selections
   // The global binding and single key bindings should come from saved album data, not current UI state
-  
+
   // For now, we don't include global binding validation since it represents current UI selections
   // TODO: If there are actual saved global bindings, they should be included here
   const globalBinding = undefined;
 
   // Convert keysWithSoundEffect Map to the format expected by validator
-  const singleKeyBindings = keysWithSoundEffect.value.size > 0 
-    ? keysWithSoundEffect.value 
+  const singleKeyBindings = keysWithSoundEffect.value.size > 0
+    ? keysWithSoundEffect.value
     : undefined;
 
   return validator.validateAllDependencies(globalBinding, singleKeyBindings);
@@ -5127,6 +5135,158 @@ const step_introduce_fontSize = computed(() => {
     ? 'text-[0.83rem]'
     : 'text-[0.85rem]';
 });
+
+// ============================================================================
+// Context 提供（provide）
+// ============================================================================
+//
+// 【作用】
+// 将父组件的所有状态和方法打包成 Context 对象，通过 provide 提供给子组件。
+// 子组件通过 inject(KEYTONE_ALBUM_CONTEXT_KEY) 获取这个 Context。
+//
+// 【为什么在这里定义】
+// 需要在所有状态和方法都定义完成后才能构建 Context。
+// 这样确保 Context 中引用的所有变量都已存在。
+//
+// 【子组件如何使用】
+// 在子组件中：const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+// 然后通过 ctx.step.value、ctx.$t() 等方式访问状态和方法。
+// 注意：在模板中访问 Ref 类型需要用 .value，因为 ctx 是普通对象而非 Ref。
+//
+// ============================================================================
+
+/**
+ * 构建 KeytoneAlbumContext 对象
+ *
+ * 这里只列出 Step1 (音频源文件) 相关的状态和方法，
+ * 其他 Step 的状态会在后续迁移时逐步添加。
+ *
+ * 当前策略：先提供必要的状态，验证机制正常后再扩展。
+ */
+const keytoneAlbumContext: KeytoneAlbumContext = {
+  // ============ Props ============
+  // 从 props 获取，子组件可以读取但不能修改
+  pkgPath: props.pkgPath,
+  isCreate: props.isCreate,
+
+  // ============ 核心状态 ============
+  step,           // 当前步骤（1-4 或 99 表示折叠）
+  pkgName,        // 键音包名称
+
+  // ============ Step1: 音频源文件相关 ============
+  addNewSoundFile,    // 控制"添加音频文件"对话框的 v-model
+  files,              // 待上传的文件列表
+  editSoundFile,      // 控制"管理音频文件"对话框的 v-model
+  soundFileList,      // 已加载的音频文件列表
+  selectedSoundFile,  // 当前选中的音频文件（用于编辑/删除）
+
+  // ============ Step2: 声音定义相关 ============
+  createNewSound,     // 控制"创建声音"对话框
+  soundName,          // 声音名称
+  sourceFileForSound, // 声音的源文件引用
+  soundStartTime,     // 声音裁剪开始时间
+  soundEndTime,       // 声音裁剪结束时间
+  soundVolume,        // 声音音量
+  showEditSoundDialog,// 控制"编辑声音"对话框
+  soundList,          // 已定义的声音列表
+  selectedSound,      // 当前选中的声音
+
+  // ============ Step3: 按键音相关 ============
+  createNewKeySound,      // 控制"创建按键音"对话框
+  keySoundName,           // 按键音名称
+  configureDownSound,     // 是否配置按下声音
+  configureUpSound,       // 是否配置抬起声音
+  selectedSoundsForDown,  // 按下时选中的声音
+  playModeForDown,        // 按下播放模式
+  maxSelectionForDown,    // 按下最大选择数
+  downTypeGroup,          // 按下类型组
+  downSoundList,          // 按下声音列表
+  selectedSoundsForUp,    // 抬起时选中的声音
+  playModeForUp,          // 抬起播放模式
+  maxSelectionForUp,      // 抬起最大选择数
+  upTypeGroup,            // 抬起类型组
+  upSoundList,            // 抬起声音列表
+  editExistingKeySound,   // 控制"编辑按键音"对话框
+  edit_configureDownSound,
+  edit_configureUpSound,
+  edit_downTypeGroup,
+  edit_upTypeGroup,
+  edit_downSoundList,
+  edit_upSoundList,
+  keySoundList,           // 已定义的按键音列表
+  selectedKeySound,       // 当前选中的按键音
+
+  // ============ Step4: 联动声效相关 ============
+  isEnableEmbeddedTestSound,  // 内嵌测试音开关
+  showEveryKeyEffectDialog,   // 全键声效对话框
+  keyDownUnifiedSoundEffectSelect,
+  keyUpUnifiedSoundEffectSelect,
+  unifiedTypeGroup,
+  keyUnifiedSoundEffectOptions,
+  isShowUltimatePerfectionKeySoundAnchoring,
+  isAnchoringUltimatePerfectionKeySound,
+  showSingleKeyEffectDialog,
+  isShowAddOrSettingSingleKeyEffectDialog,
+  selectedSingleKeys,
+  isRecordingSingleKeys,
+  keyOptions,
+  filterOptions,
+  isGetsFocused,
+  isDownSoundEffectSelectEnabled,
+  isUpSoundEffectSelectEnabled,
+  keyDownSingleKeySoundEffectSelect,
+  keyUpSingleKeySoundEffectSelect,
+  singleKeyTypeGroup,
+  keySingleKeySoundEffectOptions,
+  isShowUltimatePerfectionKeySoundAnchoring_singleKey,
+  isAnchoringUltimatePerfectionKeySound_singleKey,
+  keysWithSoundEffect,
+  isShowSingleKeySoundEffectEditDialog,
+  currentEditingKey,
+  currentEditingKeyOfName,
+  keyDownSingleKeySoundEffectSelect_edit,
+  keyUpSingleKeySoundEffectSelect_edit,
+  singleKeyTypeGroup_edit,
+  keySingleKeySoundEffectOptions_edit,
+  isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit,
+  isAnchoringUltimatePerfectionKeySound_singleKey_edit,
+
+  // ============ 依赖校验 ============
+  dependencyIssues,
+
+  // ============ 工具函数 ============
+  album_options_select_label,   // 选项标签显示函数
+  naturalSort,                  // 自然排序函数
+  preventDefaultKeyBehaviorWhenRecording,  // 防止录制时键盘默认行为
+  preventDefaultMouseWhenRecording,        // 防止录制时鼠标默认行为
+  convertValue,                 // 值转换函数
+
+  // ============ 操作函数 ============
+  saveSoundConfig,      // 保存声音配置
+  deleteSound,          // 删除声音
+  previewSound,         // 预览声音
+  saveKeySoundConfig,   // 保存按键音配置
+  deleteKeySound,       // 删除按键音
+  saveUnifiedSoundEffectConfig,     // 保存全局联动声效
+  saveSingleKeySoundEffectConfig,   // 保存单键联动声效
+
+  // ============ i18n ============
+  $t,  // 国际化翻译函数
+
+  // ============ 样式相关 ============
+  i18n_fontSize,           // 按语言调整的字体大小
+  step_introduce_fontSize, // 步骤说明文字大小
+  isMacOS,                 // 是否 MacOS 平台
+
+  // ============ 选项常量 ============
+  options,           // 类型选项（audio_files/sounds/key_sounds）
+  playModeOptions,   // 播放模式选项
+  playModeLabels,    // 播放模式标签映射
+};
+
+// 提供 Context 给子组件
+// 子组件通过 inject(KEYTONE_ALBUM_CONTEXT_KEY) 获取
+provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 </script>
 
 <style lang="scss" scoped>

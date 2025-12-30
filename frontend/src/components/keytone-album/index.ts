@@ -39,13 +39,13 @@
  *   ├── index.ts          <-- 当前文件：模块入口
  *   ├── types.ts          <-- 类型定义
  *   ├── steps/            <-- Step 子组件目录
- *   │   ├── StepLoadAudioFiles.vue      (Step 1: 加载音频源文件)
- *   │   ├── StepDefineSounds.vue        (Step 2: 定义声音) [待创建]
- *   │   ├── StepCraftKeySounds.vue      (Step 3: 制作按键音) [待创建]
- *   │   └── StepLinkageEffects.vue      (Step 4: 联动声效) [待创建]
+ *   │   ├── StepLoadAudioFiles.vue      (Step 1: 加载音频源文件) ✅
+ *   │   ├── StepDefineSounds.vue        (Step 2: 定义声音) ✅
+ *   │   ├── StepCraftKeySounds.vue      (Step 3: 制作按键音) ✅
+ *   │   └── StepLinkageEffects.vue      (Step 4: 联动声效) ✅
  *   ├── dialogs/          <-- Dialog 子组件目录
- *   │   ├── AddAudioFileDialog.vue      (添加音频文件对话框)
- *   │   ├── ManageAudioFilesDialog.vue  (管理音频文件对话框)
+ *   │   ├── AddAudioFileDialog.vue      (添加音频文件对话框) ✅
+ *   │   ├── ManageAudioFilesDialog.vue  (管理音频文件对话框) ✅
  *   │   └── ... (更多对话框待创建)
  *   └── composables/      <-- 可复用逻辑 [待创建]
  *
