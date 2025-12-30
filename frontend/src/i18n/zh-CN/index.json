@@ -561,7 +561,7 @@
       "exportFailed": "导出授权文件失败"
     },
     "contextMenu": {
-      "viewFingerprint": "查看资格码指纹",
+      "viewFingerprint": "指纹",
       "fingerprintTitle": "资格码指纹",
       "fingerprintCopied": "资格码指纹已复制到剪贴板"
     },

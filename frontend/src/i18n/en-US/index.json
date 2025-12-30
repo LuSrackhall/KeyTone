@@ -569,7 +569,7 @@
       "exportFailed": "Failed to export authorization file"
     },
     "contextMenu": {
-      "viewFingerprint": "View Fingerprint",
+      "viewFingerprint": "Fingerprint",
       "fingerprintTitle": "Qualification Fingerprint",
       "fingerprintCopied": "Fingerprint copied to clipboard"
     },

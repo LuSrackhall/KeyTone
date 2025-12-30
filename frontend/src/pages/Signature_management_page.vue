@@ -394,7 +394,6 @@
         </q-card-section>
 
         <q-card-section>
-          <div class="text-caption text-grey q-mb-xs">{{ fingerprintDialogSignatureName }}</div>
           <div
             class="q-pa-sm bg-grey-2 rounded text-body2"
             style="font-family: monospace; word-break: break-all; line-height: 1.5"

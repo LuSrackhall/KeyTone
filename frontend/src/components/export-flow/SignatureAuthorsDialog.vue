@@ -761,4 +761,9 @@ defineExpose({
     margin-top: 12px;
   }
 }
+
+:deep(.q-item__section) {
+  @apply text-wrap;
+  @apply overflow-hidden;
+}
 </style>

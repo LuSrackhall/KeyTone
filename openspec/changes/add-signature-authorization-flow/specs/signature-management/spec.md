@@ -60,13 +60,13 @@ Normative: The system SHALL allow original authors to import authorization reque
 
 ### Requirement: 签名管理页面右键菜单查看指纹
 
-Normative: The system SHALL provide a context menu option in the signature management page to view the qualification fingerprint of any signature.
+Normative: The system SHALL provide a context menu option labeled "指纹" (Fingerprint) in the signature management page to view the qualification fingerprint of any signature.
 
 #### Scenario: 查看签名指纹
 
 - **GIVEN** 用户在签名管理页面右键点击某个签名
-- **WHEN** 用户选择"查看资格码指纹"菜单项
-- **THEN** 系统弹出对话框展示该签名的资格码指纹，支持复制到剪贴板
+- **WHEN** 用户选择"指纹"菜单项
+- **THEN** 系统弹出对话框，标题为"资格码指纹"，内容仅显示指纹值（不显示签名名称），支持复制到剪贴板
 
 ---
 
