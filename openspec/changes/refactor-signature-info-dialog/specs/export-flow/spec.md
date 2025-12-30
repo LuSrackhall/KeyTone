@@ -28,17 +28,30 @@ Normative: The `SignatureAuthorsDialog` SHALL 从 `allSignatures` 中读取原�
 - **WHEN** 对话框渲染
 - **THEN** 以等宽字体显示 UUID，带复制按钮
 
-#### Scenario: 展示直接导出作者资格码
+#### Scenario: 展示最近导出者资格码指纹
 
 - **GIVEN** 原始作者签名条目包含 `authorization.directExportAuthor`
 - **WHEN** 对话框渲染
-- **THEN** 显示直接导出作者的资格码
+- **THEN** 显示最近导出者的资格码指纹（由SDK计算的 `directExportAuthorFingerprint`）
 
 #### Scenario: 展示已授权签名列表
 
-- **GIVEN** 原始作者签名条目包含非空的 `authorization.authorizedList`
+- **GIVEN** 原始作者签名条目的 `requireAuthorization` 为 true
+- **AND** `authorization.authorizedFingerprintList` 非空（不含原始作者自己）
 - **WHEN** 用户展开"已授权签名列表"
-- **THEN** 以列表形式显示所有已授权的资格码
+- **THEN** 以列表形式显示所有已授权签名的资格码指纹（非原始资格码）
+
+#### Scenario: 已授权信息仅在需要授权时显示
+
+- **GIVEN** 原始作者签名条目的 `requireAuthorization` 为 false
+- **WHEN** 对话框渲染
+- **THEN** 不显示"已授权 N 个签名"标签和"已授权签名列表"展开项
+
+#### Scenario: 已授权列表过滤原始作者
+
+- **GIVEN** `authorization.authorizedList` 中包含原始作者自己的资格码
+- **WHEN** SDK 计算 `authorizedFingerprintList`
+- **THEN** 自动过滤掉原始作者自己，仅返回其他被授权者的指纹
 
 ---
 

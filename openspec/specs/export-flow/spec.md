@@ -333,14 +333,14 @@ Normative: The dialog layout SHALL optimize spacing between search/create area a
 
 ### Requirement: 专辑签名信息对话框
 
-Normative: The `SignatureAuthorsDialog` SHALL 完整展示专辑中所有签名的详细信息，包括原始作者、直接导出作者、历史贡献作者；对话框 MUST 显示"资格码指纹"而非原始资格码，以保护资格码不泄漏的前提下保证签名的可追溯性；原始作者区块 MUST 显示联系方式（邮箱、其他联系方式）、授权状态、授权标识UUID、最近导出者资格码指纹及已授权签名列表；所有关键信息 MUST 支持一键复制；签名图片 MUST 通过 `GetAlbumFile` API 从专辑目录读取；所有用户可见文本 SHALL 使用 i18n 翻译键（`exportFlow.signatureInfoDialog.*`）。
+Normative: The `SignatureAuthorsDialog` SHALL 完整展示专辑中所有签名的详细信息，包括原始作者、直接导出作者、历史贡献作者；对话框 MUST 显示"资格码指纹"而非原始资格码，以保护资格码不泄漏的前提下保证签名的可追溯性；原始作者区块 MUST 显示联系方式（邮箱、其他联系方式）、授权状态、授权标识UUID、最近导出者资格码指纹；已授权签名数量及列表 MUST 仅在 `requireAuthorization` 为 true 时显示，且 MUST 自动过滤原始作者自己、显示资格码指纹而非原始资格码；所有关键信息 MUST 支持一键复制；签名图片 MUST 通过 `GetAlbumFile` API 从专辑目录读取；所有用户可见文本 SHALL 使用 i18n 翻译键（`exportFlow.signatureInfoDialog.*`）。
 
 #### Scenario: 查看有签名专辑信息
 
 - **GIVEN** 用户在专辑页面点击"查看签名信息"按钮
 - **WHEN** 对话框加载专辑签名数据成功
 - **THEN** 对话框以分区卡片形式展示：
-  - 原始作者区块（琥珀色）：签名卡片、资格码指纹、联系方式、授权状态、授权UUID、最近导出者资格码指纹、已授权列表（可展开）
+  - 原始作者区块（琥珀色）：签名卡片、资格码指纹、联系方式、授权状态、授权UUID、最近导出者资格码指纹、已授权列表（仅需要授权时显示，可展开，显示指纹）
   - 直接导出作者区块（蓝色）：仅在与原始作者不同时显示
   - 历史贡献作者区块（绿色）：列表形式展示
   - 签名统计摘要
@@ -350,6 +350,18 @@ Normative: The `SignatureAuthorsDialog` SHALL 完整展示专辑中所有签名�
 - **GIVEN** 用户在专辑页面点击"查看签名信息"按钮
 - **WHEN** 专辑不包含任何签名
 - **THEN** 对话框显示空态提示："此专辑尚未包含任何签名"及引导说明
+
+#### Scenario: 已授权列表条件显示
+
+- **GIVEN** 对话框展示原始作者信息
+- **WHEN** `requireAuthorization` 为 false
+- **THEN** 不显示"已授权 N 个签名"徽章和已授权签名列表展开项
+
+#### Scenario: 已授权列表过滤原始作者
+
+- **GIVEN** SDK 计算 `authorizedFingerprintList`
+- **WHEN** `authorizedList` 中包含原始作者自己的资格码
+- **THEN** 自动过滤掉原始作者自己，仅返回其他被授权者的指纹
 
 #### Scenario: 复制签名信息
 

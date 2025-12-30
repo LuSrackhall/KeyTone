@@ -145,11 +145,27 @@ func GetAlbumSignatureInfo(albumPath string) (*AlbumSignatureInfo, error) {
 		AllSignatures:      albumSignatureMap,
 	}
 
-	// 为 allSignatures 中的 DirectExportAuthor 计算指纹
+	// 为 allSignatures 中的授权元数据计算指纹
 	// TIPS: 这样前端可以直接使用指纹进行展示，无需在前端计算
 	for qualCode, entry := range albumSignatureMap {
-		if entry.Authorization != nil && entry.Authorization.DirectExportAuthor != "" {
-			entry.Authorization.DirectExportAuthorFingerprint = signature.GenerateQualificationFingerprint(entry.Authorization.DirectExportAuthor)
+		if entry.Authorization != nil {
+			// 计算直接导出作者的指纹
+			if entry.Authorization.DirectExportAuthor != "" {
+				entry.Authorization.DirectExportAuthorFingerprint = signature.GenerateQualificationFingerprint(entry.Authorization.DirectExportAuthor)
+			}
+
+			// 计算已授权列表的指纹（过滤掉原始作者自己）
+			// TIPS: 前端展示时使用指纹而非原始资格码，保护资格码不泄漏
+			var authorizedFingerprints []string
+			for _, authorizedCode := range entry.Authorization.AuthorizedList {
+				// 过滤掉原始作者自己（原始作者的资格码就是当前遍历的 qualCode）
+				if authorizedCode != qualCode {
+					fingerprint := signature.GenerateQualificationFingerprint(authorizedCode)
+					authorizedFingerprints = append(authorizedFingerprints, fingerprint)
+				}
+			}
+			entry.Authorization.AuthorizedFingerprintList = authorizedFingerprints
+
 			albumSignatureMap[qualCode] = entry
 		}
 	}

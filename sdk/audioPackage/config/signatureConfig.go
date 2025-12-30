@@ -50,7 +50,14 @@ type AuthorizationMetadata struct {
 
 	// AuthorizedList 已授权的资格码列表
 	// 存储被授权者的资格码（签名ID的SHA256哈希）
+	// 注意：此列表用于内部数据关联，前端展示应使用 AuthorizedFingerprintList
 	AuthorizedList []string `json:"authorizedList"`
+
+	// AuthorizedFingerprintList 已授权的资格码指纹列表（不含原始作者自己）
+	// TIPS: 用于前端展示，保护原始资格码不泄漏
+	// 此字段不存储到文件，由 GetAlbumSignatureInfo 动态计算
+	// 计算时会过滤掉原始作者自己的资格码
+	AuthorizedFingerprintList []string `json:"authorizedFingerprintList,omitempty"`
 
 	// DirectExportAuthor 直接导出作者的资格码
 	// 记录每次导出时的签名者，用于内部数据关联

@@ -110,11 +110,41 @@ type SignatureAuthorInfo struct {
 }
 ```
 
+`AuthorizationMetadata` 结构体新增展示用字段：
+
+```go
+type AuthorizationMetadata struct {
+    // ...原有字段
+    AuthorizedFingerprintList     []string `json:"authorizedFingerprintList,omitempty"`     // 已授权指纹列表（不含自己）
+    DirectExportAuthorFingerprint string   `json:"directExportAuthorFingerprint,omitempty"` // 最近导出者指纹
+}
+```
+
+### SDK 计算逻辑
+
+在 `GetAlbumSignatureInfo` 返回数据前：
+
+1. 计算 `directExportAuthorFingerprint`
+2. 计算 `authorizedFingerprintList`（过滤掉原始作者自己的资格码）
+
+```go
+// 计算已授权列表的指纹（过滤掉原始作者自己）
+var authorizedFingerprints []string
+for _, authorizedCode := range entry.Authorization.AuthorizedList {
+    if authorizedCode != qualCode { // qualCode 是原始作者的资格码
+        fingerprint := signature.GenerateQualificationFingerprint(authorizedCode)
+        authorizedFingerprints = append(authorizedFingerprints, fingerprint)
+    }
+}
+entry.Authorization.AuthorizedFingerprintList = authorizedFingerprints
+```
+
 ### 安全性
 
 - 前端不接触指纹计算逻辑
 - 资格码仅用于内部数据关联（如查找 `allSignatures`）
 - 展示给用户的只有指纹
+- 已授权列表自动过滤掉原始作者自己
 
 ## UI 区块设计
 
@@ -132,10 +162,10 @@ type SignatureAuthorInfo struct {
   - 分隔线
   - 授权状态区域
     - 状态徽章（需要授权/无需授权）
-    - 已授权数量徽章
+    - 已授权数量徽章（**仅在需要授权时显示，且不含原始作者自己**）
     - 授权UUID（vpn_key 图标）
-    - 直接导出作者资格码（file_download 图标）
-    - 已授权列表（展开/折叠，checklist 图标）
+    - 最近导出者资格码指纹（file_download 图标）
+    - 已授权列表（**仅在需要授权时显示**，展开/折叠，显示指纹而非原始资格码，每项带复制按钮）
 
 ### 2. 直接导出作者区块
 

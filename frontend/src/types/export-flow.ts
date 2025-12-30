@@ -50,6 +50,11 @@ export interface AlbumSignatureEntry {
     contactEmail: string;
     contactAdditional?: string;
     authorizedList: string[];
+    /**
+     * 已授权的资格码指纹列表（不含原始作者自己）
+     * TIPS: 用于前端展示，由SDK动态计算，保护原始资格码不泄漏
+     */
+    authorizedFingerprintList?: string[];
     directExportAuthor: string;
     /**
      * 直接导出作者的资格码指纹

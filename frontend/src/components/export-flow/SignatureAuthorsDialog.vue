@@ -31,7 +31,9 @@
             <q-card-section class="q-pa-sm bg-amber-1">
               <div class="row items-center">
                 <q-icon name="star" color="amber-8" size="20px" />
-                <span class="text-subtitle2 text-amber-10 q-ml-sm">{{ t('exportFlow.signatureInfoDialog.originalAuthor') }}</span>
+                <span class="text-subtitle2 text-amber-10 q-ml-sm">{{
+                  t('exportFlow.signatureInfoDialog.originalAuthor')
+                }}</span>
                 <q-space />
                 <q-badge
                   v-if="signatureInfo.originalAuthor.requireAuthorization"
@@ -41,7 +43,9 @@
                 >
                   {{ t('exportFlow.signatureInfoDialog.requireAuth') }}
                 </q-badge>
-                <q-badge v-else color="green" text-color="white" class="text-weight-medium"> {{ t('exportFlow.signatureInfoDialog.noAuthRequired') }} </q-badge>
+                <q-badge v-else color="green" text-color="white" class="text-weight-medium">
+                  {{ t('exportFlow.signatureInfoDialog.noAuthRequired') }}
+                </q-badge>
               </div>
             </q-card-section>
 
@@ -49,7 +53,10 @@
               <!-- 签名卡片 -->
               <div class="row items-start q-gutter-sm q-mb-md">
                 <q-img
-                  v-if="signatureInfo.originalAuthor.cardImagePath && getImageUrl(signatureInfo.originalAuthor.cardImagePath)"
+                  v-if="
+                    signatureInfo.originalAuthor.cardImagePath &&
+                    getImageUrl(signatureInfo.originalAuthor.cardImagePath)
+                  "
                   :src="getImageUrl(signatureInfo.originalAuthor.cardImagePath)"
                   style="width: 64px; height: 64px"
                   class="rounded-borders shadow-1"
@@ -61,7 +68,11 @@
                     </div>
                   </template>
                 </q-img>
-                <div v-else class="flex items-center justify-center bg-grey-2 rounded-borders" style="width: 64px; height: 64px">
+                <div
+                  v-else
+                  class="flex items-center justify-center bg-grey-2 rounded-borders"
+                  style="width: 64px; height: 64px"
+                >
                   <q-icon name="person" size="32px" color="grey-5" />
                 </div>
 
@@ -81,7 +92,9 @@
                   >
                     {{ signatureInfo.originalAuthor.intro }}
                   </div>
-                  <div v-else class="text-caption text-grey-5 q-mt-xs">{{ t('exportFlow.signatureInfoDialog.noIntro') }}</div>
+                  <div v-else class="text-caption text-grey-5 q-mt-xs">
+                    {{ t('exportFlow.signatureInfoDialog.noIntro') }}
+                  </div>
                 </div>
               </div>
 
@@ -91,7 +104,9 @@
                   <q-icon name="fingerprint" color="grey-6" size="18px" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label caption>{{ t('exportFlow.signatureInfoDialog.qualificationFingerprint') }}</q-item-label>
+                  <q-item-label caption>{{
+                    t('exportFlow.signatureInfoDialog.qualificationFingerprint')
+                  }}</q-item-label>
                   <q-item-label
                     class="text-caption"
                     style="font-family: monospace; word-break: break-all; line-height: 1.4"
@@ -105,7 +120,12 @@
                     dense
                     size="xs"
                     icon="content_copy"
-                    @click="copyToClipboard(signatureInfo.originalAuthor.qualificationFingerprint, t('exportFlow.signatureInfoDialog.qualificationFingerprint'))"
+                    @click="
+                      copyToClipboard(
+                        signatureInfo.originalAuthor.qualificationFingerprint,
+                        t('exportFlow.signatureInfoDialog.qualificationFingerprint')
+                      )
+                    "
                   />
                 </q-item-section>
               </q-item>
@@ -115,7 +135,9 @@
                 <q-separator class="q-my-sm" />
 
                 <!-- 联系方式 -->
-                <div class="text-overline text-grey-7 q-mb-xs">{{ t('exportFlow.signatureInfoDialog.contactSection') }}</div>
+                <div class="text-overline text-grey-7 q-mb-xs">
+                  {{ t('exportFlow.signatureInfoDialog.contactSection') }}
+                </div>
 
                 <q-item dense class="q-pa-none q-mb-xs">
                   <q-item-section avatar style="min-width: 28px">
@@ -124,7 +146,9 @@
                   <q-item-section>
                     <q-item-label caption>{{ t('exportFlow.signatureInfoDialog.email') }}</q-item-label>
                     <q-item-label class="text-body2">
-                      {{ originalAuthorEntry.authorization.contactEmail || t('exportFlow.signatureInfoDialog.noEmail') }}
+                      {{
+                        originalAuthorEntry.authorization.contactEmail || t('exportFlow.signatureInfoDialog.noEmail')
+                      }}
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side v-if="originalAuthorEntry.authorization.contactEmail">
@@ -133,16 +157,17 @@
                       dense
                       size="xs"
                       icon="content_copy"
-                      @click="copyToClipboard(originalAuthorEntry.authorization.contactEmail, t('exportFlow.signatureInfoDialog.email'))"
+                      @click="
+                        copyToClipboard(
+                          originalAuthorEntry.authorization.contactEmail,
+                          t('exportFlow.signatureInfoDialog.email')
+                        )
+                      "
                     />
                   </q-item-section>
                 </q-item>
 
-                <q-item
-                  v-if="originalAuthorEntry.authorization.contactAdditional"
-                  dense
-                  class="q-pa-none q-mb-xs"
-                >
+                <q-item v-if="originalAuthorEntry.authorization.contactAdditional" dense class="q-pa-none q-mb-xs">
                   <q-item-section avatar style="min-width: 28px">
                     <q-icon name="chat" color="grey-6" size="18px" />
                   </q-item-section>
@@ -158,7 +183,12 @@
                       dense
                       size="xs"
                       icon="content_copy"
-                      @click="copyToClipboard(originalAuthorEntry.authorization.contactAdditional, t('exportFlow.signatureInfoDialog.additionalContact'))"
+                      @click="
+                        copyToClipboard(
+                          originalAuthorEntry.authorization.contactAdditional,
+                          t('exportFlow.signatureInfoDialog.additionalContact')
+                        )
+                      "
                     />
                   </q-item-section>
                 </q-item>
@@ -166,7 +196,9 @@
                 <q-separator class="q-my-sm" />
 
                 <!-- 授权统计 -->
-                <div class="text-overline text-grey-7 q-mb-xs">{{ t('exportFlow.signatureInfoDialog.authStatus') }}</div>
+                <div class="text-overline text-grey-7 q-mb-xs">
+                  {{ t('exportFlow.signatureInfoDialog.authStatus') }}
+                </div>
 
                 <div class="row q-gutter-sm">
                   <q-chip
@@ -176,17 +208,27 @@
                     icon="security"
                     size="sm"
                   >
-                    {{ originalAuthorEntry.authorization.requireAuthorization ? t('exportFlow.signatureInfoDialog.requireAuthorization') : t('exportFlow.signatureInfoDialog.noAuthorization') }}
+                    {{
+                      originalAuthorEntry.authorization.requireAuthorization
+                        ? t('exportFlow.signatureInfoDialog.requireAuthorization')
+                        : t('exportFlow.signatureInfoDialog.noAuthorization')
+                    }}
                   </q-chip>
 
+                  <!-- 已授权签名数量（仅在需要授权时显示） -->
                   <q-chip
+                    v-if="originalAuthorEntry.authorization.requireAuthorization"
                     dense
                     color="blue-grey"
                     text-color="white"
                     icon="people"
                     size="sm"
                   >
-                    {{ t('exportFlow.signatureInfoDialog.authorizedCount', { count: originalAuthorEntry.authorization.authorizedList?.length || 0 }) }}
+                    {{
+                      t('exportFlow.signatureInfoDialog.authorizedCount', {
+                        count: originalAuthorEntry.authorization.authorizedFingerprintList?.length || 0,
+                      })
+                    }}
                   </q-chip>
                 </div>
 
@@ -201,7 +243,10 @@
                       class="text-caption"
                       style="font-family: monospace; word-break: break-all; line-height: 1.4"
                     >
-                      {{ originalAuthorEntry.authorization.authorizationUUID || t('exportFlow.signatureInfoDialog.noAuthUUID') }}
+                      {{
+                        originalAuthorEntry.authorization.authorizationUUID ||
+                        t('exportFlow.signatureInfoDialog.noAuthUUID')
+                      }}
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side v-if="originalAuthorEntry.authorization.authorizationUUID">
@@ -210,7 +255,12 @@
                       dense
                       size="xs"
                       icon="content_copy"
-                      @click="copyToClipboard(originalAuthorEntry.authorization.authorizationUUID, t('exportFlow.signatureInfoDialog.authUUID'))"
+                      @click="
+                        copyToClipboard(
+                          originalAuthorEntry.authorization.authorizationUUID,
+                          t('exportFlow.signatureInfoDialog.authUUID')
+                        )
+                      "
                     />
                   </q-item-section>
                 </q-item>
@@ -221,12 +271,17 @@
                     <q-icon name="file_download" color="grey-6" size="18px" />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label caption>{{ t('exportFlow.signatureInfoDialog.latestExporterFingerprint') }}</q-item-label>
+                    <q-item-label caption>{{
+                      t('exportFlow.signatureInfoDialog.latestExporterFingerprint')
+                    }}</q-item-label>
                     <q-item-label
                       class="text-caption"
                       style="font-family: monospace; word-break: break-all; line-height: 1.4"
                     >
-                      {{ originalAuthorEntry.authorization.directExportAuthorFingerprint || t('exportFlow.signatureInfoDialog.noLatestExporter') }}
+                      {{
+                        originalAuthorEntry.authorization.directExportAuthorFingerprint ||
+                        t('exportFlow.signatureInfoDialog.noLatestExporter')
+                      }}
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side v-if="originalAuthorEntry.authorization.directExportAuthorFingerprint">
@@ -235,14 +290,22 @@
                       dense
                       size="xs"
                       icon="content_copy"
-                      @click="copyToClipboard(originalAuthorEntry.authorization.directExportAuthorFingerprint, t('exportFlow.signatureInfoDialog.latestExporterFingerprint'))"
+                      @click="
+                        copyToClipboard(
+                          originalAuthorEntry.authorization.directExportAuthorFingerprint,
+                          t('exportFlow.signatureInfoDialog.latestExporterFingerprint')
+                        )
+                      "
                     />
                   </q-item-section>
                 </q-item>
 
-                <!-- 已授权列表（展开/折叠） -->
+                <!-- 已授权列表（展开/折叠）- 仅在需要授权且有已授权签名时显示 -->
                 <q-expansion-item
-                  v-if="originalAuthorEntry.authorization.authorizedList?.length"
+                  v-if="
+                    originalAuthorEntry.authorization.requireAuthorization &&
+                    originalAuthorEntry.authorization.authorizedFingerprintList?.length
+                  "
                   dense
                   header-class="q-pa-none q-mt-sm"
                   expand-icon-class="text-grey-6"
@@ -253,19 +316,31 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label caption>
-                        {{ t('exportFlow.signatureInfoDialog.authorizedList') }} ({{ originalAuthorEntry.authorization.authorizedList.length }})
+                        {{ t('exportFlow.signatureInfoDialog.authorizedList') }} ({{
+                          originalAuthorEntry.authorization.authorizedFingerprintList.length
+                        }})
                       </q-item-label>
                     </q-item-section>
                   </template>
 
                   <div class="q-pl-lg q-pr-sm">
                     <div
-                      v-for="(code, idx) in originalAuthorEntry.authorization.authorizedList"
+                      v-for="(fingerprint, idx) in originalAuthorEntry.authorization.authorizedFingerprintList"
                       :key="idx"
-                      class="text-caption q-py-xs"
+                      class="text-caption q-py-xs row items-center"
                       style="font-family: monospace; word-break: break-all; border-bottom: 1px dashed #eee"
                     >
-                      {{ idx + 1 }}. {{ code }}
+                      <span class="col">{{ idx + 1 }}. {{ fingerprint }}</span>
+                      <q-btn
+                        flat
+                        dense
+                        size="xs"
+                        icon="content_copy"
+                        class="q-ml-xs"
+                        @click="
+                          copyToClipboard(fingerprint, t('exportFlow.signatureInfoDialog.qualificationFingerprint'))
+                        "
+                      />
                     </div>
                   </div>
                 </q-expansion-item>
@@ -283,16 +358,23 @@
             <q-card-section class="q-pa-sm bg-blue-1">
               <div class="row items-center">
                 <q-icon name="file_download" color="blue-7" size="20px" />
-                <span class="text-subtitle2 text-blue-9 q-ml-sm">{{ t('exportFlow.signatureInfoDialog.directExportAuthor') }}</span>
+                <span class="text-subtitle2 text-blue-9 q-ml-sm">{{
+                  t('exportFlow.signatureInfoDialog.directExportAuthor')
+                }}</span>
                 <q-space />
-                <q-badge color="blue" text-color="white" class="text-weight-medium"> {{ t('exportFlow.signatureInfoDialog.latestExporter') }} </q-badge>
+                <q-badge color="blue" text-color="white" class="text-weight-medium">
+                  {{ t('exportFlow.signatureInfoDialog.latestExporter') }}
+                </q-badge>
               </div>
             </q-card-section>
 
             <q-card-section class="q-pa-md">
               <div class="row items-start q-gutter-sm">
                 <q-img
-                  v-if="signatureInfo.directExportAuthor.cardImagePath && getImageUrl(signatureInfo.directExportAuthor.cardImagePath)"
+                  v-if="
+                    signatureInfo.directExportAuthor.cardImagePath &&
+                    getImageUrl(signatureInfo.directExportAuthor.cardImagePath)
+                  "
                   :src="getImageUrl(signatureInfo.directExportAuthor.cardImagePath)"
                   style="width: 56px; height: 56px"
                   class="rounded-borders shadow-1"
@@ -304,7 +386,11 @@
                     </div>
                   </template>
                 </q-img>
-                <div v-else class="flex items-center justify-center bg-grey-2 rounded-borders" style="width: 56px; height: 56px">
+                <div
+                  v-else
+                  class="flex items-center justify-center bg-grey-2 rounded-borders"
+                  style="width: 56px; height: 56px"
+                >
                   <q-icon name="person" size="28px" color="grey-5" />
                 </div>
 
@@ -333,7 +419,9 @@
                   <q-icon name="fingerprint" color="grey-6" size="16px" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label caption>{{ t('exportFlow.signatureInfoDialog.qualificationFingerprint') }}</q-item-label>
+                  <q-item-label caption>{{
+                    t('exportFlow.signatureInfoDialog.qualificationFingerprint')
+                  }}</q-item-label>
                   <q-item-label
                     class="text-caption"
                     style="font-family: monospace; word-break: break-all; line-height: 1.4; font-size: 0.7rem"
@@ -356,7 +444,9 @@
               <div class="row items-center">
                 <q-icon name="group" color="green-7" size="20px" />
                 <span class="text-subtitle2 text-green-9 q-ml-sm">
-                  {{ t('exportFlow.signatureInfoDialog.contributorAuthors') }} ({{ signatureInfo.contributorAuthors.length }})
+                  {{ t('exportFlow.signatureInfoDialog.contributorAuthors') }} ({{
+                    signatureInfo.contributorAuthors.length
+                  }})
                 </span>
               </div>
             </q-card-section>
@@ -404,7 +494,12 @@
                       dense
                       size="xs"
                       icon="content_copy"
-                      @click="copyToClipboard(contributor.qualificationFingerprint, t('exportFlow.signatureInfoDialog.qualificationFingerprint'))"
+                      @click="
+                        copyToClipboard(
+                          contributor.qualificationFingerprint,
+                          t('exportFlow.signatureInfoDialog.qualificationFingerprint')
+                        )
+                      "
                     >
                       <q-tooltip>{{ t('exportFlow.signatureInfoDialog.qualificationFingerprint') }}</q-tooltip>
                     </q-btn>
@@ -417,10 +512,16 @@
           <!-- ====================== 签名统计摘要 ====================== -->
           <q-card flat bordered class="bg-grey-1">
             <q-card-section class="q-pa-sm">
-              <div class="text-overline text-grey-7 q-mb-xs">{{ t('exportFlow.signatureInfoDialog.signatureStats') }}</div>
+              <div class="text-overline text-grey-7 q-mb-xs">
+                {{ t('exportFlow.signatureInfoDialog.signatureStats') }}
+              </div>
               <div class="row q-gutter-sm">
                 <q-chip dense outline color="grey-7" size="sm" icon="numbers">
-                  {{ t('exportFlow.signatureInfoDialog.totalSignatures', { count: Object.keys(signatureInfo.allSignatures || {}).length }) }}
+                  {{
+                    t('exportFlow.signatureInfoDialog.totalSignatures', {
+                      count: Object.keys(signatureInfo.allSignatures || {}).length,
+                    })
+                  }}
                 </q-chip>
                 <q-chip v-if="signatureInfo.originalAuthor" dense outline color="amber-8" size="sm" icon="star">
                   {{ t('exportFlow.signatureInfoDialog.originalAuthorCount') }}
@@ -433,7 +534,11 @@
                   size="sm"
                   icon="group"
                 >
-                  {{ t('exportFlow.signatureInfoDialog.contributorCount', { count: signatureInfo.contributorAuthors.length }) }}
+                  {{
+                    t('exportFlow.signatureInfoDialog.contributorCount', {
+                      count: signatureInfo.contributorAuthors.length,
+                    })
+                  }}
                 </q-chip>
               </div>
             </q-card-section>
@@ -445,7 +550,14 @@
       <q-card-section v-else-if="error" class="text-center q-pa-lg">
         <q-icon name="error_outline" size="64px" color="negative" />
         <div class="text-body1 text-negative q-mt-md">{{ error }}</div>
-        <q-btn flat color="primary" :label="t('exportFlow.signatureInfoDialog.retry')" icon="refresh" class="q-mt-md" @click="open" />
+        <q-btn
+          flat
+          color="primary"
+          :label="t('exportFlow.signatureInfoDialog.retry')"
+          icon="refresh"
+          class="q-mt-md"
+          @click="open"
+        />
       </q-card-section>
 
       <!-- 底部操作 -->
@@ -513,8 +625,7 @@ const isDirectExportAuthorSameAsOriginal = computed(() => {
     return false;
   }
   return (
-    signatureInfo.value.originalAuthor.qualificationCode ===
-    signatureInfo.value.directExportAuthor.qualificationCode
+    signatureInfo.value.originalAuthor.qualificationCode === signatureInfo.value.directExportAuthor.qualificationCode
   );
 });
 

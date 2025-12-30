@@ -65,13 +65,14 @@
 - `authorization.contactEmail` - 联系邮箱
 - `authorization.contactAdditional` - 其他联系方式
 - `authorization.authorizationUUID` - 授权标识UUID
-- `authorization.directExportAuthor` - 直接导出作者资格码
-- `authorization.authorizedList` - 已授权签名列表
+- `authorization.directExportAuthorFingerprint` - 最近导出者资格码指纹（SDK计算）
+- `authorization.authorizedFingerprintList` - 已授权签名指纹列表（SDK计算，不含原始作者自己）
 
 ### 3. 交互增强
 
 - 所有关键信息支持一键复制（资格码指纹、邮箱、UUID等）
-- 已授权列表使用展开/折叠组件
+- 已授权列表使用展开/折叠组件（**仅在需要授权时显示**）
+- 已授权数量徽章（**仅在需要授权时显示**）
 - 错误状态提供重试按钮
 - 横向滚动条样式与签名列表保持一致
 
@@ -91,13 +92,20 @@
 - 指纹计算在SDK端进行，前端不接触计算逻辑
 - SDK 新增 `GenerateQualificationFingerprint` 函数
 - `SignatureAuthorInfo` 结构体新增 `qualificationFingerprint` 字段
-- `AuthorizationMetadata` 结构体新增 `directExportAuthorFingerprint` 字段（动态计算，不存储）
+- `AuthorizationMetadata` 结构体新增：
+  - `directExportAuthorFingerprint` 字段（最近导出者指纹，动态计算）
+  - `authorizedFingerprintList` 字段（已授权指纹列表，动态计算，**自动过滤原始作者自己**）
 - 前端直接使用SDK返回的指纹值展示
 
 **资格码指纹计算方式**：
 - TIPS: 将资格码去除第2位（索引1）和第11位（索引10）字符
 - 对处理后的字符串计算SHA256哈希
 - 结果为64字符十六进制字符串
+
+**已授权列表展示规则**：
+- 仅在 `requireAuthorization` 为 true 时显示已授权相关信息
+- 已授权数量和列表自动过滤掉原始作者自己
+- 列表项显示资格码指纹（非原始资格码），每项带复制按钮
 
 ### 6. i18n 国际化支持
 

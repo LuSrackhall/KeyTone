@@ -88,10 +88,12 @@
   - [x] TIPS: 去除第2位（索引1）和第11位（索引10）字符后计算SHA256
   - [x] 在 `SignatureAuthorInfo` 结构体添加 `qualificationFingerprint` 字段
   - [x] 在 `AuthorizationMetadata` 结构体添加 `directExportAuthorFingerprint` 字段
+  - [x] 在 `AuthorizationMetadata` 结构体添加 `authorizedFingerprintList` 字段
   - [x] 构建签名信息时自动计算指纹
+  - [x] 已授权列表指纹计算时自动过滤原始作者自己
 
 - [x] 6.2 更新前端
-  - [x] 更新类型定义，添加 `qualificationFingerprint` 和 `directExportAuthorFingerprint` 字段
+  - [x] 更新类型定义，添加 `qualificationFingerprint`、`directExportAuthorFingerprint`、`authorizedFingerprintList` 字段
   - [x] 移除前端指纹计算逻辑
   - [x] 直接使用SDK返回的指纹字段展示
   - [x] "直接导出作者资格码"改为"最近导出者资格码指纹"
@@ -108,6 +110,19 @@
   - [x] 引入 `useI18n`
   - [x] 替换所有硬编码文本为 `t()` 调用
 
+### Phase 8: 已授权列表优化 ✅
+
+- [x] 8.1 已授权列表过滤原始作者
+  - [x] SDK 端计算 `authorizedFingerprintList` 时过滤掉原始作者自己
+
+- [x] 8.2 已授权列表显示指纹
+  - [x] 列表项显示资格码指纹（非原始资格码）
+  - [x] 每个列表项添加复制按钮
+
+- [x] 8.3 已授权信息条件显示
+  - [x] 已授权数量徽章仅在 `requireAuthorization` 为 true 时显示
+  - [x] 已授权列表展开项仅在 `requireAuthorization` 为 true 时显示
+
 ## 已完成
 
 所有任务已完成，组件重构成功：
@@ -116,12 +131,15 @@
 2. ✅ 分区卡片式布局，颜色区分清晰
 3. ✅ 所有关键信息支持一键复制
 4. ✅ 横向滚动条样式与签名列表保持一致
-5. ✅ 已授权列表可展开/折叠
+5. ✅ 已授权列表可展开/折叠（仅在需要授权时显示）
 6. ✅ 签名统计摘要
 7. ✅ 错误状态带重试按钮
 8. ✅ 资格码指纹（SDK端计算，保护原始资格码）
 9. ✅ 最近导出者资格码指纹展示（修复原资格码泄漏问题）
 10. ✅ 完整的 i18n 国际化支持
+11. ✅ 已授权列表显示指纹而非原始资格码
+12. ✅ 已授权列表自动过滤原始作者自己
+13. ✅ 已授权相关信息仅在需要授权时显示
 
 ## 测试要点
 
@@ -133,3 +151,6 @@
 - [ ] 验证长文本横向滚动
 - [ ] 验证资格码指纹展示正确
 - [ ] 验证中英文切换正常
+- [ ] 验证已授权列表不包含原始作者自己
+- [ ] 验证已授权列表显示的是指纹而非资格码
+- [ ] 验证无需授权的专辑不显示已授权相关信息
