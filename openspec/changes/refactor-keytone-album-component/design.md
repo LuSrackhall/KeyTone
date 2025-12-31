@@ -282,6 +282,85 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 
 ---
 
+## 架构导览索引（快速定位入口）
+
+> 本节是一份"速查清单"，帮助你在 review 或排错时快速找到对应文件。
+
+### 1. 调用关系一览
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              Keytone_album.vue（父组件 / 薄壳）                                   │
+│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐│
+│  │ 持有所有状态 (refs/reactive)                                                                 ││
+│  │ provide(KEYTONE_ALBUM_CONTEXT_KEY, ctx)                                                      ││
+│  │ 生命周期：onBeforeMount → attach SSE；onUnmounted → detach SSE                               ││
+│  └─────────────────────────────────────────────────────────────────────────────────────────────┘│
+│        │                         │                         │                                    │
+│        │ 调用                    │ 调用                    │ 调用                               │
+│        ▼                         ▼                         ▼                                    │
+│ useKeytoneAlbumSseSync   useKeytoneAlbumDependencyIssues   keytoneAlbumMappers                  │
+│ (SSE监听+写入)            (依赖校验computed+watch)          (纯函数映射/排序工具)                  │
+│        │                         │                                                              │
+│        │ 使用                    │                                                              │
+│        └────────────────────────►│                                                              │
+│                                  │                                                              │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+                         ▲                               ▲
+                         │ inject(ctx)                   │ inject(ctx)
+    ┌────────────────────┴────────────────────┐          │
+    │ steps/*.vue                              │          │
+    │ - StepLoadAudioFiles.vue (Step 1)        │          │
+    │ - StepDefineSounds.vue (Step 2)          │          │
+    │ - StepCraftKeySounds.vue (Step 3)        │          │
+    │ - StepLinkageEffects.vue (Step 4, 框架)  │          │
+    └────────────────────┬────────────────────┘          │
+                         │ 嵌套/打开                      │
+                         ▼                               │
+    ┌─────────────────────────────────────────────────────┘
+    │ dialogs/*.vue
+    │ - AddAudioFileDialog / ManageAudioFilesDialog (Step1)
+    │ - CreateSoundDialog / EditSoundDialog (Step2)
+    │ - CreateKeySoundDialog / EditKeySoundDialog (Step3)
+    │ - EveryKeyEffectDialog / SingleKeyEffectDialog (Step4)
+    └──────────────────────────────────────────────────────
+```
+
+### 2. 数据流简表
+
+| 事件/触发点                              | 数据流向                                                             | 关键文件                             |
+| ---------------------------------------- | -------------------------------------------------------------------- | ------------------------------------ |
+| 后端 SSE `messageAudioPackage`           | SDK → eventSource → useKeytoneAlbumSseSync → 父组件 refs → 子组件 UI | `useKeytoneAlbumSseSync.ts`          |
+| 用户操作（保存/删除）                    | Dialog/Step → ctx.xxx() → 父组件 watch → ConfigSet/ConfigDelete      | `Keytone_album.vue`                  |
+| 列表映射（audio_files→soundFileList 等） | 父组件/SSE 回调 → keytoneAlbumMappers → 父组件 refs                  | `keytoneAlbumMappers.ts`             |
+| 依赖校验变化                             | soundFileList/soundList/keySoundList → computed → dependencyIssues   | `useKeytoneAlbumDependencyIssues.ts` |
+
+### 3. 排错入口速查
+
+| 现象                  | 首选排查文件                                     | 次选排查文件                         |
+| --------------------- | ------------------------------------------------ | ------------------------------------ |
+| SSE 推送后 UI 未刷新  | `useKeytoneAlbumSseSync.ts`                      | `Keytone_album.vue` 的 attach/detach |
+| 列表排序不对          | `keytoneAlbumMappers.ts` 的 naturalSort 调用     | 父组件的 `naturalSort` 实现          |
+| 全键/单键联动映射不对 | 父组件的 `convertValue` + soundList/keySoundList | `useKeytoneAlbumSseSync.ts`          |
+| 依赖警告不显示或误报  | `useKeytoneAlbumDependencyIssues.ts`             | `src/utils/dependencyValidator.ts`   |
+| Dialog 打开/关闭异常  | 对应 `dialogs/*.vue` + 父组件的 v-model 状态     | —                                    |
+| Step 折叠/展开异常    | `Keytone_album.vue` 的 step 状态 + q-stepper     | —                                    |
+
+### 4. 文件职责一句话总结
+
+| 文件                                                           | 一句话职责                                                        |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `Keytone_album.vue`                                            | 父组件：持有所有状态、provide Context、生命周期挂载 SSE           |
+| `keytone-album/types.ts`                                       | 类型：定义 Context 接口、数据结构、注入 Key                       |
+| `keytone-album/index.ts`                                       | 入口：统一导出，保持向后兼容                                      |
+| `keytone-album/steps/*.vue`                                    | Step UI：只负责渲染，通过 inject 获取状态和方法                   |
+| `keytone-album/dialogs/*.vue`                                  | Dialog UI：可被任意 Step 拉起的对话框，通过 inject 获取状态和方法 |
+| `keytone-album/composables/useKeytoneAlbumSseSync.ts`          | SSE：监听 messageAudioPackage、解析 JSON、写入父组件 refs         |
+| `keytone-album/composables/keytoneAlbumMappers.ts`             | 映射：纯函数，Object.entries + 自然排序，供 SSE/初始化复用        |
+| `keytone-album/composables/useKeytoneAlbumDependencyIssues.ts` | 校验：computed + watch，输出 dependencyIssues 供 UI 展示          |
+
+---
+
 ## 代码注释规范（Code Comment Standards）
 
 > **重要**: 本规范是本次重构的强制要求。详细的注释对于后续代码审查和维护至关重要。
