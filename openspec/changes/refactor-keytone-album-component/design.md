@@ -43,16 +43,16 @@
 │    ▼                               ▼                               ▼        │
 │ ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐       │
 │ │ StepLoadAudio    │    │ StepDefineSounds │    │ StepCraftKey     │  ...  │
-│ │ Files.vue ✅     │    │ .vue [待创建]    │    │ Sounds.vue       │       │
-│ │                  │    │                  │    │ [待创建]         │       │
+│ │ Files.vue ✅     │    │ .vue ✅          │    │ Sounds.vue ✅    │       │
+│ │                  │    │                  │    │                  │       │
 │ │ inject(ctx)      │    │ inject(ctx)      │    │ inject(ctx)      │       │
 │ │ 只负责 UI 渲染    │    │ 只负责 UI 渲染    │    │ 只负责 UI 渲染    │       │
 │ └────────┬─────────┘    └────────┬─────────┘    └────────┬─────────┘       │
 │          │                       │                       │                  │
 │          ▼                       ▼                       ▼                  │
 │    ┌───────────┐           ┌───────────┐           ┌───────────┐           │
-│    │ Dialog ✅ │           │ Dialog    │           │ Dialog    │           │
-│    │ 组件      │           │ [待创建]   │           │ [待创建]   │           │
+│    │ Dialog ✅ │           │ Dialog ✅ │           │ Dialog ✅ │           │
+│    │ 组件      │           │ 组件      │           │ 组件      │           │
 │    │ inject()  │           │ inject()  │           │ inject()  │           │
 │    └───────────┘           └───────────┘           └───────────┘           │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -72,7 +72,7 @@
 frontend/src/components/
 ├── Keytone_album.vue              # 原始大组件（已改造为父组件）
 │                                  # 职责：持有所有状态、副作用、provide Context
-│                                  # 状态：✅ 已添加 provide
+│                                  # 状态：✅ 已添加 provide，Step1/2/3 已替换
 │
 └── keytone-album/                 # 新的模块目录
     ├── index.ts                   # 模块入口 ✅
@@ -82,16 +82,19 @@ frontend/src/components/
     │                              # 职责：定义 Context 接口、数据结构、注入 Key
     │
     ├── steps/                     # Step 子组件目录
-    │   ├── StepLoadAudioFiles.vue     # Step 1: 加载音频源文件 ✅
-    │   ├── StepDefineSounds.vue       # Step 2: 定义声音 ✅
-    │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音 ✅
-    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 ✅
+    │   ├── StepLoadAudioFiles.vue     # Step 1: 加载音频源文件 ✅ 已集成
+    │   ├── StepDefineSounds.vue       # Step 2: 定义声音 ✅ 已集成
+    │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音 ✅ 已集成
+    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 ✅ 框架完成（保留在父组件）
     │   # 职责：只负责 UI 渲染，通过 inject 获取状态
     │
     ├── dialogs/                   # Dialog 子组件目录
-    │   ├── AddAudioFileDialog.vue     # 添加音频文件对话框 ✅
-    │   ├── ManageAudioFilesDialog.vue # 管理音频文件对话框 ✅
-    │   └── ... (更多对话框待创建)
+    │   ├── AddAudioFileDialog.vue     # 添加音频文件对话框 ✅ 已集成
+    │   ├── ManageAudioFilesDialog.vue # 管理音频文件对话框 ✅ 已集成
+    │   ├── CreateSoundDialog.vue      # 创建声音对话框 ✅ 已集成
+    │   ├── EditSoundDialog.vue        # 编辑声音对话框 ✅ 已集成
+    │   ├── CreateKeySoundDialog.vue   # 创建按键音对话框 ✅ 已集成
+    │   └── EditKeySoundDialog.vue     # 编辑按键音对话框 ✅ 已集成
     │   # 职责：可复用的对话框 UI，可被任意 Step 调用
     │
     └── composables/               # 可复用逻辑 [Phase 4，可选]
@@ -217,18 +220,26 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 
 | 文件                                               | 说明                            | 状态       |
 | -------------------------------------------------- | ------------------------------- | ---------- |
-| `Keytone_album.vue`                                | 父组件添加 provide              | ✅ 已完成   |
+| `Keytone_album.vue`                                | 父组件（已添加 provide）        | ✅ 已完成   |
 | `keytone-album/types.ts`                           | 定义 Context 接口和所有数据类型 | ✅ 已完成   |
 | `keytone-album/index.ts`                           | 模块入口，统一导出              | ✅ 已完成   |
-| `keytone-album/steps/StepLoadAudioFiles.vue`       | Step 1 UI 组件                  | ✅ 框架完成 |
-| `keytone-album/dialogs/AddAudioFileDialog.vue`     | 添加音频文件对话框              | ✅ 框架完成 |
-| `keytone-album/dialogs/ManageAudioFilesDialog.vue` | 管理音频文件对话框              | ✅ 框架完成 |
+| `keytone-album/steps/StepLoadAudioFiles.vue`       | Step 1: 加载音频源文件          | ✅ 已集成   |
+| `keytone-album/steps/StepDefineSounds.vue`         | Step 2: 定义声音                | ✅ 已集成   |
+| `keytone-album/steps/StepCraftKeySounds.vue`       | Step 3: 制作按键音              | ✅ 已集成   |
+| `keytone-album/steps/StepLinkageEffects.vue`       | Step 4: 联动声效（框架）        | ✅ 框架完成 |
+| `keytone-album/dialogs/AddAudioFileDialog.vue`     | 添加音频文件对话框              | ✅ 已集成   |
+| `keytone-album/dialogs/ManageAudioFilesDialog.vue` | 管理音频文件对话框              | ✅ 已集成   |
+| `keytone-album/dialogs/CreateSoundDialog.vue`      | 创建声音对话框                  | ✅ 已集成   |
+| `keytone-album/dialogs/EditSoundDialog.vue`        | 编辑声音对话框                  | ✅ 已集成   |
+| `keytone-album/dialogs/CreateKeySoundDialog.vue`   | 创建按键音对话框                | ✅ 已集成   |
+| `keytone-album/dialogs/EditKeySoundDialog.vue`     | 编辑按键音对话框                | ✅ 已集成   |
 
-### 待完成
+### 待完成（可选）
 
-- [ ] 用新的 Step 组件替换原有模板（Step1 → Step4）
-- [ ] 创建 Step2/3/4 组件框架
-- [ ] 创建更多 Dialog 组件
+- [ ] 将 Step4 替换为子组件（复杂度高，包含虚拟键盘）
+- [ ] 创建 `EveryKeyEffectDialog.vue` 对话框
+- [ ] 创建 `SingleKeyEffectDialog.vue` 对话框
+- [ ] 抽离 composables（SSE 映射、排序、校验逻辑）
 
 ---
 
