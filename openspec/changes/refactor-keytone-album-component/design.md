@@ -270,6 +270,10 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 - **风险：scoped style / :deep 选择器作用域变化**
   - 缓解：先保留样式在父组件；必要时将通用样式移动到更合适的位置，但需逐步验证。
 
+## 清理状态（与实现同步）
+
+- ✅ 已移除父组件中旧的单键声效对话框实现（原先用于对照的 `v-if="false"` 模板块），当前仅保留 `SingleKeyEffectDialog` 组件入口。
+
 ---
 
 ## 代码注释规范（Code Comment Standards）

@@ -150,4 +150,5 @@ frontend/src/components/
 - Dialog 抽离：
   - `EveryKeyEffectDialog`（全键声效）已抽离并集成。
   - `SingleKeyEffectDialog`（单键声效）已抽离并集成（内部拆为“添加/编辑”两个子对话框组件）。
+- 清理：已删除父组件中旧的单键声效对话框实现（原先用于对照的 `v-if="false"` 块），避免冗余与模板误改风险。
 - 构建验证：`npm -C frontend run build` 通过。
