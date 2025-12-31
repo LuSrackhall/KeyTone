@@ -40,8 +40,7 @@
   │  q-stepper                                          │
   │  ├── StepLoadAudioFiles.vue       (Step 1)          │
   │  ├── StepDefineSounds.vue    <── 当前文件 (Step 2)  │
-  │  ├── StepCraftKeySounds.vue       (Step 3) [待创建] │
-  │  └── StepLinkageEffects.vue       (Step 4) [待创建] │
+  └── StepLinkageEffects.vue       (Step 4)          │
   └─────────────────────────────────────────────────────┘
 
 【数据流】
@@ -90,8 +89,8 @@ ctx.soundVolume --> 音量调整 ctx.saveSoundConfig() --> 保存声音配置 ct
           @click="ctx.createNewSound.value = !ctx.createNewSound.value"
         />
 
-        <!-- TODO: 创建声音对话框 - 待抽离为独立组件 dialogs/CreateSoundDialog.vue -->
-        <!-- 当前保持原有实现，后续迁移 -->
+        <!-- 创建声音对话框 -->
+        <CreateSoundDialog />
       </div>
 
       <div :class="['p-2 text-zinc-600']">{{ ctx.$t('KeyToneAlbum.or') }}</div>
@@ -104,8 +103,8 @@ ctx.soundVolume --> 音量调整 ctx.saveSoundConfig() --> 保存声音配置 ct
           @click="handleEditSound"
         />
 
-        <!-- TODO: 编辑声音对话框 - 待抽离为独立组件 dialogs/EditSoundDialog.vue -->
-        <!-- 当前保持原有实现，后续迁移 -->
+        <!-- 编辑声音对话框 -->
+        <EditSoundDialog />
       </div>
     </div>
 
@@ -135,6 +134,8 @@ ctx.soundVolume --> 音量调整 ctx.saveSoundConfig() --> 保存声音配置 ct
 import { inject } from 'vue';
 import { useQuasar } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
+import CreateSoundDialog from '../dialogs/CreateSoundDialog.vue';
+import EditSoundDialog from '../dialogs/EditSoundDialog.vue';
 
 const q = useQuasar();
 
@@ -182,3 +183,22 @@ function handleEditSound() {
   ctx.showEditSoundDialog.value = true;
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * StepDefineSounds 组件样式
+ *
+ * 【样式说明】
+ * 本组件使用的样式大部分继承自父组件 Keytone_album.vue 的全局样式。
+ * 此处仅定义本组件特有的样式。
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+</style>

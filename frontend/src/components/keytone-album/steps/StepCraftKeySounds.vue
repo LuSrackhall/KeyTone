@@ -42,7 +42,7 @@
   │  ├── StepLoadAudioFiles.vue       (Step 1)          │
   │  ├── StepDefineSounds.vue         (Step 2)          │
   │  ├── StepCraftKeySounds.vue  <── 当前文件 (Step 3)  │
-  │  └── StepLinkageEffects.vue       (Step 4) [待创建] │
+  │  └── StepLinkageEffects.vue       (Step 4)          │
   └─────────────────────────────────────────────────────┘
 
 【数据流】
@@ -55,15 +55,15 @@
 ctx.editExistingKeySound --> 控制"编辑按键音"对话框 ctx.selectedSoundsForDown/Up --> 按下/抬起时选中的声音
 ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选择的声音列表 ctx.saveKeySoundConfig() -->
 保存按键音配置 ctx.deleteKeySound() --> 删除按键音 ctx.dependencyIssues --> 依赖问题列表 【关联文件】 - ../types.ts :
-类型定义 - ../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ⚠️
-注意：本组件已创建但尚未集成到父组件中！ ============================================================================
+类型定义 - ../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ✅ 本组件已集成到父组件中。
+============================================================================
 -->
 
 <template>
   <q-step
     :name="3"
     :title="ctx.$t('KeyToneAlbum.craftKeySounds.title')"
-    icon="piano"
+    icon="add_comment"
     :done="ctx.keySoundList.value.length !== 0"
     :disable="ctx.step.value === 99 && ctx.keySoundList.value.length === 0"
     :header-nav="false"
@@ -72,10 +72,15 @@ ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选
     <!-- 步骤说明 -->
     <div :class="['mb-3', ctx.step_introduce_fontSize.value]">
       {{ ctx.$t('KeyToneAlbum.craftKeySounds.description') }}
-      <q-icon name="info" color="primary">
-        <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-          <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.keySoundExplain') }}</div>
-          <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.downUpExplain') }}</div>
+      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+        <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+          <span>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.description_0') }}</span>
+          <br />
+          <span>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.description_1') }}</span>
+          <br />
+          <span>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.description_2') }}</span>
+          <br />
+          <span>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.description_3') }}</span>
         </q-tooltip>
       </q-icon>
     </div>
@@ -86,12 +91,12 @@ ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选
       <div>
         <q-btn
           :class="['bg-zinc-300']"
-          :label="ctx.$t('KeyToneAlbum.craftKeySounds.createNewKeySound')"
+          :label="ctx.$t('KeyToneAlbum.craftKeySounds.newKeySound')"
           @click="ctx.createNewKeySound.value = !ctx.createNewKeySound.value"
         />
 
-        <!-- TODO: 创建按键音对话框 - 待抽离为独立组件 dialogs/CreateKeySoundDialog.vue -->
-        <!-- 当前保持原有实现，后续迁移 -->
+        <!-- 创建按键音对话框 -->
+        <CreateKeySoundDialog />
       </div>
 
       <div :class="['p-2 text-zinc-600']">{{ ctx.$t('KeyToneAlbum.or') }}</div>
@@ -104,8 +109,8 @@ ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选
           @click="handleEditKeySound"
         />
 
-        <!-- TODO: 编辑按键音对话框 - 待抽离为独立组件 dialogs/EditKeySoundDialog.vue -->
-        <!-- 当前保持原有实现，后续迁移 -->
+        <!-- 编辑按键音对话框 -->
+        <EditKeySoundDialog />
       </div>
     </div>
 
@@ -140,6 +145,8 @@ ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选
 import { inject } from 'vue';
 import { useQuasar } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
+import CreateKeySoundDialog from '../dialogs/CreateKeySoundDialog.vue';
+import EditKeySoundDialog from '../dialogs/EditKeySoundDialog.vue';
 
 const q = useQuasar();
 
@@ -177,3 +184,32 @@ function handleEditKeySound() {
   ctx.editExistingKeySound.value = true;
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * StepCraftKeySounds 组件样式
+ *
+ * 【样式说明】
+ * 本组件使用的样式大部分继承自父组件 Keytone_album.vue 的全局样式。
+ * 此处仅定义本组件特有的样式。
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+
+// 按键音选择器专用样式 - 用于多选芯片选择框
+.zl-ll {
+  :deep(.q-field__native) {
+    @apply h-auto;
+  }
+  :deep(.q-field__messages) {
+    @apply text-nowrap;
+  }
+}
+</style>

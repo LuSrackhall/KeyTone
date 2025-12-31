@@ -31,10 +31,6 @@
 4. 支持选择音频文件、声音、按键音三种类型
 5. 支持单次、随机、循环三种播放模式
 
-【复杂度说明】
-本对话框包含两个嵌套的子对话框（配置按下声音、配置抬起声音），
-结构较为复杂。在未来的迭代中，可以考虑将子对话框进一步拆分。
-
 【在整体架构中的位置】
 
   Keytone_album.vue (父组件)
@@ -44,9 +40,6 @@
         ├── steps/StepCraftKeySounds.vue
         │         │
         │         └── dialogs/CreateKeySoundDialog.vue  <── 当前文件
-        │                 │
-        │                 ├── (内嵌) ConfigureDownSoundDialog
-        │                 └── (内嵌) ConfigureUpSoundDialog
 
 【数据流】
   父组件状态                          本组件使用方式
@@ -55,11 +48,11 @@
 v-model 控制对话框显示 ctx.keySoundName --> 按键音名称 ctx.configureDownSound --> 控制按下声音配置子对话框
 ctx.configureUpSound --> 控制抬起声音配置子对话框 ctx.selectedSoundsForDown --> 按下时选中的声音列表
 ctx.selectedSoundsForUp --> 抬起时选中的声音列表 ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList -->
-可选择的声音列表 ctx.saveKeySoundConfig() --> 保存按键音 【关联文件】 - ../types.ts : 类型定义 -
-../steps/StepCraftKeySounds.vue : 使用此对话框的 Step 组件 - ../../DependencyWarning.vue : 依赖警告组件
+可选择的声音列表 ctx.saveKeySoundConfig() --> 保存按键音
 ============================================================================ -->
 
 <template>
+  <!-- 主对话框：创建新按键音 -->
   <q-dialog
     :style="{ '--i18n_fontSize': ctx.i18n_fontSize.value }"
     v-model="ctx.createNewKeySound.value"
@@ -93,7 +86,126 @@ ctx.selectedSoundsForUp --> 抬起时选中的声音列表 ctx.playModeForDown/U
           />
 
           <!-- 配置按下声音子对话框 -->
-          <ConfigureDownSoundSubDialog />
+          <q-dialog
+            :style="{ '--i18n_fontSize': ctx.i18n_fontSize.value }"
+            v-model="ctx.configureDownSound.value"
+            backdrop-filter="invert(70%)"
+            @mouseup="ctx.preventDefaultMouseWhenRecording"
+          >
+            <q-card :class="['min-w-[80%]']">
+              <q-card-section class="row items-center q-pb-none text-h6">
+                {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
+              </q-card-section>
+              <q-card-section>
+                <!-- 使用选择框选择模式 -->
+                <q-select
+                  outlined
+                  popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                  :virtual-scroll-slice-size="999999"
+                  stack-label
+                  v-model="ctx.playModeForDown.value"
+                  :options="ctx.playModeOptions"
+                  :option-label="(item: any) => ctx.$t(ctx.playModeLabels.get(item) || '')"
+                  :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
+                  dense
+                />
+              </q-card-section>
+              <q-card-section>
+                <!-- 选择声音的选项，支持多选 -->
+                <q-select
+                  outlined
+                  stack-label
+                  :virtual-scroll-slice-size="999999"
+                  v-model="ctx.selectedSoundsForDown.value"
+                  popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                  :options="ctx.downSoundList.value"
+                  :option-label="ctx.album_options_select_label"
+                  :option-value="getOptionValue"
+                  :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
+                  multiple
+                  use-chips
+                  :class="['zl-ll']"
+                  dense
+                  :max-values="ctx.maxSelectionForDown.value"
+                  counter
+                  :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
+                  :error="ctx.playModeForDown.value === 'single' ? ctx.selectedSoundsForDown.value.length > 1 : false"
+                  ref="downSoundSelectDom"
+                  @update:model-value="downSoundSelectDom?.hidePopup()"
+                >
+                  <template v-slot:option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section>
+                        <q-item-label>{{ ctx.album_options_select_label(scope.opt) }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                        <DependencyWarning
+                          v-if="scope.opt.type === 'sounds'"
+                          :issues="ctx.dependencyIssues.value"
+                          item-type="sounds"
+                          :item-id="scope.opt.value.soundKey"
+                          :show-details="false"
+                        />
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+                <div class="h-10">
+                  <q-option-group
+                    dense
+                    v-model="ctx.downTypeGroup.value"
+                    :options="ctx.options"
+                    type="checkbox"
+                    class="absolute left-8"
+                  >
+                    <template #label-0="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                    <template v-slot:label-1="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                    <template v-slot:label-2="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
+                            <div>⬇</div>
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
+                            <div>⬇</div>
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                  </q-option-group>
+                </div>
+              </q-card-section>
+              <q-card-actions align="right">
+                <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
 
           <!-- 配置抬起声音按钮 -->
           <q-btn
@@ -103,7 +215,126 @@ ctx.selectedSoundsForUp --> 抬起时选中的声音列表 ctx.playModeForDown/U
           />
 
           <!-- 配置抬起声音子对话框 -->
-          <ConfigureUpSoundSubDialog />
+          <q-dialog
+            :style="{ '--i18n_fontSize': ctx.i18n_fontSize.value }"
+            v-model="ctx.configureUpSound.value"
+            backdrop-filter="invert(70%)"
+            @mouseup="ctx.preventDefaultMouseWhenRecording"
+          >
+            <q-card :class="['min-w-[80%]']">
+              <q-card-section class="row items-center q-pb-none text-h6">
+                {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
+              </q-card-section>
+              <q-card-section>
+                <!-- 使用选择框选择模式 -->
+                <q-select
+                  outlined
+                  popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                  :virtual-scroll-slice-size="999999"
+                  stack-label
+                  v-model="ctx.playModeForUp.value"
+                  :options="ctx.playModeOptions"
+                  :option-label="(item: any) => ctx.$t(ctx.playModeLabels.get(item) || '')"
+                  :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
+                  dense
+                />
+              </q-card-section>
+              <q-card-section>
+                <!-- 选择声音的选项，支持多选 -->
+                <q-select
+                  outlined
+                  stack-label
+                  :virtual-scroll-slice-size="999999"
+                  v-model="ctx.selectedSoundsForUp.value"
+                  popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+                  :options="ctx.upSoundList.value"
+                  :option-label="ctx.album_options_select_label"
+                  :option-value="getOptionValue"
+                  :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
+                  multiple
+                  use-chips
+                  :class="['zl-ll']"
+                  dense
+                  :max-values="ctx.maxSelectionForUp.value"
+                  counter
+                  :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
+                  :error="ctx.playModeForUp.value === 'single' ? ctx.selectedSoundsForUp.value.length > 1 : false"
+                  ref="upSoundSelectDom"
+                  @update:model-value="upSoundSelectDom?.hidePopup()"
+                >
+                  <template v-slot:option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section>
+                        <q-item-label>{{ ctx.album_options_select_label(scope.opt) }}</q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                        <DependencyWarning
+                          v-if="scope.opt.type === 'sounds'"
+                          :issues="ctx.dependencyIssues.value"
+                          item-type="sounds"
+                          :item-id="scope.opt.value.soundKey"
+                          :show-details="false"
+                        />
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+                <div class="h-10">
+                  <q-option-group
+                    dense
+                    v-model="ctx.upTypeGroup.value"
+                    :options="ctx.options"
+                    type="checkbox"
+                    class="absolute left-8"
+                  >
+                    <template #label-0="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                    <template v-slot:label-1="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                    <template v-slot:label-2="props">
+                      <q-item-label>
+                        {{ ctx.$t(props.label) }}
+                        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+                          <q-tooltip
+                            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
+                          >
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
+                            <div>⬇</div>
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
+                            <div>⬇</div>
+                            <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
+                          </q-tooltip>
+                        </q-icon>
+                      </q-item-label>
+                    </template>
+                  </q-option-group>
+                </div>
+              </q-card-section>
+              <q-card-actions align="right">
+                <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
         </div>
       </q-card-section>
 
@@ -123,16 +354,12 @@ ctx.selectedSoundsForUp --> 抬起时选中的声音列表 ctx.playModeForDown/U
  * 【组件职责】
  * 提供创建新按键音的完整界面，包括：
  * - 按键音名称设置
- * - 按下声音配置
- * - 抬起声音配置
+ * - 按下声音配置（内嵌子对话框）
+ * - 抬起声音配置（内嵌子对话框）
  * - 保存功能
- *
- * 【子对话框】
- * 配置按下/抬起声音的子对话框内嵌在此组件中，
- * 未来可以考虑进一步拆分为独立组件。
  */
 
-import { inject, h, defineComponent } from 'vue';
+import { inject, ref } from 'vue';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 
@@ -142,221 +369,20 @@ import DependencyWarning from '../../DependencyWarning.vue';
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 
 // ============================================================================
-// 配置按下声音子对话框（内嵌组件）
+// DOM 引用
 // ============================================================================
-const ConfigureDownSoundSubDialog = defineComponent({
-  name: 'ConfigureDownSoundSubDialog',
-  setup() {
-    return () =>
-      h(
-        'q-dialog',
-        {
-          style: { '--i18n_fontSize': ctx.i18n_fontSize.value },
-          modelValue: ctx.configureDownSound.value,
-          'onUpdate:modelValue': (val: boolean) => {
-            ctx.configureDownSound.value = val;
-          },
-          'backdrop-filter': 'invert(70%)',
-          onMouseup: ctx.preventDefaultMouseWhenRecording,
-        },
-        [
-          h('q-card', { class: 'min-w-[80%]' }, [
-            // 标题
-            h(
-              'q-card-section',
-              { class: 'row items-center q-pb-none text-h6' },
-              ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound')
-            ),
-            // 播放模式选择
-            h('q-card-section', [
-              h('q-select', {
-                outlined: true,
-                'stack-label': true,
-                'virtual-scroll-slice-size': 999999,
-                'popup-content-class':
-                  'w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50',
-                modelValue: ctx.playModeForDown.value,
-                'onUpdate:modelValue': (val: string) => {
-                  ctx.playModeForDown.value = val;
-                },
-                options: ctx.playModeOptions,
-                'option-label': (item: string) => ctx.$t(ctx.playModeLabels.get(item) || ''),
-                label: ctx.$t('KeyToneAlbum.craftKeySounds.selectPlayMode'),
-                dense: true,
-              }),
-            ]),
-            // 声音选择
-            h('q-card-section', [
-              h('q-select', {
-                outlined: true,
-                'stack-label': true,
-                'virtual-scroll-slice-size': 999999,
-                'popup-content-class':
-                  'w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50',
-                modelValue: ctx.selectedSoundsForDown.value,
-                'onUpdate:modelValue': (val: any[]) => {
-                  ctx.selectedSoundsForDown.value = val;
-                },
-                options: ctx.downSoundList.value,
-                'option-label': ctx.album_options_select_label,
-                'option-value': getOptionValue,
-                label: ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds'),
-                multiple: true,
-                'use-chips': true,
-                class: 'zl-ll',
-                dense: true,
-                'max-values': ctx.maxSelectionForDown.value,
-                counter: true,
-                'error-message': ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode'),
-                error: ctx.playModeForDown.value === 'single' ? ctx.selectedSoundsForDown.value.length > 1 : false,
-              }),
-              // 类型选择组
-              h('div', { class: 'h-10' }, [
-                h('q-option-group', {
-                  dense: true,
-                  modelValue: ctx.downTypeGroup.value,
-                  'onUpdate:modelValue': (val: string[]) => {
-                    ctx.downTypeGroup.value = val;
-                  },
-                  options: ctx.options,
-                  type: 'checkbox',
-                  class: 'absolute left-8',
-                }),
-              ]),
-            ]),
-            // 关闭按钮
-            h('q-card-actions', { align: 'right' }, [
-              h(
-                'q-btn',
-                {
-                  flat: true,
-                  label: ctx.$t('KeyToneAlbum.close'),
-                  color: 'primary',
-                  onClick: () => {
-                    ctx.configureDownSound.value = false;
-                  },
-                },
-                null
-              ),
-            ]),
-          ]),
-        ]
-      );
-  },
-});
+const downSoundSelectDom = ref<any>(null);
+const upSoundSelectDom = ref<any>(null);
 
 // ============================================================================
-// 配置抬起声音子对话框（内嵌组件）
-// ============================================================================
-const ConfigureUpSoundSubDialog = defineComponent({
-  name: 'ConfigureUpSoundSubDialog',
-  setup() {
-    return () =>
-      h(
-        'q-dialog',
-        {
-          style: { '--i18n_fontSize': ctx.i18n_fontSize.value },
-          modelValue: ctx.configureUpSound.value,
-          'onUpdate:modelValue': (val: boolean) => {
-            ctx.configureUpSound.value = val;
-          },
-          'backdrop-filter': 'invert(70%)',
-          onMouseup: ctx.preventDefaultMouseWhenRecording,
-        },
-        [
-          h('q-card', { class: 'min-w-[80%]' }, [
-            // 标题
-            h(
-              'q-card-section',
-              { class: 'row items-center q-pb-none text-h6' },
-              ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound')
-            ),
-            // 播放模式选择
-            h('q-card-section', [
-              h('q-select', {
-                outlined: true,
-                'stack-label': true,
-                'virtual-scroll-slice-size': 999999,
-                'popup-content-class':
-                  'w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50',
-                modelValue: ctx.playModeForUp.value,
-                'onUpdate:modelValue': (val: string) => {
-                  ctx.playModeForUp.value = val;
-                },
-                options: ctx.playModeOptions,
-                'option-label': (item: string) => ctx.$t(ctx.playModeLabels.get(item) || ''),
-                label: ctx.$t('KeyToneAlbum.craftKeySounds.selectPlayMode'),
-                dense: true,
-              }),
-            ]),
-            // 声音选择
-            h('q-card-section', [
-              h('q-select', {
-                outlined: true,
-                'stack-label': true,
-                'virtual-scroll-slice-size': 999999,
-                'popup-content-class':
-                  'w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50',
-                modelValue: ctx.selectedSoundsForUp.value,
-                'onUpdate:modelValue': (val: any[]) => {
-                  ctx.selectedSoundsForUp.value = val;
-                },
-                options: ctx.upSoundList.value,
-                'option-label': ctx.album_options_select_label,
-                'option-value': getOptionValue,
-                label: ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds'),
-                multiple: true,
-                'use-chips': true,
-                class: 'zl-ll',
-                dense: true,
-                'max-values': ctx.maxSelectionForUp.value,
-                counter: true,
-                'error-message': ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode'),
-                error: ctx.playModeForUp.value === 'single' ? ctx.selectedSoundsForUp.value.length > 1 : false,
-              }),
-              // 类型选择组
-              h('div', { class: 'h-10' }, [
-                h('q-option-group', {
-                  dense: true,
-                  modelValue: ctx.upTypeGroup.value,
-                  'onUpdate:modelValue': (val: string[]) => {
-                    ctx.upTypeGroup.value = val;
-                  },
-                  options: ctx.options,
-                  type: 'checkbox',
-                  class: 'absolute left-8',
-                }),
-              ]),
-            ]),
-            // 关闭按钮
-            h('q-card-actions', { align: 'right' }, [
-              h(
-                'q-btn',
-                {
-                  flat: true,
-                  label: ctx.$t('KeyToneAlbum.close'),
-                  color: 'primary',
-                  onClick: () => {
-                    ctx.configureUpSound.value = false;
-                  },
-                },
-                null
-              ),
-            ]),
-          ]),
-        ]
-      );
-  },
-});
-
-// ============================================================================
-// 辅助函数
+// 工具函数
 // ============================================================================
 
 /**
- * 获取选项的唯一标识值
+ * 获取选项的唯一值
+ * 用于 q-select 组件的 option-value 属性
  */
-function getOptionValue(item: any): string {
+function getOptionValue(item: any) {
   if (item.type === 'audio_files') {
     return item.value.sha256 + item.value.name_id;
   }
@@ -366,7 +392,6 @@ function getOptionValue(item: any): string {
   if (item.type === 'key_sounds') {
     return item.value.keySoundKey;
   }
-  return '';
 }
 
 // ============================================================================
@@ -375,7 +400,6 @@ function getOptionValue(item: any): string {
 
 /**
  * 保存按键音配置
- * 保存成功后关闭对话框并重置表单
  */
 function handleSave() {
   ctx.saveKeySoundConfig(
@@ -405,3 +429,50 @@ function handleSave() {
   );
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * CreateKeySoundDialog 组件样式
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+
+// 选择器样式 - 处理溢出
+:deep(.q-field__native) {
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50 [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
+}
+
+// 输入框标签样式
+:deep(.q-field__label) {
+  @apply overflow-visible -ml-1.5 text-[0.8rem];
+}
+
+// 输入框 placeholder 高度修复
+:deep(.q-placeholder) {
+  @apply h-auto;
+}
+
+// 按键音选择器专用样式 - 用于多选芯片选择框
+.zl-ll {
+  :deep(.q-field__native) {
+    @apply h-auto;
+  }
+  :deep(.q-field__messages) {
+    @apply text-nowrap;
+  }
+}
+
+// 椭圆省略样式 - 溢出处理
+:deep(.ellipsis) {
+  @apply max-w-full overflow-auto whitespace-nowrap text-clip;
+  @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+</style>

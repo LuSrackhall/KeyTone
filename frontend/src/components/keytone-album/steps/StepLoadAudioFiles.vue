@@ -49,25 +49,14 @@
 
   父组件状态                    本组件使用方式
   ─────────────────────────────────────────────────
-  ctx.step                 --> 控制当前步骤，点击 header 切换
-  ctx.soundFileList        --> 判断是否已有文件（done 状态）
-  ctx.addNewSoundFile      --> 控制"添加文件"对话框显示
-  ctx.editSoundFile        --> 控制"管理文件"对话框显示
-
-【关联文件】
-- ../types.ts                       : 类型定义，包含 KEYTONE_ALBUM_CONTEXT_KEY
-- ../dialogs/AddAudioFileDialog.vue : 本组件内嵌的"添加音频文件"对话框
-- ../dialogs/ManageAudioFilesDialog.vue : 本组件内嵌的"管理音频文件"对话框
-- ../../Keytone_album.vue           : 父组件，提供 Context (待集成)
-
-【当前状态】
-⚠️ 注意：本组件已创建但尚未集成到父组件中！
-要使本组件生效，需要在 Keytone_album.vue 中：
-1. 添加 provide() 提供 Context
-2. 用本组件替换原有的 Step 1 模板
-
-============================================================================
--->
+  ctx.step                 -->
+控制当前步骤，点击 header 切换 ctx.soundFileList --> 判断是否已有文件（done 状态） ctx.addNewSoundFile -->
+控制"添加文件"对话框显示 ctx.editSoundFile --> 控制"管理文件"对话框显示 【关联文件】 - ../types.ts : 类型定义，包含
+KEYTONE_ALBUM_CONTEXT_KEY - ../dialogs/AddAudioFileDialog.vue : 本组件内嵌的"添加音频文件"对话框 -
+../dialogs/ManageAudioFilesDialog.vue : 本组件内嵌的"管理音频文件"对话框 - ../../Keytone_album.vue : 父组件，提供
+Context (待集成) 【当前状态】 ⚠️ 注意：本组件已创建但尚未集成到父组件中！ 要使本组件生效，需要在 Keytone_album.vue 中：
+1. 添加 provide() 提供 Context 2. 用本组件替换原有的 Step 1 模板
+============================================================================ -->
 
 <template>
   <q-step
@@ -79,7 +68,9 @@
     :header-nav="false"
     @click="handleStepClick"
   >
-    <div :class="['mb-3', ctx.step_introduce_fontSize]">{{ ctx.$t('KeyToneAlbum.loadAudioFile.description') }}</div>
+    <div :class="['mb-3', ctx.step_introduce_fontSize.value]">
+      {{ ctx.$t('KeyToneAlbum.loadAudioFile.description') }}
+    </div>
 
     <!-- 载入音频文件的业务逻辑 -->
     <div>
@@ -150,3 +141,22 @@ function handleManageFiles() {
   ctx.editSoundFile.value = !ctx.editSoundFile.value;
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * StepLoadAudioFiles 组件样式
+ *
+ * 【样式说明】
+ * 本组件使用的样式大部分继承自父组件 Keytone_album.vue 的全局样式。
+ * 此处仅定义本组件特有的样式。
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+</style>

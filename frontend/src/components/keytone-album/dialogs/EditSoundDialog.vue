@@ -404,3 +404,46 @@ function handleDelete() {
   });
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * EditSoundDialog 组件样式
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+
+// 选择器样式 - 处理溢出
+:deep(.q-field__native) {
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50 [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
+}
+
+// 输入框标签样式
+:deep(.q-field__label) {
+  @apply overflow-visible -ml-1.5 text-[0.8rem];
+}
+
+// 输入框 placeholder 高度修复
+:deep(.q-placeholder) {
+  @apply h-auto;
+}
+
+// 选项列表项样式 - 溢出处理
+:deep(.q-item__section) {
+  @apply max-w-full overflow-auto whitespace-nowrap;
+  @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+
+// 椭圆省略样式 - 溢出处理
+:deep(.ellipsis) {
+  @apply max-w-full overflow-auto whitespace-nowrap text-clip;
+  @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+</style>

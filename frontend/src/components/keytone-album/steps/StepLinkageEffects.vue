@@ -213,3 +213,22 @@ function handleFinish() {
   ctx.step.value = 99;
 }
 </script>
+
+<style lang="scss" scoped>
+/**
+ * StepLinkageEffects 组件样式
+ *
+ * 【样式说明】
+ * 本组件使用的样式大部分继承自父组件 Keytone_album.vue 的全局样式。
+ * 此处仅定义本组件特有的样式。
+ */
+
+// 按钮样式 - 统一按钮外观
+.q-btn {
+  @apply text-xs;
+  font-size: var(--i18n_fontSize);
+  @apply p-1.5;
+  @apply transition-transform hover:scale-105;
+  @apply scale-103;
+}
+</style>
