@@ -45,10 +45,10 @@
 【数据流】
   父组件状态                  本组件使用方式
   ─────────────────────────────────────────────────
-  ctx.editSoundFile      --> v-model 控制对话框显示/隐藏
-  ctx.soundFileList      --> 下拉选项列表
-  ctx.selectedSoundFile  --> 当前选中的文件
-  ctx.$t()               --> i18n 翻译函数
+  ctx.editSoundFile      -> v-model 控制对话框显示/隐藏
+  ctx.soundFileList      -> 下拉选项列表
+  ctx.selectedSoundFile  -> 当前选中的文件
+  ctx.$t()               -> i18n 翻译函数
 
 【关联文件】
 - ../types.ts                        : 类型定义
@@ -56,7 +56,7 @@
 - src/boot/query/keytonePkg-query.ts : SoundFileDelete API
 
 【当前状态】
-⚠️ 注意：本组件已创建但尚未集成到父组件中！
+✅ 本组件已集成：由 `StepLoadAudioFiles` 渲染，并通过 `ctx.editSoundFile` 的 v-model 控制显示/隐藏。
 
 ============================================================================
 -->

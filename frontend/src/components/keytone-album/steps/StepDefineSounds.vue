@@ -40,7 +40,8 @@
   │  q-stepper                                          │
   │  ├── StepLoadAudioFiles.vue       (Step 1)          │
   │  ├── StepDefineSounds.vue    <── 当前文件 (Step 2)  │
-  └── StepLinkageEffects.vue       (Step 4)          │
+  │  ├── StepCraftKeySounds.vue       (Step 3)          │
+  │  └── StepLinkageEffects.vue       (Step 4)          │
   └─────────────────────────────────────────────────────┘
 
 【数据流】
@@ -48,15 +49,19 @@
 
   父组件状态                        本组件使用方式
   ───────────────────────────────────────────────────────
-  ctx.step                     -->
-控制当前步骤，点击 header 切换 ctx.soundList --> 已定义的声音列表（用于判断 done 状态） ctx.createNewSound -->
-控制"创建声音"对话框显示 ctx.showEditSoundDialog --> 控制"编辑声音"对话框显示 ctx.soundFileList -->
-可选择的音频源文件列表 ctx.sourceFileForSound --> 当前选中的源文件 ctx.soundStartTime/EndTime --> 裁剪时间范围
-ctx.soundVolume --> 音量调整 ctx.saveSoundConfig() --> 保存声音配置 ctx.previewSound() --> 预览声音 ctx.deleteSound()
---> 删除声音 【关联文件】 - ../types.ts : 类型定义，包含 KEYTONE_ALBUM_CONTEXT_KEY - ../../Keytone_album.vue :
-父组件，提供 Context - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ⚠️
-注意：本组件已创建但尚未集成到父组件中！ 要使本组件生效，需要在 Keytone_album.vue 中用本组件替换原有的 Step 2 模板。
-============================================================================ -->
+  ctx.step                     ->
+控制当前步骤，点击 header 切换 ctx.soundList -> 已定义的声音列表（用于判断 done 状态） ctx.createNewSound ->
+控制"创建声音"对话框显示 ctx.showEditSoundDialog -> 控制"编辑声音"对话框显示 ctx.soundFileList ->
+可选择的音频源文件列表 ctx.sourceFileForSound -> 当前选中的源文件 ctx.soundStartTime/EndTime -> 裁剪时间范围
+ctx.soundVolume -> 音量调整 ctx.saveSoundConfig() -> 保存声音配置 ctx.previewSound() -> 预览声音 ctx.deleteSound()
+-> 删除声音 【关联文件】 - ../types.ts : 类型定义，包含 KEYTONE_ALBUM_CONTEXT_KEY - ../../Keytone_album.vue :
+父组件，提供 Context - ../../DependencyWarning.vue : 依赖警告组件
+
+【当前状态】
+✅ 本组件已集成到父组件中：父组件 provide Context，并以 `<StepDefineSounds />` 替换原 Step2 模板。
+
+============================================================================
+-->
 
 <template>
   <q-step

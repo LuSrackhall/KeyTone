@@ -49,18 +49,20 @@
 
   父组件状态                              本组件使用方式
   ───────────────────────────────────────────────────────────
-  ctx.step                           -->
-控制当前步骤 ctx.isEnableEmbeddedTestSound --> 内嵌测试音开关 ctx.showEveryKeyEffectDialog --> 全键声效对话框
-ctx.showSingleKeyEffectDialog --> 单键声效对话框 ctx.keysWithSoundEffect --> 已配置声效的按键 Map
-ctx.saveUnifiedSoundEffectConfig() --> 保存全局声效 ctx.saveSingleKeySoundEffectConfig() --> 保存单键声效
+  ctx.step                           ->
+控制当前步骤 ctx.isEnableEmbeddedTestSound -> 内嵌测试音开关 ctx.showEveryKeyEffectDialog -> 全键声效对话框
+ctx.showSingleKeyEffectDialog -> 单键声效对话框 ctx.keysWithSoundEffect -> 已配置声效的按键 Map
+ctx.saveUnifiedSoundEffectConfig() -> 保存全局声效 ctx.saveSingleKeySoundEffectConfig() -> 保存单键声效
 【联动声效概念】 联动声效分为两种： 1. 全键声效：统一设置所有按键的声音（优先级低于单键） 2.
 单键声效：为特定按键设置独立声音（优先级高于全键） 内嵌测试音：指在编辑器内测试按键时播放的声音，可分别控制
 down（按下）与 up（抬起）。 【关联文件】 - ../types.ts : 类型定义 - ../../Keytone_album.vue : 父组件（提供 Context） -
 ../dialogs/EveryKeyEffectDialog.vue : 全键声效对话框 - ../dialogs/SingleKeyEffectDialog.vue : 单键声效对话框
-【当前状态】 ✅ Step4 已从父组件迁移到本组件，父组件以 `
-<StepLinkageEffects />
-` 替换原有模板，实现“父组件持有状态 + 子组件承载 UI”。
-============================================================================ -->
+
+【当前状态】
+✅ Step4 已从父组件迁移到本组件, 父组件以`<StepLinkageEffects/>`替换原有模板, 实现  “父组件持有状态 + 子组件承载UI”。
+
+============================================================================
+-->
 
 <template>
   <q-step

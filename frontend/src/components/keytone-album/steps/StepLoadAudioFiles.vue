@@ -39,9 +39,9 @@
   ┌─────────────────────────────────────────────────────┐
   │  q-stepper                                          │
   │  ├── StepLoadAudioFiles.vue  <── 当前文件 (Step 1)  │
-  │  ├── StepDefineSounds.vue         (Step 2) [待创建] │
-  │  ├── StepCraftKeySounds.vue       (Step 3) [待创建] │
-  │  └── StepLinkageEffects.vue       (Step 4) [待创建] │
+  │  ├── StepDefineSounds.vue         (Step 2)          │
+  │  ├── StepCraftKeySounds.vue       (Step 3)          │
+  │  └── StepLinkageEffects.vue       (Step 4)          │
   └─────────────────────────────────────────────────────┘
 
 【数据流】
@@ -49,14 +49,17 @@
 
   父组件状态                    本组件使用方式
   ─────────────────────────────────────────────────
-  ctx.step                 -->
-控制当前步骤，点击 header 切换 ctx.soundFileList --> 判断是否已有文件（done 状态） ctx.addNewSoundFile -->
-控制"添加文件"对话框显示 ctx.editSoundFile --> 控制"管理文件"对话框显示 【关联文件】 - ../types.ts : 类型定义，包含
+  ctx.step                 ->
+控制当前步骤，点击 header 切换 ctx.soundFileList -> 判断是否已有文件（done 状态） ctx.addNewSoundFile ->
+控制"添加文件"对话框显示 ctx.editSoundFile -> 控制"管理文件"对话框显示 【关联文件】 - ../types.ts : 类型定义，包含
 KEYTONE_ALBUM_CONTEXT_KEY - ../dialogs/AddAudioFileDialog.vue : 本组件内嵌的"添加音频文件"对话框 -
-../dialogs/ManageAudioFilesDialog.vue : 本组件内嵌的"管理音频文件"对话框 - ../../Keytone_album.vue : 父组件，提供
-Context (待集成) 【当前状态】 ⚠️ 注意：本组件已创建但尚未集成到父组件中！ 要使本组件生效，需要在 Keytone_album.vue 中：
-1. 添加 provide() 提供 Context 2. 用本组件替换原有的 Step 1 模板
-============================================================================ -->
+../dialogs/ManageAudioFilesDialog.vue : 本组件内嵌的"管理音频文件"对话框 - ../../Keytone_album.vue : 父组件，提供 Context
+
+【当前状态】
+✅ 本组件已集成到父组件中：父组件 provide Context，并以 `<StepLoadAudioFiles />` 替换原 Step1 模板。
+
+============================================================================
+-->
 
 <template>
   <q-step

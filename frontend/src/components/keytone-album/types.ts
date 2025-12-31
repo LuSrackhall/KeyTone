@@ -56,7 +56,7 @@
  * - index.ts              : 模块入口，导出类型和组件
  * - steps/*.vue           : Step 子组件，通过 inject 获取 Context
  * - dialogs/*.vue         : Dialog 子组件，通过 inject 获取 Context
- * - Keytone_album.vue     : 父组件，通过 provide 提供 Context (待集成)
+ * - Keytone_album.vue     : 父组件，通过 provide 提供 Context
  *
  * 【类型分类】
  * 1. 基础类型: SoundFileInfo, SoundEntry, KeySoundEntry 等 - 描述数据结构

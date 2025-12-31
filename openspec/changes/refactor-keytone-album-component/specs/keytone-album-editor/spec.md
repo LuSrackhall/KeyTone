@@ -78,7 +78,7 @@ Normative: 为降低单文件复杂度，键音专辑编辑器前端实现 SHALL
 
 ### Requirement: 新增拆分文件具备可读性说明
 
-Normative: 本次重构新增的 step/dialog/composable/mapper 文件 SHOULD 在文件头部包含说明注释，用于降低 review 与排错成本。
+Normative: 本次重构新增的 step/dialog/composable/mapper 文件 SHALL 在文件头部包含说明注释，用于降低 review 与排错成本。
 
 #### Scenario: 排查行为回归时的定位成本可控
 
@@ -98,7 +98,7 @@ Normative: `initData()`、`watch(audioFiles)` 与 SSE 更新 三条路径 SHALL 
 
 ### Requirement: Step4（联动声效）以子组件承载 UI
 
-Normative: 联动声效步骤（Step4）的 UI 模板 SHOULD 从父组件中拆出到 `steps/StepLinkageEffects.vue`，并通过 inject 使用父组件 provide 的 Context，以降低父组件模板复杂度且保持行为不变。
+Normative: 联动声效步骤（Step4）的 UI 模板 SHALL 从父组件中拆出到 `steps/StepLinkageEffects.vue`，并通过 inject 使用父组件 provide 的 Context，以降低父组件模板复杂度且保持行为不变。
 
 #### Scenario: Step4 的 done/disable 与对话框打开行为保持一致
 

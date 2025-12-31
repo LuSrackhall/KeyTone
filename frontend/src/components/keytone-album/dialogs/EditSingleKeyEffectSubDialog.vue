@@ -31,11 +31,15 @@
 【数据流】
   父组件状态                              本组件使用方式
   ─────────────────────────────────────────────────────────────
-  ctx.isShowSingleKeySoundEffectEditDialog -->
-v-model ctx.currentEditingKey --> 当前编辑的按键 ctx.currentEditingKeyOfName --> 当前按键名称
-ctx.keyDownSingleKeySoundEffectSelect_edit --> 按下声效选择 ctx.keyUpSingleKeySoundEffectSelect_edit --> 抬起声效选择
-ctx.saveSingleKeySoundEffectConfig() --> 保存配置 【关联文件】 - ./SingleKeyEffectDialog.vue : 父对话框 - ../types.ts :
-类型定义 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ✅ 本组件已创建，待集成。
+  ctx.isShowSingleKeySoundEffectEditDialog ->
+v-model ctx.currentEditingKey -> 当前编辑的按键 ctx.currentEditingKeyOfName -> 当前按键名称
+ctx.keyDownSingleKeySoundEffectSelect_edit -> 按下声效选择 ctx.keyUpSingleKeySoundEffectSelect_edit -> 抬起声效选择
+ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./SingleKeyEffectDialog.vue : 父对话框 - ../types.ts :
+类型定义 - ../../DependencyWarning.vue : 依赖警告组件
+
+【当前状态】
+✅ 本组件已集成：由 `SingleKeyEffectDialog` 拉起，通过 `ctx.isShowSingleKeySoundEffectEditDialog` 控制显示/隐藏。
+
 ============================================================================ -->
 
 <template>

@@ -36,12 +36,17 @@
 【数据流】
   父组件状态                              本组件使用方式
   ─────────────────────────────────────────────────────────────
-  ctx.isShowAddOrSettingSingleKeyEffectDialog -->
-v-model ctx.selectedSingleKeys --> 选中的按键列表 ctx.isRecordingSingleKeys --> 是否正在录制
-ctx.keyDownSingleKeySoundEffectSelect --> 按下声效选择 ctx.keyUpSingleKeySoundEffectSelect --> 抬起声效选择
-ctx.saveSingleKeySoundEffectConfig() --> 保存配置 【关联文件】 - ./SingleKeyEffectDialog.vue : 父对话框 - ../types.ts :
-类型定义 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ✅ 本组件已创建，待集成。
-============================================================================ -->
+  ctx.isShowAddOrSettingSingleKeyEffectDialog ->
+v-model ctx.selectedSingleKeys -> 选中的按键列表 ctx.isRecordingSingleKeys -> 是否正在录制
+ctx.keyDownSingleKeySoundEffectSelect -> 按下声效选择 ctx.keyUpSingleKeySoundEffectSelect -> 抬起声效选择
+ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./SingleKeyEffectDialog.vue : 父对话框 - ../types.ts :
+类型定义 - ../../DependencyWarning.vue : 依赖警告组件
+
+【当前状态】
+✅ 本组件已集成：由 `SingleKeyEffectDialog` 拉起，通过 `ctx.isShowAddOrSettingSingleKeyEffectDialog` 控制显示/隐藏。
+
+============================================================================
+-->
 
 <template>
   <!-- 添加单键声效子对话框 -->

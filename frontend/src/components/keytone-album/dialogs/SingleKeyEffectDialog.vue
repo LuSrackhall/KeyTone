@@ -33,10 +33,10 @@
   Keytone_album.vue (父组件)
         │
         │ provide(Context)
-        │
-        └── Step4 模板区域
-                │
-                └── dialogs/SingleKeyEffectDialog.vue  <── 当前文件
+    │
+    └── steps/StepLinkageEffects.vue (Step 4)
+      │
+      └── dialogs/SingleKeyEffectDialog.vue  <── 当前文件
                         │
                         ├── 添加单键声效子对话框 (isShowAddOrSettingSingleKeyEffectDialog)
                         └── 编辑单键声效子对话框 (isShowSingleKeySoundEffectEditDialog)
@@ -53,13 +53,18 @@
 【数据流】
   父组件状态                              本组件使用方式
   ─────────────────────────────────────────────────────────────
-  ctx.showSingleKeyEffectDialog      -->
-v-model 控制主对话框显示 ctx.isShowAddOrSettingSingleKeyEffectDialog --> 添加对话框显示
-ctx.isShowSingleKeySoundEffectEditDialog --> 编辑对话框显示 ctx.keysWithSoundEffect --> 已配置声效的按键 Map
-ctx.selectedSingleKeys --> 选中的按键列表 ctx.isRecordingSingleKeys --> 是否正在录制按键
-ctx.saveSingleKeySoundEffectConfig() --> 保存单键声效配置 【关联文件】 - ../types.ts : 类型定义 -
-../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ✅
-本组件已创建，待集成到父组件中。 ============================================================================ -->
+  ctx.showSingleKeyEffectDialog      ->
+v-model 控制主对话框显示 ctx.isShowAddOrSettingSingleKeyEffectDialog -> 添加对话框显示
+ctx.isShowSingleKeySoundEffectEditDialog -> 编辑对话框显示 ctx.keysWithSoundEffect -> 已配置声效的按键 Map
+ctx.selectedSingleKeys -> 选中的按键列表 ctx.isRecordingSingleKeys -> 是否正在录制按键
+ctx.saveSingleKeySoundEffectConfig() -> 保存单键声效配置 【关联文件】 - ../types.ts : 类型定义 -
+../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件
+
+【当前状态】
+✅ 本组件已集成：由 `StepLinkageEffects` 渲染，并通过 `ctx.showSingleKeyEffectDialog` 的 v-model 控制显示/隐藏。
+
+============================================================================
+-->
 
 <template>
   <!-- 单键声效主对话框 -->

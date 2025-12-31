@@ -34,7 +34,7 @@
 
 ## 代码可读性约束（Review-friendly）
 
-- 本次重构新增的 step/dialog/composable/mapper 文件 SHOULD 在文件头部提供清晰的说明注释：
+- 本次重构新增的 step/dialog/composable/mapper 文件 SHALL 在文件头部提供清晰的说明注释：
   - 文件作用与边界（做什么/不做什么）
   - 与哪些文件/状态/事件配合使用
   - 行为不变的关键约束（避免 review 时误以为可随意“优化时序”）
@@ -82,15 +82,15 @@ frontend/src/components/
     │   │                              # - 内嵌 AddAudioFileDialog, ManageAudioFilesDialog
     │   │                              # - 关联文件: types.ts, ../dialogs/*
     │   │
-    │   ├── StepDefineSounds.vue       # Step 2: 定义声音 [待创建]
+    │   ├── StepDefineSounds.vue       # Step 2: 定义声音
     │   │                              # - 显示创建/编辑声音 UI
     │   │                              # - 调用 ctx.saveSoundConfig, ctx.previewSound
     │   │
-    │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音 [待创建]
+    │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音
     │   │                              # - 显示创建/编辑按键音 UI
     │   │                              # - 显示依赖警告 (DependencyWarning)
     │   │
-    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 [待创建]
+    │   └── StepLinkageEffects.vue     # Step 4: 联动声效
     │                                  # - 全局联动设置
     │                                  # - 单键联动设置
     │
@@ -107,7 +107,7 @@ frontend/src/components/
     │   │                              # - 重命名/删除功能
     │   │                              # - 关联文件: types.ts, keytonePkg-query.ts
     │   │
-    │   └── ... (更多对话框待创建)
+    │   └── ... (其余对话框见 dialogs/ 目录)
     │
     └── composables/               # 可复用逻辑 [Phase 4，可选]
                                    # 职责：抽离纯逻辑（如 SSE 映射、排序、校验）

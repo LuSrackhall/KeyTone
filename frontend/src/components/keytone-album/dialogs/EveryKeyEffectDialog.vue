@@ -34,24 +34,29 @@
   Keytone_album.vue (父组件)
         │
         │ provide(Context)
-        │
-        └── Step4 模板区域
-                │
-                └── dialogs/EveryKeyEffectDialog.vue  <── 当前文件
+    │
+    └── steps/StepLinkageEffects.vue (Step 4)
+      │
+      └── dialogs/EveryKeyEffectDialog.vue  <── 当前文件
 
 【数据流】
   父组件状态                              本组件使用方式
   ─────────────────────────────────────────────────────────────
-  ctx.showEveryKeyEffectDialog       -->
-v-model 控制对话框显示 ctx.keyDownUnifiedSoundEffectSelect --> 按下声效选择 ctx.keyUpUnifiedSoundEffectSelect -->
-抬起声效选择 ctx.keyUnifiedSoundEffectOptions --> 可选声效列表（已排序） ctx.unifiedTypeGroup -->
-类型筛选（音频文件/声音/按键音） ctx.isShowUltimatePerfectionKeySoundAnchoring --> 是否显示锚定图标
-ctx.isAnchoringUltimatePerfectionKeySound --> 锚定开关状态 ctx.saveUnifiedSoundEffectConfig() --> 保存全键声效配置
+  ctx.showEveryKeyEffectDialog       ->
+v-model 控制对话框显示 ctx.keyDownUnifiedSoundEffectSelect -> 按下声效选择 ctx.keyUpUnifiedSoundEffectSelect ->
+抬起声效选择 ctx.keyUnifiedSoundEffectOptions -> 可选声效列表（已排序） ctx.unifiedTypeGroup ->
+类型筛选（音频文件/声音/按键音） ctx.isShowUltimatePerfectionKeySoundAnchoring -> 是否显示锚定图标
+ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedSoundEffectConfig() -> 保存全键声效配置
 【锚定功能说明】 当选择"按键音"类型时，会出现锚定图标： - 锚定开启：选择 down 声效时自动将 up 设为相同值，反之亦然 -
 锚定关闭：down 和 up 可独立选择 - 删除声效时的联动在父组件的 watch 中处理 【关联文件】 - ../types.ts : 类型定义 -
 ../../Keytone_album.vue : 父组件，包含状态和 saveUnifiedSoundEffectConfig 函数 - ../../DependencyWarning.vue :
-依赖警告组件 【当前状态】 ✅ 本组件已创建，待集成到父组件中。
-============================================================================ -->
+依赖警告组件
+
+【当前状态】
+✅ 本组件已集成：由 `StepLinkageEffects` 渲染，并通过 `ctx.showEveryKeyEffectDialog` 的 v-model 控制显示/隐藏。
+
+============================================================================
+-->
 
 <template>
   <!-- 全键声效设置对话框 -->

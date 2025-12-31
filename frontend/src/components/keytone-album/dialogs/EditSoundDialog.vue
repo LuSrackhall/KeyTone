@@ -53,12 +53,13 @@
 【数据流】
   父组件状态                      本组件使用方式
   ─────────────────────────────────────────────────────
-  ctx.showEditSoundDialog    -->
-v-model 控制对话框显示 ctx.soundList --> 可选择的声音列表 ctx.selectedSound --> 当前选中的声音 ctx.soundFileList -->
-源文件列表（用于更换源文件） ctx.dependencyIssues --> 依赖问题列表 ctx.saveSoundConfig() --> 保存声音 ctx.deleteSound()
---> 删除声音 ctx.previewSound() --> 预览声音 【关联文件】 - ../types.ts : 类型定义 - ../steps/StepDefineSounds.vue :
+  ctx.showEditSoundDialog    ->
+v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.selectedSound -> 当前选中的声音 ctx.soundFileList ->
+源文件列表（用于更换源文件） ctx.dependencyIssues -> 依赖问题列表 ctx.saveSoundConfig() -> 保存声音 ctx.deleteSound()
+-> 删除声音 ctx.previewSound() -> 预览声音 【关联文件】 - ../types.ts : 类型定义 - ../steps/StepDefineSounds.vue :
 使用此对话框的 Step 组件 - ../../DependencyWarning.vue : 依赖警告组件
-============================================================================ -->
+============================================================================
+-->
 
 <template>
   <q-dialog

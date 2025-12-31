@@ -53,16 +53,16 @@
 【数据流】
   父组件状态                              本组件使用方式
   ─────────────────────────────────────────────────────────────
-  ctx.editExistingKeySound           --> v-model 控制对话框显示
-  ctx.keySoundList                   --> 可选择的按键音列表
-  ctx.selectedKeySound               --> 当前选中的按键音
-  ctx.edit_configureDownSound        --> 控制按下声音编辑子对话框
-  ctx.edit_configureUpSound          --> 控制抬起声音编辑子对话框
-  ctx.edit_downSoundList/upSoundList --> 可选择的声音列表
-  ctx.edit_downTypeGroup/upTypeGroup --> 类型筛选（音频文件/声音/按键音）
-  ctx.saveKeySoundConfig()           --> 保存按键音
-  ctx.deleteKeySound()               --> 删除按键音
-  ctx.dependencyIssues               --> 依赖问题列表
+  ctx.editExistingKeySound           -> v-model 控制对话框显示
+  ctx.keySoundList                   -> 可选择的按键音列表
+  ctx.selectedKeySound               -> 当前选中的按键音
+  ctx.edit_configureDownSound        -> 控制按下声音编辑子对话框
+  ctx.edit_configureUpSound          -> 控制抬起声音编辑子对话框
+  ctx.edit_downSoundList/upSoundList -> 可选择的声音列表
+  ctx.edit_downTypeGroup/upTypeGroup -> 类型筛选（音频文件/声音/按键音）
+  ctx.saveKeySoundConfig()           -> 保存按键音
+  ctx.deleteKeySound()               -> 删除按键音
+  ctx.dependencyIssues               -> 依赖问题列表
 
 【关联文件】
 - ../types.ts : 类型定义，包含 KEYTONE_ALBUM_CONTEXT_KEY
@@ -71,6 +71,7 @@
 
 【当前状态】
 ✅ 本组件已集成到父组件中。
+
 ============================================================================
 -->
 
@@ -189,7 +190,10 @@
                       :max-values="ctx.selectedKeySound.value.keySoundValue.down.mode.mode === 'single' ? 1 : Infinity"
                       counter
                       :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                      :error="ctx.selectedKeySound.value.keySoundValue.down.mode.mode === 'single' && ctx.selectedKeySound.value.keySoundValue.down.value.length > 1"
+                      :error="
+                        ctx.selectedKeySound.value.keySoundValue.down.mode.mode === 'single' &&
+                        ctx.selectedKeySound.value.keySoundValue.down.value.length > 1
+                      "
                       ref="edit_downSoundSelectDom"
                       @update:model-value="edit_downSoundSelectDom?.hidePopup()"
                     >
@@ -202,7 +206,13 @@
                             <DependencyWarning
                               :issues="ctx.dependencyIssues.value"
                               :item-type="scope.opt.type"
-                              :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                              :item-id="
+                                scope.opt.type === 'audio_files'
+                                  ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}`
+                                  : scope.opt.type === 'sounds'
+                                  ? scope.opt.value?.soundKey
+                                  : scope.opt.value?.keySoundKey
+                              "
                               :show-details="false"
                             />
                           </q-item-section>
@@ -221,7 +231,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
                               </q-tooltip>
                             </q-icon>
@@ -231,7 +245,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
                               </q-tooltip>
                             </q-icon>
@@ -241,7 +259,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
                                 <div>⬇</div>
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
@@ -309,7 +331,10 @@
                       :max-values="ctx.selectedKeySound.value.keySoundValue.up.mode.mode === 'single' ? 1 : Infinity"
                       counter
                       :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                      :error="ctx.selectedKeySound.value.keySoundValue.up.mode.mode === 'single' && ctx.selectedKeySound.value.keySoundValue.up.value.length > 1"
+                      :error="
+                        ctx.selectedKeySound.value.keySoundValue.up.mode.mode === 'single' &&
+                        ctx.selectedKeySound.value.keySoundValue.up.value.length > 1
+                      "
                       ref="edit_upSoundSelectDom"
                       @update:model-value="edit_upSoundSelectDom?.hidePopup()"
                     >
@@ -322,7 +347,13 @@
                             <DependencyWarning
                               :issues="ctx.dependencyIssues.value"
                               :item-type="scope.opt.type"
-                              :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
+                              :item-id="
+                                scope.opt.type === 'audio_files'
+                                  ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}`
+                                  : scope.opt.type === 'sounds'
+                                  ? scope.opt.value?.soundKey
+                                  : scope.opt.value?.keySoundKey
+                              "
                               :show-details="false"
                             />
                           </q-item-section>
@@ -341,7 +372,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
                               </q-tooltip>
                             </q-icon>
@@ -351,7 +386,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
                               </q-tooltip>
                             </q-icon>
@@ -361,7 +400,11 @@
                           <q-item-label>
                             {{ ctx.$t(props.label) }}
                             <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+                              <q-tooltip
+                                :class="[
+                                  'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
+                                ]"
+                              >
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
                                 <div>⬇</div>
                                 <div>{{ ctx.$t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>

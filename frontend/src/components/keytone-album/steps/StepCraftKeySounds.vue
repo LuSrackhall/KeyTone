@@ -50,12 +50,15 @@
 
   父组件状态                          本组件使用方式
   ─────────────────────────────────────────────────────────
-  ctx.step                       -->
-控制当前步骤 ctx.keySoundList --> 已定义的按键音列表 ctx.createNewKeySound --> 控制"创建按键音"对话框
-ctx.editExistingKeySound --> 控制"编辑按键音"对话框 ctx.selectedSoundsForDown/Up --> 按下/抬起时选中的声音
-ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList --> 可选择的声音列表 ctx.saveKeySoundConfig() -->
-保存按键音配置 ctx.deleteKeySound() --> 删除按键音 ctx.dependencyIssues --> 依赖问题列表 【关联文件】 - ../types.ts :
-类型定义 - ../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ✅ 本组件已集成到父组件中。
+  ctx.step                       ->
+控制当前步骤 ctx.keySoundList -> 已定义的按键音列表 ctx.createNewKeySound -> 控制"创建按键音"对话框
+ctx.editExistingKeySound -> 控制"编辑按键音"对话框 ctx.selectedSoundsForDown/Up -> 按下/抬起时选中的声音
+ctx.playModeForDown/Up -> 播放模式 ctx.downSoundList/upSoundList -> 可选择的声音列表 ctx.saveKeySoundConfig() ->
+保存按键音配置 ctx.deleteKeySound() -> 删除按键音 ctx.dependencyIssues -> 依赖问题列表 【关联文件】 - ../types.ts :
+类型定义 - ../../Keytone_album.vue : 父组件 - ../../DependencyWarning.vue : 依赖警告组件
+
+【当前状态】
+✅ 本组件已集成到父组件中。
 ============================================================================
 -->
 

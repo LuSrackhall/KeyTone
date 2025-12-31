@@ -44,12 +44,13 @@
 【数据流】
   父组件状态                          本组件使用方式
   ───────────────────────────────────────────────────────────
-  ctx.createNewKeySound          -->
-v-model 控制对话框显示 ctx.keySoundName --> 按键音名称 ctx.configureDownSound --> 控制按下声音配置子对话框
-ctx.configureUpSound --> 控制抬起声音配置子对话框 ctx.selectedSoundsForDown --> 按下时选中的声音列表
-ctx.selectedSoundsForUp --> 抬起时选中的声音列表 ctx.playModeForDown/Up --> 播放模式 ctx.downSoundList/upSoundList -->
-可选择的声音列表 ctx.saveKeySoundConfig() --> 保存按键音
-============================================================================ -->
+  ctx.createNewKeySound          ->
+v-model 控制对话框显示 ctx.keySoundName -> 按键音名称 ctx.configureDownSound -> 控制按下声音配置子对话框
+ctx.configureUpSound -> 控制抬起声音配置子对话框 ctx.selectedSoundsForDown -> 按下时选中的声音列表
+ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up -> 播放模式 ctx.downSoundList/upSoundList ->
+可选择的声音列表 ctx.saveKeySoundConfig() -> 保存按键音
+============================================================================
+-->
 
 <template>
   <!-- 主对话框：创建新按键音 -->

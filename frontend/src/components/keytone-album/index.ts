@@ -46,8 +46,8 @@
  *   ├── dialogs/          <-- Dialog 子组件目录
  *   │   ├── AddAudioFileDialog.vue      (添加音频文件对话框) ✅
  *   │   ├── ManageAudioFilesDialog.vue  (管理音频文件对话框) ✅
- *   │   └── ... (更多对话框待创建)
- *   └── composables/      <-- 可复用逻辑 [待创建]
+ *   │   └── ... (其余对话框见 dialogs/ 目录) ✅
+ *   └── composables/      <-- 可复用逻辑 ✅
  *
  * 【关联文件】
  * - types.ts                  : 被本文件导出的类型定义

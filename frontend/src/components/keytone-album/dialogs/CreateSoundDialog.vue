@@ -47,12 +47,13 @@
 【数据流】
   父组件状态                      本组件使用方式
   ─────────────────────────────────────────────────────
-  ctx.createNewSound         -->
-v-model 控制对话框显示 ctx.soundName --> 声音名称输入 ctx.sourceFileForSound --> 选中的源文件 ctx.soundFileList -->
-可选择的源文件列表 ctx.soundStartTime --> 裁剪开始时间 ctx.soundEndTime --> 裁剪结束时间 ctx.soundVolume --> 音量调整
-ctx.saveSoundConfig() --> 保存声音 ctx.previewSound() --> 预览声音 【关联文件】 - ../types.ts : 类型定义 -
+  ctx.createNewSound         ->
+v-model 控制对话框显示 ctx.soundName -> 声音名称输入 ctx.sourceFileForSound -> 选中的源文件 ctx.soundFileList ->
+可选择的源文件列表 ctx.soundStartTime -> 裁剪开始时间 ctx.soundEndTime -> 裁剪结束时间 ctx.soundVolume -> 音量调整
+ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关联文件】 - ../types.ts : 类型定义 -
 ../steps/StepDefineSounds.vue : 使用此对话框的 Step 组件
-============================================================================ -->
+============================================================================
+-->
 
 <template>
   <q-dialog
