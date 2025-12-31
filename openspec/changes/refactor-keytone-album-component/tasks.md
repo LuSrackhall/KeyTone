@@ -78,7 +78,7 @@
 - [x] 3.5 将"创建按键音"对话框抽离 → `dialogs/CreateKeySoundDialog.vue`
 - [x] 3.6 将"编辑按键音"对话框抽离 → `dialogs/EditKeySoundDialog.vue`
 - [x] 3.7 将"全键声效"对话框抽离 → `dialogs/EveryKeyEffectDialog.vue` ✅ 已集成
-- [ ] 3.8 将"单键声效"对话框抽离 → `dialogs/SingleKeyEffectDialog.vue` (可选)
+- [x] 3.8 将"单键声效"对话框抽离 → `dialogs/SingleKeyEffectDialog.vue` ✅ 已集成
 
 ## Phase 4: 逻辑域 composables（可选、低风险逐步）
 
@@ -114,6 +114,9 @@
 | `keytone-album/dialogs/CreateKeySoundDialog.vue`   | 创建按键音对话框               | ✅    |
 | `keytone-album/dialogs/EditKeySoundDialog.vue`     | 编辑按键音对话框               | ✅    |
 | `keytone-album/dialogs/EveryKeyEffectDialog.vue`   | 全键声效对话框                 | ✅    |
+| `keytone-album/dialogs/SingleKeyEffectDialog.vue`  | 单键声效对话框（主对话框）     | ✅    |
+| `keytone-album/dialogs/AddSingleKeyEffectSubDialog.vue`  | 单键声效：添加子对话框    | ✅    |
+| `keytone-album/dialogs/EditSingleKeyEffectSubDialog.vue` | 单键声效：编辑子对话框    | ✅    |
 
 ---
 
@@ -122,18 +125,19 @@
 **当前状态**: 
 - ✅ Step1/2/3 已替换为独立组件
 - ✅ Step4 保留在父组件（复杂度高，包含虚拟键盘）
-- ✅ 7 个 Dialog 组件已创建并集成（包括新增的 EveryKeyEffectDialog）
+- ✅ 单键/全键声效对话框已抽离并集成（SingleKeyEffectDialog/EveryKeyEffectDialog）
 - ✅ 父组件从 ~3660 行减少到 ~3390 行
 - ✅ 构建验证通过（无错误，仅有 warnings）
 - ✅ 代码注释规范已添加到 design.md
 
-**推荐下一步**: 继续拆分单键声效对话框或进行回归测试
+**推荐下一步**: 进行手动回归测试（重点覆盖 Step4 的单键声效增删改）
 
 按照 Validation 最小集进行测试：
 1. Step1：上传/管理音频源文件
 2. Step2：创建/编辑/删除/预览声音
 3. Step3：创建/编辑/删除键音；依赖警告展示
 4. Step4：切换 embedded test sound；打开全局设置对话框并选择声效
+5. Step4：打开单键设置对话框 → 添加单键声效 → 编辑该按键声效 → 删除该按键声效
 
 **可选后续工作**:
 - 将 Step4 的复杂内容（虚拟键盘、EveryKeyEffect 对话框、SingleKeyEffect 对话框）拆分为独立组件
@@ -145,6 +149,7 @@
 
 | 日期       | 变更内容                                            |
 | ---------- | --------------------------------------------------- |
+| 2025-12-31 | 创建并集成 SingleKeyEffectDialog（单键声效对话框）   |
 | 2024-12-31 | 创建并集成 EveryKeyEffectDialog（全键声效对话框）   |
 | 2024-12-31 | 添加代码注释规范到 design.md                        |
 | 2024-12-31 | 修复 EditKeySoundDialog 子对话框缺失问题            |

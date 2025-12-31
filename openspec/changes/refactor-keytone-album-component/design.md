@@ -234,12 +234,15 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 | `keytone-album/dialogs/CreateKeySoundDialog.vue`   | 创建按键音对话框                | ✅ 已集成   |
 | `keytone-album/dialogs/EditKeySoundDialog.vue`     | 编辑按键音对话框                | ✅ 已集成   |
 | `keytone-album/dialogs/EveryKeyEffectDialog.vue`   | 全键声效对话框                  | ✅ 已集成   |
+| `keytone-album/dialogs/SingleKeyEffectDialog.vue`  | 单键声效对话框（主对话框）      | ✅ 已集成   |
+| `keytone-album/dialogs/AddSingleKeyEffectSubDialog.vue`  | 单键声效：添加子对话框     | ✅ 已集成   |
+| `keytone-album/dialogs/EditSingleKeyEffectSubDialog.vue` | 单键声效：编辑子对话框     | ✅ 已集成   |
 
 ### 待完成（可选）
 
 - [ ] 将 Step4 替换为子组件（复杂度高，包含虚拟键盘）
 - [x] 创建 `EveryKeyEffectDialog.vue` 对话框 ✅
-- [ ] 创建 `SingleKeyEffectDialog.vue` 单键声效对话框
+- [x] 创建 `SingleKeyEffectDialog.vue` 单键声效对话框 ✅
 - [ ] 抽离 composables（SSE 映射、排序、校验逻辑）
 
 ---

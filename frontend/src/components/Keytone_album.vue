@@ -199,6 +199,11 @@
                     <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.singleKeyPriority') }}</span>
                   </q-tooltip>
                 </q-icon>
+                <!-- 单键声效设置对话框（已拆分为独立组件） -->
+                <SingleKeyEffectDialog />
+
+                <!-- 旧实现：保留但不渲染（用于回滚/对照），后续稳定后再删除 -->
+                <template v-if="false">
                 <q-dialog
                   :style="{ '--i18n_fontSize': i18n_fontSize }"
                   v-model="showSingleKeyEffectDialog"
@@ -1334,6 +1339,7 @@
                     </q-card-actions>
                   </q-card>
                 </q-dialog>
+                </template>
               </div>
             </q-stepper-navigation>
             <q-stepper-navigation>
@@ -1393,6 +1399,7 @@ import StepDefineSounds from './keytone-album/steps/StepDefineSounds.vue';
 import StepCraftKeySounds from './keytone-album/steps/StepCraftKeySounds.vue';
 import StepLinkageEffects from './keytone-album/steps/StepLinkageEffects.vue';
 import EveryKeyEffectDialog from './keytone-album/dialogs/EveryKeyEffectDialog.vue';
+import SingleKeyEffectDialog from './keytone-album/dialogs/SingleKeyEffectDialog.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -2229,6 +2236,10 @@ const isGetsFocused = ref(false);
 
 let first_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
 let clear_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
+
+const setSingleKeyRecordingClearFlag = () => {
+  clear_flag = true;
+};
 
 const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('keycode=', keycode, 'keyName=', keyName);
@@ -3240,9 +3251,12 @@ const keytoneAlbumContext: KeytoneAlbumContext = {
   keysWithSoundEffect,
   isShowSingleKeySoundEffectEditDialog,
   currentEditingKey,
+  currentEditingKey_old,
   currentEditingKeyOfName,
   keyDownSingleKeySoundEffectSelect_edit,
   keyUpSingleKeySoundEffectSelect_edit,
+  keyDownSingleKeySoundEffectSelect_edit_old,
+  keyUpSingleKeySoundEffectSelect_edit_old,
   singleKeyTypeGroup_edit,
   keySingleKeySoundEffectOptions_edit,
   isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit,
@@ -3256,6 +3270,7 @@ const keytoneAlbumContext: KeytoneAlbumContext = {
   naturalSort,                  // 自然排序函数
   preventDefaultKeyBehaviorWhenRecording,  // 防止录制时键盘默认行为
   preventDefaultMouseWhenRecording,        // 防止录制时鼠标默认行为
+  setSingleKeyRecordingClearFlag,          // 单键录制：设置 clear_flag
   convertValue,                 // 值转换函数
 
   // ============ 操作函数 ============

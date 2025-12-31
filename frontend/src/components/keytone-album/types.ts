@@ -281,9 +281,12 @@ export interface KeytoneAlbumContext {
   keysWithSoundEffect: Ref<Map<string, any>>;
   isShowSingleKeySoundEffectEditDialog: Ref<boolean>;
   currentEditingKey: Ref<number | null>;
+  currentEditingKey_old: number | null; // 非 ref，用于记录旧值
   currentEditingKeyOfName: ComputedRef<string>;
   keyDownSingleKeySoundEffectSelect_edit: Ref<any>;
   keyUpSingleKeySoundEffectSelect_edit: Ref<any>;
+  keyDownSingleKeySoundEffectSelect_edit_old: any; // 非 ref，用于记录旧值
+  keyUpSingleKeySoundEffectSelect_edit_old: any; // 非 ref，用于记录旧值
   singleKeyTypeGroup_edit: Ref<Array<string>>;
   keySingleKeySoundEffectOptions_edit: ComputedRef<Array<MixedOptionItem>>;
   isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit: ComputedRef<boolean>;
@@ -301,6 +304,8 @@ export interface KeytoneAlbumContext {
   preventDefaultKeyBehaviorWhenRecording: (event: KeyboardEvent) => void;
   /** 防止录制时默认鼠标行为 */
   preventDefaultMouseWhenRecording: (event: MouseEvent) => void;
+  /** 单键录制：设置 clear_flag（避免录制瞬间误记录鼠标行为） */
+  setSingleKeyRecordingClearFlag: () => void;
   /** 值转换函数（配置文件格式 -> UI格式） */
   convertValue: (item: any) => any;
 
