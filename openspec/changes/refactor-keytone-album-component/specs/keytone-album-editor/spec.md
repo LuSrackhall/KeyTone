@@ -85,3 +85,13 @@ Normative: 本次重构新增的 step/dialog/composable/mapper 文件 SHOULD 在
 - **GIVEN** 用户在重构后遇到行为回归或数据不同步
 - **WHEN** 开发者打开新增的拆分文件
 - **THEN** 文件头部注释 SHOULD 明确：文件职责边界、关联的调用方文件、关键行为不变约束、以及首选的 Debug 切入点
+
+### Requirement: 映射逻辑统一复用纯函数
+
+Normative: `initData()`、`watch(audioFiles)` 与 SSE 更新 三条路径 SHALL 复用 `keytoneAlbumMappers` 中的纯函数，以确保映射行为一致、避免重复代码与行为漂移。
+
+#### Scenario: 初始化与 SSE 更新的列表排序行为一致
+
+- **GIVEN** 用户加载键音包配置（初始化）或接收 SSE 更新
+- **WHEN** 配置数据被映射为 `soundFileList` / `soundList` / `keysWithSoundEffect`
+- **THEN** 三条路径的映射结果 SHALL 一致（通过调用同一纯函数实现）

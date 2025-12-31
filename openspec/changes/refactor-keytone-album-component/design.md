@@ -279,6 +279,7 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 - ✅ SSE 映射逻辑已从父组件抽离至 `keytone-album/composables/useKeytoneAlbumSseSync.ts`，父组件仅负责 attach/detach 与状态承载。
 - ✅ 列表映射/自然排序的纯工具已抽离至 `keytone-album/composables/keytoneAlbumMappers.ts`（避免在多个位置重复实现同一映射逻辑）。
 - ✅ 依赖校验 computed/watch 已抽离至 `keytone-album/composables/useKeytoneAlbumDependencyIssues.ts`，父组件继续暴露 `dependencyIssues` 给 UI 使用。
+- ✅ Phase 4.5：`initData()` 与 `watch(audioFiles)` 中的映射逻辑已改用 `keytoneAlbumMappers` 纯函数，消除重复代码并确保"初始化 / watch / SSE"三条路径的映射行为一致。
 
 ---
 

@@ -86,6 +86,7 @@
 - [x] 4.2 抽离列表映射/自然排序工具（供 SSE/初始化复用）
 - [x] 4.3 抽离依赖校验逻辑到 `composables/useKeytoneAlbumDependencyIssues.ts`
 - [x] 4.4 为新增 composables/mappers 文件补齐文件头说明注释（用途/边界/关联文件/调试入口）
+- [x] 4.5 initData/watch(audioFiles) 复用 keytoneAlbumMappers 纯函数（消除重复映射代码）
 
 ## Phase 5: 清理与验证 ✅
 

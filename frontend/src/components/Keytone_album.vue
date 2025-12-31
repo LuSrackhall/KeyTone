@@ -265,6 +265,17 @@ import DependencyWarning from 'src/components/DependencyWarning.vue';
 
 import { useKeytoneAlbumSseSync } from './keytone-album/composables/useKeytoneAlbumSseSync';
 import { useKeytoneAlbumDependencyIssues } from './keytone-album/composables/useKeytoneAlbumDependencyIssues';
+// ============================================================================
+// 导入映射工具函数（Phase 4.5：initData 复用 mappers）
+// 说明：这些纯函数原本在 initData/watch(audioFiles)/SSE 中重复实现。
+//       现在统一到 keytoneAlbumMappers.ts，确保"初始化"与"SSE 更新"的映射逻辑一致。
+// ============================================================================
+import {
+  mapAudioFilesConfigToArray,
+  mapAudioFilesArrayToSoundFileList,
+  mapSoundsConfigToList,
+  mapSingleKeyConfigToKeysWithSoundEffect,
+} from './keytone-album/composables/keytoneAlbumMappers';
 
 // ============================================================================
 // 导入 Context 类型和注入 Key
@@ -1632,43 +1643,23 @@ onBeforeMount(async () => {
       }
 
       // 已载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapAudioFilesConfigToArray + mapAudioFilesArrayToSoundFileList 替代原先的内联映射，
+      //       确保"初始化"与"SSE 更新"使用相同的映射逻辑，避免重复代码与行为漂移。
       if (data.audio_files !== undefined) {
-        // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-        const audioFilesArray = Object.entries(data.audio_files).map(([key, value]) => ({
-          sha256: key,
-          value: value,
-        }));
+        // 1. 将后端 audio_files 对象转为数组（sha256 + value）
+        const audioFilesArray = mapAudioFilesConfigToArray(data.audio_files);
         audioFiles.value = audioFilesArray;
-        const tempSoundFileList: Array<any> = [];
-
-        audioFiles.value.forEach((item) => {
-          // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
-          if (item.value.name !== undefined && item.value.name !== null) {
-            Object.entries(item.value.name).forEach(([name_id, name]) => {
-              tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
-            });
-          }
-        });
-        // ===== 应用自然排序：解决声音文件列表乱序问题 =====
-        // 按文件名+扩展名进行自然排序（初始化时）
-        tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
-        soundFileList.value = tempSoundFileList;
+        // 2. 将数组进一步展开为 soundFileList（sha256 + name_id + name + type），并应用自然排序
+        soundFileList.value = mapAudioFilesArrayToSoundFileList(audioFilesArray, naturalSort);
       }
 
       // 已载入的声音列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapSoundsConfigToList 替代原先的内联映射，确保与 SSE 更新路径一致。
+      // 注意：原代码判断的是 data.sound_list，但实际读取的是 data.sounds，此处保持原逻辑不变。
       if (data.sound_list !== undefined) {
-        const sounds = Object.entries(data.sounds).map(([key, value]) => ({
-          soundKey: key,
-          soundValue: value,
-        }));
-        // ===== 应用自然排序：解决声音列表乱序问题 =====
-        // 基于声音名称或soundKey进行自然排序（初始化时）
-        sounds.sort((a: any, b: any) => {
-          const aName = (a.soundValue?.name as string) || a.soundKey;
-          const bName = (b.soundValue?.name as string) || b.soundKey;
-          return naturalSort(aName, bName);
-        });
-        soundList.value = sounds as Array<{
+        soundList.value = mapSoundsConfigToList(data.sounds, naturalSort) as Array<{
           soundKey: string;
           soundValue: {
             cut: { start_time: number; end_time: number; volume: number };
@@ -1684,14 +1675,10 @@ onBeforeMount(async () => {
       }
 
       // TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapSingleKeyConfigToKeysWithSoundEffect 替代原先的内联映射，确保与 SSE 更新路径一致。
       if (data.key_tone?.single !== undefined) {
-        keysWithSoundEffect.value.clear();
-        Object.entries(data.key_tone.single).forEach(([dikCode, value]) => {
-          // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
-          if ((value as any)?.down?.value || (value as any)?.up?.value) {
-            keysWithSoundEffect.value.set(dikCode, value);
-          }
-        });
+        keysWithSoundEffect.value = mapSingleKeyConfigToKeysWithSoundEffect(data.key_tone.single);
       }
     });
     const updateKeyToneAlbumListName = debounce(
@@ -1708,23 +1695,13 @@ onBeforeMount(async () => {
     });
 
     // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
+    // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+    // 说明：用 mapAudioFilesArrayToSoundFileList 替代原先的内联映射，
+    //       确保 watch(audioFiles) 与 initData、SSE 更新都使用相同的映射逻辑。
     watch(audioFiles, (newVal) => {
       console.debug('观察audioFiles=', audioFiles.value);
-      // 为了更容易理解, 故引入audioFiles这一变量, 做初步映射, audioFiles只是过程值, 我们最终需要对此过程值做进一步映射, 形成soundFileList
-      const tempSoundFileList: Array<any> = [];
-
-      audioFiles.value.forEach((item) => {
-        // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
-        if (item.value.name !== undefined && item.value.name !== null) {
-          Object.entries(item.value.name).forEach(([name_id, name]) => {
-            tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
-          });
-        }
-      });
-      // ===== 应用自然排序：解决声音文件列表乱序问题 =====
-      // 按文件名+扩展名进行自然排序，确保 sound1.wav, sound2.wav, sound10.wav 的正确顺序
-      tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
-      soundFileList.value = tempSoundFileList;
+      // 将 audioFiles 数组进一步展开为 soundFileList，并应用自然排序
+      soundFileList.value = mapAudioFilesArrayToSoundFileList(audioFiles.value, naturalSort);
     });
 
     // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。

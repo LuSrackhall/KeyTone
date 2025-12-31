@@ -163,4 +163,5 @@ frontend/src/components/
   - SSE 映射监听与数据写入已抽离为 `useKeytoneAlbumSseSync`。
   - 列表映射/自然排序纯工具已抽离为 `keytoneAlbumMappers`。
   - 依赖校验逻辑已抽离为 `useKeytoneAlbumDependencyIssues`。
+  - Phase 4.5：`initData()` 与 `watch(audioFiles)` 中的映射逻辑已改用 `keytoneAlbumMappers` 纯函数，消除重复代码，确保"初始化 / watch / SSE"三条路径的映射行为一致。
 - 构建验证：`npm -C frontend run build` 通过。

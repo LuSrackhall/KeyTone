@@ -25,7 +25,8 @@
  *
  * 使用场景（Where used）
  * - `useKeytoneAlbumSseSync.ts`：处理 SSE 推送的全量配置更新。
- * - （后续可选）`Keytone_album.vue` 的 initData：初始化读取配置时也可以复用相同映射，确保“初始化”和“SSE 更新”一致。
+ * - `Keytone_album.vue` 的 initData：初始化读取配置时复用相同映射，确保"初始化"和"SSE 更新"一致。
+ * - `Keytone_album.vue` 的 watch(audioFiles)：当 audioFiles 变化时，复用 mapAudioFilesArrayToSoundFileList。
  *
  * 设计约束（Constraints）
  * - 不直接依赖 Vue 响应式：这里不操作 ref/reactive，仅返回新数组/Map。
