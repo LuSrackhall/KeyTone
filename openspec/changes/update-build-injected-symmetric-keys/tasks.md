@@ -44,5 +44,8 @@
 
 - [x] `go build ./...`（sdk）
 - [x] 再次全量扫描主项目（sdk + frontend），确认所有对称密钥均已被构建脚本覆盖（共 10 个，无遗漏）
+- [x] 确认 SDK 内部工具 `sdk/audioPackage/cmd/printconfig` 依赖 `FixedSecret`，因在 SDK 模块内自动继承注入
+- [x] 为 `printconfig` 添加文件头部使用说明（含密钥/构建说明）
+- [x] 为 `printconfig` 补充 `go run` 使用说明（含开源/私有注入与兼容性边界）
 - [ ] 可选：在本地提供 `sdk/private_keys.env` 并运行 `source sdk/setup_build_env.sh` 后构建，验证注入 keys 生效
 - [ ] 可选：为 `tools/ktalbum-tools` 构建时传入 `-ldflags -X`，验证能解密对应构建身份产物

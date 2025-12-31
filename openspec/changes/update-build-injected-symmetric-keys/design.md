@@ -73,6 +73,20 @@ ktalbum-tools 的目标是便于本地查看/调试 `.ktalbum` 文件，因此�
 - 一键构建：`tools/ktalbum-tools/build.sh` 会自动合并并应用 `EXTRA_LDFLAGS`
 - 运行时解密：按顺序尝试“注入密钥 → 默认密钥”，并在校验失败时按 SDK 策略回退尝试 v1
 
+### printconfig（SDK 内部调试工具）
+
+`sdk/audioPackage/cmd/printconfig` 是用于解密查看键音专辑配置的内部工具。
+
+- 位于 SDK 模块内，构建时自动继承 `EXTRA_LDFLAGS` 注入的 `FixedSecret`
+- 无需单独配置注入脚本
+- 私有构建后可解密私有产物的加密配置
+
+使用方式补充：
+
+- 可直接 `go run ./audioPackage/cmd/printconfig --path ...`（开源默认密钥）
+- 若要解密私有构建产物，需要 `go run -ldflags "$EXTRA_LDFLAGS" ./audioPackage/cmd/printconfig --path ...`
+- 注入发生在编译/链接阶段，因此同一次运行无法同时兼容两套密钥（需分别运行）
+
 ## Compatibility Notes
 
 - 未注入：行为与当前开源版本完全一致

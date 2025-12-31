@@ -57,10 +57,14 @@
 
 注：工具链 `tools/ktalbum-tools` 也提供同等注入点（模块路径不同）。
 
-另外：ktalbum-tools 为本地查看/调试用途，解密 `.ktalbum` 时会按顺序尝试“注入密钥 → 开源默认密钥”，并在校验失败时回退尝试 v1，以便同一构建可同时兼容开源与私有两类产物。## 扫描验证结论
+另外：ktalbum-tools 为本地查看/调试用途，解密 `.ktalbum` 时会按顺序尝试“注入密钥 → 开源默认密钥”，并在校验失败时回退尝试 v1，以便同一构建可同时兼容开源与私有两类产物。
+
+## 扫描验证结论
 
 2025-12-31 再次全量扫描主项目（sdk + frontend）：
 
 - SDK 共发现 **10 个**对称加密密钥/secret，全部已被 `setup_build_env.sh` 覆盖
 - 前端无任何硬编码对称密钥参与加密操作
+- SDK 内部调试工具 `sdk/audioPackage/cmd/printconfig` 依赖 `FixedSecret`，因在 SDK 模块内，构建时会自动继承注入
+- `printconfig` 可通过 `go run` 直接使用；私有密钥需要 `go run -ldflags "$EXTRA_LDFLAGS" ...`，且同一次运行无法同时兼容两套密钥（需分别运行）
 - **结论：无遗漏**

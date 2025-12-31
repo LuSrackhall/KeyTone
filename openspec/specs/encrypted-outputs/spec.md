@@ -51,6 +51,8 @@ Note: A local debug tool (ktalbum-tools) MAY additionally try both the injected 
 
 Normative: The system SHALL derive a 32-byte AES key using `SHA256(secret + last6(sha1(albumUUID)))`, where `secret` is configurable via build-time injection; the encrypted config bytes MUST be stored as `nonce + ciphertext`.
 
+Note: The internal debug utility `sdk/audioPackage/cmd/printconfig` can be used to inspect decrypted config; for private builds it must be run/built with the same `-ldflags -X` injection (e.g. via `EXTRA_LDFLAGS`).
+
 #### Scenario: 使用默认 secret 派生 key
 
 - **GIVEN** 未注入自定义 secret

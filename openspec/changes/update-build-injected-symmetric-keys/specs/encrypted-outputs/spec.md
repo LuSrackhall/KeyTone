@@ -6,6 +6,8 @@
 
 Normative: The system SHALL keep default symmetric keys/secrets hardcoded in source for open-source builds, and SHALL allow overriding them at build-time via Go `-ldflags -X` using XOR-obfuscated hex values; at runtime it MUST deobfuscate injected values before use.
 
+Note: The internal debug utility `sdk/audioPackage/cmd/printconfig` depends on `FixedSecret` and MAY be executed via `go run`; private builds must use the same build-time injection (e.g. `go run -ldflags "$EXTRA_LDFLAGS" ...`).
+
 #### Scenario: 未注入私钥时保持原行为
 
 - **GIVEN** 构建过程中未提供任何 `-ldflags -X` 覆盖值
