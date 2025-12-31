@@ -54,10 +54,12 @@
 ctx.showSingleKeyEffectDialog --> 单键声效对话框 ctx.keysWithSoundEffect --> 已配置声效的按键 Map
 ctx.saveUnifiedSoundEffectConfig() --> 保存全局声效 ctx.saveSingleKeySoundEffectConfig() --> 保存单键声效
 【联动声效概念】 联动声效分为两种： 1. 全键声效：统一设置所有按键的声音（优先级低于单键） 2.
-单键声效：为特定按键设置独立声音（优先级高于全键） 内嵌测试音是指在编辑器内测试按键时播放的声音， 可以单独控制
-down（按下）和 up（抬起）的开关。 【关联文件】 - ../types.ts : 类型定义 - ../../Keytone_album.vue : 父组件 -
-../../DependencyWarning.vue : 依赖警告组件 【当前状态】 ⚠️ 注意：本组件框架已创建，但 Step4 仍保留在父组件中！ Step4
-内容复杂（约1500行），包含虚拟键盘和多个嵌套对话框，暂不替换。
+单键声效：为特定按键设置独立声音（优先级高于全键） 内嵌测试音：指在编辑器内测试按键时播放的声音，可分别控制
+down（按下）与 up（抬起）。 【关联文件】 - ../types.ts : 类型定义 - ../../Keytone_album.vue : 父组件（提供 Context） -
+../dialogs/EveryKeyEffectDialog.vue : 全键声效对话框 - ../dialogs/SingleKeyEffectDialog.vue : 单键声效对话框
+【当前状态】 ✅ Step4 已从父组件迁移到本组件，父组件以 `
+<StepLinkageEffects />
+` 替换原有模板，实现“父组件持有状态 + 子组件承载 UI”。
 ============================================================================ -->
 
 <template>
@@ -65,80 +67,93 @@ down（按下）和 up（抬起）的开关。 【关联文件】 - ../types.ts 
     :name="4"
     :title="ctx.$t('KeyToneAlbum.linkageEffects.title')"
     icon="settings"
-    :done="hasAnyEffect"
-    :disable="ctx.step.value === 99 && !hasAnyEffect"
+    :done="!isDefaultState"
+    :disable="ctx.step.value === 99 && isDefaultState"
     :header-nav="false"
     @click="handleStepClick"
   >
-    <!-- 步骤说明 -->
     <div :class="['mb-3', ctx.step_introduce_fontSize.value]">
       {{ ctx.$t('KeyToneAlbum.linkageEffects.description') }}
-      <q-icon name="info" color="primary">
-        <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-          <div>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltip.linkageExplain') }}</div>
-          <div>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltip.priorityExplain') }}</div>
+      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+        <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
+          <span>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltips.description') }}</span>
         </q-tooltip>
       </q-icon>
     </div>
 
-    <!-- 联动声效的业务逻辑 -->
-    <div>
-      <!-- 内嵌测试音开关 -->
-      <div class="mb-4">
-        <div class="text-sm text-gray-600 mb-2">
-          {{ ctx.$t('KeyToneAlbum.linkageEffects.embeddedTestSound') }}
-          <q-icon name="info" color="primary">
-            <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-              {{ ctx.$t('KeyToneAlbum.linkageEffects.tooltip.embeddedTestSound') }}
-            </q-tooltip>
-          </q-icon>
-        </div>
-        <div class="flex gap-4">
-          <q-toggle
-            v-model="ctx.isEnableEmbeddedTestSound.down"
-            :label="ctx.$t('KeyToneAlbum.linkageEffects.downSound')"
-          />
-          <q-toggle v-model="ctx.isEnableEmbeddedTestSound.up" :label="ctx.$t('KeyToneAlbum.linkageEffects.upSound')" />
-        </div>
-      </div>
+    <div :class="['flex items-center m-t-2 w-[130%]']">
+      <span class="text-gray-500 mr-0.7">•</span>
+      <span class="text-nowrap">
+        {{ ctx.$t('KeyToneAlbum.linkageEffects.enableTestSound') }}:
+        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+          <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+            <span>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltips.testSound') }}</span>
+          </q-tooltip>
+        </q-icon>
+      </span>
+    </div>
+    <div
+      :class="[
+        'flex items-center ml-3',
+        setting_store.languageDefault === 'pt' || setting_store.languageDefault === 'pt-BR'
+          ? 'flex-nowrap text-nowrap'
+          : '',
+      ]"
+    >
+      <span class="text-gray-500 mr-1.5">•</span>
+      <q-toggle
+        v-model="ctx.isEnableEmbeddedTestSound.down"
+        color="primary"
+        :label="ctx.$t('KeyToneAlbum.linkageEffects.downTestSound')"
+        dense
+      />
+    </div>
+    <div :class="['flex items-center ml-3', setting_store.languageDefault === 'fr' ? 'flex-nowrap text-nowrap' : '']">
+      <span class="text-gray-500 mr-1.5">•</span>
+      <q-toggle
+        v-model="ctx.isEnableEmbeddedTestSound.up"
+        color="primary"
+        :label="ctx.$t('KeyToneAlbum.linkageEffects.upTestSound')"
+        dense
+      />
+    </div>
 
-      <!-- 全键声效设置 -->
-      <div class="mb-3">
-        <q-btn
-          :class="['bg-zinc-300']"
-          :label="ctx.$t('KeyToneAlbum.linkageEffects.everyKeyEffect')"
-          @click="ctx.showEveryKeyEffectDialog.value = !ctx.showEveryKeyEffectDialog.value"
-        />
-
-        <!-- TODO: 全键声效对话框 - 待抽离为独立组件 dialogs/EveryKeyEffectDialog.vue -->
-      </div>
-
-      <div :class="['p-2 text-zinc-600']">{{ ctx.$t('KeyToneAlbum.or') }}</div>
-
-      <!-- 单键声效设置 -->
+    <q-stepper-navigation>
       <div>
         <q-btn
           :class="['bg-zinc-300']"
-          :label="ctx.$t('KeyToneAlbum.linkageEffects.singleKeyEffect')"
-          @click="ctx.showSingleKeyEffectDialog.value = !ctx.showSingleKeyEffectDialog.value"
-        />
-
-        <!-- TODO: 单键声效对话框 - 待抽离为独立组件 dialogs/SingleKeyEffectDialog.vue -->
+          :label="ctx.$t('KeyToneAlbum.linkageEffects.globalSettings')"
+          @click="() => (ctx.showEveryKeyEffectDialog.value = true)"
+        >
+        </q-btn>
+        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+          <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+            <span>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltips.globalPriority') }}</span>
+          </q-tooltip>
+        </q-icon>
+        <!-- 全键声效设置对话框（独立组件，内部通过 inject 获取 Context） -->
+        <EveryKeyEffectDialog />
       </div>
-
-      <!-- 已配置的单键声效列表（如果有） -->
-      <div v-if="ctx.keysWithSoundEffect.value.size > 0" class="mt-4">
-        <div class="text-sm text-gray-600 mb-2">
-          {{ ctx.$t('KeyToneAlbum.linkageEffects.configuredKeys') }}
-          ({{ ctx.keysWithSoundEffect.value.size }})
-        </div>
-        <!-- 显示已配置的按键列表 - 可点击编辑 -->
+      <div :class="['p-2 text-zinc-600']">{{ ctx.$t('KeyToneAlbum.or') }}</div>
+      <div>
+        <q-btn
+          :class="['bg-zinc-300']"
+          :label="ctx.$t('KeyToneAlbum.linkageEffects.singleKeySettings')"
+          @click="() => (ctx.showSingleKeyEffectDialog.value = true)"
+        >
+        </q-btn>
+        <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
+          <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
+            <span>{{ ctx.$t('KeyToneAlbum.linkageEffects.tooltips.singleKeyPriority') }}</span>
+          </q-tooltip>
+        </q-icon>
+        <!-- 单键声效设置对话框（独立组件，内部通过 inject 获取 Context） -->
+        <SingleKeyEffectDialog />
       </div>
-    </div>
+    </q-stepper-navigation>
 
-    <!-- 导航按钮 -->
     <q-stepper-navigation>
-      <q-btn color="primary" :label="ctx.$t('KeyToneAlbum.finish')" @click="handleFinish" />
+      <q-btn @click="ctx.step.value = 5" color="primary" :label="ctx.$t('KeyToneAlbum.continue')" />
       <q-btn flat @click="ctx.step.value = 3" color="primary" :label="ctx.$t('KeyToneAlbum.back')" class="q-ml-sm" />
     </q-stepper-navigation>
   </q-step>
@@ -152,11 +167,7 @@ down（按下）和 up（抬起）的开关。 【关联文件】 - ../types.ts 
  * - 只负责 UI 渲染和用户交互
  * - 所有状态和业务逻辑通过 inject 从父组件获取
  * - 不持有任何本地状态（除了纯 UI 状态）
- *
- * 【完成条件】
- * 这是最后一个步骤，用户可以：
- * 1. 点击"完成"按钮结束编辑
- * 2. 或继续返回修改之前的步骤
+ * - 作为 Step4 的 UI 承载：包含“内嵌测试音开关 + 全键/单键对话框入口 + Continue/Back 导航”
  *
  * 【内嵌测试音】
  * 控制在编辑器内测试按键时是否播放声音：
@@ -166,26 +177,33 @@ down（按下）和 up（抬起）的开关。 【关联文件】 - ../types.ts 
  */
 
 import { inject, computed } from 'vue';
+import { useSettingStore } from 'src/stores/setting-store';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
+import EveryKeyEffectDialog from '../dialogs/EveryKeyEffectDialog.vue';
+import SingleKeyEffectDialog from '../dialogs/SingleKeyEffectDialog.vue';
 
 // ============================================================================
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 
+const setting_store = useSettingStore();
+
 // ============================================================================
 // 计算属性
 // ============================================================================
-
 /**
- * 是否已配置任何联动声效
- * 用于判断步骤的 done 状态
+ * 是否处于“默认/未配置”状态
+ * - 该逻辑必须与父组件原 Step4 模板保持一致（用于 done/disable）
  */
-const hasAnyEffect = computed(() => {
-  // 检查全键声效或单键声效是否已配置
-  const hasUnified = ctx.keyDownUnifiedSoundEffectSelect?.value || ctx.keyUpUnifiedSoundEffectSelect?.value;
-  const hasSingleKey = ctx.keysWithSoundEffect.value.size > 0;
-  return hasUnified || hasSingleKey;
+const isDefaultState = computed(() => {
+  return (
+    ctx.isEnableEmbeddedTestSound.down === true &&
+    ctx.isEnableEmbeddedTestSound.up === true &&
+    !ctx.keyDownUnifiedSoundEffectSelect.value &&
+    !ctx.keyUpUnifiedSoundEffectSelect.value &&
+    ctx.keysWithSoundEffect.value.size === 0
+  );
 });
 
 // ============================================================================
@@ -202,17 +220,7 @@ function handleStepClick(event: MouseEvent) {
   }
 }
 
-/**
- * 处理"完成"按钮点击
- *
- * 【行为说明】
- * 完成编辑后，折叠所有步骤（step = 99）
- * 用户可以随时点击任意步骤的 header 重新展开编辑
- */
-function handleFinish() {
-  // 完成编辑，折叠所有步骤
-  ctx.step.value = 99;
-}
+// Step4 的折叠/展开由 handleStepClick 控制；继续/返回由模板中的 Continue/Back 按钮控制。
 </script>
 
 <style lang="scss" scoped>

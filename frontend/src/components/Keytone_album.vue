@@ -108,133 +108,8 @@
               <q-btn flat @click="step = 4" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step> -->
-          <q-step
-            :name="4"
-            :title="$t('KeyToneAlbum.linkageEffects.title')"
-            icon="settings"
-            :done="
-              !(
-                isEnableEmbeddedTestSound.down === true &&
-                isEnableEmbeddedTestSound.up === true &&
-                !keyDownUnifiedSoundEffectSelect &&
-                !keyUpUnifiedSoundEffectSelect &&
-                keysWithSoundEffect.size === 0
-              )
-            "
-            :disable="
-              step === 99 &&
-              isEnableEmbeddedTestSound.down === true &&
-              isEnableEmbeddedTestSound.up === true &&
-              !keyDownUnifiedSoundEffectSelect &&
-              !keyUpUnifiedSoundEffectSelect &&
-              keysWithSoundEffect.size === 0
-            "
-            :header-nav="false"
-            @click="
-              (event: MouseEvent) => {
-                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
-                if (header) {
-                  step = step === 4 ? 99 : 4;
-                }
-              }
-            "
-          >
-            <div :class="['mb-3', step_introduce_fontSize]">
-              {{ $t('KeyToneAlbum.linkageEffects.description') }}
-              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.description') }}</span>
-                </q-tooltip>
-              </q-icon>
-            </div>
-            <div :class="['flex items-center m-t-2 w-[130%]']">
-              <span class="text-gray-500 mr-0.7">•</span>
-              <span class="text-nowrap">
-                {{ $t('KeyToneAlbum.linkageEffects.enableTestSound') }}:
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.testSound') }}</span>
-                  </q-tooltip>
-                </q-icon>
-              </span>
-            </div>
-            <div
-              :class="[
-                'flex items-center ml-3',
-                setting_store.languageDefault === 'pt' || setting_store.languageDefault === 'pt-BR'
-                  ? 'flex-nowrap text-nowrap'
-                  : '',
-              ]"
-            >
-              <span class="text-gray-500 mr-1.5">•</span>
-              <q-toggle
-                v-model="isEnableEmbeddedTestSound.down"
-                color="primary"
-                :label="$t('KeyToneAlbum.linkageEffects.downTestSound')"
-                dense
-              />
-            </div>
-            <div
-              :class="[
-                'flex items-center ml-3',
-                setting_store.languageDefault === 'fr' ? 'flex-nowrap text-nowrap' : '',
-              ]"
-            >
-              <span class="text-gray-500 mr-1.5">•</span>
-              <q-toggle
-                v-model="isEnableEmbeddedTestSound.up"
-                color="primary"
-                :label="$t('KeyToneAlbum.linkageEffects.upTestSound')"
-                dense
-              />
-            </div>
-            <q-stepper-navigation>
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.linkageEffects.globalSettings')"
-                  @click="
-                    () => {
-                      showEveryKeyEffectDialog = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.globalPriority') }}</span>
-                  </q-tooltip>
-                </q-icon>
-                <!-- 全键声效设置对话框（已拆分为独立组件） -->
-                <EveryKeyEffectDialog />
-              </div>
-              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.linkageEffects.singleKeySettings')"
-                  @click="
-                    () => {
-                      showSingleKeyEffectDialog = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.singleKeyPriority') }}</span>
-                  </q-tooltip>
-                </q-icon>
-                <!-- 单键声效设置对话框（已拆分为独立组件） -->
-                <SingleKeyEffectDialog />
-
-                              </div>
-            </q-stepper-navigation>
-            <q-stepper-navigation>
-              <q-btn @click="step = 5" color="primary" :label="$t('KeyToneAlbum.continue')" />
-              <q-btn flat @click="step = 3" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
-            </q-stepper-navigation>
-          </q-step>
+          <!-- Step 4: 联动声效 (已拆分为独立组件) -->
+          <StepLinkageEffects />
         </q-stepper>
       </div>
     </q-scroll-area>
@@ -292,8 +167,6 @@ import StepLoadAudioFiles from './keytone-album/steps/StepLoadAudioFiles.vue';
 import StepDefineSounds from './keytone-album/steps/StepDefineSounds.vue';
 import StepCraftKeySounds from './keytone-album/steps/StepCraftKeySounds.vue';
 import StepLinkageEffects from './keytone-album/steps/StepLinkageEffects.vue';
-import EveryKeyEffectDialog from './keytone-album/dialogs/EveryKeyEffectDialog.vue';
-import SingleKeyEffectDialog from './keytone-album/dialogs/SingleKeyEffectDialog.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();

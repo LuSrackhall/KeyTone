@@ -85,7 +85,7 @@ frontend/src/components/
     │   ├── StepLoadAudioFiles.vue     # Step 1: 加载音频源文件 ✅ 已集成
     │   ├── StepDefineSounds.vue       # Step 2: 定义声音 ✅ 已集成
     │   ├── StepCraftKeySounds.vue     # Step 3: 制作按键音 ✅ 已集成
-    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 ✅ 框架完成（保留在父组件）
+    │   └── StepLinkageEffects.vue     # Step 4: 联动声效 ✅ 已集成
     │   # 职责：只负责 UI 渲染，通过 inject 获取状态
     │
     ├── dialogs/                   # Dialog 子组件目录
@@ -264,7 +264,7 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 ## Risks / Trade-offs
 
 - **风险：副作用触发时机变化**（watch、debounce、SSE listener）
-  - 缓解：保留在父组件；拆分仅移动模板与事件绑定。
+  - 缓解：副作用与数据写回仍保留在父组件；步骤拆分仅迁移模板与交互入口，避免触发时机漂移。
 - **风险：Dialog 的 v-model 绑定与关闭时机**
   - 缓解：每个 dialog 单独抽取时保持 `v-model` 字段与事件处理不变。
 - **风险：scoped style / :deep 选择器作用域变化**
@@ -314,7 +314,7 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
     │ - StepLoadAudioFiles.vue (Step 1)        │          │
     │ - StepDefineSounds.vue (Step 2)          │          │
     │ - StepCraftKeySounds.vue (Step 3)        │          │
-    │ - StepLinkageEffects.vue (Step 4, 框架)  │          │
+    │ - StepLinkageEffects.vue (Step 4)        │          │
     └────────────────────┬────────────────────┘          │
                          │ 嵌套/打开                      │
                          ▼                               │
@@ -344,7 +344,7 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 | 列表排序不对          | `keytoneAlbumMappers.ts` 的 naturalSort 调用     | 父组件的 `naturalSort` 实现          |
 | 全键/单键联动映射不对 | 父组件的 `convertValue` + soundList/keySoundList | `useKeytoneAlbumSseSync.ts`          |
 | 依赖警告不显示或误报  | `useKeytoneAlbumDependencyIssues.ts`             | `src/utils/dependencyValidator.ts`   |
-| Dialog 打开/关闭异常  | 对应 `dialogs/*.vue` + 父组件的 v-model 状态     | —                                    |
+| Dialog 打开/关闭异常  | 对应 `dialogs/*.vue` + `StepLinkageEffects.vue`  | 父组件的 v-model 状态（Context 字段） |
 | Step 折叠/展开异常    | `Keytone_album.vue` 的 step 状态 + q-stepper     | —                                    |
 
 ### 4. 文件职责一句话总结

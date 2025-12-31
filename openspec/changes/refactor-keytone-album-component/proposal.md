@@ -154,7 +154,7 @@ frontend/src/components/
 
 ## 已落地实现（截至 2025-12-31）
 
-- Step1/2/3 已替换为独立组件；Step4 仍保留在父组件（降低迁移风险）。
+- Step1/2/3/4 已替换为独立组件；父组件作为薄壳持有状态并 provide Context。
 - Dialog 抽离：
   - `EveryKeyEffectDialog`（全键声效）已抽离并集成。
   - `SingleKeyEffectDialog`（单键声效）已抽离并集成（内部拆为“添加/编辑”两个子对话框组件）。

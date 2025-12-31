@@ -95,3 +95,13 @@ Normative: `initData()`、`watch(audioFiles)` 与 SSE 更新 三条路径 SHALL 
 - **GIVEN** 用户加载键音包配置（初始化）或接收 SSE 更新
 - **WHEN** 配置数据被映射为 `soundFileList` / `soundList` / `keysWithSoundEffect`
 - **THEN** 三条路径的映射结果 SHALL 一致（通过调用同一纯函数实现）
+
+### Requirement: Step4（联动声效）以子组件承载 UI
+
+Normative: 联动声效步骤（Step4）的 UI 模板 SHOULD 从父组件中拆出到 `steps/StepLinkageEffects.vue`，并通过 inject 使用父组件 provide 的 Context，以降低父组件模板复杂度且保持行为不变。
+
+#### Scenario: Step4 的 done/disable 与对话框打开行为保持一致
+
+- **GIVEN** 用户处于 Step4（联动声效）
+- **WHEN** 用户切换内嵌测试音开关，或点击“全局设置/单键设置”打开对应对话框
+- **THEN** Step4 的 done/disable 逻辑、以及对话框打开/关闭状态字段 SHALL 与重构前一致
