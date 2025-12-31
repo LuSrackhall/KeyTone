@@ -21,8 +21,12 @@
 ## 3. 工具链：ktalbum-tools 适配
 
 - [x] `tools/ktalbum-tools/utils/header.go`：增加 v1/v2 key 与注入点、提供 `GetEncryptKeyByVersion`
-- [x] `tools/ktalbum-tools/commands/extract.go`：按版本解密 + 校验失败回退 v1
-- [x] `tools/ktalbum-tools/commands/info.go`：按版本解密 + 校验失败回退 v1
+- [x] `tools/ktalbum-tools/utils/header.go`：增加 `GetDecryptKeyCandidatesByVersion`（注入→默认双候选）以兼容开源/私有两类产物
+- [x] `tools/ktalbum-tools/commands/extract.go`：按版本循环尝试候选密钥 + 校验失败回退 v1 候选
+- [x] `tools/ktalbum-tools/commands/info.go`：按版本循环尝试候选密钥 + 校验失败回退 v1 候选
+- [x] `tools/ktalbum-tools/setup_build_env.sh`：复用 sdk 私钥文件生成注入用 `EXTRA_LDFLAGS`
+- [x] `tools/ktalbum-tools/build.sh`：自动应用 `EXTRA_LDFLAGS`（一键构建时支持注入）
+- [x] `tools/ktalbum-tools/private_keys.template.env`：可选的独立私钥模板（不提交 private_keys.env）
 
 ## 4. 构建入口与模板
 
@@ -32,6 +36,7 @@
 ## 5. 文档与规格同步
 
 - [x] `BUILD_COMPATIBILITY.md`：补充 Build-Time Injected Keys
+- [x] `BUILD_COMPATIBILITY.zh-CN.md`：同步补充 Build-Time Injected Keys
 - [x] 新增能力规格：`openspec/specs/encrypted-outputs/spec.md`
 - [x] 变更增量规格：`openspec/changes/update-build-injected-symmetric-keys/specs/encrypted-outputs/spec.md`
 

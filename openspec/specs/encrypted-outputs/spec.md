@@ -33,6 +33,8 @@ Normative: The system SHALL support overriding selected symmetric keys/secrets a
 
 Normative: The system SHALL encrypt the `.ktalbum` zip body using a versioned XOR key; it MUST store the key version in the file header and MUST select the decryption key by header version, with a v1 fallback on checksum mismatch.
 
+Note: A local debug tool (ktalbum-tools) MAY additionally try both the injected key and the default open-source key for the same version to improve inspection compatibility. This does not change the main application's compatibility boundary.
+
 #### Scenario: 导出写入 v2
 
 - **GIVEN** 用户导出专辑

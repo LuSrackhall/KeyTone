@@ -60,6 +60,19 @@
 - `sdk/private_keys.template.env` 增加对应 KEY_* 项
 - `sdk/setup_build_env.sh` 增加 `KEYS_TO_PROCESS` 映射，使本地私有构建可以自动生成 `EXTRA_LDFLAGS`
 
+### ktalbum-tools（本地调试工具）
+
+ktalbum-tools 的目标是便于本地查看/调试 `.ktalbum` 文件，因此它需要在“一个二进制”中尽量兼容两类产物：
+
+- 开源默认密钥产物
+- 私有构建注入密钥产物
+
+实现方式：
+
+- 构建注入脚本：`tools/ktalbum-tools/setup_build_env.sh`（默认复用 `sdk/private_keys.env`，也可使用本地 `tools/ktalbum-tools/private_keys.env`）
+- 一键构建：`tools/ktalbum-tools/build.sh` 会自动合并并应用 `EXTRA_LDFLAGS`
+- 运行时解密：按顺序尝试“注入密钥 → 默认密钥”，并在校验失败时按 SDK 策略回退尝试 v1
+
 ## Compatibility Notes
 
 - 未注入：行为与当前开源版本完全一致

@@ -51,6 +51,20 @@ func getPlainEncryptKey(value string, defaultValue string) string {
 	return deobfuscateString(value)
 }
 
+func getDecryptKeyCandidates(value string, defaultValue string) []string {
+	// 未注入：仅返回默认值
+	if value == defaultValue {
+		return []string{defaultValue}
+	}
+
+	// 已注入：优先返回注入后的明文密钥，并追加默认值作为“兼容开源产物”的回退
+	primary := getPlainEncryptKey(value, defaultValue)
+	if primary == defaultValue {
+		return []string{defaultValue}
+	}
+	return []string{primary, defaultValue}
+}
+
 // GetEncryptKeyByVersion 根据文件头版本号返回对应的明文密钥。
 func GetEncryptKeyByVersion(version uint8) string {
 	switch version {
@@ -61,6 +75,21 @@ func GetEncryptKeyByVersion(version uint8) string {
 	default:
 		// 未知版本：保守回退到 v2（与 SDK 保持一致的“当前版本”语义）
 		return getPlainEncryptKey(KeytoneEncryptKeyV2, DefaultKeytoneEncryptKeyV2)
+	}
+}
+
+// GetDecryptKeyCandidatesByVersion 返回解密候选密钥列表。
+// 设计目标：
+// - 开源构建：仅使用默认密钥
+// - 私有密钥构建（注入后）：优先使用注入密钥，同时回退尝试默认密钥，保证工具可同时解密两类产物
+func GetDecryptKeyCandidatesByVersion(version uint8) []string {
+	switch version {
+	case 1:
+		return getDecryptKeyCandidates(KeytoneEncryptKeyV1, DefaultKeytoneEncryptKeyV1)
+	case 2:
+		return getDecryptKeyCandidates(KeytoneEncryptKeyV2, DefaultKeytoneEncryptKeyV2)
+	default:
+		return getDecryptKeyCandidates(KeytoneEncryptKeyV2, DefaultKeytoneEncryptKeyV2)
 	}
 }
 

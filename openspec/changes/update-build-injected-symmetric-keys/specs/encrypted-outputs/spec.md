@@ -22,6 +22,8 @@ Normative: The system SHALL keep default symmetric keys/secrets hardcoded in sou
 
 Normative: The system SHALL encrypt `.ktalbum` file body using the current version key (v2), store `header.Version=2`, and SHALL select decryption key by `header.Version` with a v1 fallback on checksum mismatch.
 
+Note: For local debugging, ktalbum-tools MAY additionally attempt both injected and default open-source keys for the same version (in that order) before declaring failure. This is tooling behavior and does not change the core app compatibility boundary.
+
 #### Scenario: 导出使用 v2
 
 - **GIVEN** 用户导出专辑

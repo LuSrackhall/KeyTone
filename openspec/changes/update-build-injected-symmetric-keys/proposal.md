@@ -15,6 +15,8 @@
   - 专辑配置加密派生 secret（FixedSecret）
 - 统一注入方式：注入值为 XOR 混淆后的 hex 字符串；运行时自动解混淆。
 - 更新构建脚本与模板：`sdk/setup_build_env.sh` 与 `sdk/private_keys.template.env` 增加新 key 项。
+- 为本地调试工具 ktalbum-tools 补齐注入脚本：`tools/ktalbum-tools/setup_build_env.sh`（默认复用 `sdk/private_keys.env`）。
+- ktalbum-tools 构建脚本会自动应用 `EXTRA_LDFLAGS`：`tools/ktalbum-tools/build.sh`。
 - 更新文档：`BUILD_COMPATIBILITY.md` 补充“Build-Time Injected Keys”列表。
 
 ## Non-Goals
@@ -33,7 +35,11 @@
   - `sdk/private_keys.template.env`
   - `tools/ktalbum-tools/utils/header.go`
   - `tools/ktalbum-tools/commands/*.go`
+  - `tools/ktalbum-tools/setup_build_env.sh`
+  - `tools/ktalbum-tools/build.sh`
+  - `tools/ktalbum-tools/private_keys.template.env`
   - `BUILD_COMPATIBILITY.md`
+  - `BUILD_COMPATIBILITY.zh-CN.md`
 
 - Affected specs:
   - New capability: `openspec/specs/encrypted-outputs/spec.md`
@@ -50,3 +56,5 @@
 | 专辑配置派生 secret     | `LuSrackhall_KeyTone_2024_Signature_66688868686688`                          | `KeyTone/audioPackage/enc.FixedSecret`                 | 派生 AES key：`SHA256(secret + last6(sha1(albumUUID)))` |
 
 注：工具链 `tools/ktalbum-tools` 也提供同等注入点（模块路径不同）。
+
+另外：ktalbum-tools 为本地查看/调试用途，解密 `.ktalbum` 时会按顺序尝试“注入密钥 → 开源默认密钥”，并在校验失败时回退尝试 v1，以便同一构建可同时兼容开源与私有两类产物。
