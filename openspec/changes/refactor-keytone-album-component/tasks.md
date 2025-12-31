@@ -77,7 +77,7 @@
 - [x] 3.4 将"编辑声音"对话框抽离 → `dialogs/EditSoundDialog.vue`
 - [x] 3.5 将"创建按键音"对话框抽离 → `dialogs/CreateKeySoundDialog.vue`
 - [x] 3.6 将"编辑按键音"对话框抽离 → `dialogs/EditKeySoundDialog.vue`
-- [ ] 3.7 将"全键声效"对话框抽离 → `dialogs/EveryKeyEffectDialog.vue` (可选)
+- [x] 3.7 将"全键声效"对话框抽离 → `dialogs/EveryKeyEffectDialog.vue` ✅ 已集成
 - [ ] 3.8 将"单键声效"对话框抽离 → `dialogs/SingleKeyEffectDialog.vue` (可选)
 
 ## Phase 4: 逻辑域 composables（可选、低风险逐步）
@@ -113,19 +113,21 @@
 | `keytone-album/dialogs/EditSoundDialog.vue`        | 编辑声音对话框                 | ✅    |
 | `keytone-album/dialogs/CreateKeySoundDialog.vue`   | 创建按键音对话框               | ✅    |
 | `keytone-album/dialogs/EditKeySoundDialog.vue`     | 编辑按键音对话框               | ✅    |
+| `keytone-album/dialogs/EveryKeyEffectDialog.vue`   | 全键声效对话框                 | ✅    |
 
 ---
 
 ## 下一步行动
 
 **当前状态**: 
-- ✅ Step1/2/3 已替换为独立组件（父组件减少约 1750 行）
-- ✅ Step4 保留原始实现（复杂度高，包含虚拟键盘，约 1500 行）
-- ✅ 6 个核心 Dialog 组件已创建并集成
+- ✅ Step1/2/3 已替换为独立组件
+- ✅ Step4 保留在父组件（复杂度高，包含虚拟键盘）
+- ✅ 7 个 Dialog 组件已创建并集成（包括新增的 EveryKeyEffectDialog）
+- ✅ 父组件从 ~3660 行减少到 ~3390 行
 - ✅ 构建验证通过（无错误，仅有 warnings）
 - ✅ 代码注释规范已添加到 design.md
 
-**推荐下一步**: 手动功能回归测试
+**推荐下一步**: 继续拆分单键声效对话框或进行回归测试
 
 按照 Validation 最小集进行测试：
 1. Step1：上传/管理音频源文件
@@ -141,15 +143,16 @@
 
 ## 变更历史
 
-| 日期       | 变更内容                                       |
-| ---------- | ---------------------------------------------- |
-| 2024-12-31 | 添加代码注释规范到 design.md                   |
-| 2024-12-31 | 修复 EditKeySoundDialog 子对话框缺失问题       |
-| 2024-12-31 | 补充完整注释到所有 Dialog 组件                 |
-| 2024-12-30 | **模板替换完成**: Step1/2/3 替换为独立组件     |
-| 2024-12-30 | 创建 4 个 Dialog 组件（声音/按键音的创建编辑） |
-| 2024-12-30 | 创建 Step2/3/4 组件框架，构建验证通过          |
-| 2024-12-30 | 添加 provide 到父组件 `Keytone_album.vue`      |
-| 2024-12-30 | 创建 Step1 组件和两个 Dialog 组件              |
-| 2024-12-30 | 创建目录结构和基础文件                         |
+| 日期       | 变更内容                                            |
+| ---------- | --------------------------------------------------- |
+| 2024-12-31 | 创建并集成 EveryKeyEffectDialog（全键声效对话框）   |
+| 2024-12-31 | 添加代码注释规范到 design.md                        |
+| 2024-12-31 | 修复 EditKeySoundDialog 子对话框缺失问题            |
+| 2024-12-31 | 补充完整注释到所有 Dialog 组件                      |
+| 2024-12-30 | **模板替换完成**: Step1/2/3 替换为独立组件          |
+| 2024-12-30 | 创建 4 个 Dialog 组件（声音/按键音的创建编辑）      |
+| 2024-12-30 | 创建 Step2/3/4 组件框架，构建验证通过               |
+| 2024-12-30 | 添加 provide 到父组件 `Keytone_album.vue`           |
+| 2024-12-30 | 创建 Step1 组件和两个 Dialog 组件                   |
+| 2024-12-30 | 创建目录结构和基础文件                              |
 | 2024-12-30 | 初始化任务清单                                 |
