@@ -75,3 +75,13 @@ Normative: 为降低单文件复杂度，键音专辑编辑器前端实现 SHALL
 - **GIVEN** 其他页面/组件可能引用 `frontend/src/components/Keytone_album.vue`
 - **WHEN** 本次重构落地
 - **THEN** 外部引用 SHALL 继续可用（通过薄壳组件或兼容导出），无需调用方修改行为
+
+### Requirement: 新增拆分文件具备可读性说明
+
+Normative: 本次重构新增的 step/dialog/composable/mapper 文件 SHOULD 在文件头部包含说明注释，用于降低 review 与排错成本。
+
+#### Scenario: 排查行为回归时的定位成本可控
+
+- **GIVEN** 用户在重构后遇到行为回归或数据不同步
+- **WHEN** 开发者打开新增的拆分文件
+- **THEN** 文件头部注释 SHOULD 明确：文件职责边界、关联的调用方文件、关键行为不变约束、以及首选的 Debug 切入点

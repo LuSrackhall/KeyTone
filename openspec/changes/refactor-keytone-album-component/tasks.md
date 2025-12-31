@@ -82,9 +82,10 @@
 
 ## Phase 4: 逻辑域 composables（可选、低风险逐步）
 
-- [ ] 4.1 抽离 SSE 映射逻辑到 `composables/useKeytoneAlbumSseSync.ts`
-- [ ] 4.2 抽离列表映射/自然排序逻辑
-- [ ] 4.3 抽离依赖校验逻辑
+- [x] 4.1 抽离 SSE 映射逻辑到 `composables/useKeytoneAlbumSseSync.ts`
+- [x] 4.2 抽离列表映射/自然排序工具（供 SSE/初始化复用）
+- [x] 4.3 抽离依赖校验逻辑到 `composables/useKeytoneAlbumDependencyIssues.ts`
+- [x] 4.4 为新增 composables/mappers 文件补齐文件头说明注释（用途/边界/关联文件/调试入口）
 
 ## Phase 5: 清理与验证 ✅
 
@@ -118,12 +119,15 @@
 | `keytone-album/dialogs/SingleKeyEffectDialog.vue`  | 单键声效对话框（主对话框）     | ✅    |
 | `keytone-album/dialogs/AddSingleKeyEffectSubDialog.vue`  | 单键声效：添加子对话框    | ✅    |
 | `keytone-album/dialogs/EditSingleKeyEffectSubDialog.vue` | 单键声效：编辑子对话框    | ✅    |
+| `keytone-album/composables/useKeytoneAlbumSseSync.ts`    | Phase4：SSE 映射抽离      | ✅    |
+| `keytone-album/composables/keytoneAlbumMappers.ts`       | Phase4：映射/排序工具     | ✅    |
+| `keytone-album/composables/useKeytoneAlbumDependencyIssues.ts` | Phase4：依赖校验抽离 | ✅    |
 
 ---
 
 ## 下一步行动
 
-**当前状态**: 
+**当前状态**:
 - ✅ Step1/2/3 已替换为独立组件
 - ✅ Step4 保留在父组件（复杂度高，包含虚拟键盘）
 - ✅ 单键/全键声效对话框已抽离并集成（SingleKeyEffectDialog/EveryKeyEffectDialog）

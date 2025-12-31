@@ -17,6 +17,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
+<!--
+  File: Keytone_album.vue
+
+  组件定位（Role）
+  - 这是“键音专辑编辑器”的父组件/薄壳（stateful shell）。
+  - 目标：在不改变任何用户可感知行为的前提下，把 UI 模板与可复用对话框逐步拆分到 `keytone-album/*`。
+
+  当前架构（How it is structured today）
+  - Steps：Step1/2/3 已拆到 `keytone-album/steps/*`，本文件继续持有核心状态并通过 provide 注入给子组件。
+  - Dialogs：全键/单键声效对话框已拆到 `keytone-album/dialogs/*`，本文件仅负责打开/关闭状态字段。
+  - Phase 4 composables（纯逻辑）：
+    - SSE 映射：`keytone-album/composables/useKeytoneAlbumSseSync.ts`
+    - 依赖校验：`keytone-album/composables/useKeytoneAlbumDependencyIssues.ts`
+    - 映射/排序工具：`keytone-album/composables/keytoneAlbumMappers.ts`
+
+  Debug 快速定位（Where to look when things break）
+  - SSE 不更新：检查 app_store.eventSource 是否正常、以及 useKeytoneAlbumSseSync 的 attach/detach。
+  - 列表顺序不对：检查 naturalSort + keytoneAlbumMappers 输出。
+  - 单键/全键联动映射不对：检查 convertValue 如何从 soundList/keySoundList/soundFileList 中 find。
+  - 依赖警告不对：检查 useKeytoneAlbumDependencyIssues 是否正确还原 keySound 的字符串依赖。
+
+  注意（Behavior parity）
+  - 本次重构的硬约束是“行为保持不变”。因此即使看到一些历史实现的细节（例如 debounce.cancel 未调用），
+    在没有明确验证收益前也不应擅自“修正”，避免引入时序回归。
+-->
+
 <template>
   <q-page :style="{ '--i18n_fontSize': i18n_fontSize }">
     <q-scroll-area :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
@@ -235,15 +261,10 @@ import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
 import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-  createDependencyValidator,
-  hasItemDependencyIssues,
-  type DependencyIssue,
-  type AudioFile,
-  type Sound,
-  type KeySound
-} from 'src/utils/dependencyValidator';
 import DependencyWarning from 'src/components/DependencyWarning.vue';
+
+import { useKeytoneAlbumSseSync } from './keytone-album/composables/useKeytoneAlbumSseSync';
+import { useKeytoneAlbumDependencyIssues } from './keytone-album/composables/useKeytoneAlbumDependencyIssues';
 
 // ============================================================================
 // 导入 Context 类型和注入 Key
@@ -1440,85 +1461,12 @@ watch(
   }
 );
 
-// Dependency validation logic
-const dependencyIssues = ref<DependencyIssue[]>([]);
-
-// Computed property to get all dependency issues
-const allDependencyIssues = computed(() => {
-  const audioFiles = soundFileList.value as AudioFile[];
-  const sounds = soundList.value as Sound[];
-
-  // Create a copy of keySoundList with original string format for validation
-  const keySounds = keySoundList.value.map(keySound => {
-    // Create a deep copy to avoid modifying the original
-    const keySoundCopy = JSON.parse(JSON.stringify(keySound));
-
-    // Restore original string format for dependency validation
-    keySoundCopy.keySoundValue.down.value = keySoundCopy.keySoundValue.down.value.map((item: any) => {
-      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
-        return {
-          type: 'sounds',
-          value: item.value.soundKey
-        };
-      }
-      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
-        return {
-          type: 'key_sounds',
-          value: item.value.keySoundKey
-        };
-      }
-      return item;
-    });
-
-    keySoundCopy.keySoundValue.up.value = keySoundCopy.keySoundValue.up.value.map((item: any) => {
-      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
-        return {
-          type: 'sounds',
-          value: item.value.soundKey
-        };
-      }
-      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
-        return {
-          type: 'key_sounds',
-          value: item.value.keySoundKey
-        };
-      }
-      return item;
-    });
-
-    return keySoundCopy;
-  }) as KeySound[];
-
-  if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
-    return [];
-  }
-
-  const validator = createDependencyValidator(audioFiles, sounds, keySounds);
-
-  // Only validate actual saved dependencies, not current UI selections
-  // The global binding and single key bindings should come from saved album data, not current UI state
-
-  // For now, we don't include global binding validation since it represents current UI selections
-  // TODO: If there are actual saved global bindings, they should be included here
-  const globalBinding = undefined;
-
-  // Convert keysWithSoundEffect Map to the format expected by validator
-  const singleKeyBindings = keysWithSoundEffect.value.size > 0
-    ? keysWithSoundEffect.value
-    : undefined;
-
-  return validator.validateAllDependencies(globalBinding, singleKeyBindings);
+const { dependencyIssues, allDependencyIssues, checkItemDependencyIssues } = useKeytoneAlbumDependencyIssues({
+  soundFileList,
+  soundList,
+  keySoundList,
+  keysWithSoundEffect,
 });
-
-// Update dependency issues when data changes
-watch([soundFileList, soundList, keySoundList, keysWithSoundEffect], () => {
-  dependencyIssues.value = allDependencyIssues.value;
-}, { deep: true });
-
-// Helper function to check if an item has dependency issues
-const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sounds', itemId: string) => {
-  return hasItemDependencyIssues(itemType, itemId, dependencyIssues.value);
-};
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
     return {
@@ -1630,8 +1578,7 @@ watch(keyUpSingleKeySoundEffectSelect_edit, (newVal, oldVal) => {
   }
 });
 
-// 存储事件监听器的引用，以便后续移除
-let messageAudioPackageListener: (e: MessageEvent) => void;
+let detachMessageAudioPackageListener: undefined | (() => void);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
@@ -1839,112 +1786,20 @@ onBeforeMount(async () => {
   );
 
   // 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-  function sseDataToKeyTonePkgData(keyTonePkgData: any) {
-    // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
-    if (keyTonePkgData.package_name !== undefined) {
-      pkgNameDelayed.cancel();
-      pkgNameDelayed(keyTonePkgData);
-    }
-
-    // 1. 初步映射配置文件中的audio_files到audioFiles。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    //    使用audioFiles作为中间值, 而不是一步到位的映射, 是为代码的可读性, 后续阅读理解是方便。
-    if (keyTonePkgData.audio_files !== undefined) {
-      // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-      const audioFilesArray = Object.entries(keyTonePkgData.audio_files).map(([key, value]) => ({
-        sha256: key,
-        value: value,
-      }));
-      audioFiles.value = audioFilesArray;
-    } else {
-      // 此处else是为防止最后一项的audio_files为undefined, 而导致的删除最后一项音频源文件后, audioFiles值无法清空, 从而导致无法触发soundFileList的变更, 从而ui界面导致无法删除最后一项音频源文件。
-      audioFiles.value = [];
-    }
-
-    // 映射配置文件中的sounds到ui中的soundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    if (keyTonePkgData.sounds !== undefined) {
-      const sounds = Object.entries(keyTonePkgData.sounds).map(([key, value]) => ({
-        soundKey: key,
-        soundValue: value,
-      }));
-      // ===== 应用自然排序：解决声音列表乱序问题 =====
-      // 基于声音名称或soundKey进行自然排序（EventSource更新时）
-      sounds.sort((a: any, b: any) => {
-        const aName = (a.soundValue?.name as string) || a.soundKey;
-        const bName = (b.soundValue?.name as string) || b.soundKey;
-        return naturalSort(aName, bName);
-      });
-      soundList.value = sounds as Array<{
-        soundKey: string;
-        soundValue: {
-          cut: { start_time: number; end_time: number; volume: number };
-          name: string;
-          source_file_for_sound: { sha256: string; name_id: string; type: string };
-        };
-      }>;
-    } else {
-      soundList.value = [];
-    }
-
-    // 映射配置文件中的key_sounds到ui中的keySoundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    if (keyTonePkgData.key_sounds !== undefined) {
-      const keySounds = Object.entries(keyTonePkgData.key_sounds).map(([key, value]) => ({
-        keySoundKey: key,
-        keySoundValue: value,
-      }));
-      // ===== 应用自然排序：解决键音列表乱序问题 =====
-      // 基于键音名称或keySoundKey进行自然排序
-      keySounds.sort((a: any, b: any) => {
-        const aName = (a.keySoundValue?.name as string) || a.keySoundKey;
-        const bName = (b.keySoundValue?.name as string) || b.keySoundKey;
-        return naturalSort(aName, bName);
-      });
-      keySoundList.value = keySounds;
-    } else {
-      keySoundList.value = [];
-    }
-
-    if (keyTonePkgData.key_tone !== undefined) {
-      isEnableEmbeddedTestSoundDelayed.cancel();
-      isEnableEmbeddedTestSoundDelayed(keyTonePkgData.key_tone.is_enable_embedded_test_sound);
-    }
-
-    if (keyTonePkgData.key_tone?.global !== undefined) {
-      keyDownUnifiedSoundEffectSelect.value = convertValue(
-        keyTonePkgData.key_tone.global.down ? keyTonePkgData.key_tone.global.down : ''
-      );
-      keyUpUnifiedSoundEffectSelect.value = convertValue(
-        keyTonePkgData.key_tone.global.up ? keyTonePkgData.key_tone.global.up : ''
-      );
-    }
-
-    if (keyTonePkgData.key_tone?.single !== undefined) {
-      keysWithSoundEffect.value.clear();
-      Object.entries(keyTonePkgData.key_tone.single).forEach(([dikCode, value]) => {
-        // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
-        if ((value as any)?.down?.value || (value as any)?.up?.value) {
-          keysWithSoundEffect.value.set(dikCode, value);
-        }
-      });
-    }
-  }
-  const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
-    trailing: true,
+  const { attach } = useKeytoneAlbumSseSync({
+    pkgName,
+    audioFiles,
+    soundList,
+    keySoundList,
+    isEnableEmbeddedTestSound,
+    keyDownUnifiedSoundEffectSelect,
+    keyUpUnifiedSoundEffectSelect,
+    keysWithSoundEffect,
+    convertValue,
+    naturalSort,
   });
 
-  // 定义事件监听器
-  messageAudioPackageListener = function (e) {
-    console.debug('后端钩子函数中的值 = ', e.data);
-
-    const data = JSON.parse(e.data);
-
-    if (data.key === 'get_all_value') {
-      debounced_sseDataToSettingStore.cancel;
-      debounced_sseDataToSettingStore(data.value);
-    }
-  };
-
-  // 添加事件监听
-  app_store.eventSource.addEventListener('messageAudioPackage', messageAudioPackageListener, false);
+  detachMessageAudioPackageListener = attach(app_store.eventSource);
 });
 
 // 在退出创建键音包的页面后, 载入 持久化的 用户选择的 键音包。(在 创建 键音包界面 退出时, 重新加载 用户持久化至 设置 文件中的 键音包。)
@@ -1955,10 +1810,7 @@ onUnmounted(() => {
   // // 卸载组件后, 重新载入持久化配置中用户所选的键音包(在新设计的键音专辑页面逻辑中, 不需要此步骤)
   // main_store.LoadSelectedKeyTonePkg();
 
-  // 移除事件监听
-  if (messageAudioPackageListener) {
-    app_store.eventSource.removeEventListener('messageAudioPackage', messageAudioPackageListener);
-  }
+  detachMessageAudioPackageListener?.();
 });
 
 const isMacOS = ref(getMacOSStatus());

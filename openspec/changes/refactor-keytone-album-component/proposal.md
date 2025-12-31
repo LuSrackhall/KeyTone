@@ -32,6 +32,14 @@
 - 不调整 i18n key、不改动后端 SDK API
 - 不做设计重构（仅做“结构重构”）
 
+## 代码可读性约束（Review-friendly）
+
+- 本次重构新增的 step/dialog/composable/mapper 文件 SHOULD 在文件头部提供清晰的说明注释：
+  - 文件作用与边界（做什么/不做什么）
+  - 与哪些文件/状态/事件配合使用
+  - 行为不变的关键约束（避免 review 时误以为可随意“优化时序”）
+  - Debug 定位入口（出问题优先看哪里）
+
 ## 现状要点（用于约束“不能变”）
 
 以下要点在拆分后必须保持一致：
@@ -151,4 +159,8 @@ frontend/src/components/
   - `EveryKeyEffectDialog`（全键声效）已抽离并集成。
   - `SingleKeyEffectDialog`（单键声效）已抽离并集成（内部拆为“添加/编辑”两个子对话框组件）。
 - 清理：已删除父组件中旧的单键声效对话框实现（原先用于对照的 `v-if="false"` 块），避免冗余与模板误改风险。
+- Phase 4（composables）：
+  - SSE 映射监听与数据写入已抽离为 `useKeytoneAlbumSseSync`。
+  - 列表映射/自然排序纯工具已抽离为 `keytoneAlbumMappers`。
+  - 依赖校验逻辑已抽离为 `useKeytoneAlbumDependencyIssues`。
 - 构建验证：`npm -C frontend run build` 通过。

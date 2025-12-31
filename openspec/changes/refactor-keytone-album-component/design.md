@@ -274,6 +274,12 @@ provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 
 - ✅ 已移除父组件中旧的单键声效对话框实现（原先用于对照的 `v-if="false"` 模板块），当前仅保留 `SingleKeyEffectDialog` 组件入口。
 
+## Phase 4（composables）落地情况
+
+- ✅ SSE 映射逻辑已从父组件抽离至 `keytone-album/composables/useKeytoneAlbumSseSync.ts`，父组件仅负责 attach/detach 与状态承载。
+- ✅ 列表映射/自然排序的纯工具已抽离至 `keytone-album/composables/keytoneAlbumMappers.ts`（避免在多个位置重复实现同一映射逻辑）。
+- ✅ 依赖校验 computed/watch 已抽离至 `keytone-album/composables/useKeytoneAlbumDependencyIssues.ts`，父组件继续暴露 `dependencyIssues` 给 UI 使用。
+
 ---
 
 ## 代码注释规范（Code Comment Standards）
@@ -448,6 +454,9 @@ function handleSave(onSuccess?: () => void) {
 - [ ] 样式规则有用途说明
 - [ ] 原有的有效注释未被删除
 - [ ] TODO 注释标明了后续计划
+
+> 补充：Phase 4 新增的 composables/mappers 文件也必须包含“文件头部说明注释”（用途/边界/关联文件/调试入口），
+> 以保证后续 review 与定位问题成本可控。
 
 ### 注释示例参考
 
