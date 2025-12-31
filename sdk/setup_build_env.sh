@@ -40,11 +40,23 @@ OBFUSCATOR_TOOL="../tools/key-obfuscator/main.go"
 # 格式说明：
 #   KEY_NAME  : 在 private_keys.env 文件中的键名 (如 KEY_F)
 #   GO_VAR    : 在 Go 代码中接收注入的变量全路径 (如 KeyTone/signature.KeyToneAuthRequestEncryptionKeyF)
+#
+# 说明：
+# - 推荐 32 字节密钥（AES-256 标准）
+# - 部分“种子/口令”可能不是 32 字节（例如专辑配置派生 secret），混淆工具会给出长度警告但仍可工作
 KEYS_TO_PROCESS=(
     "KEY_F:KeyTone/signature.KeyToneAuthRequestEncryptionKeyF"
     "KEY_K:KeyTone/signature.KeyToneAuthRequestEncryptionKeyK"
     "KEY_Y:KeyTone/signature.KeyToneAuthGrantEncryptionKeyY"
     "KEY_N:KeyTone/signature.KeyToneAuthGrantEncryptionKeyN"
+
+    # 旧有对称加密密钥（本次补齐到构建注入体系）
+    "KEY_A:KeyTone/signature.KeyToneSignatureEncryptionKeyA"
+    "KEY_B:KeyTone/signature.KeyToneSignatureEncryptionKeyB"
+    "KEY_ALBUM_SIGNATURE_FIELD:KeyTone/signature.KeyToneAlbumSignatureEncryptionKey"
+    "KEY_ALBUM_EXPORT_V1:KeyTone/server.KeytoneEncryptKeyV1"
+    "KEY_ALBUM_EXPORT_V2:KeyTone/server.KeytoneEncryptKeyV2"
+    "KEY_ALBUM_CONFIG_SECRET:KeyTone/audioPackage/enc.FixedSecret"
     # 示例：新增密钥时，取消注释并修改下行
     # "KEY_NEW:KeyTone/signature.KeyToneNewKey"
 )

@@ -26,42 +26,60 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-// 密钥常量定义
+// ==============================
+// 签名相关对称密钥变量定义
+// 注意：这些变量不再是 const，而是 var，以便在编译时通过 -ldflags 进行注入
+// 注入的值应为经过 XOR 混淆后的 Hex 字符串（与授权流一致）
+// ==============================
+
+// 定义默认的开源密钥常量，用于运行时比对
+const (
+	DefaultKeyA = "KeyTone2024Signature_KeyA_SecureEncryptionKeyForIDEncryption"
+	DefaultKeyB = "KeyTone2024Signature_KeyB_SuperSecureEncryptionKeyForExportImportOperation"
+)
 
 // KeyToneSignatureEncryptionKeyA 密钥A：用于加密签名ID和生成动态密钥
 // 安全等级：标准
 // 长度: 32字节
-const KeyToneSignatureEncryptionKeyA = "KeyTone2024Signature_KeyA_SecureEncryptionKeyForIDEncryption"
+var KeyToneSignatureEncryptionKeyA = DefaultKeyA
 
 // KeyToneSignatureEncryptionKeyB 密钥B：用于导出/导入加密，安全级别更高
 // 安全等级：高
 // 长度: 32字节
-const KeyToneSignatureEncryptionKeyB = "KeyTone2024Signature_KeyB_SuperSecureEncryptionKeyForExportImportOperation"
+var KeyToneSignatureEncryptionKeyB = DefaultKeyB
 
 // GetKeyA 获取密钥A (32字节)
 // 用途：加密签名ID、生成动态密钥
 func GetKeyA() []byte {
-	key := []byte(KeyToneSignatureEncryptionKeyA)
-	if len(key) < 32 {
-		// 如果密钥长度不足，需要填充
-		for len(key) < 32 {
-			key = append(key, 0)
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneSignatureEncryptionKeyA == DefaultKeyA {
+		key := []byte(DefaultKeyA)
+		if len(key) < 32 {
+			for len(key) < 32 {
+				key = append(key, 0)
+			}
 		}
+		return key[:32]
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑（hex -> xor -> plaintext）
+	return deobfuscateKey(KeyToneSignatureEncryptionKeyA)
 }
 
 // GetKeyB 获取密钥B (32字节)
 // 用途：导出/导入签名文件加密
 func GetKeyB() []byte {
-	key := []byte(KeyToneSignatureEncryptionKeyB)
-	if len(key) < 32 {
-		// 如果密钥长度不足，需要填充
-		for len(key) < 32 {
-			key = append(key, 0)
+	// 1. 如果变量值等于默认常量，说明未注入，直接使用默认明文密钥
+	if KeyToneSignatureEncryptionKeyB == DefaultKeyB {
+		key := []byte(DefaultKeyB)
+		if len(key) < 32 {
+			for len(key) < 32 {
+				key = append(key, 0)
+			}
 		}
+		return key[:32]
 	}
-	return key[:32]
+	// 2. 否则说明已被注入，执行解混淆逻辑（hex -> xor -> plaintext）
+	return deobfuscateKey(KeyToneSignatureEncryptionKeyB)
 }
 
 // GenerateDynamicKey 根据加密的签名ID生成动态密钥

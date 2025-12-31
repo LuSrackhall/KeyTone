@@ -13,6 +13,23 @@ Certain features rely on **build-time injected parameters** (such as signing or 
 
 This difference is intentional and limited to identity-related behavior.
 
+## Build-Time Injected Keys
+
+The project supports **build-time key injection** (via Go `-ldflags -X`), so private build identities can override default open-source keys **without changing source code**.
+
+This mechanism is used by:
+
+* Signature authorization flow keys (F/K/Y/N)
+* Signature management encryption keys (A/B)
+* Album export encryption keys (versioned XOR keys: v1/v2)
+* Album config encryption seed (FixedSecret used for key derivation)
+* Album `signature` field inner encryption key
+
+For local/private builds, see:
+
+* `sdk/private_keys.template.env`
+* `sdk/setup_build_env.sh`
+
 ---
 
 # Encrypted Output Compatibility
