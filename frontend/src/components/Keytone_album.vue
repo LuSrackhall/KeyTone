@@ -17,6 +17,32 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
+<!--
+  File: Keytone_album.vue
+
+  组件定位（Role）
+  - 这是“键音专辑编辑器”的父组件/薄壳（stateful shell）。
+  - 目标：在不改变任何用户可感知行为的前提下，把 UI 模板与可复用对话框逐步拆分到 `keytone-album/*`。
+
+  当前架构（How it is structured today）
+  - Steps：Step1/2/3 已拆到 `keytone-album/steps/*`，本文件继续持有核心状态并通过 provide 注入给子组件。
+  - Dialogs：全键/单键声效对话框已拆到 `keytone-album/dialogs/*`，本文件仅负责打开/关闭状态字段。
+  - Phase 4 composables（纯逻辑）：
+    - SSE 映射：`keytone-album/composables/useKeytoneAlbumSseSync.ts`
+    - 依赖校验：`keytone-album/composables/useKeytoneAlbumDependencyIssues.ts`
+    - 映射/排序工具：`keytone-album/composables/keytoneAlbumMappers.ts`
+
+  Debug 快速定位（Where to look when things break）
+  - SSE 不更新：检查 app_store.eventSource 是否正常、以及 useKeytoneAlbumSseSync 的 attach/detach。
+  - 列表顺序不对：检查 naturalSort + keytoneAlbumMappers 输出。
+  - 单键/全键联动映射不对：检查 convertValue 如何从 soundList/keySoundList/soundFileList 中 find。
+  - 依赖警告不对：检查 useKeytoneAlbumDependencyIssues 是否正确还原 keySound 的字符串依赖。
+
+  注意（Behavior parity）
+  - 本次重构的硬约束是“行为保持不变”。因此即使看到一些历史实现的细节（例如 debounce.cancel 未调用），
+    在没有明确验证收益前也不应擅自“修正”，避免引入时序回归。
+-->
+
 <template>
   <q-page :style="{ '--i18n_fontSize': i18n_fontSize }">
     <q-scroll-area :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
@@ -52,1758 +78,14 @@
           >
             {{ pkgName }}
           </div>
-          <q-step
-            :name="1"
-            :title="$t('KeyToneAlbum.loadAudioFile.title')"
-            icon="create_new_folder"
-            :done="soundFileList.length !== 0"
-            :disable="step === 99 && soundFileList.length === 0"
-            :header-nav="false"
-            @click="
-              (event:MouseEvent) => {
-                // TIPS: 由于:header-nav=true是此组件默认的行为,
-                //       他会为此组件添加默认的点击事件
-                //       这个默认事件的作用是会自动将step其设置为1, 且发生在我们当前的click事件之前。
-                //       因此若不手动将  :header-nav 设置为false, 我们就无法得到预期效果, 只能在点击关闭后望而却步
-                //       故再次之前, 将 :header-nav 手动设置为false, 以禁用默认的事件
-                //       而因为禁用默认 header-nav 后, 组件会失去可点击的样式, 因此我们手动添加相关的 class 可点击样式
-                //       TODO: 由于我希望其关闭时, 可以简单的校验是否已完成, 因此我们使用disable和error两个组件状态来完成简单校验(目前仅使用disable, 后续完善时再说)
-                // step = step === 99 ? 1 : 99;  // 由于还有其它步骤(如step=2,3,4等)要作此操作, 为了不影响, 我们更改判断方式为step===1,而不是现在的step===99。
-                // step = step === 1 ? 99 : 1; // 我们只需要在内部组件的标题部分响应此事件, 因此需要先检查判断点击的区域。
-                // 检查点击是否发生在标题区域
-                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
-                if (header) {
-                  step = step === 1 ? 99 : 1;
-                }
-                // q-step 组件是否为展开状态的逻辑很简单。 只要step的值等于其某个q-step的name字段即可。只要不相等则处于关闭状态, 只要相等就处于展开状态。
-              }
-            "
-          >
-            <div :class="['mb-3', step_introduce_fontSize]">{{ $t('KeyToneAlbum.loadAudioFile.description') }}</div>
-            <!-- <div>文件类型可以是WAV、MP3、OGG等。</div> -->
-            <!-- <div>原始音频文件的数量不定,可根据您的制作喜好来决定。</div> -->
-            <!-- <q-card class="bg-slate-500" :class="['p-2']"> -->
-            <!-- <q-btn :class="['bg-zinc-300']" label="添加新的声音源文件"></q-btn>
-            <div :class="['p-2 text-zinc-300']">或</div>
-            <q-btn :class="['bg-zinc-300']" label="选择声音源文件以进行编辑"></q-btn> -->
-            <!-- </q-card> -->
-            <!-- ------------------------------------------------------------------------载入音频文件的业务逻辑 start -->
-            <div>
-              <!-- ------------------------------------------------------------------------------ 添加新的音频源文件 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.loadAudioFile.addNewFile')"
-                  @click="
-                    () => {
-                      addNewSoundFile = !addNewSoundFile;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="addNewSoundFile"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6">
-                      {{ $t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
-                    </q-card-section>
+          <!-- Step 1: 加载音频源文件 (已拆分为独立组件) -->
+          <StepLoadAudioFiles />
 
-                    <!-- <q-card-section> <div>文件类型可以是WAV、MP3、OGG。</div></q-card-section> -->
+          <!-- Step 2: 定义声音 (已拆分为独立组件) -->
+          <StepDefineSounds />
 
-                    <q-card-section>
-                      <div class="text-gray-600 text-xs">{{ $t('KeyToneAlbum.loadAudioFile.dragAndDrop') }}</div>
-                      <q-file
-                        :class="['w-56', 'zl-ll']"
-                        dense
-                        v-model="files"
-                        :label="$t('KeyToneAlbum.loadAudioFile.audioFile')"
-                        outlined
-                        use-chips
-                        multiple
-                        append
-                        accept=".wav,.mp3,.ogg"
-                        excludeAcceptAllOption
-                        style="max-width: 300px"
-                        :hint="$t('KeyToneAlbum.loadAudioFile.supportedFormats')"
-                      />
-                    </q-card-section>
-
-                    <q-card-section>
-                      <div>{{ $t('KeyToneAlbum.loadAudioFile.addAsNeeded') }}</div>
-                    </q-card-section>
-                    <q-card-actions align="right">
-                      <q-btn
-                        flat
-                        @click="
-                          async () => {
-                            // 循环files, 并在每次上传成功后, 删除对应file
-
-                            if (!files || files.length === 0) {
-                              console.warn('No files selected for upload');
-                              return;
-                            }
-
-                            // 使用slice()方法创建一个数组的浅拷贝, 避免因遍历过程中修改原始数组而导致的遍历中止
-                            // slice也可以只截取数组的一部分, 类似golang的切片, 都是左闭右开区间。 如slice(2,4) 会从[1,2,3,4,5]中, 截取[3,4]
-                            for (const file of files.slice()) {
-                              try {
-                                const re = await SendFileToServer(file);
-                                if (re === true) {
-                                  console.info(`File ${file.name} uploaded successfully`);
-                                  // Remove the file from the list after successful upload
-                                  const index = files.indexOf(file);
-                                  if (index > -1) {
-                                    files.splice(index, 1);
-                                  }
-                                } else {
-                                  console.error(`File ${file.name} uploading error`);
-                                  q.notify({
-                                    type: 'negative',
-
-                                    position: 'top',
-
-                                    message: `${$t('KeyToneAlbum.notify.addFailed')} '${file.name}'`,
-
-                                    timeout: 5,
-                                  });
-                                  return;
-                                }
-                              } catch (error) {
-                                console.error(`Error uploading file ${file.name}:`, error);
-                                q.notify({
-                                  type: 'negative',
-
-                                  position: 'top',
-
-                                  message: `${$t('KeyToneAlbum.notify.addFailed')} '${file.name}'`,
-
-                                  timeout: 5,
-                                });
-                                return;
-                              }
-                            }
-                            nextTick(() => {
-                              q.notify({
-                                type: 'positive',
-                                position: 'top',
-                                message: $t('KeyToneAlbum.notify.addSuccess'),
-                                timeout: 5,
-                              });
-                            });
-                          }
-                        "
-                        color="primary"
-                        :label="$t('KeyToneAlbum.loadAudioFile.confirmAdd')"
-                      />
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
-              <!-- -------------------------------------------------------------------------------编辑已有音频源文件 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.loadAudioFile.manageExistingFiles')"
-                  @click="
-                    () => {
-                      if (soundFileList.length === 0) {
-                        q.notify({
-                          type: 'warning',
-                          message: $t('KeyToneAlbum.notify.noFilesToManage'),
-                          position: 'top',
-                        });
-                        return;
-                      }
-
-                      editSoundFile = !editSoundFile;
-                    }
-                  "
-                ></q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="editSoundFile"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card :class="['p-x-3  w-[96%]']">
-                    <q-card-section class="row items-center q-pb-none text-h6">
-                      {{ $t('KeyToneAlbum.loadAudioFile.manageExistingFiles') }}
-                    </q-card-section>
-
-                    <!-- <q-card-section> <div>请选择您想要修改或删除的声音源文件并执行对应操作。</div></q-card-section> -->
-
-                    <q-card-section>
-                      <q-select
-                        outlined
-                        :virtual-scroll-slice-size="999999"
-                        stack-label
-                        v-model="selectedSoundFile"
-                        :options="soundFileList"
-                        :option-label="(item) => item.name + item.type"
-                        :label="$t('KeyToneAlbum.loadAudioFile.selectFileToManage')"
-                        dense
-                        popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                      >
-                        <!-- 添加清除按钮 -->
-                        <template
-                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
-                          v-slot:append
-                        >
-                          <q-icon
-                            name="cancel"
-                            @click.stop.prevent="
-                              selectedSoundFile = {
-                                sha256: '',
-                                name_id: '',
-                                name: '',
-                                type: '',
-                              }
-                            "
-                            class="cursor-pointer text-lg"
-                          />
-                        </template>
-                      </q-select>
-                      <!-- option-label="name"
-                       如果 :options 的元素类型是对象, 则有必要指定其中某个类型为字符串的字段作为label显示。
-                       注意, 列表中显示的label名称, 是根据此字段来显示的。
-                       (已选择框内显示的也是此字段)->
-                       (
-                        已选择框内显示的字段, 是否在重新选择后发生变更,
-                        则需要由 :value 指定的字段来决定。就算label字段不同,
-                        但只要:value指定的字段值是相同的, 已选择框内就不会发生label名称的变更。
-                       )
-                       -->
-                      <!-- option-value="uuid" WARN -> 这个理解似乎是不对的
-                       如果不手动的显示指定, 默认会以整个对象作为区分标准(我们这里就是这种情况, 因为我们没有能作为uuid的字段),
-                       但也可以指定具体字段作为区分标准( 可以类比v-for遍历时指定的 :key 值。),
-                       当检测到变化, 才会更新已选择框内的label名。
-                       这里我们不手动指定, 默认使用整个对象做区分,
-                       因为我们的uuid可能和其它不同sha256中的uuid重复,
-                       而sha256就更不用说了, 默认就会有相同sha256的项,
-                       至于使用name也更不用说, 我们命名时允许相同的名称。
-                       使用type这个字段作为唯一表示就更加没有讨论意义了。
-                        -->
-                      <!-- option-value所返回的值, 似乎会影响真正的v-model中所绑定的值 WARN -> 与上述的警告互相参考, 待确定
-                        也就是说, select选择框采用的 v-model 的值, 就是option-value中的返回值, 这个值在不指定的情况下默认为options数组元素的对象中的value值, 如果没对象内没value字段则默认返回整个对象。
-                       -->
-                    </q-card-section>
-
-                    <!-- 分割线 -->
-                    <q-separator v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''" />
-
-                    <!-- 以卡片形式展示选择的音频源文件 -->
-                    <q-card-section
-                      v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
-                      :class="['flex flex-col m-t-3']"
-                    >
-                      <q-card :class="['flex flex-col']">
-                        <q-badge
-                          transparent
-                          color="orange"
-                          :label="selectedSoundFile.type"
-                          :class="[
-                            'absolute  overflow-visible ',
-                            // 'left-0',
-                            'right-0',
-                          ]"
-                        />
-                        <q-card-section
-                          v-if="selectedSoundFile.sha256 !== '' && selectedSoundFile.name_id !== ''"
-                          :class="['flex flex-col m-t-3']"
-                        >
-                          <!-- 一个重命名的输入框, 一个删除按钮 -->
-                          <q-input
-                            outlined
-                            stack-label
-                            dense
-                            :error-message="$t('KeyToneAlbum.notify.emptyFileName')"
-                            :error="
-                              selectedSoundFile.name === '' ||
-                              selectedSoundFile.name === undefined ||
-                              selectedSoundFile.name === null
-                            "
-                            v-model="selectedSoundFile.name"
-                            :label="$t('KeyToneAlbum.loadAudioFile.renameFile')"
-                          />
-
-                          <q-btn
-                            :class="['w-20 self-center bg-pink-700 text-zinc-50']"
-                            dense
-                            no-caps
-                            :label="$t('KeyToneAlbum.delete')"
-                            icon="flight_takeoff"
-                            @click="
-                              async () => {
-                                const re = await SoundFileDelete(
-                                  selectedSoundFile.sha256,
-                                  selectedSoundFile.name_id,
-                                  selectedSoundFile.type
-                                );
-                                if (re) {
-                                  q.notify({
-                                    type: 'positive',
-                                    position: 'top',
-                                    message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                    timeout: 5,
-                                  });
-                                  // 如果sdk中删除操作执行成功, 则前端清除相关的结构体对象
-                                  selectedSoundFile = {
-                                    sha256: '',
-                                    name_id: '',
-                                    name: '',
-                                    type: '',
-                                  };
-                                } else {
-                                  q.notify({
-                                    type: 'negative',
-                                    position: 'top',
-                                    message: $t('KeyToneAlbum.notify.deleteFailed'),
-                                    timeout: 5,
-                                  });
-                                }
-                              }
-                            "
-                          >
-                          </q-btn>
-                        </q-card-section>
-                      </q-card>
-                    </q-card-section>
-                    <q-card-actions align="right">
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-            </div>
-            <!-- ------------------------------------------------------------------------载入声音文件的业务逻辑   end -->
-            <q-stepper-navigation>
-              <q-btn @click="step = 2" color="primary" :label="$t('KeyToneAlbum.continue')" />
-            </q-stepper-navigation>
-          </q-step>
-
-          <!-- <q-step :name="2" title="键音制作" caption="Optional" icon="create_new_folder" :done="step > 2"> -->
-          <q-step
-            :name="2"
-            :title="$t('KeyToneAlbum.defineSounds.title')"
-            icon="add_comment"
-            :done="soundList.length !== 0"
-            :disable="step === 99 && soundList.length === 0"
-            :header-nav="false"
-            @click="
-              (event: MouseEvent) => {
-                // 检查点击是否发生在标题区域
-                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
-                if (header) {
-                  step = step === 2 ? 99 : 2;
-                }
-              }
-            "
-          >
-            <div :class="['mb-3', step_introduce_fontSize]">
-              {{ $t('KeyToneAlbum.defineSounds.description') }}
-              <q-icon name="info" color="primary">
-                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                  <div>{{ $t('KeyToneAlbum.defineSounds.tooltip.noImpactOnSource') }}</div>
-                  <div>{{ $t('KeyToneAlbum.defineSounds.tooltip.multipleSoundsFromSameSource') }}</div>
-                </q-tooltip>
-              </q-icon>
-            </div>
-
-            <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑 start -->
-            <div>
-              <!-- ------------------------------------------------------------------------------ 制作新的声音 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.defineSounds.createNewSound')"
-                  @click="
-                    () => {
-                      createNewSound = !createNewSound;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="createNewSound"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card>
-                    <q-card-section class="row items-center q-pb-none text-h6">
-                      {{ $t('KeyToneAlbum.defineSounds.createNewSound') }}
-                    </q-card-section>
-                    <q-card-section :class="['p-b-1']">
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        v-model="soundName"
-                        :label="$t('KeyToneAlbum.defineSounds.soundName')"
-                        :placeholder="
-                          sourceFileForSound.name + '     - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
-                        "
-                        :input-style="{ textOverflow: 'ellipsis' }"
-                        :input-class="'text-truncate'"
-                      >
-                        <template v-slot:append>
-                          <q-icon name="info" color="primary">
-                            <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                              {{
-                                $t('KeyToneAlbum.defineSounds.tooltip.soundName') +
-                                ' : \n' +
-                                (soundName === ''
-                                  ? sourceFileForSound.name + ' - ' + ' [' + soundStartTime + ' ~ ' + soundEndTime + ']'
-                                  : soundName)
-                              }}
-                            </q-tooltip>
-                          </q-icon>
-                        </template>
-                      </q-input>
-                    </q-card-section>
-                    <q-card-section :class="['p-b-1']">
-                      <q-select
-                        outlined
-                        stack-label
-                        :virtual-scroll-slice-size="999999"
-                        v-model="sourceFileForSound"
-                        :options="soundFileList"
-                        :option-label="(item) => item.name + item.type"
-                        :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
-                        dense
-                        popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                      />
-                    </q-card-section>
-
-                    <q-card-section :class="['p-b-1']">
-                      <div class="text-[13.5px] text-gray-600 p-b-2">
-                        {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
-                        <q-icon name="info" color="primary">
-                          <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                            {{ $t('KeyToneAlbum.defineSounds.tooltip.soundDuration') }}
-                          </q-tooltip>
-                        </q-icon>
-                      </div>
-                      <!-- TIPS: 注意number类型使用时, 需要使用  v-model.number 。 因为使用后可以自动处理 01、 00.55 这种, 会将其自动变更为 1、 0.55 -->
-                      <div class="flex flex-row">
-                        <q-input
-                          :class="['w-1/2 p-r-1']"
-                          outlined
-                          stack-label
-                          dense
-                          v-model.number="soundStartTime"
-                          :label="$t('KeyToneAlbum.defineSounds.startTime')"
-                          type="number"
-                          :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
-                          :error="soundStartTime < 0"
-                        />
-                        <q-input
-                          :class="['w-1/2 p-l-1']"
-                          outlined
-                          stack-label
-                          dense
-                          v-model.number="soundEndTime"
-                          :label="$t('KeyToneAlbum.defineSounds.endTime')"
-                          type="number"
-                          :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
-                          :error="soundEndTime < 0"
-                        />
-                      </div>
-                    </q-card-section>
-                    <q-card-section :class="['p-y-0']">
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        v-model.number="soundVolume"
-                        :label="$t('KeyToneAlbum.defineSounds.volume')"
-                        type="number"
-                        :step="0.1"
-                      >
-                        <template v-slot:append>
-                          <q-icon name="info" color="primary">
-                            <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                              {{ $t('KeyToneAlbum.defineSounds.tooltip.volume') }}
-                              {{ $t('KeyToneAlbum.defineSounds.tooltip.volume_1') }}
-                            </q-tooltip>
-                          </q-icon>
-                        </template>
-                      </q-input>
-                    </q-card-section>
-                    <q-card-actions align="right">
-                      <q-btn
-                        class="mt-2"
-                        dense
-                        @click="
-                          previewSound({
-                            source_file_for_sound: sourceFileForSound,
-                            cut: {
-                              start_time: soundStartTime,
-                              end_time: soundEndTime,
-                              volume: soundVolume,
-                            },
-                          })
-                        "
-                        :label="$t('KeyToneAlbum.defineSounds.previewSound')"
-                        color="secondary"
-                      >
-                        <q-tooltip
-                          :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
-                          :delay="600"
-                        >
-                          {{ $t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
-                        </q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        class="mt-2"
-                        @click="
-                          saveSoundConfig({
-                            // source_file_for_sound: sourceFileForSound ,  // 由于js/ts中，传递对象时是通过引用传递的。这意味着函数接收到的是对象的引用，而不是对象的副本。因此，函数内部可以访问和修改对象的所有属性。包括不希望有的name字段。
-                            // source_file_for_sound: { ...sourceFileForSound },  // 使用对象解构（{ ...sourceFileForSound }）会复制sourceFileForSound对象的所有可枚举属性到一个新的对象中。因此，如果sourceFileForSound对象中包含name字段，解构操作会将其包含在新对象中, 本质仍是将一个包含name字段的对象, 赋值给所需参数。
-                            source_file_for_sound: {
-                              sha256: sourceFileForSound.sha256,
-                              name_id: sourceFileForSound.name_id,
-                              type: sourceFileForSound.type,
-                            }, //手动选择字段：通过手动选择字段，可以确保只传递所需的字段，而不会包含任何不需要的字段。
-
-                            name: soundName,
-                            cut: {
-                              start_time: soundStartTime,
-                              end_time: soundEndTime,
-                              volume: soundVolume,
-                            },
-                            onSuccess: () => {
-                              // 重置表单状态
-                              soundName = '';
-                              sourceFileForSound = {
-                                sha256: '',
-                                name_id: '',
-                                name: '',
-                                type: '',
-                              };
-                              soundStartTime = 0;
-                              soundEndTime = 0;
-                              soundVolume = 0.0;
-                            },
-                          })
-                        "
-                        :label="$t('KeyToneAlbum.defineSounds.confirmAdd')"
-                        color="primary"
-                      />
-                      <q-btn class="mt-2" flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-
-              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
-
-              <!-- -------------------------------------------------------------------------------编辑已有声音 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.defineSounds.editExistingSound')"
-                  @click="
-                    () => {
-                      if (soundList.length === 0) {
-                        q.notify({
-                          type: 'warning',
-                          message: $t('KeyToneAlbum.notify.noSoundsToEdit'),
-                          position: 'top',
-                        });
-                        return;
-                      }
-                      showEditSoundDialog = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="showEditSoundDialog"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card class="min-w-[106%]">
-                    <q-card-section
-                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
-                    >
-                      {{ $t('KeyToneAlbum.defineSounds.editExistingSound') }}
-                    </q-card-section>
-                    <q-card-section>
-                      <q-select
-                        outlined
-                        stack-label
-                        :virtual-scroll-slice-size="999999"
-                        clearable
-                        v-model="selectedSound"
-                        popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                        :options="soundList"
-                        :option-label="(item: any) => {
-                          if (item.soundValue.name !== '' && item.soundValue.name !== undefined) {
-                            return item.soundValue.name
-                          } else {
-                            return soundFileList.find(
-                              (soundFile) =>
-                                soundFile.sha256 === item.soundValue.source_file_for_sound.sha256 &&
-                                soundFile.name_id === item.soundValue.source_file_for_sound.name_id
-                            )?.name + '     - ' + ' [' + item.soundValue.cut.start_time + ' ~ ' + item.soundValue.cut.end_time + ']'
-                          }
-                        }"
-                        :option-value="(item:any) =>{
-                          // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                          return item.soundKey
-                        }"
-                        :label="$t('KeyToneAlbum.defineSounds.selectSoundToManage')"
-                        dense
-                      >
-                        <template v-slot:option="scope">
-                          <q-item v-bind="scope.itemProps">
-                            <q-item-section>
-                              <q-item-label>
-                                {{
-                                  scope.opt.soundValue.name !== '' && scope.opt.soundValue.name !== undefined
-                                    ? scope.opt.soundValue.name
-                                    : soundFileList.find(
-                                        (soundFile) =>
-                                          soundFile.sha256 === scope.opt.soundValue.source_file_for_sound.sha256 &&
-                                          soundFile.name_id === scope.opt.soundValue.source_file_for_sound.name_id
-                                      )?.name + '     - ' + ' [' + scope.opt.soundValue.cut.start_time + ' ~ ' + scope.opt.soundValue.cut.end_time + ']'
-                                }}
-                              </q-item-label>
-                            </q-item-section>
-                            <q-item-section side>
-                              <DependencyWarning
-                                :issues="dependencyIssues"
-                                item-type="sounds"
-                                :item-id="scope.opt.soundKey"
-                                :show-details="false"
-                              />
-                            </q-item-section>
-                          </q-item>
-                        </template>
-                      </q-select>
-                    </q-card-section>
-                    <!-- 以卡片形式展示选择的声音 -->
-                    <q-card-section
-                      :class="['flex flex-col m-t-3']"
-                      v-if="selectedSound?.soundKey !== '' && selectedSound !== undefined"
-                    >
-                      <q-card :class="['flex flex-col pb-3 w-[100%]']" v-if="selectedSound">
-                        <q-card-section :class="['p-b-1 mt-3']">
-                          <q-input
-                            outlined
-                            stack-label
-                            dense
-                            v-model="selectedSound.soundValue.name"
-                            :label="$t('KeyToneAlbum.defineSounds.soundName')"
-                            :placeholder="
-                              soundFileList.find(
-                                (soundFile) =>
-                                  soundFile.sha256 === selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                  soundFile.name_id === selectedSound?.soundValue.source_file_for_sound.name_id
-                              )?.name +
-                              '     - ' +
-                              ' [' +
-                              selectedSound.soundValue.cut.start_time +
-                              ' ~ ' +
-                              selectedSound.soundValue.cut.end_time +
-                              ']'
-                            "
-                            :input-style="{ textOverflow: 'ellipsis' }"
-                            :input-class="'text-truncate'"
-                          >
-                            <template v-slot:append>
-                              <q-icon name="info" color="primary">
-                                <q-tooltip
-                                  :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
-                                >
-                                  {{
-                                    $t('KeyToneAlbum.defineSounds.tooltip.soundName') +
-                                    ' : \n' +
-                                    (selectedSound.soundValue.name === ''
-                                      ? soundFileList.find(
-                                          (soundFile) =>
-                                            soundFile.sha256 ===
-                                              selectedSound?.soundValue.source_file_for_sound.sha256 &&
-                                            soundFile.name_id ===
-                                              selectedSound?.soundValue.source_file_for_sound.name_id
-                                        )?.name +
-                                        ' - ' +
-                                        ' [' +
-                                        selectedSound.soundValue.cut.start_time +
-                                        ' ~ ' +
-                                        selectedSound.soundValue.cut.end_time +
-                                        ']'
-                                      : selectedSound.soundValue.name)
-                                  }}
-                                </q-tooltip>
-                              </q-icon>
-                            </template>
-                          </q-input>
-                        </q-card-section>
-                        <q-card-section :class="['p-b-1 w-68']">
-                          <q-select
-                            outlined
-                            stack-label
-                            :virtual-scroll-slice-size="999999"
-                            popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                            v-model="selectedSound.soundValue.source_file_for_sound"
-                            :options="soundFileList"
-                            :option-label="(item: any) => {
-                              // 此处的:options本身就是soundFileList, 因此直接通过find查找并返回自身即可。
-                              // 此处仅是为了避免直接使用其中元素值的name字段, 以让selectedSound.soundValue.source_file_for_sound也可享受name变化时的实时更新。
-                              const soundFile = soundFileList.find(
-                                (soundFile) =>
-                                  soundFile.sha256 === item.sha256 &&
-                                  soundFile.name_id === item.name_id
-                              )
-                              return soundFile ? soundFile.name + soundFile.type : ''
-                            }"
-                            :option-value="(item: any) => {
-                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                              return item.sha256 + item.name_id
-                            }"
-                            :label="$t('KeyToneAlbum.defineSounds.sourceFile')"
-                            dense
-                          />
-                        </q-card-section>
-
-                        <q-card-section :class="['p-b-1']">
-                          <div class="text-[13.5px] text-gray-600 p-b-2">
-                            {{ $t('KeyToneAlbum.defineSounds.cropSound') }}
-                            <q-icon name="info" color="primary">
-                              <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']">
-                                {{ $t('KeyToneAlbum.defineSounds.tooltip.soundDuration') }}
-                              </q-tooltip>
-                            </q-icon>
-                          </div>
-                          <!-- TIPS: 注意number类型使用时, 需要使用  v-model.number 。 因为使用后可以自动处理 01、 00.55 这种, 会将其自动变更为 1、 0.55 -->
-                          <div class="flex flex-row">
-                            <q-input
-                              :class="['w-1/2 p-r-1']"
-                              outlined
-                              stack-label
-                              dense
-                              v-model.number="selectedSound.soundValue.cut.start_time"
-                              :label="$t('KeyToneAlbum.defineSounds.startTime')"
-                              type="number"
-                              :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
-                              :error="selectedSound.soundValue.cut.start_time < 0"
-                            />
-                            <q-input
-                              :class="['w-1/2 p-l-1']"
-                              outlined
-                              stack-label
-                              dense
-                              v-model.number="selectedSound.soundValue.cut.end_time"
-                              :label="$t('KeyToneAlbum.defineSounds.endTime')"
-                              type="number"
-                              :error-message="$t('KeyToneAlbum.defineSounds.error.negativeTime')"
-                              :error="selectedSound.soundValue.cut.end_time < 0"
-                            />
-                          </div>
-                        </q-card-section>
-                        <q-card-section :class="['p-y-0']">
-                          <q-input
-                            outlined
-                            stack-label
-                            dense
-                            v-model.number="selectedSound.soundValue.cut.volume"
-                            :label="$t('KeyToneAlbum.defineSounds.volume')"
-                            type="number"
-                            :step="0.1"
-                          >
-                            <template v-slot:append>
-                              <q-icon name="info" color="primary">
-                                <q-tooltip
-                                  :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
-                                >
-                                  {{ $t('KeyToneAlbum.defineSounds.tooltip.volume') }}
-                                  {{ $t('KeyToneAlbum.defineSounds.tooltip.volume_1') }}
-                                </q-tooltip>
-                              </q-icon>
-                            </template>
-                          </q-input>
-                        </q-card-section>
-
-                        <!-- 添加按钮组 -->
-                        <q-card-section :class="['flex justify-center gap-4']">
-                          <q-btn
-                            class="pr-2.3"
-                            dense
-                            color="secondary"
-                            icon="play_arrow"
-                            :label="$t('KeyToneAlbum.defineSounds.previewSound')"
-                            @click="
-                              previewSound({
-                                source_file_for_sound: selectedSound.soundValue.source_file_for_sound,
-                                cut: selectedSound.soundValue.cut,
-                              })
-                            "
-                          >
-                            <q-tooltip
-                              :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
-                              :delay="600"
-                            >
-                              {{ $t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
-                            </q-tooltip>
-                          </q-btn>
-
-                          <q-btn
-                            class="pr-2.3"
-                            dense
-                            color="primary"
-                            icon="save"
-                            :label="$t('KeyToneAlbum.confirmEdit')"
-                            @click="
-                              saveSoundConfig({
-                                soundKey: selectedSound.soundKey,
-                                source_file_for_sound: {
-                                  sha256: selectedSound.soundValue.source_file_for_sound.sha256,
-                                  name_id: selectedSound.soundValue.source_file_for_sound.name_id,
-                                  type: selectedSound.soundValue.source_file_for_sound.type,
-                                },
-                                name: selectedSound.soundValue.name,
-                                cut: selectedSound.soundValue.cut,
-                                onSuccess: () => {
-                                  // q.notify({
-                                  //   type: 'positive',
-                                  //   position: 'top',
-                                  //   message: '修改成功',
-                                  //   timeout: 5,
-                                  // });
-                                },
-                              })
-                            "
-                          />
-
-                          <q-btn
-                            class="pr-2.3"
-                            dense
-                            color="negative"
-                            icon="delete"
-                            :label="$t('KeyToneAlbum.delete')"
-                            @click="
-                              deleteSound({
-                                soundKey: selectedSound.soundKey,
-                                onSuccess: () => {
-                                  selectedSound = undefined;
-                                  q.notify({
-                                    type: 'positive',
-                                    position: 'top',
-                                    message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                    timeout: 5,
-                                  });
-                                },
-                              })
-                            "
-                          />
-                        </q-card-section>
-                      </q-card>
-                    </q-card-section>
-
-                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-            </div>
-            <!-- ------------------------------------------------------------------------裁剪定义声音的业务逻辑   end -->
-            <q-stepper-navigation>
-              <q-btn @click="step = 3" color="primary" :label="$t('KeyToneAlbum.continue')" />
-              <q-btn flat @click="step = 1" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
-            </q-stepper-navigation>
-          </q-step>
-
-          <q-step
-            :name="3"
-            :title="$t('KeyToneAlbum.craftKeySounds.title')"
-            icon="add_comment"
-            :done="keySoundList.length !== 0"
-            :disable="step === 99 && keySoundList.length === 0"
-            :header-nav="false"
-            @click="
-              (event: MouseEvent) => {
-                // if (soundList.length === 0) {
-                //   q.notify({
-                //     type: 'warning',
-                //     position: 'top',
-                //     message: '请先定义声音',
-                //     timeout: 5,
-                //   });
-                //   return;
-                // }
-                // 检查点击是否发生在标题区域
-                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
-                if (header) {
-                  step = step === 3 ? 99 : 3;
-                }
-              }
-            "
-          >
-            <div :class="['mb-3', step_introduce_fontSize]">
-              {{ $t('KeyToneAlbum.craftKeySounds.description') }}
-              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_0') }}</span>
-                  <br />
-                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_1') }}</span>
-                  <br />
-                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_2') }}</span>
-                  <br />
-                  <span>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.description_3') }}</span>
-                </q-tooltip>
-              </q-icon>
-            </div>
-            <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑 start -->
-            <div>
-              <!-- ------------------------------------------------------------------------------ 制作新的按键音 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.craftKeySounds.newKeySound')"
-                  @click="
-                    () => {
-                      createNewKeySound = !createNewKeySound;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="createNewKeySound"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card :class="['min-w-[90%]']">
-                    <q-card-section class="row items-center q-pb-none text-h6">
-                      {{ $t('KeyToneAlbum.craftKeySounds.newKeySound') }}
-                    </q-card-section>
-                    <q-card-section :class="['p-b-1']">
-                      <q-input
-                        outlined
-                        stack-label
-                        dense
-                        v-model="keySoundName"
-                        :label="$t('KeyToneAlbum.craftKeySounds.keySoundName')"
-                        :placeholder="$t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder')"
-                      />
-                      <div class="flex flex-col mt-3">
-                        <q-btn
-                          :class="['bg-zinc-300 my-7 w-88% self-center']"
-                          :label="$t('KeyToneAlbum.craftKeySounds.configureDownSound')"
-                          @click="configureDownSound = true"
-                        />
-                        <q-dialog
-                          :style="{ '--i18n_fontSize': i18n_fontSize }"
-                          v-model="configureDownSound"
-                          backdrop-filter="invert(70%)"
-                          @mouseup="preventDefaultMouseWhenRecording"
-                        >
-                          <q-card :class="['min-w-[80%]']">
-                            <q-card-section class="row items-center q-pb-none text-h6">
-                              {{ $t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
-                            </q-card-section>
-                            <q-card-section>
-                              <!-- 使用选择框选择模式 -->
-                              <q-select
-                                outlined
-                                popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                :virtual-scroll-slice-size="999999"
-                                stack-label
-                                v-model="playModeForDown"
-                                :options="playModeOptions"
-                                :option-label="(item: any) => {
-                                  return $t(playModeLabels.get(item) || '')
-                                }"
-                                :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
-                                dense
-                              />
-                            </q-card-section>
-                            <q-card-section>
-                              <!-- 选择声音的选项，支持多选 -->
-                              <q-select
-                                outlined
-                                stack-label
-                                :virtual-scroll-slice-size="999999"
-                                v-model="selectedSoundsForDown"
-                                popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                :options="downSoundList"
-                                :option-label="album_options_select_label"
-                                :option-value="(item: any) => {
-                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                  if (item.type === 'audio_files'){
-                                    return item.value.sha256 + item.value.name_id
-                                  }
-                                  if(item.type === 'sounds'){
-                                    return item.value.soundKey
-                                  }
-                                  if(item.type === 'key_sounds'){
-                                    return item.value.keySoundKey
-                                  }
-                                }"
-                                :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
-                                multiple
-                                use-chips
-                                :class="['zl-ll']"
-                                dense
-                                :max-values="maxSelectionForDown"
-                                counter
-                                :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                :注释="
-                                  () => {
-                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
-                                    /* :error = '()=>{
-                                          return true
-                                        }'
-                                    */
-                                    // 你需要手动调用它(像下方这样)
-                                    /* :error = '(()=>{
-                                          return true
-                                        })()'
-                                    */
-                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
-                                    // 因此, 想要用函数的方式并且响应式生效
-                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
-                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
-                                  }
-                                "
-                                :error="
-                                  playModeForDown === 'single'
-                                    ? selectedSoundsForDown.length > 1
-                                      ? true
-                                      : false
-                                    : false
-                                "
-                                ref="downSoundSelectDom"
-                                @update:model-value="downSoundSelectDom?.hidePopup()"
-                              >
-                                <template v-slot:option="scope">
-                                  <q-item v-bind="scope.itemProps">
-                                    <q-item-section>
-                                      <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                    </q-item-section>
-                                    <q-item-section side>
-                                      <DependencyWarning
-                                        v-if="scope.opt.type === 'sounds'"
-                                        :issues="dependencyIssues"
-                                        item-type="sounds"
-                                        :item-id="scope.opt.value.soundKey"
-                                        :show-details="false"
-                                      />
-                                      <DependencyWarning
-                                        v-else-if="scope.opt.type === 'key_sounds'"
-                                        :issues="dependencyIssues"
-                                        item-type="key_sounds"
-                                        :item-id="scope.opt.value.keySoundKey"
-                                        :show-details="false"
-                                      />
-                                    </q-item-section>
-                                  </q-item>
-                                </template>
-                              </q-select>
-                              <div class="h-10">
-                                <q-option-group
-                                  dense
-                                  v-model="downTypeGroup"
-                                  :options="options"
-                                  type="checkbox"
-                                  class="absolute left-8"
-                                >
-                                  <template #label-0="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-1="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-2="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
-                                          <div>⬇</div>
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
-                                          <div>⬇</div>
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                </q-option-group>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions align="right">
-                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                            </q-card-actions>
-                          </q-card>
-                        </q-dialog>
-                        <q-btn
-                          :class="['bg-zinc-300  m-b-7 w-88% self-center']"
-                          :label="$t('KeyToneAlbum.craftKeySounds.configureUpSound')"
-                          @click="configureUpSound = true"
-                        />
-                        <q-dialog
-                          :style="{ '--i18n_fontSize': i18n_fontSize }"
-                          v-model="configureUpSound"
-                          backdrop-filter="invert(70%)"
-                          @mouseup="preventDefaultMouseWhenRecording"
-                        >
-                          <q-card :class="['min-w-[80%]']">
-                            <q-card-section class="row items-center q-pb-none text-h6">
-                              {{ $t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
-                            </q-card-section>
-                            <q-card-section>
-                              <!-- 使用选择框选择模式 -->
-                              <q-select
-                                outlined
-                                stack-label
-                                :virtual-scroll-slice-size="999999"
-                                popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                v-model="playModeForUp"
-                                :options="playModeOptions"
-                                :option-label="(item: any) => {
-                                  return $t(playModeLabels.get(item) || '')
-                                }"
-                                :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
-                                dense
-                              />
-                            </q-card-section>
-                            <q-card-section>
-                              <!-- 选择声音的选项，支持多选 -->
-                              <q-select
-                                outlined
-                                stack-label
-                                :virtual-scroll-slice-size="999999"
-                                v-model="selectedSoundsForUp"
-                                popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                :options="upSoundList"
-                                :option-label="album_options_select_label"
-                                :option-value="(item: any) => {
-                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                  if (item.type === 'audio_files'){
-                                    return item.value.sha256 + item.value.name_id
-                                  }
-                                  if(item.type === 'sounds'){
-                                    return item.value.soundKey
-                                  }
-                                  if(item.type === 'key_sounds'){
-                                    return item.value.keySoundKey
-                                  }
-                                }"
-                                :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
-                                multiple
-                                use-chips
-                                :class="['zl-ll']"
-                                dense
-                                :max-values="maxSelectionForUp"
-                                counter
-                                :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                :注释="
-                                  () => {
-                                    // 这种写法, 实际上是绑定了箭头函数, 而非函数的返回值。
-                                    /* :error = '()=>{
-                                          return true
-                                        }'
-                                    */
-                                    // 你需要手动调用它(像下方这样)
-                                    /* :error = '(()=>{
-                                          return true
-                                        })()'
-                                    */
-                                    // 不过, 这也仅调用了一次。 如果函数内部有响应式变量, 它并不会因触发响应式变更而重新被调用
-                                    // 因此, 想要用函数的方式并且响应式生效
-                                    // * 常用做法是在script中创建一个计算属性, 并在此处绑定它(而不是绑定某个函数)
-                                    // * 还有一种做法是, 直接绑定对应的表达式(表达式中如果有响应式变量的变化, 表达式会被重新计算), 就像下面这样
-                                  }
-                                "
-                                :error="
-                                  playModeForUp === 'single' ? (selectedSoundsForUp.length > 1 ? true : false) : false
-                                "
-                                ref="upSoundSelectDom"
-                                @update:model-value="upSoundSelectDom?.hidePopup()"
-                              />
-                              <div class="h-10">
-                                <q-option-group
-                                  dense
-                                  v-model="upTypeGroup"
-                                  :options="options"
-                                  type="checkbox"
-                                  class="absolute left-8"
-                                >
-                                  <template #label-0="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-1="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                  <template v-slot:label-2="props">
-                                    <q-item-label>
-                                      {{ $t(props.label) }}
-                                      <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
-                                          <div>⬇</div>
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
-                                          <div>⬇</div>
-                                          <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </q-item-label>
-                                  </template>
-                                </q-option-group>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions align="right">
-                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                            </q-card-actions>
-                          </q-card>
-                        </q-dialog>
-                      </div>
-                    </q-card-section>
-                    <q-card-actions align="right">
-                      <q-btn
-                        color="primary"
-                        :label="$t('KeyToneAlbum.craftKeySounds.confirmAdd')"
-                        @click="
-                          saveKeySoundConfig(
-                            {
-                              key: '',
-                              name: keySoundName,
-                              down: { mode: playModeForDown, value: selectedSoundsForDown },
-                              up: { mode: playModeForUp, value: selectedSoundsForUp },
-                            },
-                            () => {
-                              // 关闭对话框
-                              createNewKeySound = !createNewKeySound;
-
-                              // 重置表单变量
-                              keySoundName = $t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder');
-                              selectedSoundsForDown = [];
-                              playModeForDown = 'random';
-                              selectedSoundsForUp = [];
-                              playModeForUp = 'random';
-                            }
-                          )
-                        "
-                      />
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-
-              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
-
-              <!-- -------------------------------------------------------------------------------编辑已有按键音 -->
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.craftKeySounds.editExistingKeySound')"
-                  @click="
-                    () => {
-                      if (keySoundList.length === 0) {
-                        q.notify({
-                          type: 'warning',
-                          message: $t('KeyToneAlbum.notify.noKeySoundsToEdit'),
-                          position: 'top',
-                        });
-                        return;
-                      }
-                      editExistingKeySound = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="editExistingKeySound"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card :class="['min-w-[100%]']">
-                    <q-card-section
-                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
-                    >
-                      {{ $t('KeyToneAlbum.craftKeySounds.editExistingKeySound') }}
-                    </q-card-section>
-                    <q-card-section>
-                      <q-select
-                        outlined
-                        stack-label
-                        clearable
-                        :virtual-scroll-slice-size="999999"
-                        popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                        v-model="selectedKeySound"
-                        :options="keySoundList"
-                        :label="$t('KeyToneAlbum.craftKeySounds.selectKeySoundToEdit')"
-                        :option-label="(item) => item.keySoundValue.name"
-                        :option-value="(item) => item.keySoundKey"
-                        dense
-                      >
-                        <template v-slot:option="scope">
-                          <q-item v-bind="scope.itemProps">
-                            <q-item-section>
-                              <q-item-label>{{ scope.opt.keySoundValue.name }}</q-item-label>
-                            </q-item-section>
-                            <q-item-section side>
-                              <DependencyWarning
-                                :issues="dependencyIssues"
-                                item-type="key_sounds"
-                                :item-id="scope.opt.keySoundKey"
-                                :show-details="false"
-                              />
-                            </q-item-section>
-                          </q-item>
-                        </template>
-                      </q-select>
-                    </q-card-section>
-                    <!-- 以卡片的形式, 展示选择的按键音 -->
-                    <q-card-section
-                      :class="['flex flex-col -m-t-2']"
-                      v-if="selectedKeySound?.keySoundKey !== '' && selectedKeySound !== undefined"
-                    >
-                      <q-card :class="['flex flex-col pb-3']" v-if="selectedKeySound">
-                        <q-card-section :class="['p-b-1 mt-3']">
-                          <q-input
-                            outlined
-                            stack-label
-                            dense
-                            v-model="selectedKeySound.keySoundValue.name"
-                            :label="$t('KeyToneAlbum.craftKeySounds.keySoundName')"
-                            :placeholder="$t('KeyToneAlbum.craftKeySounds.keySoundName-placeholder')"
-                          />
-                          <div class="flex flex-col mt-1">
-                            <q-btn
-                              :class="['bg-zinc-300 my-7 w-88% self-center']"
-                              :label="$t('KeyToneAlbum.craftKeySounds.configureDownSound')"
-                              @click="edit_configureDownSound = true"
-                            />
-                            <q-dialog
-                              :style="{ '--i18n_fontSize': i18n_fontSize }"
-                              v-model="edit_configureDownSound"
-                              backdrop-filter="invert(70%)"
-                              @mouseup="preventDefaultMouseWhenRecording"
-                            >
-                              <q-card :class="['min-w-[80%]']">
-                                <q-card-section class="row items-center q-pb-none text-h6">
-                                  {{ $t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
-                                </q-card-section>
-                                <q-card-section>
-                                  <q-select
-                                    outlined
-                                    stack-label
-                                    :virtual-scroll-slice-size="999999"
-                                    popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                    v-model="selectedKeySound.keySoundValue.down.mode"
-                                    :options="playModeOptions"
-                                    :option-label="(item: any) => {
-                                      return $t(playModeLabels.get(item) || '')
-                                    }"
-                                    :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
-                                    dense
-                                  />
-                                </q-card-section>
-                                <q-card-section>
-                                  <q-select
-                                    outlined
-                                    stack-label
-                                    :virtual-scroll-slice-size="999999"
-                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                    v-model="selectedKeySound.keySoundValue.down.value"
-                                    :options="edit_downSoundList"
-                                    :option-label="album_options_select_label"
-                                    :option-value="
-                                      (item) => {
-                                        /**
-                                         * json中的存储格式分别是
-                                         * {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-                                         * {key:'sounds', value:string} // 此处value, 是soundKey
-                                         * {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-                                         */
-                                        if (item.type === 'audio_files') {
-                                          return item.value?.sha256 + item.value?.name_id;
-                                        }
-                                        if (item.type === 'sounds') {
-                                          return item.value?.soundKey;
-                                        }
-                                        if (item.type === 'key_sounds') {
-                                          return item.value?.keySoundKey;
-                                        }
-                                      }
-                                    "
-                                    :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
-                                    multiple
-                                    use-chips
-                                    :class="['zl-ll']"
-                                    dense
-                                    :max-values="
-                                      selectedKeySound.keySoundValue.down.mode.mode === 'single' ? 1 : Infinity
-                                    "
-                                    counter
-                                    :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                    :error="
-                                      selectedKeySound.keySoundValue.down.mode.mode === 'single' &&
-                                      selectedKeySound.keySoundValue.down.value.length > 1
-                                    "
-                                    ref="edit_downSoundSelectDom"
-                                    @update:model-value="edit_downSoundSelectDom?.hidePopup()"
-                                  >
-                                    <template v-slot:option="scope">
-                                      <q-item v-bind="scope.itemProps">
-                                        <q-item-section>
-                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                        </q-item-section>
-                                        <q-item-section side>
-                                          <DependencyWarning
-                                            :issues="dependencyIssues"
-                                            :item-type="scope.opt.type"
-                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
-                                            :show-details="false"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                    </template>
-                                  </q-select>
-                                  <div class="h-10">
-                                    <q-option-group
-                                      dense
-                                      v-model="edit_downTypeGroup"
-                                      :options="options"
-                                      type="checkbox"
-                                      class="absolute left-8"
-                                    >
-                                      <template #label-0="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-1="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-2="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
-                                              <div>⬇</div>
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
-                                              <div>⬇</div>
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                    </q-option-group>
-                                  </div>
-                                </q-card-section>
-                                <q-card-actions align="right">
-                                  <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                                </q-card-actions>
-                              </q-card>
-                            </q-dialog>
-                            <q-btn
-                              :class="['bg-zinc-300 m-b-7 w-88% self-center']"
-                              :label="$t('KeyToneAlbum.craftKeySounds.configureUpSound')"
-                              @click="edit_configureUpSound = true"
-                            />
-                            <q-dialog
-                              :style="{ '--i18n_fontSize': i18n_fontSize }"
-                              v-model="edit_configureUpSound"
-                              backdrop-filter="invert(70%)"
-                              @mouseup="preventDefaultMouseWhenRecording"
-                            >
-                              <q-card :class="['min-w-[80%]']">
-                                <q-card-section class="row items-center q-pb-none text-h6">
-                                  {{ $t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
-                                </q-card-section>
-                                <q-card-section>
-                                  <q-select
-                                    outlined
-                                    stack-label
-                                    :virtual-scroll-slice-size="999999"
-                                    popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                    v-model="selectedKeySound.keySoundValue.up.mode"
-                                    :options="playModeOptions"
-                                    :option-label="(item: any) => {
-                                      return $t(playModeLabels.get(item) || '')
-                                    }"
-                                    :label="$t('KeyToneAlbum.craftKeySounds.selectPlayMode')"
-                                    dense
-                                  />
-                                </q-card-section>
-                                <q-card-section>
-                                  <q-select
-                                    outlined
-                                    stack-label
-                                    :virtual-scroll-slice-size="999999"
-                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                    v-model="selectedKeySound.keySoundValue.up.value"
-                                    :options="edit_upSoundList"
-                                    :option-label="album_options_select_label"
-                                    :option-value="
-                                      /**
-                                       * 虽然json中的存储格式分别是
-                                       * - {key:'audio_files', value:{sha256: string, name_id: string, type:string}}
-                                       * - {key:'sounds', value:string} // 此处value, 是soundKey
-                                       * - {key:'key_sounds', value:string} // 此处value, 是keySoundKey
-                                       * 但是, 我们通过watch对当前组件的model做了变更, 使其类型提前由uuid转换成了相关对象
-                                       * - 因此, 此处仍按照对应对象处理即可
-                                       */
-                                      (item) => {
-                                        if (item.type === 'audio_files') {
-                                          return item.value?.sha256 + item.value?.name_id;
-                                        }
-                                        if (item.type === 'sounds') {
-                                          return item.value?.soundKey;
-                                        }
-                                        if (item.type === 'key_sounds') {
-                                          return item.value?.keySoundKey;
-                                        }
-                                      }
-                                    "
-                                    :label="$t('KeyToneAlbum.craftKeySounds.selectSounds')"
-                                    multiple
-                                    use-chips
-                                    :class="['zl-ll']"
-                                    dense
-                                    :max-values="
-                                      selectedKeySound.keySoundValue.up.mode.mode === 'single' ? 1 : Infinity
-                                    "
-                                    counter
-                                    :error-message="$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
-                                    :error="
-                                      selectedKeySound.keySoundValue.up.mode.mode === 'single' &&
-                                      selectedKeySound.keySoundValue.up.value.length > 1
-                                    "
-                                    ref="edit_upSoundSelectDom"
-                                    @update:model-value="edit_upSoundSelectDom?.hidePopup()"
-                                  >
-                                    <template v-slot:option="scope">
-                                      <q-item v-bind="scope.itemProps">
-                                        <q-item-section>
-                                          <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                        </q-item-section>
-                                        <q-item-section side>
-                                          <DependencyWarning
-                                            :issues="dependencyIssues"
-                                            :item-type="scope.opt.type"
-                                            :item-id="scope.opt.type === 'audio_files' ? `${scope.opt.value?.sha256}:${scope.opt.value?.name_id}` : scope.opt.type === 'sounds' ? scope.opt.value?.soundKey : scope.opt.value?.keySoundKey"
-                                            :show-details="false"
-                                          />
-                                        </q-item-section>
-                                      </q-item>
-                                    </template>
-                                  </q-select>
-                                  <div class="h-10">
-                                    <q-option-group
-                                      dense
-                                      v-model="edit_upTypeGroup"
-                                      :options="options"
-                                      type="checkbox"
-                                      class="absolute left-8"
-                                    >
-                                      <template #label-0="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.audioFile') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-1="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.soundList') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-2="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.keySounds') }}</div>
-                                              <div>⬇</div>
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritKeySound') }}</div>
-                                              <div>⬇</div>
-                                              <div>{{ $t('KeyToneAlbum.craftKeySounds.tooltip.inheritRule') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                    </q-option-group>
-                                  </div>
-                                </q-card-section>
-                                <q-card-actions align="right">
-                                  <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                                </q-card-actions>
-                              </q-card>
-                            </q-dialog>
-                          </div>
-                        </q-card-section>
-                        <q-card-section :class="['flex justify-center gap-4 -mt-3']">
-                          <q-btn
-                            dense
-                            class="pr-2.3"
-                            color="primary"
-                            icon="save"
-                            :label="$t('KeyToneAlbum.confirmEdit')"
-                            @click="
-                              saveKeySoundConfig({
-                                key: selectedKeySound.keySoundKey,
-                                name: selectedKeySound.keySoundValue.name,
-                                down: {
-                                  mode: selectedKeySound.keySoundValue.down.mode.mode,
-                                  value: selectedKeySound.keySoundValue.down.value,
-                                },
-                                up: {
-                                  mode: selectedKeySound.keySoundValue.up.mode.mode,
-                                  value: selectedKeySound.keySoundValue.up.value,
-                                },
-                              })
-                            "
-                          />
-                          <q-btn
-                            dense
-                            class="pr-2.3"
-                            color="negative"
-                            icon="delete"
-                            :label="$t('KeyToneAlbum.delete')"
-                            @click="
-                              deleteKeySound({
-                                keySoundKey: selectedKeySound.keySoundKey,
-                                onSuccess: () => {
-                                  selectedKeySound = undefined;
-                                  q.notify({
-                                    type: 'positive',
-                                    position: 'top',
-                                    message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                    timeout: 5,
-                                  });
-                                },
-                              })
-                            "
-                          />
-                        </q-card-section>
-                      </q-card>
-                    </q-card-section>
-                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-            </div>
-            <q-stepper-navigation>
-              <q-btn @click="step = 4" color="primary" :label="$t('KeyToneAlbum.continue')" />
-              <q-btn flat @click="step = 2" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
-            </q-stepper-navigation>
-          </q-step>
-
-          <!-- ------------------------------------------------------------------------制作按键声音的业务逻辑   end -->
+          <!-- Step 3: 制作按键音 (已拆分为独立组件) -->
+          <StepCraftKeySounds />
 
           <!-- <q-step :name="4" title="对全局按键统一设置键音" icon="settings" :done="step > 3">
             <div>设置一个全局所有按键统一使用的按键声音。</div>
@@ -1826,1533 +108,8 @@
               <q-btn flat @click="step = 4" color="primary" label="Back" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step> -->
-          <q-step
-            :name="4"
-            :title="$t('KeyToneAlbum.linkageEffects.title')"
-            icon="settings"
-            :done="
-              !(
-                isEnableEmbeddedTestSound.down === true &&
-                isEnableEmbeddedTestSound.up === true &&
-                !keyDownUnifiedSoundEffectSelect &&
-                !keyUpUnifiedSoundEffectSelect &&
-                keysWithSoundEffect.size === 0
-              )
-            "
-            :disable="
-              step === 99 &&
-              isEnableEmbeddedTestSound.down === true &&
-              isEnableEmbeddedTestSound.up === true &&
-              !keyDownUnifiedSoundEffectSelect &&
-              !keyUpUnifiedSoundEffectSelect &&
-              keysWithSoundEffect.size === 0
-            "
-            :header-nav="false"
-            @click="
-              (event: MouseEvent) => {
-                const header = (event.target as HTMLElement).closest('.q-stepper__tab');
-                if (header) {
-                  step = step === 4 ? 99 : 4;
-                }
-              }
-            "
-          >
-            <div :class="['mb-3', step_introduce_fontSize]">
-              {{ $t('KeyToneAlbum.linkageEffects.description') }}
-              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']">
-                  <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.description') }}</span>
-                </q-tooltip>
-              </q-icon>
-            </div>
-            <div :class="['flex items-center m-t-2 w-[130%]']">
-              <span class="text-gray-500 mr-0.7">•</span>
-              <span class="text-nowrap">
-                {{ $t('KeyToneAlbum.linkageEffects.enableTestSound') }}:
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.testSound') }}</span>
-                  </q-tooltip>
-                </q-icon>
-              </span>
-            </div>
-            <div
-              :class="[
-                'flex items-center ml-3',
-                setting_store.languageDefault === 'pt' || setting_store.languageDefault === 'pt-BR'
-                  ? 'flex-nowrap text-nowrap'
-                  : '',
-              ]"
-            >
-              <span class="text-gray-500 mr-1.5">•</span>
-              <q-toggle
-                v-model="isEnableEmbeddedTestSound.down"
-                color="primary"
-                :label="$t('KeyToneAlbum.linkageEffects.downTestSound')"
-                dense
-              />
-            </div>
-            <div
-              :class="[
-                'flex items-center ml-3',
-                setting_store.languageDefault === 'fr' ? 'flex-nowrap text-nowrap' : '',
-              ]"
-            >
-              <span class="text-gray-500 mr-1.5">•</span>
-              <q-toggle
-                v-model="isEnableEmbeddedTestSound.up"
-                color="primary"
-                :label="$t('KeyToneAlbum.linkageEffects.upTestSound')"
-                dense
-              />
-            </div>
-            <q-stepper-navigation>
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.linkageEffects.globalSettings')"
-                  @click="
-                    () => {
-                      showEveryKeyEffectDialog = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.globalPriority') }}</span>
-                  </q-tooltip>
-                </q-icon>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="showEveryKeyEffectDialog"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card>
-                    <q-card-section
-                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
-                    >
-                      {{ $t('KeyToneAlbum.linkageEffects.globalSettings') }}
-                    </q-card-section>
-
-                    <q-card-section class="q-pt-none">
-                      <div class="text-subtitle1 q-mb-md">
-                        {{ $t('KeyToneAlbum.linkageEffects.global.description') }}
-                      </div>
-                      <!-- 这里添加声效选择等具体设置内容 -->
-                    </q-card-section>
-                    <q-card-section>
-                      <!-- 选择全键按下声效的选项, 仅支持单选 -->
-                      <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
-                        <div class="flex flex-col space-y-4 w-7/8">
-                          <q-select
-                            outlined
-                            stack-label
-                            :virtual-scroll-slice-size="999999"
-                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                            v-model="keyDownUnifiedSoundEffectSelect"
-                            :options="keyUnifiedSoundEffectOptions"
-                            :option-label="album_options_select_label"
-                            :option-value="(item: any) => {
-                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                  if (item.type === 'audio_files'){
-                                    return item.value?.sha256 + item.value?.name_id
-                                  }
-                                  if(item.type === 'sounds'){
-                                    return item.value?.soundKey
-                                  }
-                                  if(item.type === 'key_sounds'){
-                                    return item.value?.keySoundKey
-                                  }
-                                }"
-                            :label="$t('KeyToneAlbum.linkageEffects.global.setKeyDownSound')"
-                            use-chips
-                            :class="['zl-ll']"
-                            dense
-                            @popup-hide="
-                              () => {
-                                if (
-                                  // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                  isShowUltimatePerfectionKeySoundAnchoring &&
-                                  isAnchoringUltimatePerfectionKeySound &&
-                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                  keyDownUnifiedSoundEffectSelect?.type === 'key_sounds'
-                                ) {
-                                  keyUpUnifiedSoundEffectSelect = keyDownUnifiedSoundEffectSelect;
-                                }
-                              }
-                            "
-                            class="max-w-full"
-                          >
-                            <template v-slot:option="scope">
-                              <q-item v-bind="scope.itemProps">
-                                <q-item-section>
-                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                </q-item-section>
-                                <q-item-section side>
-                                  <DependencyWarning
-                                    v-if="scope.opt.type === 'audio_files'"
-                                    :issues="dependencyIssues"
-                                    item-type="audio_files"
-                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                    :show-details="false"
-                                  />
-                                  <DependencyWarning
-                                    v-else-if="scope.opt.type === 'sounds'"
-                                    :issues="dependencyIssues"
-                                    item-type="sounds"
-                                    :item-id="scope.opt.value?.soundKey"
-                                    :show-details="false"
-                                  />
-                                  <DependencyWarning
-                                    v-else-if="scope.opt.type === 'key_sounds'"
-                                    :issues="dependencyIssues"
-                                    item-type="key_sounds"
-                                    :item-id="scope.opt.value?.keySoundKey"
-                                    :show-details="false"
-                                  />
-                                </q-item-section>
-                              </q-item>
-                            </template>
-                          </q-select>
-                          <!-- 选择全键抬起声效的选项, 仅支持单选 -->
-                          <q-select
-                            outlined
-                            stack-label
-                            :virtual-scroll-slice-size="999999"
-                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                            v-model="keyUpUnifiedSoundEffectSelect"
-                            :options="keyUnifiedSoundEffectOptions"
-                            :option-label="album_options_select_label"
-                            :option-value="(item: any) => {
-                                  // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                  if (item.type === 'audio_files'){
-                                    return item.value?.sha256 + item.value?.name_id
-                                  }
-                                  if(item.type === 'sounds'){
-                                    return item.value?.soundKey
-                                  }
-                                  if(item.type === 'key_sounds'){
-                                    return item.value?.keySoundKey
-                                  }
-                                }"
-                            :label="$t('KeyToneAlbum.linkageEffects.global.setKeyUpSound')"
-                            use-chips
-                            :class="['zl-ll']"
-                            dense
-                            @popup-hide="
-                              () => {
-                                // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                if (
-                                  isShowUltimatePerfectionKeySoundAnchoring &&
-                                  isAnchoringUltimatePerfectionKeySound &&
-                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                  keyUpUnifiedSoundEffectSelect?.type === 'key_sounds'
-                                ) {
-                                  keyDownUnifiedSoundEffectSelect = keyUpUnifiedSoundEffectSelect;
-                                }
-                              }
-                            "
-                            class="max-w-full"
-                          >
-                            <template v-slot:option="scope">
-                              <q-item v-bind="scope.itemProps">
-                                <q-item-section>
-                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                </q-item-section>
-                                <q-item-section side>
-                                  <DependencyWarning
-                                    v-if="scope.opt.type === 'audio_files'"
-                                    :issues="dependencyIssues"
-                                    item-type="audio_files"
-                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                    :show-details="false"
-                                  />
-                                  <DependencyWarning
-                                    v-else-if="scope.opt.type === 'sounds'"
-                                    :issues="dependencyIssues"
-                                    item-type="sounds"
-                                    :item-id="scope.opt.value?.soundKey"
-                                    :show-details="false"
-                                  />
-                                  <DependencyWarning
-                                    v-else-if="scope.opt.type === 'key_sounds'"
-                                    :issues="dependencyIssues"
-                                    item-type="key_sounds"
-                                    :item-id="scope.opt.value?.keySoundKey"
-                                    :show-details="false"
-                                  />
-                                </q-item-section>
-                              </q-item>
-                            </template>
-                          </q-select>
-                        </div>
-                        <div class="flex justify-end -m-l-2">
-                          <q-icon
-                            @click="isAnchoringUltimatePerfectionKeySound = !isAnchoringUltimatePerfectionKeySound"
-                            size="2.75rem"
-                            v-if="isShowUltimatePerfectionKeySoundAnchoring"
-                          >
-                            <template v-if="isAnchoringUltimatePerfectionKeySound">
-                              <!-- 锚定 -->
-                              <q-icon name="svguse:icons.svg#锚定"></q-icon>
-                            </template>
-                            <template v-else>
-                              <!-- 锚定解除 -->
-                              <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
-                            </template>
-                            <q-tooltip
-                              :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center']"
-                            >
-                              <span class="text-sm">{{
-                                $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.title')
-                              }}</span>
-                              <span class="text-sm" v-if="isAnchoringUltimatePerfectionKeySound"
-                                >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored') }}<br
-                              /></span>
-                              <span class="text-sm" v-else
-                                >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored') }}<br
-                              /></span>
-                              <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip') }}</span>
-                            </q-tooltip>
-                          </q-icon>
-                        </div>
-                      </div>
-                      <div class="h-16 m-l-5.8">
-                        <q-option-group dense v-model="unifiedTypeGroup" :options="options" type="checkbox">
-                          <template #label-0="props">
-                            <q-item-label>
-                              {{ $t(props.label) }}
-                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                <q-tooltip
-                                  :class="[
-                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                  ]"
-                                >
-                                  <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.audioFile') }}</div>
-                                </q-tooltip>
-                              </q-icon>
-                            </q-item-label>
-                          </template>
-                          <template v-slot:label-1="props">
-                            <q-item-label :class="[setting_store.languageDefault === 'es' ? 'text-nowrap' : '']">
-                              {{ $t(props.label) }}
-                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                <q-tooltip
-                                  :class="[
-                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                  ]"
-                                >
-                                  <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.soundList') }}</div>
-                                </q-tooltip>
-                              </q-icon>
-                            </q-item-label>
-                          </template>
-                          <template v-slot:label-2="props">
-                            <q-item-label>
-                              {{ $t(props.label) }}
-                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                <q-tooltip
-                                  :class="[
-                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                  ]"
-                                >
-                                  <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.keySounds') }}</div>
-                                </q-tooltip>
-                              </q-icon>
-                            </q-item-label>
-                          </template>
-                        </q-option-group>
-                      </div>
-                    </q-card-section>
-                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn
-                        dense
-                        :label="$t('KeyToneAlbum.linkageEffects.confirm')"
-                        color="primary"
-                        v-close-popup
-                        @click="
-                          saveUnifiedSoundEffectConfig(
-                            {
-                              down: keyDownUnifiedSoundEffectSelect,
-                              up: keyUpUnifiedSoundEffectSelect,
-                            },
-                            () => {
-                              q.notify({
-                                type: 'positive',
-                                position: 'top',
-                                message: $t('KeyToneAlbum.notify.configSuccess'),
-                                timeout: 2000,
-                              });
-                            }
-                          )
-                        "
-                      />
-                      <q-btn flat dense color="primary" :label="$t('KeyToneAlbum.close')" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-              <div :class="['p-2 text-zinc-600']">{{ $t('KeyToneAlbum.or') }}</div>
-              <div>
-                <q-btn
-                  :class="['bg-zinc-300']"
-                  :label="$t('KeyToneAlbum.linkageEffects.singleKeySettings')"
-                  @click="
-                    () => {
-                      showSingleKeyEffectDialog = true;
-                    }
-                  "
-                >
-                </q-btn>
-                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                  <q-tooltip :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words ']">
-                    <span>{{ $t('KeyToneAlbum.linkageEffects.tooltips.singleKeyPriority') }}</span>
-                  </q-tooltip>
-                </q-icon>
-                <q-dialog
-                  :style="{ '--i18n_fontSize': i18n_fontSize }"
-                  v-model="showSingleKeyEffectDialog"
-                  backdrop-filter="invert(70%)"
-                  @mouseup="preventDefaultMouseWhenRecording"
-                >
-                  <q-card>
-                    <q-card-section
-                      class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
-                    >
-                      {{ $t('KeyToneAlbum.linkageEffects.singleKeySettings') }}
-                    </q-card-section>
-
-                    <q-card-section class="q-pt-none pb-0">
-                      <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">
-                        {{ $t('KeyToneAlbum.linkageEffects.single.description') }}
-                      </div>
-                      <!-- 这里添加按键选择和声效设置等具体内容 -->
-                      <div class="flex flex-row items-center gap-2 mb-2 ml-2">
-                        <q-btn
-                          flat
-                          round
-                          color="primary"
-                          icon="add"
-                          @click="
-                            () => {
-                              isShowAddOrSettingSingleKeyEffectDialog = true;
-                            }
-                          "
-                        />
-                        {{ $t('KeyToneAlbum.linkageEffects.single.addSingleKeyEffect') }}
-                        <q-dialog
-                          :style="{ '--i18n_fontSize': i18n_fontSize }"
-                          :no-esc-dismiss="isRecordingSingleKeys && isGetsFocused"
-                          v-model="isShowAddOrSettingSingleKeyEffectDialog"
-                          backdrop-filter="invert(70%)"
-                          @mouseup="preventDefaultMouseWhenRecording"
-                        >
-                          <q-card>
-                            <q-card-section
-                              class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm"
-                            >
-                              {{ $t('KeyToneAlbum.linkageEffects.single.addSingleKeyEffect') }}
-                            </q-card-section>
-
-                            <q-card-section class="q-pt-none">
-                              <div class="text-subtitle1 q-mb-md leading-tight m-t-1.5">
-                                {{ $t('KeyToneAlbum.linkageEffects.single.dialog.selectKeyAndEffect') }}
-                                <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                  <q-tooltip
-                                    :class="[
-                                      'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                    ]"
-                                  >
-                                    <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.fastDelete') }}</div>
-                                    <div></div>
-                                    <div></div>
-                                  </q-tooltip>
-                                </q-icon>
-                              </div>
-                              <div class="flex flex-col gap-4">
-                                <div class="flex flex-row items-center gap-2 w-full">
-                                  <!--
-                                    // 此选择组件增加录制功能且默认启用。(停止录制的应用场景全配列键盘的用户可能用不到, 但当某些用户使用的键盘不是全配列, 无法录制一些常用按键时(如小键盘数字区)会非常有用。)
-                                    //   ↓    - completed(已完成)    只不过方法不是太优雅而已 -> 采用了其中提到的比较啰嗦的其余方式。
-                                    // TODO: 在使用录制功能录制按键的过程中会存在一些干扰录制过程的功能键, 最影响的就数`BACKSPACE`键了。
-                                             但是说实话, 目前我没有很好的解决此问题的方式, 因为即使阻止@keydown事件的按键默认行为也无效。
-                                             对于 input 组件上删除事件监听的做法, 由于无法针对性删除, 因此也无济于事。
-                                             而其余的方式, 有点太啰嗦了, 并且此bug对用户体验也是有利有弊的(弊大于利吧),索性就暂时不适配了。
-                                             何时适配? 等待quasar的更新中提供相关的选项后, 再适配此TODO。
-                                    //
-                                    // 组件的关键使用注释
-                                    // 单纯而new-value-mode满足不了我的需求, 我需要@new-value事件来更进一步的使用。
-                                    new-value-mode="add-unique"  // 一开始想通过此属性来实现录制功能, 不过之后使用其它方案了
-                                    // 为了在 录制单键 功能启用时, 阻止正常输入的内容。(使用此方式, 可以便捷的阻止输入)
-                                    :maxlength="isRecordingSingleKeys ? 0 : Infinity"
-                                  -->
-                                  <!-- 按键选择 start -->
-                                  <q-select
-                                    :label="$t('KeyToneAlbum.linkageEffects.single.dialog.selectSingleKey')"
-                                    ref="singleKeysSelectRef"
-                                    popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                    v-model="selectedSingleKeys"
-                                    :options="filterOptions"
-                                    :virtual-scroll-slice-size="
-                                      (() => {
-                                        // TIPS: 此处如此写, 只是为了添加注释。因此没使用正常的双引号内直接写9999的方式。
-                                        // TIPS: select组件默认启用了虚拟滚动行为, 初始值是10, 因此每次只会渲染10个, 超出就会触发虚拟滚动。
-                                        // TIPS: 我不喜欢quasar的虚拟滚动, 但quasar不支持关闭。 因此将此值设置的足够大来满足禁用虚拟滚动的需求。
-                                        // TIPS: 就算我需要使用虚拟滚动, 也会使用专门的虚拟滚动库, 而不是quasar的虚拟滚动(因为quasar的虚拟滚动影响显示)。
-                                        //       不过似乎不现实, 因为即使自定义菜单时, 似乎也被要求加上虚拟滚动类 -> https://quasar.dev/vue-components/select#customizing-menu-options:~:text=Customizing%20menu%20options,the%20first%20one
-                                        return 9999;
-                                      })()
-                                    "
-                                    dense
-                                    filled
-                                    hide-dropdown-icon
-                                    multiple
-                                    outlined
-                                    stack-label
-                                    :placeholder="
-                                      isRecordingSingleKeys
-                                        ? $t(
-                                            'KeyToneAlbum.linkageEffects.single.dialog.selectSingleKey-placeholder_record'
-                                          )
-                                        : $t(
-                                            'KeyToneAlbum.linkageEffects.single.dialog.selectSingleKey-placeholder_search'
-                                          )
-                                    "
-                                    use-input
-                                    use-chips
-                                    :class="['zl-ll']"
-                                    class="flex-1"
-                                    @focus="
-                                      () => {
-                                        isGetsFocused = true;
-                                      }
-                                    "
-                                    @blur="
-                                      () => {
-                                        isGetsFocused = false;
-                                      }
-                                    "
-                                    :maxlength="isRecordingSingleKeys ? 0 : Infinity"
-                                    @keydown="preventDefaultKeyBehaviorWhenRecording"
-                                    :option-label="
-                                      (option) => {
-                                        return (
-                                          keyEvent_store.dikCodeToName.get(option) || // 优先从项目作者制作的特定于 dik码 与 按键名称 的映射码表中取按键名。
-                                          'Dik-{' + option + '}'
-                                        ); // 最后, 若按键名仍无法识别, 将按照此处指定的固定格式, 展示出无法失败的Dik码值。(其实有了这一步, 第二步可以删除的, 毕竟它的存在有可能影响测试, 故对其增加大括号以避免造成影响。)
-                                      }
-                                    "
-                                    @filter="
-                                      (inputValue, doneFn) => {
-                                        if (inputValue === '') {
-                                          doneFn(() => {
-                                            filterOptions = keyOptions;
-                                          });
-                                          return;
-                                        }
-
-                                        doneFn(() => {
-                                          const inputValueLowerCase = inputValue.toLowerCase();
-                                          filterOptions = keyOptions.filter((item) => {
-                                            // 首先过滤系统 TIPS: 由于结果0也是符合预期的(即第一个字符), 因此不能使用||来处理, 否则会造成第一个字符无法被识别。
-                                            let ifre = keyEvent_store.dikCodeToName
-                                              .get(item)
-                                              ?.toLowerCase()
-                                              ?.indexOf(inputValueLowerCase);
-
-                                            if (ifre !== undefined && ifre > -1) {
-                                              return true;
-                                            }
-
-                                            return false;
-                                          });
-                                        });
-                                      }
-                                    "
-                                    @remove="
-                                      // TIPS: @remove事件是quasar的select组件提供的。用于多选时被选项减少时触发。(另一个@clear事件, 仅作用于单选时的总清楚按钮, 无法触发多选时各个芯片上的清楚按钮)
-                                      () => {
-                                        clear_flag = true;
-                                        singleKeysSelectRef?.focus(); // remove事件会造成所选项被清空时, 选择组件失去焦点的问题。因此通过手动获取焦点来解决此问题。
-                                      }
-                                    "
-                                  >
-                                    <template v-slot:append>
-                                      <q-btn
-                                        dense
-                                        flat
-                                        :color="isRecordingSingleKeys ? 'primary' : ''"
-                                        icon="keyboard"
-                                        @click="isRecordingSingleKeys = !isRecordingSingleKeys"
-                                      >
-                                        <q-tooltip>
-                                          {{
-                                            isRecordingSingleKeys
-                                              ? $t('KeyToneAlbum.linkageEffects.tooltips.stopRecording')
-                                              : $t('KeyToneAlbum.linkageEffects.tooltips.startRecording')
-                                          }}
-                                        </q-tooltip>
-                                      </q-btn>
-                                    </template>
-                                  </q-select>
-                                  <!-- 按键选择 end -->
-
-                                  <!-- 声效选择 start -->
-                                  <div class="flex flex-row items-center justify-center gap-x-9 gap-y-2 w-[95%]">
-                                    <q-checkbox
-                                      dense
-                                      :class="[
-                                        setting_store.languageDefault === 'ru' || setting_store.languageDefault === 'pl'
-                                          ? 'w-[200px] text-nowrap'
-                                          : setting_store.languageDefault === 'fr' ||
-                                            setting_store.languageDefault === 'pt' ||
-                                            setting_store.languageDefault === 'pt-BR' ||
-                                            setting_store.languageDefault === 'vi'
-                                          ? 'w-[180px] text-nowrap'
-                                          : setting_store.languageDefault === 'it' ||
-                                            setting_store.languageDefault === 'tr'
-                                          ? 'w-[102px] text-nowrap'
-                                          : '',
-                                      ]"
-                                      v-model="isDownSoundEffectSelectEnabled"
-                                      :label="$t('KeyToneAlbum.linkageEffects.single.dialog.downSoundEffect')"
-                                    />
-                                    <q-checkbox
-                                      dense
-                                      :class="[
-                                        setting_store.languageDefault === 'ru' || setting_store.languageDefault === 'pl'
-                                          ? 'w-[200px] text-nowrap'
-                                          : setting_store.languageDefault === 'fr' ||
-                                            setting_store.languageDefault === 'pt' ||
-                                            setting_store.languageDefault === 'pt-BR' ||
-                                            setting_store.languageDefault === 'vi'
-                                          ? 'w-[180px] text-nowrap'
-                                          : setting_store.languageDefault === 'it'
-                                          ? 'w-[102px] text-nowrap'
-                                          : '',
-                                      ]"
-                                      v-model="isUpSoundEffectSelectEnabled"
-                                      :label="$t('KeyToneAlbum.linkageEffects.single.dialog.upSoundEffect')"
-                                    />
-                                  </div>
-                                  <div class="w-full">
-                                    <q-card-section>
-                                      <div class="flex flex-row flex-nowrap items-center m-b-3 m-l-5">
-                                        <div class="flex flex-col space-y-4 w-[223px]">
-                                          <!-- 选择单键按下声效的选项, 仅支持单选 -->
-                                          <q-select
-                                            v-show="isDownSoundEffectSelectEnabled"
-                                            outlined
-                                            stack-label
-                                            :virtual-scroll-slice-size="999999"
-                                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                            v-model="keyDownSingleKeySoundEffectSelect"
-                                            :options="keySingleKeySoundEffectOptions"
-                                            :option-label="album_options_select_label"
-                                            :option-value="(item: any) => {
-                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                              if (item.type === 'audio_files'){
-                                                return item.value.sha256 + item.value.name_id
-                                              }
-                                              if(item.type === 'sounds'){
-                                                return item.value.soundKey
-                                              }
-                                              if(item.type === 'key_sounds'){
-                                                return item.value.keySoundKey
-                                              }
-                                            }"
-                                            :label="$t('KeyToneAlbum.linkageEffects.single.dialog.setDownSoundEffect')"
-                                            use-chips
-                                            :class="['zl-ll']"
-                                            dense
-                                            @popup-hide="
-                                              () => {
-                                                if (
-                                                  // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                                  isShowUltimatePerfectionKeySoundAnchoring_singleKey &&
-                                                  isAnchoringUltimatePerfectionKeySound_singleKey &&
-                                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                                  keyDownSingleKeySoundEffectSelect?.type === 'key_sounds'
-                                                ) {
-                                                  keyUpSingleKeySoundEffectSelect = keyDownSingleKeySoundEffectSelect;
-                                                }
-                                              }
-                                            "
-                                            class="max-w-full"
-                                          >
-                                            <template v-slot:option="scope">
-                                              <q-item v-bind="scope.itemProps">
-                                                <q-item-section>
-                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                                </q-item-section>
-                                                <q-item-section side>
-                                                  <DependencyWarning
-                                                    v-if="scope.opt.type === 'audio_files'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="audio_files"
-                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                                    :show-details="false"
-                                                  />
-                                                  <DependencyWarning
-                                                    v-else-if="scope.opt.type === 'sounds'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="sounds"
-                                                    :item-id="scope.opt.value?.soundKey"
-                                                    :show-details="false"
-                                                  />
-                                                  <DependencyWarning
-                                                    v-else-if="scope.opt.type === 'key_sounds'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="key_sounds"
-                                                    :item-id="scope.opt.value?.keySoundKey"
-                                                    :show-details="false"
-                                                  />
-                                                </q-item-section>
-                                              </q-item>
-                                            </template>
-                                          </q-select>
-                                          <!-- 选择单键抬起声效的选项, 仅支持单选 -->
-                                          <q-select
-                                            v-show="isUpSoundEffectSelectEnabled"
-                                            outlined
-                                            stack-label
-                                            :virtual-scroll-slice-size="999999"
-                                            popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                            v-model="keyUpSingleKeySoundEffectSelect"
-                                            :options="keySingleKeySoundEffectOptions"
-                                            :option-label="album_options_select_label"
-                                            :option-value="(item: any) => {
-                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                              if (item.type === 'audio_files'){
-                                                return item.value.sha256 + item.value.name_id
-                                              }
-                                              if(item.type === 'sounds'){
-                                                return item.value.soundKey
-                                              }
-                                              if(item.type === 'key_sounds'){
-                                                return item.value.keySoundKey
-                                              }
-                                            }"
-                                            :label="$t('KeyToneAlbum.linkageEffects.single.dialog.setUpSoundEffect')"
-                                            use-chips
-                                            :class="['zl-ll']"
-                                            dense
-                                            @popup-hide="
-                                              () => {
-                                                // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                                if (
-                                                  isShowUltimatePerfectionKeySoundAnchoring_singleKey &&
-                                                  isAnchoringUltimatePerfectionKeySound_singleKey &&
-                                                  // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                                  keyUpSingleKeySoundEffectSelect?.type === 'key_sounds'
-                                                ) {
-                                                  keyDownSingleKeySoundEffectSelect = keyUpSingleKeySoundEffectSelect;
-                                                }
-                                              }
-                                            "
-                                            class="max-w-full"
-                                          >
-                                            <template v-slot:option="scope">
-                                              <q-item v-bind="scope.itemProps">
-                                                <q-item-section>
-                                                  <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                                </q-item-section>
-                                                <q-item-section side>
-                                                  <DependencyWarning
-                                                    v-if="scope.opt.type === 'audio_files'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="audio_files"
-                                                    :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                                    :show-details="false"
-                                                  />
-                                                  <DependencyWarning
-                                                    v-else-if="scope.opt.type === 'sounds'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="sounds"
-                                                    :item-id="scope.opt.value?.soundKey"
-                                                    :show-details="false"
-                                                  />
-                                                  <DependencyWarning
-                                                    v-else-if="scope.opt.type === 'key_sounds'"
-                                                    :issues="dependencyIssues"
-                                                    item-type="key_sounds"
-                                                    :item-id="scope.opt.value?.keySoundKey"
-                                                    :show-details="false"
-                                                  />
-                                                </q-item-section>
-                                              </q-item>
-                                            </template>
-                                          </q-select>
-                                        </div>
-                                        <div
-                                          v-show="isDownSoundEffectSelectEnabled && isUpSoundEffectSelectEnabled"
-                                          :class="['absolute -right-2']"
-                                        >
-                                          <q-icon
-                                            @click="
-                                              isAnchoringUltimatePerfectionKeySound_singleKey =
-                                                !isAnchoringUltimatePerfectionKeySound_singleKey
-                                            "
-                                            size="2.75rem"
-                                            v-if="isShowUltimatePerfectionKeySoundAnchoring_singleKey"
-                                          >
-                                            <template v-if="isAnchoringUltimatePerfectionKeySound_singleKey">
-                                              <!-- 锚定 -->
-                                              <q-icon name="svguse:icons.svg#锚定"></q-icon>
-                                            </template>
-                                            <template v-else>
-                                              <!-- 锚定解除 -->
-                                              <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
-                                            </template>
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <span class="text-sm">{{
-                                                $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.title')
-                                              }}</span>
-                                              <span
-                                                class="text-sm"
-                                                v-if="isAnchoringUltimatePerfectionKeySound_singleKey"
-                                              >
-                                                {{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored')
-                                                }}<br
-                                              /></span>
-                                              <span class="text-sm" v-else
-                                                >{{
-                                                  $t(
-                                                    'KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored'
-                                                  )
-                                                }}<br
-                                              /></span>
-                                              <span>{{
-                                                $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip')
-                                              }}</span>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </div>
-                                      </div>
-                                      <div
-                                        class="h-16 m-l-9"
-                                        v-show="isDownSoundEffectSelectEnabled || isUpSoundEffectSelectEnabled"
-                                      >
-                                        <q-option-group
-                                          dense
-                                          v-model="singleKeyTypeGroup"
-                                          :options="options"
-                                          type="checkbox"
-                                        >
-                                          <template #label-0="props">
-                                            <q-item-label>
-                                              {{ $t(props.label) }}
-                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                                <q-tooltip
-                                                  :class="[
-                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                                  ]"
-                                                >
-                                                  <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.audioFile') }}</div>
-                                                </q-tooltip>
-                                              </q-icon>
-                                            </q-item-label>
-                                          </template>
-                                          <template v-slot:label-1="props">
-                                            <q-item-label
-                                              :class="[
-                                                setting_store.languageDefault === 'fr' ||
-                                                setting_store.languageDefault === 'it' ||
-                                                setting_store.languageDefault === 'pt' ||
-                                                setting_store.languageDefault === 'pt-BR'
-                                                  ? 'text-nowrap'
-                                                  : '',
-                                              ]"
-                                            >
-                                              {{ $t(props.label) }}
-                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                                <q-tooltip
-                                                  :class="[
-                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                                  ]"
-                                                >
-                                                  <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.soundList') }}</div>
-                                                </q-tooltip>
-                                              </q-icon>
-                                            </q-item-label>
-                                          </template>
-                                          <template v-slot:label-2="props">
-                                            <q-item-label>
-                                              {{ $t(props.label) }}
-                                              <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                                <q-tooltip
-                                                  :class="[
-                                                    'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                                  ]"
-                                                >
-                                                  <div>
-                                                    {{ $t('KeyToneAlbum.linkageEffects.tooltips.keySounds') }}
-                                                  </div>
-                                                </q-tooltip>
-                                              </q-icon>
-                                            </q-item-label>
-                                          </template>
-                                        </q-option-group>
-                                      </div>
-                                    </q-card-section>
-                                  </div>
-                                  <!-- 声效选择 end -->
-                                </div>
-
-                                <!-- <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" /> -->
-                              </div>
-                            </q-card-section>
-
-                            <q-card-actions
-                              align="right"
-                              :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']"
-                            >
-                              <q-btn
-                                flat
-                                :label="$t('KeyToneAlbum.linkageEffects.confirm')"
-                                color="primary"
-                                @click="
-                                  if (selectedSingleKeys.length !== 0) {
-                                    // 保存之前先记录下keysWithSoundEffect的值, 用于保存成功回调中的判断。 保证保存成功的回调中, 判断逻辑的正确性。
-                                    const keysWithSoundEffect_old = [...keysWithSoundEffect]; // 注意,这里我们直接将解构的map给到了数组, 因此后续需要使用数组的some函数判断,而不是map的has。
-
-                                    saveSingleKeySoundEffectConfig(
-                                      {
-                                        singleKeys: selectedSingleKeys,
-                                        down: keyDownSingleKeySoundEffectSelect,
-                                        up: keyUpSingleKeySoundEffectSelect,
-                                      },
-                                      () => {
-                                        if (!keyDownSingleKeySoundEffectSelect && !keyUpSingleKeySoundEffectSelect) {
-                                          const isDeletes: number[] = [];
-                                          const isNotSoundEffectSelect: number[] = [];
-                                          selectedSingleKeys.forEach((key) => {
-                                            // if (keysWithSoundEffect.has(String(key))) { // TIPS: 由于onSuccess发生在保存成功后, 此时的keysWithSoundEffect已经是更改过的值了(判断的结果是不可用的), 我们应该就更改前的值来做判断才是正确的逻辑。
-                                            if (keysWithSoundEffect_old.some((item) => item[0] === String(key))) {
-                                              isDeletes.push(key);
-                                            } else {
-                                              isNotSoundEffectSelect.push(key);
-                                            }
-                                          });
-                                          if (isNotSoundEffectSelect.length !== 0) {
-                                            if (isDeletes.length === 0) {
-                                              q.notify({
-                                                type: 'warning',
-                                                position: 'top',
-                                                message: $t('KeyToneAlbum.notify.selectSoundEffect'),
-                                                timeout: 2000,
-                                              });
-                                              return;
-                                            } else {
-                                              // 此时代表isDeletes.length !== 0, 即本次操作同时存在删除单键声效配置的操作, 和一些未知目的的错误录制的按键
-                                              let deleteString: string = '';
-                                              let notSoundEffectSelectString: string = '';
-                                              isDeletes.forEach((key) => {
-                                                deleteString +=
-                                                  '-[' +
-                                                  (keyEvent_store.dikCodeToName.get(key) || 'Dik-{' + key + '}') +
-                                                  ']';
-                                              });
-                                              isNotSoundEffectSelect.forEach((key) => {
-                                                notSoundEffectSelectString +=
-                                                  '-[' +
-                                                  (keyEvent_store.dikCodeToName.get(key) || 'Dik-{' + key + '}') +
-                                                  ']';
-                                              });
-                                              q.notify({
-                                                type: 'warning',
-                                                position: 'top',
-                                                message: $t('KeyToneAlbum.notify.selectSoundEffectForKeys', {
-                                                  keys: notSoundEffectSelectString,
-                                                }),
-                                                timeout: 8000,
-                                              });
-                                              q.notify({
-                                                type: 'positive',
-                                                position: 'top',
-                                                message: $t('KeyToneAlbum.notify.deleteSuccessForKeys', {
-                                                  keys: deleteString,
-                                                }),
-                                                timeout: 3000,
-                                              });
-                                              selectedSingleKeys = isNotSoundEffectSelect;
-                                              return;
-                                            }
-                                          } else {
-                                            // 此时代表isNotSoundEffectSelect.length === 0, 即本次操作为专门的删除按键配置的操作
-                                            q.notify({
-                                              type: 'positive',
-                                              position: 'top',
-                                              message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                              timeout: 2000,
-                                            });
-                                            selectedSingleKeys = [];
-                                            keyDownSingleKeySoundEffectSelect = null;
-                                            keyUpSingleKeySoundEffectSelect = null;
-                                            isShowAddOrSettingSingleKeyEffectDialog = false;
-                                            return;
-                                          }
-                                        }
-
-                                        q.notify({
-                                          type: 'positive',
-                                          position: 'top',
-                                          message: $t('KeyToneAlbum.notify.configSuccess'),
-                                          timeout: 2000,
-                                        });
-                                        selectedSingleKeys = [];
-                                        keyDownSingleKeySoundEffectSelect = null;
-                                        keyUpSingleKeySoundEffectSelect = null;
-                                        isShowAddOrSettingSingleKeyEffectDialog = false;
-                                      }
-                                    );
-                                  } else {
-                                    q.notify({
-                                      type: 'warning',
-                                      position: 'top',
-                                      message: $t('KeyToneAlbum.notify.selectKey'),
-                                      timeout: 2000,
-                                    });
-                                  }
-                                "
-                              />
-                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                            </q-card-actions>
-                          </q-card>
-                        </q-dialog>
-                      </div>
-
-                      <!-- <div class="flex flex-col gap-4">
-                        <q-select filled v-model="selectedKeys" :options="keyOptions" multiple label="选择按键" />
-                        <q-select filled v-model="selectedEffect" :options="effectOptions" label="选择声效" />
-                      </div> -->
-                      <!-- <div class="flex flex-row items-center gap-2 mb-2">
-                        <q-select
-                          class="w-1/2"
-                          filled
-                          v-model="selectedKeys"
-                          :options="keyOptions"
-                          multiple
-                          label="选择按键"
-                        />
-                        <q-select
-                          class="w-1/2"
-                          filled
-                          v-model="selectedEffect"
-                          :options="effectOptions"
-                          label="选择声效"
-                        />
-                        <q-btn flat round color="primary" icon="add" @click="addSingleKeyEffect" />
-                      </div>
-                      <q-card-section
-                        class="row items-center q-pb-none text-sm font-bold sticky top-0 z-10 bg-white/30 backdrop-blur-sm -m-l-4 m-b-2"
-                      >
-                        查看已设置的单键声效
-                      </q-card-section> -->
-                    </q-card-section>
-                    <q-card-section>
-                      <div v-if="keysWithSoundEffect.size === 0" class="text-[1.06rem]">
-                        {{ $t('KeyToneAlbum.linkageEffects.single.dialog.noSingleKeyEffects') }}
-                      </div>
-                      <div v-else class="text-[1.06rem] pb-2 font-600 text-gray-700 flex flex-row items-center">
-                        {{ $t('KeyToneAlbum.linkageEffects.single.dialog.singleKeyEffects') }}
-                        <div class="text-[0.88rem] ml-1">
-                          ({{ $t('KeyToneAlbum.linkageEffects.single.dialog.clickToView') }})
-                        </div>
-                      </div>
-                      <div class="flex flex-wrap gap-0.8">
-                        <q-chip
-                          v-for="item in keysWithSoundEffect"
-                          :key="item[0]"
-                          dense
-                          square
-                          class="p-t-3.25 p-b-3.25 p-x-2.5 bg-gradient-to-b from-gray-50 to-gray-200 border-2 border-gray-300 rounded-[0.18rem] shadow-[1px_2px_1px_3px_rgba(0,0,0,0.2),inset_1px_1px_1px_rgba(255,255,255,0.6)] inset_1px_1px_1px_rgba(255,255,255,0.6)]"
-                          clickable
-                          @click="
-                            () => {
-                              // 打开查看声效的对话框
-                              isShowSingleKeySoundEffectEditDialog = true;
-                              currentEditingKey_old = currentEditingKey;
-                              currentEditingKey = Number(item[0]);
-                              // TODO: 进一步, 需要在此处读取对应单键的声效设置, 并用读取的数据来初始化对话框, 以供用户的后续编辑。
-                              if (currentEditingKey !== currentEditingKey_old) {
-                                // 如果点击的是同一个按键, 则没必要重新初始值。(即默认持久化刚才的操作记录)
-                                singleKeyTypeGroup_edit = ['sounds']; // 为了防止初始有'key_sounds'时触发的锚定, 会影响原数据的初始化(如因锚定错误的同步双方等连锁反应)
-                                const down = item[1].down;
-                                const up = item[1].up;
-                                keyDownSingleKeySoundEffectSelect_edit = convertValue(down ? down : '');
-                                keyUpSingleKeySoundEffectSelect_edit = convertValue(up ? up : '');
-                                keyDownSingleKeySoundEffectSelect_edit_old = keyDownSingleKeySoundEffectSelect_edit;
-                                keyUpSingleKeySoundEffectSelect_edit_old = keyUpSingleKeySoundEffectSelect_edit;
-                              }
-                            }
-                          "
-                        >
-                          {{ keyEvent_store.dikCodeToName.get(Number(item[0])) || 'Dik-{' + item[0] + '}' }}
-                        </q-chip>
-                        <q-dialog
-                          :style="{ '--i18n_fontSize': i18n_fontSize }"
-                          v-model="isShowSingleKeySoundEffectEditDialog"
-                          @mouseup="preventDefaultMouseWhenRecording"
-                        >
-                          <q-card style="min-width: 350px">
-                            <q-card-section>
-                              <div class="text-base flex flex-row items-center">
-                                {{ $t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey') }} -
-                                <div class="text-sm font-bold">
-                                  [
-                                  {{ currentEditingKeyOfName }}
-                                  ]
-                                </div>
-                                - {{ $t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect') }}
-                              </div>
-                            </q-card-section>
-
-                            <q-card-section class="q-pt-none pb-1">
-                              <!-- 这里之后添加编辑内容 -->
-                              <!-- 声效编辑  start -->
-                              <div class="w-full">
-                                <q-card-section>
-                                  <div class="flex flex-row flex-nowrap items-center mb-3">
-                                    <div class="flex flex-col space-y-4 w-full">
-                                      <!-- 选择单键按下声效的选项, 仅支持单选 [声效编辑]-->
-                                      <q-select
-                                        outlined
-                                        stack-label
-                                        :virtual-scroll-slice-size="999999"
-                                        popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                        v-model="keyDownSingleKeySoundEffectSelect_edit"
-                                        :options="keySingleKeySoundEffectOptions_edit"
-                                        :option-label="album_options_select_label"
-                                        :option-value="(item: any) => {
-                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                              if (item.type === 'audio_files'){
-                                                return item.value?.sha256 + item.value?.name_id
-                                              }
-                                              if(item.type === 'sounds'){
-                                                return item.value?.soundKey
-                                              }
-                                              if(item.type === 'key_sounds'){
-                                                return item.value?.keySoundKey
-                                              }
-                                            }"
-                                        :label="`${$t(
-                                          'KeyToneAlbum.linkageEffects.single.dialog.editSingleKey'
-                                        )} -[ ${currentEditingKeyOfName} ]- ${$t(
-                                          'KeyToneAlbum.linkageEffects.single.dialog.soundEffect-down'
-                                        )} `"
-                                        use-chips
-                                        :class="['zl-ll']"
-                                        dense
-                                        @popup-hide="
-                                          () => {
-                                            if (
-                                              // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                              isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit &&
-                                              isAnchoringUltimatePerfectionKeySound_singleKey_edit &&
-                                              // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                              keyDownSingleKeySoundEffectSelect_edit?.type === 'key_sounds'
-                                            ) {
-                                              keyUpSingleKeySoundEffectSelect_edit =
-                                                keyDownSingleKeySoundEffectSelect_edit;
-                                            }
-                                          }
-                                        "
-                                        class="max-w-full"
-                                      >
-                                        <template v-slot:option="scope">
-                                          <q-item v-bind="scope.itemProps">
-                                            <q-item-section>
-                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                            </q-item-section>
-                                            <q-item-section side>
-                                              <DependencyWarning
-                                                v-if="scope.opt.type === 'audio_files'"
-                                                :issues="dependencyIssues"
-                                                item-type="audio_files"
-                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                                :show-details="false"
-                                              />
-                                              <DependencyWarning
-                                                v-else-if="scope.opt.type === 'sounds'"
-                                                :issues="dependencyIssues"
-                                                item-type="sounds"
-                                                :item-id="scope.opt.value?.soundKey"
-                                                :show-details="false"
-                                              />
-                                              <DependencyWarning
-                                                v-else-if="scope.opt.type === 'key_sounds'"
-                                                :issues="dependencyIssues"
-                                                item-type="key_sounds"
-                                                :item-id="scope.opt.value?.keySoundKey"
-                                                :show-details="false"
-                                              />
-                                            </q-item-section>
-                                          </q-item>
-                                        </template>
-                                      </q-select>
-                                      <!-- 选择单键抬起声效的选项, 仅支持单选 [声效编辑]-->
-                                      <q-select
-                                        outlined
-                                        stack-label
-                                        :virtual-scroll-slice-size="999999"
-                                        popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                                        v-model="keyUpSingleKeySoundEffectSelect_edit"
-                                        :options="keySingleKeySoundEffectOptions_edit"
-                                        :option-label="album_options_select_label"
-                                        :option-value="(item: any) => {
-                                              // 直接设置uuid, 使组件可轻松精确的区分每个选项。
-                                              if (item.type === 'audio_files'){
-                                                return item.value?.sha256 + item.value?.name_id
-                                              }
-                                              if(item.type === 'sounds'){
-                                                return item.value?.soundKey
-                                              }
-                                              if(item.type === 'key_sounds'){
-                                                return item.value?.keySoundKey
-                                              }
-                                            }"
-                                        :label="`${$t(
-                                          'KeyToneAlbum.linkageEffects.single.dialog.editSingleKey'
-                                        )} -[ ${currentEditingKeyOfName} ]- ${$t(
-                                          'KeyToneAlbum.linkageEffects.single.dialog.soundEffect-up'
-                                        )} `"
-                                        use-chips
-                                        :class="['zl-ll']"
-                                        dense
-                                        @popup-hide="
-                                          () => {
-                                            // 为避免循环依赖, 此处作为锚定功能选择声效时的判断逻辑; 而删除声效时的判断逻辑, 在watch中书写。
-                                            if (
-                                              isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit &&
-                                              isAnchoringUltimatePerfectionKeySound_singleKey_edit &&
-                                              // 这里的?是防止在勾选至臻键音的条件下, 仅打开选项菜单且未做任何选择就关闭时, mode的null值内 没有type字段引起报错。
-                                              keyUpSingleKeySoundEffectSelect_edit?.type === 'key_sounds'
-                                            ) {
-                                              keyDownSingleKeySoundEffectSelect_edit =
-                                                keyUpSingleKeySoundEffectSelect_edit;
-                                            }
-                                          }
-                                        "
-                                        class="max-w-full"
-                                      >
-                                        <template v-slot:option="scope">
-                                          <q-item v-bind="scope.itemProps">
-                                            <q-item-section>
-                                              <q-item-label>{{ album_options_select_label(scope.opt) }}</q-item-label>
-                                            </q-item-section>
-                                            <q-item-section side>
-                                              <DependencyWarning
-                                                v-if="scope.opt.type === 'audio_files'"
-                                                :issues="dependencyIssues"
-                                                item-type="audio_files"
-                                                :item-id="scope.opt.value?.sha256 + scope.opt.value?.name_id"
-                                                :show-details="false"
-                                              />
-                                              <DependencyWarning
-                                                v-else-if="scope.opt.type === 'sounds'"
-                                                :issues="dependencyIssues"
-                                                item-type="sounds"
-                                                :item-id="scope.opt.value?.soundKey"
-                                                :show-details="false"
-                                              />
-                                              <DependencyWarning
-                                                v-else-if="scope.opt.type === 'key_sounds'"
-                                                :issues="dependencyIssues"
-                                                item-type="key_sounds"
-                                                :item-id="scope.opt.value?.keySoundKey"
-                                                :show-details="false"
-                                              />
-                                            </q-item-section>
-                                          </q-item>
-                                        </template>
-                                      </q-select>
-                                    </div>
-                                    <div class="flex justify-end -m-l-2">
-                                      <q-icon
-                                        @click="
-                                          isAnchoringUltimatePerfectionKeySound_singleKey_edit =
-                                            !isAnchoringUltimatePerfectionKeySound_singleKey_edit
-                                        "
-                                        size="2.75rem"
-                                        v-if="isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit"
-                                      >
-                                        <template v-if="isAnchoringUltimatePerfectionKeySound_singleKey_edit">
-                                          <!-- 锚定 [声效编辑]-->
-                                          <q-icon name="svguse:icons.svg#锚定"></q-icon>
-                                        </template>
-                                        <template v-else>
-                                          <!-- 锚定解除 [声效编辑]-->
-                                          <q-icon name="svguse:icons.svg#锚定解除"></q-icon>
-                                        </template>
-                                        <q-tooltip
-                                          :class="[
-                                            'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                          ]"
-                                        >
-                                          <span class="text-sm">{{
-                                            $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.title')
-                                          }}</span>
-                                          <span
-                                            class="text-sm"
-                                            v-if="isAnchoringUltimatePerfectionKeySound_singleKey_edit"
-                                          >
-                                            {{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.anchored')
-                                            }}<br
-                                          /></span>
-                                          <span class="text-sm" v-else
-                                            >{{ $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.unanchored')
-                                            }}<br
-                                          /></span>
-                                          <span>{{
-                                            $t('KeyToneAlbum.linkageEffects.tooltips.ultimateKeySound.tooltip')
-                                          }}</span>
-                                        </q-tooltip>
-                                      </q-icon>
-                                    </div>
-                                  </div>
-                                  <div class="h-16 m-l-9">
-                                    <q-option-group
-                                      dense
-                                      v-model="singleKeyTypeGroup_edit"
-                                      :options="options"
-                                      type="checkbox"
-                                    >
-                                      <template #label-0="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.audioFile') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-1="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-4.5 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>{{ $t('KeyToneAlbum.linkageEffects.tooltips.soundList') }}</div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                      <template v-slot:label-2="props">
-                                        <q-item-label>
-                                          {{ $t(props.label) }}
-                                          <q-icon name="info" color="primary" class="p-l-1 m-b-0.5">
-                                            <q-tooltip
-                                              :class="[
-                                                'text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-center',
-                                              ]"
-                                            >
-                                              <div>
-                                                {{ $t('KeyToneAlbum.linkageEffects.tooltips.keySounds') }}
-                                              </div>
-                                            </q-tooltip>
-                                          </q-icon>
-                                        </q-item-label>
-                                      </template>
-                                    </q-option-group>
-                                  </div>
-                                  <div class="flex justify-center gap-8 -m-l-3 m-t-5">
-                                    <q-btn
-                                      class="p-r-2"
-                                      dense
-                                      :label="$t('KeyToneAlbum.confirmEdit')"
-                                      color="primary"
-                                      icon="save"
-                                      @click="
-                                        async () => {
-                                          // TIPS: 只是这样简单的对比, 无法在用户操作后, 仍选择相同声效时作出正确的判断, 因此后续可以更精确的对uuid进行比较。
-                                          const uuid = (item: any) => {
-                                            if (item?.type === 'audio_files') {
-                                              return item?.value.sha256 + item?.value.name_id;
-                                            }
-                                            if (item?.type === 'sounds') {
-                                              return item?.value.soundKey;
-                                            }
-                                            if (item?.type === 'key_sounds') {
-                                              return item?.value.keySoundKey;
-                                            }
-                                          };
-                                          if (
-                                            uuid(keyDownSingleKeySoundEffectSelect_edit) !==
-                                              uuid(keyDownSingleKeySoundEffectSelect_edit_old) ||
-                                            uuid(keyUpSingleKeySoundEffectSelect_edit) !==
-                                              uuid(keyUpSingleKeySoundEffectSelect_edit_old)
-                                          ) {
-                                            // TIPS: 此时毕竟有可能存在误操作(即用户可能并不是主观的想要删除此单键声效的配置, 因此最好能有个二次提示的窗口来警告操作后果会删除单键, 并询问用户是否继续操作)
-                                            if (
-                                              !keyDownSingleKeySoundEffectSelect_edit &&
-                                              !keyUpSingleKeySoundEffectSelect_edit
-                                            ) {
-                                              q.dialog({
-                                                title: $t('KeyToneAlbum.notify.confirmDeleteSingleKeyEffect'),
-                                                message: $t('KeyToneAlbum.notify.confirmDeleteSingleKeyEffectMessage'),
-                                                ok: {
-                                                  label: $t('KeyToneAlbum.cancel'),
-                                                  color: 'primary',
-                                                  flat: true,
-                                                },
-                                                cancel: {
-                                                  label: $t('KeyToneAlbum.confirm'),
-                                                  color: 'primary',
-                                                  flat: true,
-                                                },
-                                                persistent: true,
-                                                focus: 'cancel',
-                                              }).onCancel(() => {
-                                                saveSingleKeySoundEffectConfig(
-                                                  {
-                                                    singleKeys: currentEditingKey ? [currentEditingKey] : [],
-                                                    down: keyDownSingleKeySoundEffectSelect_edit,
-                                                    up: keyUpSingleKeySoundEffectSelect_edit,
-                                                  },
-                                                  () => {
-                                                    if (
-                                                      !keyDownSingleKeySoundEffectSelect_edit &&
-                                                      !keyUpSingleKeySoundEffectSelect_edit
-                                                    ) {
-                                                      q.notify({
-                                                        type: 'positive',
-                                                        position: 'top',
-                                                        message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                                        timeout: 2000,
-                                                      });
-                                                    } else {
-                                                      q.notify({
-                                                        type: 'positive',
-                                                        position: 'top',
-                                                        message: $t('KeyToneAlbum.notify.saveSuccess'),
-                                                        timeout: 2000,
-                                                      });
-                                                    }
-                                                    // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
-                                                    keyDownSingleKeySoundEffectSelect_edit_old =
-                                                      keyDownSingleKeySoundEffectSelect_edit;
-                                                    keyUpSingleKeySoundEffectSelect_edit_old =
-                                                      keyUpSingleKeySoundEffectSelect_edit;
-                                                    // 关闭对话框
-                                                    isShowSingleKeySoundEffectEditDialog = false;
-                                                  }
-                                                );
-                                              });
-                                            } else {
-                                              saveSingleKeySoundEffectConfig(
-                                                {
-                                                  singleKeys: currentEditingKey ? [currentEditingKey] : [],
-                                                  down: keyDownSingleKeySoundEffectSelect_edit,
-                                                  up: keyUpSingleKeySoundEffectSelect_edit,
-                                                },
-                                                () => {
-                                                  if (
-                                                    !keyDownSingleKeySoundEffectSelect_edit &&
-                                                    !keyUpSingleKeySoundEffectSelect_edit
-                                                  ) {
-                                                    q.notify({
-                                                      type: 'positive',
-                                                      position: 'top',
-                                                      message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                                      timeout: 2000,
-                                                    });
-                                                  } else {
-                                                    q.notify({
-                                                      type: 'positive',
-                                                      position: 'top',
-                                                      message: $t('KeyToneAlbum.notify.saveSuccess'),
-                                                      timeout: 2000,
-                                                    });
-                                                  }
-                                                  // TIPS: 由于对连续打开同一个按键对话框时, 默认持久化(即不会更新响应的SoundEffectSelect_edit_old值), 因此需要在保存成功后, 主动地更新它们, 才能完善整体逻辑。
-                                                  keyDownSingleKeySoundEffectSelect_edit_old =
-                                                    keyDownSingleKeySoundEffectSelect_edit;
-                                                  keyUpSingleKeySoundEffectSelect_edit_old =
-                                                    keyUpSingleKeySoundEffectSelect_edit;
-                                                  // 关闭对话框
-                                                  isShowSingleKeySoundEffectEditDialog = false;
-                                                }
-                                              );
-                                            }
-                                          } else {
-                                            q.notify({
-                                              type: 'warning',
-                                              position: 'top',
-                                              message: $t('KeyToneAlbum.notify.noChangesDetected'),
-                                              timeout: 2000,
-                                            });
-                                          }
-                                        }
-                                      "
-                                    >
-                                      <q-tooltip>{{ $t('KeyToneAlbum.linkageEffects.tooltips.save') }}</q-tooltip>
-                                    </q-btn>
-                                    <q-btn
-                                      class="p-r-2"
-                                      dense
-                                      :label="$t('KeyToneAlbum.delete')"
-                                      color="negative"
-                                      icon="delete"
-                                      v-close-popup
-                                      @click="
-                                        saveSingleKeySoundEffectConfig(
-                                          {
-                                            singleKeys: currentEditingKey ? [currentEditingKey] : [],
-                                            down: null,
-                                            up: null,
-                                          },
-                                          () => {
-                                            q.notify({
-                                              type: 'positive',
-                                              position: 'top',
-                                              message: $t('KeyToneAlbum.notify.deleteSuccess'),
-                                              timeout: 2000,
-                                            });
-                                          }
-                                        )
-                                      "
-                                    >
-                                      <q-tooltip>{{ $t('KeyToneAlbum.linkageEffects.tooltips.delete') }}</q-tooltip>
-                                    </q-btn>
-                                  </div>
-                                </q-card-section>
-                              </div>
-                            </q-card-section>
-                            <q-card-actions class="pt-0" align="right">
-                              <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                            </q-card-actions>
-                          </q-card>
-                          <!-- 声效编辑  end -->
-                        </q-dialog>
-                      </div>
-                    </q-card-section>
-                    <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-                      <q-btn flat :label="$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-            </q-stepper-navigation>
-            <q-stepper-navigation>
-              <q-btn @click="step = 5" color="primary" :label="$t('KeyToneAlbum.continue')" />
-              <q-btn flat @click="step = 3" color="primary" :label="$t('KeyToneAlbum.back')" class="q-ml-sm" />
-            </q-stepper-navigation>
-          </q-step>
+          <!-- Step 4: 联动声效 (已拆分为独立组件) -->
+          <StepLinkageEffects />
         </q-stepper>
       </div>
     </q-scroll-area>
@@ -3377,17 +134,39 @@ import { useAppStore } from 'src/stores/app-store';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import { useMainStore } from 'src/stores/main-store';
 import { useSettingStore } from 'src/stores/setting-store';
-import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted } from 'vue';
+import { computed, onBeforeMount, ref, watch, useTemplateRef, reactive, nextTick, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { 
-  createDependencyValidator, 
-  hasItemDependencyIssues,
-  type DependencyIssue,
-  type AudioFile,
-  type Sound,
-  type KeySound 
-} from 'src/utils/dependencyValidator';
 import DependencyWarning from 'src/components/DependencyWarning.vue';
+
+import { useKeytoneAlbumSseSync } from './keytone-album/composables/useKeytoneAlbumSseSync';
+import { useKeytoneAlbumDependencyIssues } from './keytone-album/composables/useKeytoneAlbumDependencyIssues';
+// ============================================================================
+// 导入映射工具函数（Phase 4.5：initData 复用 mappers）
+// 说明：这些纯函数原本在 initData/watch(audioFiles)/SSE 中重复实现。
+//       现在统一到 keytoneAlbumMappers.ts，确保"初始化"与"SSE 更新"的映射逻辑一致。
+// ============================================================================
+import {
+  mapAudioFilesConfigToArray,
+  mapAudioFilesArrayToSoundFileList,
+  mapSoundsConfigToList,
+  mapSingleKeyConfigToKeysWithSoundEffect,
+} from './keytone-album/composables/keytoneAlbumMappers';
+
+// ============================================================================
+// 导入 Context 类型和注入 Key
+// ============================================================================
+import {
+  KEYTONE_ALBUM_CONTEXT_KEY,
+  type KeytoneAlbumContext
+} from './keytone-album/types';
+
+// ============================================================================
+// 导入拆分后的子组件
+// ============================================================================
+import StepLoadAudioFiles from './keytone-album/steps/StepLoadAudioFiles.vue';
+import StepDefineSounds from './keytone-album/steps/StepDefineSounds.vue';
+import StepCraftKeySounds from './keytone-album/steps/StepCraftKeySounds.vue';
+import StepLinkageEffects from './keytone-album/steps/StepLinkageEffects.vue';
 
 // console.error("重新载入")   // 用笨方法, 严重组件的重新渲染情况
 const q = useQuasar();
@@ -3619,10 +398,10 @@ const options = reactive([
 
 // ============================================================================
 // 自然排序工具函数：解决下拉列表选项乱序问题
-// 
+//
 // 问题：当选项数量很多的时候，列表的排序没有规律，用户难以快速定位所需内容
 // 解决方案：实现字母和数字的自然顺序排序作为默认排序规则
-// 
+//
 // 功能：
 // - 支持字母和数字的混合排序（如：sound1, sound2, sound10 而不是 sound1, sound10, sound2）
 // - 不区分大小写的字母排序
@@ -3633,16 +412,16 @@ const naturalSort = (a: string, b: string): number => {
   const segmentize = (str: string) => {
     return str.match(/\d+|\D+/g) || [];
   };
-  
+
   const aSegments = segmentize(a.toLowerCase());
   const bSegments = segmentize(b.toLowerCase());
-  
+
   const maxLength = Math.max(aSegments.length, bSegments.length);
-  
+
   for (let i = 0; i < maxLength; i++) {
     const aSegment = aSegments[i] || '';
     const bSegment = bSegments[i] || '';
-    
+
     // 如果两个段都是数字，按数值比较（确保 1, 2, 10 的正确顺序）
     if (/^\d+$/.test(aSegment) && /^\d+$/.test(bSegment)) {
       const diff = parseInt(aSegment, 10) - parseInt(bSegment, 10);
@@ -3653,7 +432,7 @@ const naturalSort = (a: string, b: string): number => {
       if (aSegment > bSegment) return 1;
     }
   }
-  
+
   return 0;
 };
 
@@ -3876,19 +655,19 @@ watch(selectedKeySound, (newVal, oldVal) => {
   if (!newVal) {
     return;
   }
-  
+
   // 检查是否是新选择的KeySound（避免重复处理已转换的数据）
   if (oldVal && newVal.keySoundKey === oldVal.keySoundKey) {
     return;
   }
-  
+
   console.debug('观察selectedKeySound=', newVal);
-  
+
   // 创建深拷贝避免修改keySoundList中的原始数据
   const originalKeySound = keySoundList.value.find(ks => ks.keySoundKey === newVal.keySoundKey);
   if (originalKeySound) {
     selectedKeySound.value = JSON.parse(JSON.stringify(originalKeySound));
-    
+
     // 对拷贝的数据进行UI格式转换
     selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
       /**
@@ -3919,7 +698,7 @@ watch(selectedKeySound, (newVal, oldVal) => {
       }
       return item;
     });
-    
+
     selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
       /**
        * json中的存储格式分别是
@@ -4224,6 +1003,10 @@ const isGetsFocused = ref(false);
 
 let first_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
 let clear_flag = false; // 用于避免录制按键打开瞬间(即isRecordingSingleKeys由false->true的瞬间)鼠标左键被记录。
+
+const setSingleKeyRecordingClearFlag = () => {
+  clear_flag = true;
+};
 
 const recordingSingleKeysCallback = (keycode: number, keyName: string) => {
   console.debug('keycode=', keycode, 'keyName=', keyName);
@@ -4562,85 +1345,12 @@ watch(
   }
 );
 
-// Dependency validation logic
-const dependencyIssues = ref<DependencyIssue[]>([]);
-
-// Computed property to get all dependency issues
-const allDependencyIssues = computed(() => {
-  const audioFiles = soundFileList.value as AudioFile[];
-  const sounds = soundList.value as Sound[];
-  
-  // Create a copy of keySoundList with original string format for validation
-  const keySounds = keySoundList.value.map(keySound => {
-    // Create a deep copy to avoid modifying the original
-    const keySoundCopy = JSON.parse(JSON.stringify(keySound));
-    
-    // Restore original string format for dependency validation
-    keySoundCopy.keySoundValue.down.value = keySoundCopy.keySoundValue.down.value.map((item: any) => {
-      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
-        return {
-          type: 'sounds',
-          value: item.value.soundKey
-        };
-      }
-      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
-        return {
-          type: 'key_sounds',
-          value: item.value.keySoundKey
-        };
-      }
-      return item;
-    });
-    
-    keySoundCopy.keySoundValue.up.value = keySoundCopy.keySoundValue.up.value.map((item: any) => {
-      if (item.type === 'sounds' && item.value && typeof item.value === 'object' && item.value.soundKey) {
-        return {
-          type: 'sounds',
-          value: item.value.soundKey
-        };
-      }
-      if (item.type === 'key_sounds' && item.value && typeof item.value === 'object' && item.value.keySoundKey) {
-        return {
-          type: 'key_sounds',
-          value: item.value.keySoundKey
-        };
-      }
-      return item;
-    });
-    
-    return keySoundCopy;
-  }) as KeySound[];
-  
-  if (audioFiles.length === 0 && sounds.length === 0 && keySounds.length === 0) {
-    return [];
-  }
-
-  const validator = createDependencyValidator(audioFiles, sounds, keySounds);
-  
-  // Only validate actual saved dependencies, not current UI selections
-  // The global binding and single key bindings should come from saved album data, not current UI state
-  
-  // For now, we don't include global binding validation since it represents current UI selections
-  // TODO: If there are actual saved global bindings, they should be included here
-  const globalBinding = undefined;
-
-  // Convert keysWithSoundEffect Map to the format expected by validator
-  const singleKeyBindings = keysWithSoundEffect.value.size > 0 
-    ? keysWithSoundEffect.value 
-    : undefined;
-
-  return validator.validateAllDependencies(globalBinding, singleKeyBindings);
+const { dependencyIssues, allDependencyIssues, checkItemDependencyIssues } = useKeytoneAlbumDependencyIssues({
+  soundFileList,
+  soundList,
+  keySoundList,
+  keysWithSoundEffect,
 });
-
-// Update dependency issues when data changes
-watch([soundFileList, soundList, keySoundList, keysWithSoundEffect], () => {
-  dependencyIssues.value = allDependencyIssues.value;
-}, { deep: true });
-
-// Helper function to check if an item has dependency issues
-const checkItemDependencyIssues = (itemType: 'audio_files' | 'sounds' | 'key_sounds', itemId: string) => {
-  return hasItemDependencyIssues(itemType, itemId, dependencyIssues.value);
-};
 function convertValue(item: any) {
   if (item.type === 'audio_files') {
     return {
@@ -4752,8 +1462,7 @@ watch(keyUpSingleKeySoundEffectSelect_edit, (newVal, oldVal) => {
   }
 });
 
-// 存储事件监听器的引用，以便后续移除
-let messageAudioPackageListener: (e: MessageEvent) => void;
+let detachMessageAudioPackageListener: undefined | (() => void);
 
 onBeforeMount(async () => {
   // 此时由于是新建键音包, 因此是没有对应配置文件, 需要我们主动去创建的。 故第二个参数设置为true
@@ -4807,43 +1516,23 @@ onBeforeMount(async () => {
       }
 
       // 已载入的声音文件列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapAudioFilesConfigToArray + mapAudioFilesArrayToSoundFileList 替代原先的内联映射，
+      //       确保"初始化"与"SSE 更新"使用相同的映射逻辑，避免重复代码与行为漂移。
       if (data.audio_files !== undefined) {
-        // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-        const audioFilesArray = Object.entries(data.audio_files).map(([key, value]) => ({
-          sha256: key,
-          value: value,
-        }));
+        // 1. 将后端 audio_files 对象转为数组（sha256 + value）
+        const audioFilesArray = mapAudioFilesConfigToArray(data.audio_files);
         audioFiles.value = audioFilesArray;
-        const tempSoundFileList: Array<any> = [];
-
-        audioFiles.value.forEach((item) => {
-          // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
-          if (item.value.name !== undefined && item.value.name !== null) {
-            Object.entries(item.value.name).forEach(([name_id, name]) => {
-              tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
-            });
-          }
-        });
-        // ===== 应用自然排序：解决声音文件列表乱序问题 =====
-        // 按文件名+扩展名进行自然排序（初始化时）
-        tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
-        soundFileList.value = tempSoundFileList;
+        // 2. 将数组进一步展开为 soundFileList（sha256 + name_id + name + type），并应用自然排序
+        soundFileList.value = mapAudioFilesArrayToSoundFileList(audioFilesArray, naturalSort);
       }
 
       // 已载入的声音列表初始化。  (不过由于这里是新建键音包, 这个不出意外的话一开始是undefine)
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapSoundsConfigToList 替代原先的内联映射，确保与 SSE 更新路径一致。
+      // 注意：原代码判断的是 data.sound_list，但实际读取的是 data.sounds，此处保持原逻辑不变。
       if (data.sound_list !== undefined) {
-        const sounds = Object.entries(data.sounds).map(([key, value]) => ({
-          soundKey: key,
-          soundValue: value,
-        }));
-        // ===== 应用自然排序：解决声音列表乱序问题 =====
-        // 基于声音名称或soundKey进行自然排序（初始化时）
-        sounds.sort((a: any, b: any) => {
-          const aName = (a.soundValue?.name as string) || a.soundKey;
-          const bName = (b.soundValue?.name as string) || b.soundKey;
-          return naturalSort(aName, bName);
-        });
-        soundList.value = sounds as Array<{
+        soundList.value = mapSoundsConfigToList(data.sounds, naturalSort) as Array<{
           soundKey: string;
           soundValue: {
             cut: { start_time: number; end_time: number; volume: number };
@@ -4859,14 +1548,10 @@ onBeforeMount(async () => {
       }
 
       // TODO: 此逻辑未验证, 需要到编辑键音包界面才能验证
+      // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+      // 说明：用 mapSingleKeyConfigToKeysWithSoundEffect 替代原先的内联映射，确保与 SSE 更新路径一致。
       if (data.key_tone?.single !== undefined) {
-        keysWithSoundEffect.value.clear();
-        Object.entries(data.key_tone.single).forEach(([dikCode, value]) => {
-          // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
-          if ((value as any)?.down?.value || (value as any)?.up?.value) {
-            keysWithSoundEffect.value.set(dikCode, value);
-          }
-        });
+        keysWithSoundEffect.value = mapSingleKeyConfigToKeysWithSoundEffect(data.key_tone.single);
       }
     });
     const updateKeyToneAlbumListName = debounce(
@@ -4883,23 +1568,13 @@ onBeforeMount(async () => {
     });
 
     // 2.配置文件中audio_files的进一步映射变更, 获取我们最终需要的结构
+    // ===== Phase 4.5：复用 keytoneAlbumMappers 纯函数 =====
+    // 说明：用 mapAudioFilesArrayToSoundFileList 替代原先的内联映射，
+    //       确保 watch(audioFiles) 与 initData、SSE 更新都使用相同的映射逻辑。
     watch(audioFiles, (newVal) => {
       console.debug('观察audioFiles=', audioFiles.value);
-      // 为了更容易理解, 故引入audioFiles这一变量, 做初步映射, audioFiles只是过程值, 我们最终需要对此过程值做进一步映射, 形成soundFileList
-      const tempSoundFileList: Array<any> = [];
-
-      audioFiles.value.forEach((item) => {
-        // 此处必须判断其是否存在, 否则会引起Object.entries报错崩溃, 影响后续流程执行。
-        if (item.value.name !== undefined && item.value.name !== null) {
-          Object.entries(item.value.name).forEach(([name_id, name]) => {
-            tempSoundFileList.push({ sha256: item.sha256, name_id: name_id, name: name, type: item.value.type });
-          });
-        }
-      });
-      // ===== 应用自然排序：解决声音文件列表乱序问题 =====
-      // 按文件名+扩展名进行自然排序，确保 sound1.wav, sound2.wav, sound10.wav 的正确顺序
-      tempSoundFileList.sort((a, b) => naturalSort(a.name + a.type, b.name + b.type));
-      soundFileList.value = tempSoundFileList;
+      // 将 audioFiles 数组进一步展开为 soundFileList，并应用自然排序
+      soundFileList.value = mapAudioFilesArrayToSoundFileList(audioFiles.value, naturalSort);
     });
 
     // 3.观察进一步映射变更后, 最终需要的audio_file映射, 即我们的soundFileList。
@@ -4961,112 +1636,20 @@ onBeforeMount(async () => {
   );
 
   // 将后端从键音包配置文件中获取的全部数据, 转换前端可用的键音包数据。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-  function sseDataToKeyTonePkgData(keyTonePkgData: any) {
-    // 键音包名称初始化。 (不过由于这里是新建键音包, 这个不出意外的话一开始是undefined
-    if (keyTonePkgData.package_name !== undefined) {
-      pkgNameDelayed.cancel();
-      pkgNameDelayed(keyTonePkgData);
-    }
-
-    // 1. 初步映射配置文件中的audio_files到audioFiles。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    //    使用audioFiles作为中间值, 而不是一步到位的映射, 是为代码的可读性, 后续阅读理解是方便。
-    if (keyTonePkgData.audio_files !== undefined) {
-      // keyTonePkgData.audio_files 是一个从后端获取的对象, 通过此方式可以简便的将其转换为数组, 数组元素为原对象中的key和value(增加了这两个key)
-      const audioFilesArray = Object.entries(keyTonePkgData.audio_files).map(([key, value]) => ({
-        sha256: key,
-        value: value,
-      }));
-      audioFiles.value = audioFilesArray;
-    } else {
-      // 此处else是为防止最后一项的audio_files为undefined, 而导致的删除最后一项音频源文件后, audioFiles值无法清空, 从而导致无法触发soundFileList的变更, 从而ui界面导致无法删除最后一项音频源文件。
-      audioFiles.value = [];
-    }
-
-    // 映射配置文件中的sounds到ui中的soundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    if (keyTonePkgData.sounds !== undefined) {
-      const sounds = Object.entries(keyTonePkgData.sounds).map(([key, value]) => ({
-        soundKey: key,
-        soundValue: value,
-      }));
-      // ===== 应用自然排序：解决声音列表乱序问题 =====
-      // 基于声音名称或soundKey进行自然排序（EventSource更新时）
-      sounds.sort((a: any, b: any) => {
-        const aName = (a.soundValue?.name as string) || a.soundKey;
-        const bName = (b.soundValue?.name as string) || b.soundKey;
-        return naturalSort(aName, bName);
-      });
-      soundList.value = sounds as Array<{
-        soundKey: string;
-        soundValue: {
-          cut: { start_time: number; end_time: number; volume: number };
-          name: string;
-          source_file_for_sound: { sha256: string; name_id: string; type: string };
-        };
-      }>;
-    } else {
-      soundList.value = [];
-    }
-
-    // 映射配置文件中的key_sounds到ui中的keySoundList。(只要配置文件变更, 就会触发相关sse发送, 此处就会接收)
-    if (keyTonePkgData.key_sounds !== undefined) {
-      const keySounds = Object.entries(keyTonePkgData.key_sounds).map(([key, value]) => ({
-        keySoundKey: key,
-        keySoundValue: value,
-      }));
-      // ===== 应用自然排序：解决键音列表乱序问题 =====
-      // 基于键音名称或keySoundKey进行自然排序
-      keySounds.sort((a: any, b: any) => {
-        const aName = (a.keySoundValue?.name as string) || a.keySoundKey;
-        const bName = (b.keySoundValue?.name as string) || b.keySoundKey;
-        return naturalSort(aName, bName);
-      });
-      keySoundList.value = keySounds;
-    } else {
-      keySoundList.value = [];
-    }
-
-    if (keyTonePkgData.key_tone !== undefined) {
-      isEnableEmbeddedTestSoundDelayed.cancel();
-      isEnableEmbeddedTestSoundDelayed(keyTonePkgData.key_tone.is_enable_embedded_test_sound);
-    }
-
-    if (keyTonePkgData.key_tone?.global !== undefined) {
-      keyDownUnifiedSoundEffectSelect.value = convertValue(
-        keyTonePkgData.key_tone.global.down ? keyTonePkgData.key_tone.global.down : ''
-      );
-      keyUpUnifiedSoundEffectSelect.value = convertValue(
-        keyTonePkgData.key_tone.global.up ? keyTonePkgData.key_tone.global.up : ''
-      );
-    }
-
-    if (keyTonePkgData.key_tone?.single !== undefined) {
-      keysWithSoundEffect.value.clear();
-      Object.entries(keyTonePkgData.key_tone.single).forEach(([dikCode, value]) => {
-        // 只有 down/up 至少一个被正确设置且value不为空字符串时, 才算作 已设置单键声效的按键。
-        if ((value as any)?.down?.value || (value as any)?.up?.value) {
-          keysWithSoundEffect.value.set(dikCode, value);
-        }
-      });
-    }
-  }
-  const debounced_sseDataToSettingStore = debounce<(keyTonePkgData: any) => void>(sseDataToKeyTonePkgData, 30, {
-    trailing: true,
+  const { attach } = useKeytoneAlbumSseSync({
+    pkgName,
+    audioFiles,
+    soundList,
+    keySoundList,
+    isEnableEmbeddedTestSound,
+    keyDownUnifiedSoundEffectSelect,
+    keyUpUnifiedSoundEffectSelect,
+    keysWithSoundEffect,
+    convertValue,
+    naturalSort,
   });
 
-  // 定义事件监听器
-  messageAudioPackageListener = function (e) {
-    console.debug('后端钩子函数中的值 = ', e.data);
-
-    const data = JSON.parse(e.data);
-
-    if (data.key === 'get_all_value') {
-      debounced_sseDataToSettingStore.cancel;
-      debounced_sseDataToSettingStore(data.value);
-    }
-  };
-
-  // 添加事件监听
-  app_store.eventSource.addEventListener('messageAudioPackage', messageAudioPackageListener, false);
+  detachMessageAudioPackageListener = attach(app_store.eventSource);
 });
 
 // 在退出创建键音包的页面后, 载入 持久化的 用户选择的 键音包。(在 创建 键音包界面 退出时, 重新加载 用户持久化至 设置 文件中的 键音包。)
@@ -5077,10 +1660,7 @@ onUnmounted(() => {
   // // 卸载组件后, 重新载入持久化配置中用户所选的键音包(在新设计的键音专辑页面逻辑中, 不需要此步骤)
   // main_store.LoadSelectedKeyTonePkg();
 
-  // 移除事件监听
-  if (messageAudioPackageListener) {
-    app_store.eventSource.removeEventListener('messageAudioPackage', messageAudioPackageListener);
-  }
+  detachMessageAudioPackageListener?.();
 });
 
 const isMacOS = ref(getMacOSStatus());
@@ -5127,6 +1707,162 @@ const step_introduce_fontSize = computed(() => {
     ? 'text-[0.83rem]'
     : 'text-[0.85rem]';
 });
+
+// ============================================================================
+// Context 提供（provide）
+// ============================================================================
+//
+// 【作用】
+// 将父组件的所有状态和方法打包成 Context 对象，通过 provide 提供给子组件。
+// 子组件通过 inject(KEYTONE_ALBUM_CONTEXT_KEY) 获取这个 Context。
+//
+// 【为什么在这里定义】
+// 需要在所有状态和方法都定义完成后才能构建 Context。
+// 这样确保 Context 中引用的所有变量都已存在。
+//
+// 【子组件如何使用】
+// 在子组件中：const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+// 然后通过 ctx.step.value、ctx.$t() 等方式访问状态和方法。
+// 注意：在模板中访问 Ref 类型需要用 .value，因为 ctx 是普通对象而非 Ref。
+//
+// ============================================================================
+
+/**
+ * 构建 KeytoneAlbumContext 对象
+ *
+ * 这里只列出 Step1 (音频源文件) 相关的状态和方法，
+ * 其他 Step 的状态会在后续迁移时逐步添加。
+ *
+ * 当前策略：先提供必要的状态，验证机制正常后再扩展。
+ */
+const keytoneAlbumContext: KeytoneAlbumContext = {
+  // ============ Props ============
+  // 从 props 获取，子组件可以读取但不能修改
+  pkgPath: props.pkgPath,
+  isCreate: props.isCreate,
+
+  // ============ 核心状态 ============
+  step,           // 当前步骤（1-4 或 99 表示折叠）
+  pkgName,        // 键音包名称
+
+  // ============ Step1: 音频源文件相关 ============
+  addNewSoundFile,    // 控制"添加音频文件"对话框的 v-model
+  files,              // 待上传的文件列表
+  editSoundFile,      // 控制"管理音频文件"对话框的 v-model
+  soundFileList,      // 已加载的音频文件列表
+  selectedSoundFile,  // 当前选中的音频文件（用于编辑/删除）
+
+  // ============ Step2: 声音定义相关 ============
+  createNewSound,     // 控制"创建声音"对话框
+  soundName,          // 声音名称
+  sourceFileForSound, // 声音的源文件引用
+  soundStartTime,     // 声音裁剪开始时间
+  soundEndTime,       // 声音裁剪结束时间
+  soundVolume,        // 声音音量
+  showEditSoundDialog,// 控制"编辑声音"对话框
+  soundList,          // 已定义的声音列表
+  selectedSound,      // 当前选中的声音
+
+  // ============ Step3: 按键音相关 ============
+  createNewKeySound,      // 控制"创建按键音"对话框
+  keySoundName,           // 按键音名称
+  configureDownSound,     // 是否配置按下声音
+  configureUpSound,       // 是否配置抬起声音
+  selectedSoundsForDown,  // 按下时选中的声音
+  playModeForDown,        // 按下播放模式
+  maxSelectionForDown,    // 按下最大选择数
+  downTypeGroup,          // 按下类型组
+  downSoundList,          // 按下声音列表
+  selectedSoundsForUp,    // 抬起时选中的声音
+  playModeForUp,          // 抬起播放模式
+  maxSelectionForUp,      // 抬起最大选择数
+  upTypeGroup,            // 抬起类型组
+  upSoundList,            // 抬起声音列表
+  editExistingKeySound,   // 控制"编辑按键音"对话框
+  edit_configureDownSound,
+  edit_configureUpSound,
+  edit_downTypeGroup,
+  edit_upTypeGroup,
+  edit_downSoundList,
+  edit_upSoundList,
+  keySoundList,           // 已定义的按键音列表
+  selectedKeySound,       // 当前选中的按键音
+
+  // ============ Step4: 联动声效相关 ============
+  isEnableEmbeddedTestSound,  // 内嵌测试音开关
+  showEveryKeyEffectDialog,   // 全键声效对话框
+  keyDownUnifiedSoundEffectSelect,
+  keyUpUnifiedSoundEffectSelect,
+  unifiedTypeGroup,
+  keyUnifiedSoundEffectOptions,
+  isShowUltimatePerfectionKeySoundAnchoring,
+  isAnchoringUltimatePerfectionKeySound,
+  showSingleKeyEffectDialog,
+  isShowAddOrSettingSingleKeyEffectDialog,
+  selectedSingleKeys,
+  isRecordingSingleKeys,
+  keyOptions,
+  filterOptions,
+  isGetsFocused,
+  isDownSoundEffectSelectEnabled,
+  isUpSoundEffectSelectEnabled,
+  keyDownSingleKeySoundEffectSelect,
+  keyUpSingleKeySoundEffectSelect,
+  singleKeyTypeGroup,
+  keySingleKeySoundEffectOptions,
+  isShowUltimatePerfectionKeySoundAnchoring_singleKey,
+  isAnchoringUltimatePerfectionKeySound_singleKey,
+  keysWithSoundEffect,
+  isShowSingleKeySoundEffectEditDialog,
+  currentEditingKey,
+  currentEditingKey_old,
+  currentEditingKeyOfName,
+  keyDownSingleKeySoundEffectSelect_edit,
+  keyUpSingleKeySoundEffectSelect_edit,
+  keyDownSingleKeySoundEffectSelect_edit_old,
+  keyUpSingleKeySoundEffectSelect_edit_old,
+  singleKeyTypeGroup_edit,
+  keySingleKeySoundEffectOptions_edit,
+  isShowUltimatePerfectionKeySoundAnchoring_singleKey_edit,
+  isAnchoringUltimatePerfectionKeySound_singleKey_edit,
+
+  // ============ 依赖校验 ============
+  dependencyIssues,
+
+  // ============ 工具函数 ============
+  album_options_select_label,   // 选项标签显示函数
+  naturalSort,                  // 自然排序函数
+  preventDefaultKeyBehaviorWhenRecording,  // 防止录制时键盘默认行为
+  preventDefaultMouseWhenRecording,        // 防止录制时鼠标默认行为
+  setSingleKeyRecordingClearFlag,          // 单键录制：设置 clear_flag
+  convertValue,                 // 值转换函数
+
+  // ============ 操作函数 ============
+  saveSoundConfig,      // 保存声音配置
+  deleteSound,          // 删除声音
+  previewSound,         // 预览声音
+  saveKeySoundConfig,   // 保存按键音配置
+  deleteKeySound,       // 删除按键音
+  saveUnifiedSoundEffectConfig,     // 保存全局联动声效
+  saveSingleKeySoundEffectConfig,   // 保存单键联动声效
+
+  // ============ i18n ============
+  $t,  // 国际化翻译函数
+
+  // ============ 样式相关 ============
+  i18n_fontSize,           // 按语言调整的字体大小
+  step_introduce_fontSize, // 步骤说明文字大小
+  isMacOS,                 // 是否 MacOS 平台
+
+  // ============ 选项常量 ============
+  options,           // 类型选项（audio_files/sounds/key_sounds）
+  playModeOptions,   // 播放模式选项
+  playModeLabels,    // 播放模式标签映射
+};
+
+// 提供 Context 给子组件
+// 子组件通过 inject(KEYTONE_ALBUM_CONTEXT_KEY) 获取
+provide(KEYTONE_ALBUM_CONTEXT_KEY, keytoneAlbumContext);
 </script>
 
 <style lang="scss" scoped>
