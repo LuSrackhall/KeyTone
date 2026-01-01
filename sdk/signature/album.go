@@ -35,7 +35,16 @@ import (
 //   - 此密钥独立于签名管理的KeyA/KeyB，职责分离
 //   - 专辑配置本身已有基于albumUUID的派生密钥保护（外层加密）
 //   - 此密钥用于signature字段的内层加密，双重保护
-const KeyToneAlbumSignatureEncryptionKey = "KeyTone2024Album_Signature_Field_EncryptionKey_32Bytes"
+
+// ==============================
+// 对称密钥变量定义
+// 注意：此变量不再是 const，而是 var，以便在编译时通过 -ldflags 进行注入
+// 注入的值应为经过 XOR 混淆后的 Hex 字符串
+// ==============================
+
+const DefaultAlbumSignatureKey = "KeyTone2024Album_Signature_Field_EncryptionKey_32Bytes"
+
+var KeyToneAlbumSignatureEncryptionKey = DefaultAlbumSignatureKey // 默认开源密钥（明文）
 
 // GetAlbumSignatureKey 获取专辑签名加密密钥（32字节）
 //
@@ -46,14 +55,16 @@ const KeyToneAlbumSignatureEncryptionKey = "KeyTone2024Album_Signature_Field_Enc
 //   - 确保密钥长度符合AES-256要求
 //   - 如密钥字符串不足32字节，自动填充0
 func GetAlbumSignatureKey() []byte {
-	key := []byte(KeyToneAlbumSignatureEncryptionKey)
-	// 确保密钥长度为32字节
-	if len(key) < 32 {
-		for len(key) < 32 {
-			key = append(key, 0)
+	if KeyToneAlbumSignatureEncryptionKey == DefaultAlbumSignatureKey {
+		key := []byte(DefaultAlbumSignatureKey)
+		if len(key) < 32 {
+			for len(key) < 32 {
+				key = append(key, 0)
+			}
 		}
+		return key[:32]
 	}
-	return key[:32]
+	return deobfuscateKey(KeyToneAlbumSignatureEncryptionKey)
 }
 
 // EncryptAlbumSignatureField 加密专辑配置中的签名字段

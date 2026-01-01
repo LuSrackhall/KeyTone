@@ -13,6 +13,13 @@ Certain features rely on **build-time injected parameters** (such as signing or 
 
 This difference is intentional and limited to identity-related behavior.
 
+## Symmetric Key Injection (Local Private Builds)
+
+Some symmetric encryption secrets are shipped with open-source default values in code, but can be **optionally overridden at build time** in private/local builds (same pattern as the authorization-flow keys).
+
+* When not injected: behavior stays identical to the open-source defaults.
+* When injected: encrypted artifacts may become incompatible across builds, by design.
+
 ---
 
 # Encrypted Output Compatibility

@@ -33,6 +33,7 @@ import (
 	"crypto"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -53,13 +54,62 @@ const (
 	KeytoneVersion       = "1.0.0"   // 当前版本号
 	KeytoneFileSignature = "KTALBUM" // 文件签名
 	KeytoneFileVersion   = 1         // 文件版本（已废弃，仅用于向后兼容）
-
-	// 版本化加密密钥
-	KeytoneEncryptKeyV1      = "KeyTone2024SecretKey"                  // v1 密钥（旧版本，用于向后兼容）
-	KeytoneEncryptKeyV2      = "KeyTone2025AlbumSecureEncryptionKeyV2" // v2 密钥（当前版本）
-	KeytoneEncryptKeyCurrent = KeytoneEncryptKeyV2                     // 当前使用的密钥版本
-	KeytoneEncryptKey        = KeytoneEncryptKeyV1                     // 已废弃：向后兼容，请使用 KeytoneEncryptKeyV1
 )
+
+// xorMask 用于混淆密钥的掩码，必须与 tools/key-obfuscator/main.go 中的一致
+var xorMask = []byte{0x55, 0xAA, 0x33, 0xCC, 0x99, 0x66, 0x11, 0xEE, 0x77, 0xBB, 0x22, 0xDD, 0x88, 0x44, 0xFF, 0x00}
+
+// 版本化加密密钥（默认开源值）
+const (
+	DefaultEncryptKeyV1 = "KeyTone2024SecretKey"                  // v1 密钥（旧版本，用于向后兼容）
+	DefaultEncryptKeyV2 = "KeyTone2025AlbumSecureEncryptionKeyV2" // v2 密钥（当前版本）
+)
+
+// 版本化加密密钥（可通过 -ldflags -X 注入 XOR 混淆后的 hex）
+var (
+	KeytoneEncryptKeyV1      = DefaultEncryptKeyV1
+	KeytoneEncryptKeyV2      = DefaultEncryptKeyV2
+	KeytoneEncryptKeyCurrent = KeytoneEncryptKeyV2 // 当前使用的密钥版本
+	KeytoneEncryptKey        = KeytoneEncryptKeyV1 // 已废弃：向后兼容，请使用 KeytoneEncryptKeyV1
+)
+
+func deobfuscateString(obfuscatedHex string) string {
+	obfuscated, err := hex.DecodeString(obfuscatedHex)
+	if err != nil {
+		return obfuscatedHex
+	}
+
+	realKey := make([]byte, len(obfuscated))
+	for i, b := range obfuscated {
+		realKey[i] = b ^ xorMask[i%len(xorMask)]
+	}
+
+	return string(realKey)
+}
+
+func GetEncryptKeyV1() string {
+	if KeytoneEncryptKeyV1 == DefaultEncryptKeyV1 {
+		return DefaultEncryptKeyV1
+	}
+	return deobfuscateString(KeytoneEncryptKeyV1)
+}
+
+func GetEncryptKeyV2() string {
+	if KeytoneEncryptKeyV2 == DefaultEncryptKeyV2 {
+		return DefaultEncryptKeyV2
+	}
+	return deobfuscateString(KeytoneEncryptKeyV2)
+}
+
+func GetEncryptKeyCurrent() string {
+	if KeytoneEncryptKeyCurrent == KeytoneEncryptKeyV1 {
+		return GetEncryptKeyV1()
+	}
+	if KeytoneEncryptKeyCurrent == KeytoneEncryptKeyV2 {
+		return GetEncryptKeyV2()
+	}
+	return deobfuscateString(KeytoneEncryptKeyCurrent)
+}
 
 // KeytoneAlbumMeta 用于存储专辑元数据
 type KeytoneAlbumMeta struct {
@@ -339,13 +389,13 @@ func xorCrypt(data []byte, key string) []byte {
 func getEncryptKeyByVersion(version uint8) string {
 	switch version {
 	case 1:
-		return KeytoneEncryptKeyV1
+		return GetEncryptKeyV1()
 	case 2:
-		return KeytoneEncryptKeyV2
+		return GetEncryptKeyV2()
 	default:
 		// 未知版本，返回当前密钥
 		logger.Warn("未知的文件版本号，使用当前密钥", "version", version)
-		return KeytoneEncryptKeyCurrent
+		return GetEncryptKeyCurrent()
 	}
 }
 
@@ -372,7 +422,7 @@ func decryptAlbumData(encryptedData []byte, header KeytoneFileHeader) ([]byte, u
 	// 如果校验失败且版本不是v1，尝试使用v1密钥回退
 	if header.Version != 1 {
 		logger.Warn("使用版本密钥解密失败，尝试v1密钥回退", "version", header.Version)
-		zipData = xorCrypt(encryptedData, KeytoneEncryptKeyV1)
+		zipData = xorCrypt(encryptedData, GetEncryptKeyV1())
 		checksum = sha256.Sum256(zipData)
 		if checksum == header.Checksum {
 			logger.Info("使用v1密钥成功解密", "file_version", header.Version)
@@ -388,8 +438,7 @@ func ServerRun() {
 	// 启动签名名片图片清理任务（在SDK启动5秒后执行一次）
 	go func() {
 		time.Sleep(5 * time.Second)
-		encryptionKey := []byte("KeyTone2024SignatureEncryptionKey"[:32]) // 截取前32字节
-		if err := signature.CleanupOrphanCardImages(encryptionKey); err != nil {
+		if err := signature.CleanupOrphanCardImages(nil); err != nil {
 			logger.Error("签名名片图片清理任务执行失败", "error", err.Error())
 		}
 	}()
@@ -1525,7 +1574,7 @@ func keytonePkgRouters(r *gin.Engine) {
 		checksum := sha256.Sum256(zipData)
 
 		// 加密 zip 数据（使用当前版本密钥 v2）
-		encryptedData := xorCrypt(zipData, KeytoneEncryptKeyCurrent)
+		encryptedData := xorCrypt(zipData, GetEncryptKeyCurrent())
 
 		// 创建文件头（使用版本号 2）
 		header := KeytoneFileHeader{

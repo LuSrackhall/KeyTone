@@ -12,10 +12,10 @@ import (
 )
 
 type FileInfo struct {
-	Name       string    `json:"name"`
-	Version    uint8     `json:"version"`
-	ExportTime string    `json:"exportTime"`
-	AlbumUUID  string    `json:"albumUUID"`
+	Name       string `json:"name"`
+	Version    uint8  `json:"version"`
+	ExportTime string `json:"exportTime"`
+	AlbumUUID  string `json:"albumUUID"`
 }
 
 func GetFileInfo(filePath string) (*FileInfo, error) {
@@ -43,13 +43,20 @@ func GetFileInfo(filePath string) (*FileInfo, error) {
 		return nil, fmt.Errorf("读取加密数据失败: %v", err)
 	}
 
-	// 解密数据
-	zipData := utils.XorCrypt(encryptedData, utils.KeytoneEncryptKey)
-
-	// 验证校验和
-	checksum := utils.CalculateChecksum(zipData)
-	if !bytes.Equal(checksum[:], header.Checksum[:]) {
-		return nil, fmt.Errorf("文件校验失败，文件可能已损坏")
+	// 解密数据（支持注入密钥 / 默认密钥 / v1 回退）
+	var zipData []byte
+	valid := false
+	for _, key := range utils.GetDecryptKeyCandidates(header.Version) {
+		candidate := utils.XorCrypt(encryptedData, key)
+		checksum := utils.CalculateChecksum(candidate)
+		if bytes.Equal(checksum[:], header.Checksum[:]) {
+			zipData = candidate
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return nil, fmt.Errorf("文件校验失败，文件可能已损坏或使用了不支持的加密版本/密钥")
 	}
 
 	// 从 zip 数据中读取 .keytone-album 文件
@@ -84,4 +91,4 @@ func GetFileInfo(filePath string) (*FileInfo, error) {
 		ExportTime: meta.ExportTime.Format("2006-01-02 15:04:05"),
 		AlbumUUID:  meta.AlbumUUID,
 	}, nil
-} 
+}

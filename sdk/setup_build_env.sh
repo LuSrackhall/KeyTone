@@ -34,6 +34,11 @@ KEYS_FILE="private_keys.env"
 # 2. 混淆工具源码路径
 OBFUSCATOR_TOOL="../tools/key-obfuscator/main.go"
 
+# 4. 严格模式开关（可选）
+# 默认（0）：任意 KEY_* 缺失都不会导致失败，自动跳过注入并使用代码默认值
+# 严格（1）：一旦缺少私钥文件或任意 KEY_*，立即失败
+STRICT_KEYS=${KEYTONE_STRICT_KEYS:-0}
+
 # 3. 定义需要处理的密钥列表
 # 格式： "环境变量中的键名:Go代码中的变量全路径"
 # 如果后续需要新增密钥，只需在此数组中追加一行即可。
@@ -45,6 +50,14 @@ KEYS_TO_PROCESS=(
     "KEY_K:KeyTone/signature.KeyToneAuthRequestEncryptionKeyK"
     "KEY_Y:KeyTone/signature.KeyToneAuthGrantEncryptionKeyY"
     "KEY_N:KeyTone/signature.KeyToneAuthGrantEncryptionKeyN"
+
+    # ===== 对称密钥（历史遗留，现统一适配构建注入） =====
+    "KEY_A:KeyTone/signature.KeyToneSignatureEncryptionKeyA"
+    "KEY_B:KeyTone/signature.KeyToneSignatureEncryptionKeyB"
+    "KEY_V1:KeyTone/server.KeytoneEncryptKeyV1"
+    "KEY_V2:KeyTone/server.KeytoneEncryptKeyV2"
+    "FIXED_SECRET:KeyTone/audioPackage/enc.FixedSecret"
+    "KEY_ALBUM_SIG:KeyTone/signature.KeyToneAlbumSignatureEncryptionKey"
     # 示例：新增密钥时，取消注释并修改下行
     # "KEY_NEW:KeyTone/signature.KeyToneNewKey"
 )
@@ -53,22 +66,43 @@ KEYS_TO_PROCESS=(
 
 # 检查私钥文件是否存在
 if [ ! -f "$KEYS_FILE" ]; then
-    # >&2 表示将输出重定向到标准错误(stderr)，避免干扰正常的标准输出(stdout)
-    echo "错误: 未找到私钥文件 $KEYS_FILE" >&2
-    echo "请复制 private_keys.template.env 为 $KEYS_FILE 并填入您的密钥。" >&2
-    # return 1 用于在 source 执行时退出脚本但不退出终端
-    # exit 1 用于在直接执行时退出脚本
-    return 1 2>/dev/null || exit 1
+    if [ "$STRICT_KEYS" = "1" ]; then
+        echo "错误: 未找到私钥文件 $KEYS_FILE" >&2
+        echo "请复制 private_keys.template.env 为 $KEYS_FILE 并填入您的密钥。" >&2
+        return 1 2>/dev/null || exit 1
+    fi
+
+    echo "警告: 未找到私钥文件 $KEYS_FILE，将跳过密钥注入并使用源码默认密钥。" >&2
+    export EXTRA_LDFLAGS=""
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        echo "export EXTRA_LDFLAGS=\"\""
+    fi
+    return 0 2>/dev/null || exit 0
 fi
 
 # 检查混淆工具是否存在
 if [ ! -f "$OBFUSCATOR_TOOL" ]; then
-    echo "错误: 未找到混淆工具源码 $OBFUSCATOR_TOOL" >&2
-    return 1 2>/dev/null || exit 1
+    if [ "$STRICT_KEYS" = "1" ]; then
+        echo "错误: 未找到混淆工具源码 $OBFUSCATOR_TOOL" >&2
+        return 1 2>/dev/null || exit 1
+    fi
+
+    echo "警告: 未找到混淆工具源码 $OBFUSCATOR_TOOL，将跳过密钥注入并使用源码默认密钥。" >&2
+    export EXTRA_LDFLAGS=""
+    if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        echo "export EXTRA_LDFLAGS=\"\""
+    fi
+    return 0 2>/dev/null || exit 0
 fi
 
 # 初始化 LDFLAGS 字符串
 LDFLAGS=""
+
+# 在上层启用 `set -u` 时，确保这些变量始终已定义
+KEY_NAME=""
+GO_VAR=""
+PLAINTEXT_KEY=""
+OBFUSCATED_VAL=""
 
 echo "正在处理密钥混淆..." >&2
 
@@ -83,37 +117,50 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
     # 从文件中读取明文密钥
     # grep "^$KEY_NAME=" : 查找以 KEY_NAME= 开头的行
     # cut -d'"' -f2      : 以双引号为分隔符，提取中间的内容(即密钥值)
-    PLAINTEXT_KEY=$(grep "^$KEY_NAME=" "$KEYS_FILE" | cut -d'"' -f2)
+    # 注意：上层脚本（dev.sh/build.sh）启用了 `set -euo pipefail`
+    # 这里必须避免 grep 找不到时导致整条 pipeline 非 0 直接中断。
+    PLAINTEXT_KEY=$( (grep "^${KEY_NAME}=" "${KEYS_FILE}" || true) | head -n 1 | cut -d'"' -f2 )
 
     # 检查是否成功读取到密钥
     if [ -z "$PLAINTEXT_KEY" ]; then
-        echo "错误: 在 $KEYS_FILE 中未找到 $KEY_NAME" >&2
-        return 1 2>/dev/null || exit 1
+        if [ "$STRICT_KEYS" = "1" ]; then
+            echo "错误: 在 ${KEYS_FILE} 中未找到 ${KEY_NAME}" >&2
+            return 1 2>/dev/null || exit 1
+        fi
+
+        echo "警告: 在 ${KEYS_FILE} 中未找到 ${KEY_NAME}，将跳过该项注入并使用源码默认值。" >&2
+        continue
     fi
 
     # 调用 Go 工具生成混淆后的 Hex 字符串
     # go run ... : 直接运行 Go 源码，无需预先编译
     # -key ...   : 传递明文密钥作为参数
     # $()        : 命令替换，将命令的输出结果赋值给变量
-    OBFUSCATED_VAL=$(go run "$OBFUSCATOR_TOOL" -key "$PLAINTEXT_KEY")
+    # 同理，go run 失败也不能在默认模式下中断整个 dev/build
+    if ! OBFUSCATED_VAL=$(go run "${OBFUSCATOR_TOOL}" -key "${PLAINTEXT_KEY}"); then
+        if [ "$STRICT_KEYS" = "1" ]; then
+            echo "错误: 密钥 ${KEY_NAME} 混淆失败" >&2
+            return 1 2>/dev/null || exit 1
+        fi
 
-    # 检查混淆工具是否执行成功
-    # $? 获取上一个命令的退出状态码，0 表示成功
-    if [ $? -ne 0 ]; then
-        echo "错误: 密钥 $KEY_NAME 混淆失败" >&2
-        return 1 2>/dev/null || exit 1
+        echo "警告: 密钥 ${KEY_NAME} 混淆失败，将跳过该项注入并使用源码默认值。" >&2
+        continue
     fi
 
     # 拼接到 LDFLAGS 字符串中
     # -X ... : Go 链接器参数，用于设置变量值
-    LDFLAGS="$LDFLAGS -X '$GO_VAR=$OBFUSCATED_VAL'"
+    LDFLAGS="$LDFLAGS -X '${GO_VAR}=${OBFUSCATED_VAL}'"
 done
 
 # 导出环境变量
 # export 命令将变量设置为环境变量，使其对当前 shell 及其子进程可见
 export EXTRA_LDFLAGS="$LDFLAGS"
 
-echo "成功！已设置 EXTRA_LDFLAGS 环境变量（包含混淆后的密钥）。" >&2
+if [ -z "$LDFLAGS" ]; then
+    echo "成功！未注入任何密钥，EXTRA_LDFLAGS 为空，将使用源码默认密钥。" >&2
+else
+    echo "成功！已设置 EXTRA_LDFLAGS 环境变量（包含混淆后的密钥）。" >&2
+fi
 echo "您现在可以运行 'make <target>' 或启动 electron 开发环境。" >&2
 echo "注意：此环境变量仅在当前终端会话有效，关闭终端后自动失效，不会污染全局环境。" >&2
 
