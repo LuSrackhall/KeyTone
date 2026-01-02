@@ -557,62 +557,85 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 	validImagePaths := make(map[string]bool)
 	signatureMapValue := config.GetValue("signature")
 
+	// Counters for observability
+	totalEntries := 0
+	successCount := 0
+	failCount := 0
+
 	if signatureMapValue != nil {
-		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
-			// 遍历所有的签名配置
-			for encryptedID, v := range signatureMap {
-				var encryptedValueStr string
+		// 必须能将 signature 配置解析为 map 才认为可可信，否则视为配置不可用，跳过清理
+		signatureMap, ok := signatureMapValue.(map[string]interface{})
+		if !ok {
+			logger.Warn("签名配置格式异常，跳过清理以避免误删图片")
+			return nil
+		}
 
-				// 兼容新格式 SignatureStorageEntry
-				if entry, ok := v.(map[string]interface{}); ok {
-					if value, ok := entry["value"].(string); ok {
-						encryptedValueStr = value
-					} else {
-						logger.Warn("无法从 SignatureStorageEntry 中提取 value 字段")
-						continue
-					}
-				} else if str, ok := v.(string); ok {
-					// 兼容旧格式：直接是加密字符串
-					encryptedValueStr = str
+		// 遍历所有的签名配置
+		for encryptedID, v := range signatureMap {
+			totalEntries++
+			var encryptedValueStr string
+
+			// 兼容新格式 SignatureStorageEntry
+			if entry, ok := v.(map[string]interface{}); ok {
+				if value, ok := entry["value"].(string); ok {
+					encryptedValueStr = value
 				} else {
-					logger.Warn("无法识别签名数据格式")
+					logger.Warn("无法从 SignatureStorageEntry 中提取 value 字段", "encryptedID", encryptedID)
+					failCount++
 					continue
 				}
+			} else if str, ok := v.(string); ok {
+				// 兼容旧格式：直接是加密字符串
+				encryptedValueStr = str
+			} else {
+				logger.Warn("无法识别签名数据格式", "encryptedID", encryptedID)
+				failCount++
+				continue
+			}
 
-				// 解密签名数据（使用动态密钥）
-				var decryptedData string
-				var err error
+			// 解密签名数据（使用动态密钥）
+			var decryptedData string
+			var err error
 
-				// 尝试使用新的动态密钥解密
-				decryptedData, err = DecryptValueWithDynamicKey(encryptedValueStr, encryptedID)
+			// 尝试使用新的动态密钥解密
+			decryptedData, err = DecryptValueWithDynamicKey(encryptedValueStr, encryptedID)
+			if err != nil {
+				// 如果失败，尝试使用旧的方式（KeyA）
+				logger.Debug("动态密钥解密失败，尝试旧方式", "encryptedID", encryptedID, "error", err.Error())
+				keyA := GetKeyA()
+				decryptedData, err = decryptData(encryptedValueStr, keyA)
 				if err != nil {
-					// 如果失败，尝试使用旧的方式（KeyA）
-					logger.Debug("动态密钥解密失败，尝试旧方式", "error", err.Error())
-					keyA := GetKeyA()
-					decryptedData, err = decryptData(encryptedValueStr, keyA)
-					if err != nil {
-						logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
-						continue
-					}
-				}
-
-				// 解析 JSON 数据
-				var sigData SignatureData
-				if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
-					logger.Warn("签名数据 JSON 解析失败，跳过此签名", "error", err.Error())
+					logger.Warn("签名数据解密失败，跳过此签名", "encryptedID", encryptedID, "error", err.Error())
+					failCount++
 					continue
-				}
-
-				// 如果有图片路径，添加到有效路径集合
-				if sigData.CardImage != "" {
-					validImagePaths[sigData.CardImage] = true
-					logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
 				}
 			}
+
+			// 解析 JSON 数据
+			var sigData SignatureData
+			if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
+				logger.Warn("签名数据 JSON 解析失败，跳过此签名", "encryptedID", encryptedID, "error", err.Error())
+				failCount++
+				continue
+			}
+
+			// 如果有图片路径，添加到有效路径集合
+			if sigData.CardImage != "" {
+				validImagePaths[sigData.CardImage] = true
+				logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
+			}
+
+			successCount++
 		}
 	}
 
-	logger.Info("配置中的有效签名图片数量", "count", len(validImagePaths))
+	logger.Info("签名图片引用统计", "total_entries", totalEntries, "success", successCount, "fail", failCount)
+
+	// 若配置非空且存在任意解密/解析失败，则为了安全跳过删除
+	if signatureMapValue != nil && failCount > 0 {
+		logger.Warn("检测到签名解密/解析失败，出于安全考虑已跳过清理操作", "total_entries", totalEntries, "success", successCount, "fail", failCount)
+		return nil
+	}
 
 	// 3. 获取 signature 目录下的所有文件
 	files, err := os.ReadDir(signatureDir)
