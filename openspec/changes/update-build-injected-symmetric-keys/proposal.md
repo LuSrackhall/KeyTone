@@ -55,6 +55,11 @@
 - `private_keys.env` 存在但缺少新增条目时（历史文件），脚本不得失败；缺失项应跳过注入。
 - 若 `private_keys.env` 中仍是模板占位符（如 `PLACEHOLDER_*` / `REPLACE_ME`），必须视为“未配置”并跳过注入，避免误覆盖开源默认密钥导致兼容性破坏。
 
+补充（本次修复中实际发现的两个具体故障形态）：
+
+- `set -u` 下出现 `KEYS_FILE�: unbound variable`：根因是输出字符串中使用 `$KEYS_FILE，`（紧邻非 ASCII 标点），在某些编码/locale 下会被解析成“带异常字节的变量名”。修复：统一改用 `${KEYS_FILE}` 形式。
+- “无私钥文件”分支虽然设置了 `EXTRA_LDFLAGS=""`，但仍继续执行后续混淆流程：根因是把 `return/exit` 封装进函数，函数内 `return` 只返回函数，无法中止被 `source` 的脚本。修复：在脚本顶层直接 `return ... || exit ...`。
+
 | Key/Secret              | Default（源码）                                                              | 注入变量（Go -ldflags -X）                             | 用途摘要                                                |
 | ----------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
 | 签名 KeyA               | `KeyTone2024Signature_KeyA_SecureEncryptionKeyForIDEncryption`               | `KeyTone/signature.KeyToneSignatureEncryptionKeyA`     | 加密签名ID、派生动态密钥（PBKDF2）                      |

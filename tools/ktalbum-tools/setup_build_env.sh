@@ -47,11 +47,6 @@ KEYS_TO_PROCESS=(
 
 # =================逻辑区域=================
 
-should_exit_or_return() {
-  local code="$1"
-  return "$code" 2>/dev/null || exit "$code"
-}
-
 is_placeholder_value() {
   local v="$1"
   [[ -z "$v" ]] && return 0
@@ -84,18 +79,18 @@ read_env_value_from_file() {
 
 # 检查混淆工具是否存在
 if [ ! -f "$OBFUSCATOR_TOOL" ]; then
-  echo "错误: 未找到混淆工具源码 $OBFUSCATOR_TOOL" >&2
+  echo "错误: 未找到混淆工具源码 ${OBFUSCATOR_TOOL}" >&2
   return 1 2>/dev/null || exit 1
 fi
 
 # 如果没有私钥文件，允许继续（开源构建不需要 EXTRA_LDFLAGS）
 if [ ! -f "$KEYS_FILE" ]; then
-  echo "提示: 未找到私钥文件 $KEYS_FILE，将不设置 EXTRA_LDFLAGS（开源默认密钥模式）。" >&2
+  echo "提示: 未找到私钥文件 ${KEYS_FILE}，将不设置 EXTRA_LDFLAGS（开源默认密钥模式）。" >&2
   export EXTRA_LDFLAGS=""
   if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "export EXTRA_LDFLAGS=\"\""
   fi
-  exit 0
+  return 0 2>/dev/null || exit 0
 fi
 
 # 初始化 LDFLAGS 字符串
@@ -107,7 +102,7 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
   KEY_NAME=$(echo "$entry" | cut -d':' -f1)
   GO_VAR=$(echo "$entry" | cut -d':' -f2)
 
-  PLAINTEXT_KEY=$(read_env_value_from_file "$KEY_NAME" "$KEYS_FILE")
+  PLAINTEXT_KEY=$(read_env_value_from_file "${KEY_NAME}" "${KEYS_FILE}")
   if is_placeholder_value "$PLAINTEXT_KEY"; then
     echo "提示: 跳过 ${KEY_NAME}（未配置或仍为模板占位符），将不设置 EXTRA_LDFLAGS（开源默认密钥模式）。" >&2
     continue
@@ -116,7 +111,7 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
   OBFUSCATED_VAL=$(go run "$OBFUSCATOR_TOOL" -key "$PLAINTEXT_KEY")
   if [ $? -ne 0 ]; then
     echo "错误: 密钥 $KEY_NAME 混淆失败" >&2
-    should_exit_or_return 1
+    return 1 2>/dev/null || exit 1
   fi
 
   LDFLAGS="$LDFLAGS -X '$GO_VAR=$OBFUSCATED_VAL'"

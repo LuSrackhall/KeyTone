@@ -63,11 +63,6 @@ KEYS_TO_PROCESS=(
 
 # =================逻辑区域=================
 
-should_exit_or_return() {
-    local code="$1"
-    return "$code" 2>/dev/null || exit "$code"
-}
-
 is_placeholder_value() {
     local v="$1"
     [[ -z "$v" ]] && return 0
@@ -110,17 +105,18 @@ read_env_value_from_file() {
 # - 未提供私钥文件时，开源构建依然应当可运行（使用源码默认密钥）；因此这里不再视为错误。
 # - 若仅需要部分注入（例如只注入授权流密钥），也允许其它 key 缺失并自动跳过。
 if [ ! -f "$KEYS_FILE" ]; then
-    echo "提示: 未找到私钥文件 $KEYS_FILE，将不设置 EXTRA_LDFLAGS（使用源码默认密钥/secret）。" >&2
+    echo "提示: 未找到私钥文件 ${KEYS_FILE}，将不设置 EXTRA_LDFLAGS（使用源码默认密钥/secret）。" >&2
     export EXTRA_LDFLAGS=""
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         echo "export EXTRA_LDFLAGS=\"\""
     fi
-    should_exit_or_return 0
+    # 注意：这里必须直接 return/exit 以中止被 source 的脚本继续执行
+    return 0 2>/dev/null || exit 0
 fi
 
 # 检查混淆工具是否存在
 if [ ! -f "$OBFUSCATOR_TOOL" ]; then
-    echo "错误: 未找到混淆工具源码 $OBFUSCATOR_TOOL" >&2
+    echo "错误: 未找到混淆工具源码 ${OBFUSCATOR_TOOL}" >&2
     return 1 2>/dev/null || exit 1
 fi
 
@@ -138,7 +134,7 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
     GO_VAR=$(echo "$entry" | cut -d':' -f2)
 
     # 从文件中读取明文密钥（兼容 set -euo pipefail）
-    PLAINTEXT_KEY=$(read_env_value_from_file "$KEY_NAME" "$KEYS_FILE")
+    PLAINTEXT_KEY=$(read_env_value_from_file "${KEY_NAME}" "${KEYS_FILE}")
 
     # 兼容性：
     # - 若缺失该 KEY_*，则跳过注入，让 Go 侧回退到源码默认值（保持与旧版/开源版兼容）
@@ -158,7 +154,7 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
     # $? 获取上一个命令的退出状态码，0 表示成功
     if [ $? -ne 0 ]; then
         echo "错误: 密钥 $KEY_NAME 混淆失败" >&2
-        should_exit_or_return 1
+        return 1 2>/dev/null || exit 1
     fi
 
     # 拼接到 LDFLAGS 字符串中
