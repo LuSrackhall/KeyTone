@@ -46,6 +46,15 @@
 
 ## Review Notes / Audit Trail
 
+## 2026-01-04 Compatibility Fixes (Audit)
+
+为满足“未使用新增 KEY_* 变量也能运行/构建成功，并与适配前兼容”的预期，补充以下实现约束：
+
+- `sdk/setup_build_env.sh` 必须在 `set -euo pipefail` 环境下稳定运行（不允许因 `grep` / pipeline 失败而静默退出）。
+- 未提供 `sdk/private_keys.env` 时，脚本不得失败，必须设置 `EXTRA_LDFLAGS=""`（等价于不注入，回退源码默认值）。
+- `private_keys.env` 存在但缺少新增条目时（历史文件），脚本不得失败；缺失项应跳过注入。
+- 若 `private_keys.env` 中仍是模板占位符（如 `PLACEHOLDER_*` / `REPLACE_ME`），必须视为“未配置”并跳过注入，避免误覆盖开源默认密钥导致兼容性破坏。
+
 | Key/Secret              | Default（源码）                                                              | 注入变量（Go -ldflags -X）                             | 用途摘要                                                |
 | ----------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
 | 签名 KeyA               | `KeyTone2024Signature_KeyA_SecureEncryptionKeyForIDEncryption`               | `KeyTone/signature.KeyToneSignatureEncryptionKeyA`     | 加密签名ID、派生动态密钥（PBKDF2）                      |

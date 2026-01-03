@@ -60,6 +60,16 @@
 - `sdk/private_keys.template.env` 增加对应 KEY_* 项
 - `sdk/setup_build_env.sh` 增加 `KEYS_TO_PROCESS` 映射，使本地私有构建可以自动生成 `EXTRA_LDFLAGS`
 
+### Compatibility Behavior (重要)
+
+为保证历史 `private_keys.env`（未包含新增 KEY_*）以及“仅开源构建”场景可正常运行：
+
+- `sdk/setup_build_env.sh` 采用 best-effort 策略：
+  - 若未找到 `private_keys.env`，脚本不会报错退出，而是设置 `EXTRA_LDFLAGS=""` 并继续（等价于不注入）。
+  - 若某个 `KEY_*` 缺失，或值仍为模板占位符（如 `PLACEHOLDER_*` / `REPLACE_ME`），脚本会跳过该 key 的注入，让运行时回退到源码默认值。
+
+该行为的目标是：在不要求用户立刻补齐新增环境变量的前提下，依旧保持与适配前版本的兼容性。
+
 ### ktalbum-tools（本地调试工具）
 
 ktalbum-tools 的目标是便于本地查看/调试 `.ktalbum` 文件，因此它需要在“一个二进制”中尽量兼容两类产物：

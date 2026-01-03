@@ -49,3 +49,11 @@
 - [x] 为 `printconfig` 补充 `go run` 使用说明（含开源/私有注入与兼容性边界）
 - [ ] 可选：在本地提供 `sdk/private_keys.env` 并运行 `source sdk/setup_build_env.sh` 后构建，验证注入 keys 生效
 - [ ] 可选：为 `tools/ktalbum-tools` 构建时传入 `-ldflags -X`，验证能解密对应构建身份产物
+
+## 7. 兼容性修复（2026-01-04）
+
+- [x] `sdk/setup_build_env.sh`：在 `set -euo pipefail` 下不因 grep/pipeline 失败而静默退出
+- [x] `sdk/setup_build_env.sh`：缺失 `private_keys.env` 时不失败，设置 `EXTRA_LDFLAGS=""` 并回退默认行为
+- [x] `sdk/setup_build_env.sh`：缺失新增 `KEY_*` 时跳过注入（兼容历史 private_keys.env）
+- [x] `sdk/setup_build_env.sh`：模板占位符（`PLACEHOLDER_*`/`REPLACE_ME`）视为未配置并跳过，避免误覆盖默认密钥
+- [x] `tools/ktalbum-tools/setup_build_env.sh`：同等容错（缺失/占位符跳过）

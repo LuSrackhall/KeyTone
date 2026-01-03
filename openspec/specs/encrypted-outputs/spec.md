@@ -17,6 +17,8 @@
 
 Normative: The system SHALL support overriding selected symmetric keys/secrets at build-time via Go `-ldflags -X` using XOR-obfuscated hex values; when not injected, it MUST fall back to the default hardcoded values so open-source builds remain functional.
 
+Note: The recommended helper script `sdk/setup_build_env.sh` is intentionally best-effort for compatibility. If `sdk/private_keys.env` is missing, or if individual `KEY_*` entries are missing / still template placeholders, the script SHOULD skip those injections and leave `EXTRA_LDFLAGS` empty or partial, so builds remain compatible with the default open-source behavior.
+
 #### Scenario: 开源构建未注入
 
 - **GIVEN** 用户从公开源码直接构建且未提供私钥文件/注入参数

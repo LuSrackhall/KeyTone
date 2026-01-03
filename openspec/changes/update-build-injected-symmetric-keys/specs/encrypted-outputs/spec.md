@@ -14,6 +14,8 @@ Note: The internal debug utility `sdk/audioPackage/cmd/printconfig` depends on `
 - **WHEN** 系统进行签名管理加解密、专辑导出/导入、专辑配置加解密
 - **THEN** 系统使用源码默认密钥/secret，行为与当前开源版本一致
 
+Note: For local development, the helper script `sdk/setup_build_env.sh` SHOULD treat missing `private_keys.env` or missing/placeholder `KEY_*` entries as “not injected” (skip `-ldflags -X` for that key) to preserve backward compatibility.
+
 #### Scenario: 注入密钥后自动解混淆
 
 - **GIVEN** 构建过程中通过 `-ldflags -X` 注入了 XOR 混淆后的 hex

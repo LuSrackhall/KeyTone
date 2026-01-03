@@ -47,6 +47,41 @@ KEYS_TO_PROCESS=(
 
 # =================逻辑区域=================
 
+should_exit_or_return() {
+  local code="$1"
+  return "$code" 2>/dev/null || exit "$code"
+}
+
+is_placeholder_value() {
+  local v="$1"
+  [[ -z "$v" ]] && return 0
+  [[ "$v" == PLACEHOLDER_* ]] && return 0
+  [[ "$v" == *REPLACE_ME* ]] && return 0
+  return 1
+}
+
+read_env_value_from_file() {
+  local key_name="$1"
+  local file_path="$2"
+  local line
+  line=$(grep -m 1 "^${key_name}=" "$file_path" 2>/dev/null || true)
+  if [ -z "$line" ]; then
+    echo ""
+    return 0
+  fi
+  local value
+  value="${line#*=}"
+  value="${value%$'\r'}"
+  if [[ "$value" == '"'*'"' ]]; then
+    value="${value#\"}"
+    value="${value%\"}"
+  elif [[ "$value" == "'"*"'" ]]; then
+    value="${value#\'}"
+    value="${value%\'}"
+  fi
+  echo "$value"
+}
+
 # 检查混淆工具是否存在
 if [ ! -f "$OBFUSCATOR_TOOL" ]; then
   echo "错误: 未找到混淆工具源码 $OBFUSCATOR_TOOL" >&2
@@ -72,22 +107,27 @@ for entry in "${KEYS_TO_PROCESS[@]}"; do
   KEY_NAME=$(echo "$entry" | cut -d':' -f1)
   GO_VAR=$(echo "$entry" | cut -d':' -f2)
 
-  PLAINTEXT_KEY=$(grep "^$KEY_NAME=" "$KEYS_FILE" | cut -d'"' -f2)
-  if [ -z "$PLAINTEXT_KEY" ]; then
-    echo "错误: 在 $KEYS_FILE 中未找到 $KEY_NAME" >&2
-    return 1 2>/dev/null || exit 1
+  PLAINTEXT_KEY=$(read_env_value_from_file "$KEY_NAME" "$KEYS_FILE")
+  if is_placeholder_value "$PLAINTEXT_KEY"; then
+    echo "提示: 跳过 ${KEY_NAME}（未配置或仍为模板占位符），将不设置 EXTRA_LDFLAGS（开源默认密钥模式）。" >&2
+    continue
   fi
 
   OBFUSCATED_VAL=$(go run "$OBFUSCATOR_TOOL" -key "$PLAINTEXT_KEY")
   if [ $? -ne 0 ]; then
     echo "错误: 密钥 $KEY_NAME 混淆失败" >&2
-    return 1 2>/dev/null || exit 1
+    should_exit_or_return 1
   fi
 
   LDFLAGS="$LDFLAGS -X '$GO_VAR=$OBFUSCATED_VAL'"
 done
 
 export EXTRA_LDFLAGS="$LDFLAGS"
+
+# 若没有任何 key 被注入，则显式清空（避免上次会话残留）
+if [ -z "$LDFLAGS" ]; then
+  export EXTRA_LDFLAGS=""
+fi
 
 echo "成功！已设置 EXTRA_LDFLAGS（ktalbum-tools）。" >&2
 
