@@ -16,6 +16,8 @@ Note: The internal debug utility `sdk/audioPackage/cmd/printconfig` depends on `
 
 Note: For local development, the helper script `sdk/setup_build_env.sh` SHOULD treat missing `private_keys.env` or missing/placeholder `KEY_*` entries as “not injected” (skip `-ldflags -X` for that key) to preserve backward compatibility.
 
+Note: The obfuscation tool used by the scripts (`tools/key-obfuscator`) MUST output only the obfuscated hex value to `stdout`. Any warning/info text (including non-32-byte length warnings) MUST go to `stderr` so `EXTRA_LDFLAGS` and CI secrets remain valid.
+
 #### Scenario: 注入密钥后自动解混淆
 
 - **GIVEN** 构建过程中通过 `-ldflags -X` 注入了 XOR 混淆后的 hex

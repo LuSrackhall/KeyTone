@@ -19,6 +19,8 @@ Normative: The system SHALL support overriding selected symmetric keys/secrets a
 
 Note: The recommended helper script `sdk/setup_build_env.sh` is intentionally best-effort for compatibility. If `sdk/private_keys.env` is missing, or if individual `KEY_*` entries are missing / still template placeholders, the script SHOULD skip those injections and leave `EXTRA_LDFLAGS` empty or partial, so builds remain compatible with the default open-source behavior.
 
+Note: The obfuscation helper (`tools/key-obfuscator`) MUST keep `stdout` machine-consumable. `stdout` SHALL contain only the obfuscated hex string (no warnings, no extra text). Any warnings (e.g. non-32-byte key length) or errors MUST be printed to `stderr` so CI systems (GitHub Actions secrets) and scripts capturing `$(...)` are not polluted.
+
 #### Scenario: 开源构建未注入
 
 - **GIVEN** 用户从公开源码直接构建且未提供私钥文件/注入参数

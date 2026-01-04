@@ -15,6 +15,15 @@
 - 通过 Go 链接器 `-X 'package.path.VarName=VALUE'` 注入
 - `VALUE` 推荐为：`tools/key-obfuscator` 输出的 hex（对任意长度字符串可用；长度非 32 时会提示 warning）
 
+#### tool stdout/stderr contract（跨平台关键约束）
+
+`tools/key-obfuscator` 的输出必须满足：
+
+- `stdout`：仅输出混淆后的 hex 字符串（机器可消费，允许被脚本 `$(...)` 捕获并直接用于 `-ldflags -X`）。
+- `stderr`：输出任何 warning/info/error 文本（例如“长度不是 32”的提示）。
+
+原因：CI（如 GitHub Actions）常将注入值复制为 secrets；若 warning 混入 stdout，会污染 `EXTRA_LDFLAGS`，导致构建失败或运行期走 fallback 造成兼容性破坏。
+
 ### Runtime
 
 - 若变量值等于默认常量，则直接按默认明文使用

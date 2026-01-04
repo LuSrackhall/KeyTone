@@ -60,6 +60,11 @@
 - `set -u` 下出现 `KEYS_FILE�: unbound variable`：根因是输出字符串中使用 `$KEYS_FILE，`（紧邻非 ASCII 标点），在某些编码/locale 下会被解析成“带异常字节的变量名”。修复：统一改用 `${KEYS_FILE}` 形式。
 - “无私钥文件”分支虽然设置了 `EXTRA_LDFLAGS=""`，但仍继续执行后续混淆流程：根因是把 `return/exit` 封装进函数，函数内 `return` 只返回函数，无法中止被 `source` 的脚本。修复：在脚本顶层直接 `return ... || exit ...`。
 
+补充（CI 注入相关）：
+
+- `tools/key-obfuscator` 在 key 长度不为 32 时会打印 `Warning: ...`，但历史实现将 warning 打到 `stdout`，导致 `sdk/setup_build_env.sh` 捕获 `$(go run ...)` 时把 warning 一并拼进 `-ldflags -X` 的值，进而污染 GitHub Actions secrets / 破坏构建与运行兼容性。
+- 修复策略：规定并实现 `stdout` 仅输出混淆后的 hex；任何 warning/info/error 必须写入 `stderr`。
+
 | Key/Secret              | Default（源码）                                                              | 注入变量（Go -ldflags -X）                             | 用途摘要                                                |
 | ----------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------- |
 | 签名 KeyA               | `KeyTone2024Signature_KeyA_SecureEncryptionKeyForIDEncryption`               | `KeyTone/signature.KeyToneSignatureEncryptionKeyA`     | 加密签名ID、派生动态密钥（PBKDF2）                      |

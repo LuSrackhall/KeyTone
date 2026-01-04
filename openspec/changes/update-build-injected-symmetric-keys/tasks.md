@@ -60,3 +60,4 @@
 - [x] `sdk/setup_build_env.sh`：修复 `set -u` 下 `KEYS_FILE�: unbound variable`（统一使用 `${VAR}` 展开）
 - [x] `sdk/setup_build_env.sh`：修复“无私钥文件分支仍继续执行”的 source 早退问题（顶层 `return ... || exit ...`）
 - [x] `tools/ktalbum-tools/setup_build_env.sh`：修复 source 场景下 `exit 0` 会退出当前 shell 的问题（改为 `return 0 || exit 0`）
+- [x] `tools/key-obfuscator/main.go`：stdout 仅输出混淆后的 hex；Warning/错误输出到 stderr，避免污染 `EXTRA_LDFLAGS` 与 CI secrets
