@@ -537,12 +537,24 @@ func decryptData(encryptedData string, key []byte) (string, error) {
 	return string(plaintext), nil
 }
 
-// CleanupOrphanCardImages 清理不在配置中的孤立签名图片
-// 该函数会扫描 signature 目录下的所有文件，
-// 与配置中的签名数据进行比对，删除不在配置中的图片文件
-// encryptionKey: 保留用于兼容旧调用，实际使用KeyA获取动态密钥
+// CleanupOrphanCardImages 清理签名图片的“删除标记”文件
+//
+// 重要语义（与历史实现不同）：
+// - 本函数不再解密/遍历配置中的签名列表，也不再尝试推断“孤立图片”。
+// - 它只扫描 `ConfigPath/signature` 目录并删除文件名以 `Delete___` 开头的文件。
+//
+// 关于“图片共享/去重”的实现现状（用于避免 review 误解）：
+// - 创建/更新/导入签名保存图片时，文件名由 `id|name|originalImageName|timestamp` 参与计算，
+//   并非按图片内容做去重；因此正常流程下不会出现多个签名共享同一图片文件。
+//
+// 设计原因：当构建密钥变更导致历史签名解密失败时，旧的“解密配置 -> 收集有效路径 -> 删除不在集合中的文件”
+// 会误删仍应保留的图片；改为按文件名前缀删除可从根上规避该风险。
+//
+// encryptionKey: 历史兼容保留；当前实现不再使用该参数。
 func CleanupOrphanCardImages(encryptionKey []byte) error {
 	logger.Info("开始执行签名名片图片清理操作...")
+
+	const deletePrefix = "Delete___"
 
 	// 1. 获取 signature 目录路径
 	signatureDir := filepath.Join(config.ConfigPath, "signature")
@@ -553,75 +565,14 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 		return nil
 	}
 
-	// 2. 从配置中获取所有签名数据，解析出有效的图片路径集合
-	validImagePaths := make(map[string]bool)
-	signatureMapValue := config.GetValue("signature")
-
-	if signatureMapValue != nil {
-		if signatureMap, ok := signatureMapValue.(map[string]interface{}); ok {
-			// 遍历所有的签名配置
-			for encryptedID, v := range signatureMap {
-				var encryptedValueStr string
-
-				// 兼容新格式 SignatureStorageEntry
-				if entry, ok := v.(map[string]interface{}); ok {
-					if value, ok := entry["value"].(string); ok {
-						encryptedValueStr = value
-					} else {
-						logger.Warn("无法从 SignatureStorageEntry 中提取 value 字段")
-						continue
-					}
-				} else if str, ok := v.(string); ok {
-					// 兼容旧格式：直接是加密字符串
-					encryptedValueStr = str
-				} else {
-					logger.Warn("无法识别签名数据格式")
-					continue
-				}
-
-				// 解密签名数据（使用动态密钥）
-				var decryptedData string
-				var err error
-
-				// 尝试使用新的动态密钥解密
-				decryptedData, err = DecryptValueWithDynamicKey(encryptedValueStr, encryptedID)
-				if err != nil {
-					// 如果失败，尝试使用旧的方式（KeyA）
-					logger.Debug("动态密钥解密失败，尝试旧方式", "error", err.Error())
-					keyA := GetKeyA()
-					decryptedData, err = decryptData(encryptedValueStr, keyA)
-					if err != nil {
-						logger.Warn("签名数据解密失败，跳过此签名", "error", err.Error())
-						continue
-					}
-				}
-
-				// 解析 JSON 数据
-				var sigData SignatureData
-				if err := json.Unmarshal([]byte(decryptedData), &sigData); err != nil {
-					logger.Warn("签名数据 JSON 解析失败，跳过此签名", "error", err.Error())
-					continue
-				}
-
-				// 如果有图片路径，添加到有效路径集合
-				if sigData.CardImage != "" {
-					validImagePaths[sigData.CardImage] = true
-					logger.Debug("记录有效的签名图片路径", "path", sigData.CardImage)
-				}
-			}
-		}
-	}
-
-	logger.Info("配置中的有效签名图片数量", "count", len(validImagePaths))
-
-	// 3. 获取 signature 目录下的所有文件
+	// 2. 获取 signature 目录下的所有文件
 	files, err := os.ReadDir(signatureDir)
 	if err != nil {
 		logger.Error("读取签名目录失败", "error", err.Error())
 		return err
 	}
 
-	// 4. 遍历目录中的所有文件，删除不在有效路径中的文件
+	// 3. 遍历目录中的所有文件，删除以 Delete___ 开头的标记文件
 	deletedCount := 0
 	for _, file := range files {
 		// 只处理文件，跳过目录
@@ -629,17 +580,17 @@ func CleanupOrphanCardImages(encryptionKey []byte) error {
 			continue
 		}
 
+		if !strings.HasPrefix(file.Name(), deletePrefix) {
+			continue
+		}
+
 		filePath := filepath.Join(signatureDir, file.Name())
 
-		// 检查文件路径是否在有效路径集合中
-		if _, exists := validImagePaths[filePath]; !exists {
-			// 文件不在有效路径中，删除它
-			if err := os.Remove(filePath); err != nil {
-				logger.Warn("删除孤立图片文件失败", "path", filePath, "error", err.Error())
-			} else {
-				logger.Debug("成功删除孤立图片文件", "path", filePath)
-				deletedCount++
-			}
+		if err := os.Remove(filePath); err != nil {
+			logger.Warn("删除标记图片文件失败", "path", filePath, "error", err.Error())
+		} else {
+			logger.Debug("成功删除标记图片文件", "path", filePath)
+			deletedCount++
 		}
 	}
 
