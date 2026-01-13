@@ -43,13 +43,35 @@ func Extract(inputFile, outputFile string, verbose bool) error {
 		return fmt.Errorf("读取加密数据失败: %v", err)
 	}
 
-	// 解密数据
-	zipData := utils.XorCrypt(encryptedData, utils.KeytoneEncryptKey)
+	// 解密数据（按版本选择候选密钥；私有密钥构建优先注入，回退默认，兼容开源产物）
+	var zipData []byte
+	decrypted := false
 
-	// 验证校验和
-	checksum := sha256.Sum256(zipData)
-	if checksum != header.Checksum {
-		return fmt.Errorf("文件校验失败，文件可能已损坏")
+	for _, decryptKey := range utils.GetDecryptKeyCandidatesByVersion(header.Version) {
+		candidate := utils.XorCrypt(encryptedData, decryptKey)
+		checksum := sha256.Sum256(candidate)
+		if checksum == header.Checksum {
+			zipData = candidate
+			decrypted = true
+			break
+		}
+	}
+
+	// 与 SDK 一致：若校验失败且版本不是 v1，尝试 v1 候选回退
+	if !decrypted && header.Version != 1 {
+		for _, decryptKey := range utils.GetDecryptKeyCandidatesByVersion(1) {
+			candidate := utils.XorCrypt(encryptedData, decryptKey)
+			checksum := sha256.Sum256(candidate)
+			if checksum == header.Checksum {
+				zipData = candidate
+				decrypted = true
+				break
+			}
+		}
+	}
+
+	if !decrypted {
+		return fmt.Errorf("文件校验失败，文件可能已损坏或密钥不匹配")
 	}
 
 	// 写入解密后的zip数据

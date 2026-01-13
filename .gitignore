@@ -6,6 +6,7 @@
 /sdk/KeyToneSetting.json
 /sdk/log.jsonl
 /sdk/temporaryDebug
+/sdk/printconfig
 
 # Private Keys
 private_keys.env

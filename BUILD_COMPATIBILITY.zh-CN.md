@@ -13,6 +13,24 @@
 
 这种差异是**有意设计的**，且仅限于与身份相关的行为。
 
+## 构建时注入密钥（Build-Time Injected Keys）
+
+本项目支持通过 Go 的 `-ldflags -X` 进行**构建时密钥注入**：
+私有构建可以在不修改源码的前提下覆盖开源默认密钥（注入值为 XOR 混淆后的 hex，运行时自动解混淆）。
+
+该机制覆盖：
+
+- 授权流密钥（F/K/Y/N）
+- 签名管理对称密钥（A/B）
+- 专辑导出文件对称密钥（版本化 XOR：v1/v2）
+- 专辑配置加密派生 seed（FixedSecret，用于派生 AES key）
+- 专辑配置 `signature` 字段内层加密密钥
+
+本地/私有构建入口：
+
+- `sdk/private_keys.template.env`
+- `sdk/setup_build_env.sh`
+
 ---
 
 # 加密产物的兼容性

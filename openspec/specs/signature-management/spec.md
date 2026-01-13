@@ -78,7 +78,7 @@ Normative: The system SHALL 在删除前显示确认对话框；客户端 MUST �
 
 ### Requirement: 导出签名
 
-Normative: The client SHALL 通过 `POST /signature/export` 请求导出；后端 MUST 返回经 KeyB 加密并以十六进制编码的 `.ktsign` 内容，客户端 MUST 在用户确认保存后才提示成功。
+Normative: The client SHALL 通过 `POST /signature/export` 请求导出；后端 MUST 返回经 KeyB（可构建注入；未注入时使用源码默认值）加密并以十六进制编码的 `.ktsign` 内容，客户端 MUST 在用户确认保存后才提示成功。
 
 #### Scenario: 导出成功
 
@@ -96,7 +96,7 @@ Normative: The client SHALL 通过 `POST /signature/export` 请求导出；后�
 
 ### Requirement: 导入签名
 
-Normative: The client SHALL 上传 `.ktsign` 文件到 `POST /signature/import`；后端 MUST 使用 KeyB 解密并校验字段，当签名已存在时返回 `409` 且 `conflict: true`；覆盖流程 SHALL 通过 `POST /signature/import-confirm` 携带原始加密字符串和 `overwrite` 标识完成导入。
+Normative: The client SHALL 上传 `.ktsign` 文件到 `POST /signature/import`；后端 MUST 使用 KeyB（可构建注入；未注入时使用源码默认值）解密并校验字段，当签名已存在时返回 `409` 且 `conflict: true`；覆盖流程 SHALL 通过 `POST /signature/import-confirm` 携带原始加密字符串和 `overwrite` 标识完成导入。
 
 #### Scenario: 导入成功
 

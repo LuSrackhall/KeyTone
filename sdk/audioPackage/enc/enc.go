@@ -10,8 +10,41 @@ import (
 	"KeyTone/signature"
 )
 
-// FixedSecret is the fixed secret prefix for album config enc/dec per spec.
-const FixedSecret = "LuSrackhall_KeyTone_2024_Signature_66688868686688"
+// ==============================
+// 对称加密种子（用于派生专辑配置 AES 密钥）
+// 注意：该 secret 由源码提供默认值（开源构建保持原行为），也可在构建时通过 -ldflags 注入
+// 注入的值应为经过 XOR 混淆后的 Hex 字符串（与授权流一致）
+// ==============================
+
+// xorMask 用于混淆密钥的掩码，必须与授权流一致
+var xorMask = []byte{0x55, 0xAA, 0x33, 0xCC, 0x99, 0x66, 0x11, 0xEE, 0x77, 0xBB, 0x22, 0xDD, 0x88, 0x44, 0xFF, 0x00}
+
+// DefaultFixedSecret is the fixed secret prefix for album config enc/dec per spec.
+const DefaultFixedSecret = "LuSrackhall_KeyTone_2024_Signature_66688868686688"
+
+// FixedSecret is the build-injectable secret seed (default: DefaultFixedSecret).
+// 若被注入，则值应为 XOR 混淆后的 Hex 字符串。
+var FixedSecret = DefaultFixedSecret
+
+func deobfuscateString(obfuscatedHex string) string {
+	obfuscated, err := hex.DecodeString(obfuscatedHex)
+	if err != nil {
+		// 非 hex（可能是默认明文，或用户错误注入了明文）
+		return obfuscatedHex
+	}
+	realBytes := make([]byte, len(obfuscated))
+	for i, b := range obfuscated {
+		realBytes[i] = b ^ xorMask[i%len(xorMask)]
+	}
+	return string(realBytes)
+}
+
+func getFixedSecret() string {
+	if FixedSecret == DefaultFixedSecret {
+		return DefaultFixedSecret
+	}
+	return deobfuscateString(FixedSecret)
+}
 
 // DeriveKey derives a 32-byte AES key using SHA256(FixedSecret + last6(sha1(albumUUID))).
 // Assumption: albumUUID is the directory name of the album folder unless specified otherwise.
@@ -26,7 +59,7 @@ func DeriveKey(albumUUID string) []byte {
 		hexStr = pad + hexStr
 	}
 	suffix := hexStr[len(hexStr)-6:]
-	seed := FixedSecret + suffix
+	seed := getFixedSecret() + suffix
 	sum := sha256.Sum256([]byte(seed))
 	key := make([]byte, 32)
 	copy(key, sum[:])

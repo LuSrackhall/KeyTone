@@ -16,13 +16,16 @@ func main() {
 	flag.Parse()
 
 	if *keyPtr == "" {
-		fmt.Println("Please provide a key using -key flag")
+		// NOTE: stdout is reserved for the machine-consumable hex output.
+		// Any human-facing messages MUST go to stderr to avoid polluting build flags.
+		fmt.Fprintln(os.Stderr, "Please provide a key using -key flag")
 		os.Exit(1)
 	}
 
 	key := []byte(*keyPtr)
 	if len(key) != 32 {
-		fmt.Printf("Warning: Key length is %d, expected 32 bytes.\n", len(key))
+		// NOTE: keep warning on stderr so stdout stays pure hex.
+		fmt.Fprintf(os.Stderr, "Warning: Key length is %d, expected 32 bytes.\n", len(key))
 	}
 
 	obfuscated := make([]byte, len(key))
