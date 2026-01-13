@@ -3,9 +3,7 @@
 ## Purpose
 
 本文档定义桌面端签名管理模块在前端与后端之间的交互契约，确保创建、维护、导入导出以及排序流程一致且可追溯。
-
 ## Requirements
-
 ### Requirement: 签名列表加载与增量同步
 
 Normative: The frontend SHALL retrieve the encrypted signature map via `GET /signature/list`, decrypt entries via `POST /signature/decrypt`（携带 `encryptedId`），并按 `sort.time` 升序维护顺序；SSE 回调 MUST 触发增量刷新而不是清空列表。
@@ -116,21 +114,32 @@ Normative: The client SHALL 上传 `.ktsign` 文件到 `POST /signature/import`�
 
 ### Requirement: 签名图片路径初始化
 
-Normative: The backend SHALL 在 `ConfigPath/signature` 下创建并使用签名图片目录，且 `CleanupOrphanCardImages` MUST 删除配置中未引用的文件。
+Normative: The backend SHALL create and use the signature image directory under `ConfigPath/signature`; `CleanupOrphanCardImages` SHALL delete image files that are not referenced by any signature **only when the system can reliably enumerate all referenced images from the signature configuration**. If any signature entry cannot be decrypted or parsed (e.g., due to encryption key mismatch), `CleanupOrphanCardImages` MUST NOT delete any files and MUST emit a warning log indicating cleanup was skipped for safety.
 
-#### Scenario: 初始化图片目录
+#### Scenario: 正常清理孤立图片（可可靠解析）
 
-- **GIVEN** 签名模块首次保存或更新图片
-- **WHEN** 后端写入文件
-- **THEN** 系统确保 `ConfigPath/signature` 目录存在，且项目根目录不会产生多余的 `signatures/`
-
-#### Scenario: 清理孤立图片
-
-- **GIVEN** 某些签名已被删除但图片仍存在磁盘
+- **GIVEN** 签名配置中存在一个或多个签名条目，且所有条目均可被成功解密并解析
+- **AND** `ConfigPath/signature` 目录下存在一些未被任一签名引用的图片文件
 - **WHEN** 执行 `CleanupOrphanCardImages`
-- **THEN** 所有未被引用的图片文件被移除
+- **THEN** 系统删除所有“未被引用”的图片文件
+- **AND** 系统保留所有“被引用”的图片文件
 
----
+#### Scenario: 密钥不兼容导致无法解密时跳过清理（防误删）
+
+- **GIVEN** 签名配置中存在一个或多个签名条目
+- **AND** 当前运行实例的 KeyA/动态密钥与写入该配置时使用的密钥不一致
+- **WHEN** 执行 `CleanupOrphanCardImages`
+- **THEN** 系统无法可靠解密/解析至少一个签名条目
+- **AND** 系统 MUST 跳过本次删除操作，不删除 `ConfigPath/signature` 中任何文件
+- **AND** 系统 MUST 记录 warning 日志，明确说明“因解密/解析失败，为安全起见跳过清理”
+
+#### Scenario: 部分条目解析失败时同样跳过清理（保守策略）
+
+- **GIVEN** 签名配置包含多个签名条目
+- **AND** 其中至少一个条目可解密解析成功、至少一个条目解密或解析失败
+- **WHEN** 执行 `CleanupOrphanCardImages`
+- **THEN** 系统 MUST 视引用集合为不可信
+- **AND** 系统 MUST 跳过本次删除操作，不删除 `ConfigPath/signature` 中任何文件
 
 ### Requirement: 签名排序持久化
 
@@ -160,3 +169,4 @@ Normative: The signature management UI SHALL allow original authors to import au
 - **WHEN** 用户进入审核步骤
 - **THEN** 系统显示"申请方名称"（对应申请文件中的 requesterSignatureName），支持横向滚动（滚动条样式与签名列表一致）以防长文本溢出
 - **AND** 系统在"您的签名"区域展示完整签名列表项（图片（若有）+名称+介绍），名称和介绍支持横向滚动（滚动条样式与签名列表一致）；若匹配多个签名，则用户选择后展示所选项
+
