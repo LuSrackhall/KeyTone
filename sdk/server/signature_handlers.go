@@ -30,6 +30,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	pathpkg "path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -325,12 +327,171 @@ func signatureRouters(r *gin.Engine) {
 
 		// 类型转换并删除
 		if m, ok := signatureMap.(map[string]interface{}); ok {
-			if _, exists := m[req.ID]; !exists {
+			entryData, exists := m[req.ID]
+			if !exists {
 				ctx.JSON(http.StatusNotFound, gin.H{
 					"success": false,
 					"message": "签名不存在",
 				})
 				return
+			}
+
+			// 解析签名条目的加密 value（兼容新旧格式）
+			var encryptedValueStr string
+			if entry, ok := entryData.(map[string]interface{}); ok {
+				value, ok := entry["value"].(string)
+				if !ok || value == "" {
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"success": false,
+						"message": "签名数据格式错误",
+					})
+					return
+				}
+				encryptedValueStr = value
+			} else if str, ok := entryData.(string); ok {
+				// 旧格式：直接是加密字符串
+				encryptedValueStr = str
+			} else {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "签名数据格式错误",
+				})
+				return
+			}
+
+			// 解密签名数据以获取 CardImage 路径
+			decryptedJSON, err := signature.DecryptValueWithDynamicKey(encryptedValueStr, req.ID)
+			if err != nil {
+				logger.Debug("动态密钥解密失败，尝试旧方式", "error", err.Error())
+				decryptedJSON, err = signature.DecryptData(encryptedValueStr, signature.GetKeyA())
+				if err != nil {
+					logger.Error("签名数据解密失败，无法标记删除图片", "error", err.Error())
+					ctx.JSON(http.StatusInternalServerError, gin.H{
+						"success": false,
+						"message": "签名数据解密失败，删除失败",
+					})
+					return
+				}
+			}
+
+			var sigData signature.SignatureData
+			if err := json.Unmarshal([]byte(decryptedJSON), &sigData); err != nil {
+				logger.Error("签名数据解析失败，无法标记删除图片", "error", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"message": "签名数据解析失败，删除失败",
+				})
+				return
+			}
+
+			// 若存在图片：先重命名为 Delete___ 前缀标记；标记失败则不删除配置
+			const deletePrefix = "Delete___"
+			signatureDir := filepath.Join(config.ConfigPath, "signature")
+			if strings.TrimSpace(sigData.CardImage) != "" {
+				// 这里是本变更的核心：
+				// - “签名删除”仍是异步删除：我们不直接 os.Remove 图片，只做“重命名标记”
+				// - 只有当标记成功（或图片已被标记）时，才允许删除配置条目
+				//
+				// 关于“是否存在多个签名共享同一图片文件”的结论（来自创建/导入流程的实际实现）：
+				// - CreateSignature / UpdateSignature / ImportSignature 在保存图片时，文件名是对
+				//   `id|name|originalImageName|timestamp`（导入为 `id|name|importFileName|timestamp`）做 SHA-1。
+				// - 这意味着图片文件名并非基于图片内容哈希；每次保存/导入都会生成新文件名，正常流程下
+				//   不会出现“多个签名引用同一个图片文件”的共享/去重。
+				// - 若用户/外部程序手工篡改配置导致多个签名 CardImage 指向同一路径，则本接口标记删除
+				//   会影响其他仍引用该文件的签名（这属于异常数据，不在本需求的兼容范围内）。
+				//
+				// 为什么需要“basename 回退定位”？
+				// - 历史签名可能在不同平台生成/迁移（例如 Windows 路径包含 `\\` 或盘符）
+				// - 在 macOS/Linux 上用 os.Stat 直接检查这样的路径会失败，导致之前实现“跳过标记但仍删除配置”
+				//   从而出现：签名条目删了，但图片未被重命名标记（你手测遇到的问题）
+				// - 解决方式：优先使用可用的绝对路径；若不可用，则按图片文件名在 signatureDir 下回退查找。
+				cardImageRaw := strings.TrimSpace(sigData.CardImage)
+
+				// 1) 解析文件名（兼容 Windows `\` 与 POSIX `/` 两种分隔符）
+				//    - filepath.Base 在 Unix 下不会识别 `\` 为分隔符，所以先把 `\` 归一化为 `/`，再用 path.Base。
+				normalized := strings.ReplaceAll(cardImageRaw, "\\", "/")
+				baseName := pathpkg.Base(normalized)
+				if baseName == "." || baseName == "/" || baseName == "" {
+					logger.Error("无法解析签名图片文件名，拒绝删除", "cardImage", cardImageRaw)
+					ctx.JSON(http.StatusBadRequest, gin.H{
+						"success": false,
+						"message": "签名图片路径非法，删除失败",
+					})
+					return
+				}
+
+				// 2) 若图片本身已被标记（Delete___ 前缀），则无需重复标记，可继续删除配置条目
+				if !strings.HasPrefix(baseName, deletePrefix) {
+					// 3) 解析并定位“当前图片文件的真实路径”
+					//    candidates 的顺序代表“优先级”。
+					var candidates []string
+
+					// 3.1) 若 CardImage 看起来像当前平台的绝对路径，则优先尝试它
+					//      但要注意：Windows 盘符路径（如 C:\\...）在 Unix 上不是绝对路径，不能当成 filepath.IsAbs。
+					looksLikeWindowsAbs := len(cardImageRaw) >= 3 && cardImageRaw[1] == ':' && (cardImageRaw[2] == '\\' || cardImageRaw[2] == '/')
+					if filepath.IsAbs(cardImageRaw) && !looksLikeWindowsAbs {
+						candidates = append(candidates, filepath.Clean(cardImageRaw))
+					} else {
+						// 3.2) 否则按“相对路径”拼到 signatureDir 下（如果 cardImageRaw 本来就是相对路径，这条能命中）
+						//      注意：这里并不信任 raw，后面会用 Rel 再做一次“必须在 signatureDir 下”的校验。
+						candidates = append(candidates, filepath.Join(signatureDir, filepath.Clean(cardImageRaw)))
+					}
+
+					// 3.3) 最后按 basename 回退：signatureDir/<original_filename>
+					//      这是跨平台迁移时最可靠的命中方式（图片文件实际就存放在 signatureDir 下）。
+					candidates = append(candidates, filepath.Join(signatureDir, baseName))
+
+					var foundPath string
+					for _, c := range candidates {
+						cleanPath := filepath.Clean(c)
+						rel, err := filepath.Rel(signatureDir, cleanPath)
+						if err != nil || strings.HasPrefix(rel, "..") {
+							// 不允许标记 signatureDir 以外的任何路径，避免误操作/路径注入
+							continue
+						}
+						st, err := os.Stat(cleanPath)
+						if err != nil {
+							continue
+						}
+						if st.IsDir() {
+							continue
+						}
+						foundPath = cleanPath
+						break
+					}
+
+					// 4) 只要签名数据声明“有图片”，但我们无法定位到真实文件，就必须失败并拒绝删除配置
+					//    这是为了满足规范：只有标记成功（或无图片）才能删除签名条目。
+					if foundPath == "" {
+						logger.Error("无法定位签名图片文件，拒绝删除配置", "cardImage", cardImageRaw, "signatureDir", signatureDir)
+						ctx.JSON(http.StatusInternalServerError, gin.H{
+							"success": false,
+							"message": "无法定位签名图片文件，删除失败",
+						})
+						return
+					}
+
+					// 5) 执行重命名标记（Delete___ 前缀）
+					newPath := filepath.Join(signatureDir, deletePrefix+baseName)
+					if _, err := os.Stat(newPath); err == nil {
+						// 避免覆盖既有文件：若目标已存在，直接失败（让用户/程序显式处理）
+						logger.Error("删除标记目标文件已存在，拒绝覆盖", "to", newPath)
+						ctx.JSON(http.StatusInternalServerError, gin.H{
+							"success": false,
+							"message": "删除标记冲突，删除失败",
+						})
+						return
+					}
+					if err := os.Rename(foundPath, newPath); err != nil {
+						logger.Error("标记删除签名图片失败", "from", foundPath, "to", newPath, "error", err.Error())
+						ctx.JSON(http.StatusInternalServerError, gin.H{
+							"success": false,
+							"message": "标记删除签名图片失败，删除失败",
+						})
+						return
+					}
+					logger.Info("已标记删除签名图片", "from", foundPath, "to", newPath)
+				}
 			}
 
 			// 删除签名
@@ -956,10 +1117,10 @@ func signatureRouters(r *gin.Engine) {
 				}
 
 				matchedSignatures = append(matchedSignatures, map[string]string{
-					"encryptedId":                encryptedID,
-					"qualificationCode":          qualCode,
-					"qualificationFingerprint":   signature.GenerateQualificationFingerprint(qualCode),
-					"name":                       sigName,
+					"encryptedId":              encryptedID,
+					"qualificationCode":        qualCode,
+					"qualificationFingerprint": signature.GenerateQualificationFingerprint(qualCode),
+					"name":                     sigName,
 				})
 			}
 		}
