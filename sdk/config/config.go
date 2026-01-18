@@ -208,6 +208,13 @@ func settingDefaultConfig() {
 	viper.SetDefault("main_home.audio_volume_processing.volume_silent", Main_home___audio_volume_processing___volume_silent)
 	viper.SetDefault("main_home.audio_volume_processing.is_open_volume_debug_slider", Main_home___audio_volume_processing___is_open_volume_debug_slider)
 
+	// 播放路由默认设置
+	viper.SetDefault("playback.routing.mode", "unified")
+	viper.SetDefault("playback.routing.unified_album_path", "")
+	viper.SetDefault("playback.routing.keyboard_album_path", "")
+	viper.SetDefault("playback.routing.mouse_album_path", "")
+	viper.SetDefault("playback.routing.editor_notice_dismissed", false)
+
 }
 
 func createDefaultConfig() {

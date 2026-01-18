@@ -488,11 +488,96 @@ const (
 	KeyStateUp   = "up"
 )
 
+// ConfigGetter 用于抽象读取配置的函数（支持 editor 模式的 Viper 与 route 模式的只读快照）。
+type ConfigGetter func(string) any
+
+// getValue 对 ConfigGetter 进行统一封装，避免 nil 调用。
+func getValue(get ConfigGetter, key string) any {
+	if get == nil {
+		return nil
+	}
+	return get(key)
+}
+
+// getAudioPkgUUID 从配置中读取 audio_pkg_uuid，并在必要时回退到目录名。
+func getAudioPkgUUID(get ConfigGetter, fallback string) (string, bool) {
+	if get == nil {
+		return "", false
+	}
+	value, ok := get("audio_pkg_uuid").(string)
+	if ok && strings.TrimSpace(value) != "" {
+		return value, true
+	}
+	if fallback != "" {
+		return fallback, true
+	}
+	return "", false
+}
+
+func resolvePlaybackConfig(keycode string) (ConfigGetter, string) {
+	// =============================
+	// 选择播放来源（核心逻辑）
+	// =============================
+	//
+	// 约定：KeyTone 将鼠标按键编码为负数（例如 "-1" ~ "-5"），键盘按键为非负字符串。
+	// 因此可用 keycode 是否以 "-" 开头来区分鼠标事件。
+	//
+	// 模式：
+	// - editor：编辑试听模式。播放读取 audioPackageConfig.Viper（可写配置，可能伴随 SSE 更新）。
+	// - route-unified / route-split：主页路由模式。播放读取只读快照（AlbumSnapshot），由 apply_playback_routing 预加载。
+	//
+	// 热路径约束：本函数 MUST 只做内存读取；不得触发磁盘 IO / 解密 / JSON 解析。
+	// 这些昂贵操作必须提前在 ApplyPlaybackRouting 中完成。
+	state := GetPlaybackState()
+	isMouse := strings.HasPrefix(keycode, "-")
+
+	if state.SourceMode == SourceModeEditor {
+		// 编辑试听模式下直接使用当前可编辑配置。
+		// 注意：audioPackageConfig.Viper 由 LoadConfig 初始化；若为空表示尚未加载专辑。
+		if audioPackageConfig.Viper == nil {
+			return nil, ""
+		}
+		uuid, _ := getAudioPkgUUID(audioPackageConfig.GetValue, "")
+		return audioPackageConfig.GetValue, uuid
+	}
+
+	if state.SourceMode == SourceModeRouteUnified || state.SourceMode == SourceModeRouteSplit {
+		var snapshot *AlbumSnapshot
+		if state.SourceMode == SourceModeRouteUnified {
+			// 统一路由：键盘/鼠标共享快照。
+			snapshot = state.Routing.UnifiedSnapshot
+		} else {
+			if isMouse {
+				// 分离路由：鼠标优先使用 MouseSnapshot，若为空回退到 KeyboardSnapshot。
+				// 说明：允许鼠标专辑缺失时回退到键盘专辑，避免鼠标事件完全失声。
+				snapshot = state.Routing.MouseSnapshot
+				if snapshot == nil {
+					snapshot = state.Routing.KeyboardSnapshot
+				}
+			} else {
+				snapshot = state.Routing.KeyboardSnapshot
+			}
+		}
+		if snapshot != nil && snapshot.Viper != nil {
+			return snapshot.GetValue, snapshot.AudioPkgUUID()
+		}
+	}
+
+	// 未命中任何来源时回退到内嵌测试音。
+	return nil, ""
+}
+
 // 音频包处理器
 // * 此函数会根据处理结果来调用播放器播放对应的音频结果。
 func KeySoundHandler(keyState string, keycode string) {
+	configGetter, audioPkgUUID := resolvePlaybackConfig(keycode)
+
+	// audioPkgUUID 的用途：当配置引用 audio_files（sha256+ext）时，需要拼出真实文件路径：
+	//   AudioPackagePath/<audioPkgUUID>/audioFiles/<sha256><ext>
+	// 在路由快照里，我们优先读取配置内的 audio_pkg_uuid；若缺失则回退为专辑目录名。
+
 	// 如果没有选择音频包，则默认使用内嵌的测试音频进行播放
-	if audioPackageConfig.Viper == nil {
+	if configGetter == nil {
 		switch keycode {
 		case "-1", "-2", "-3", "-4", "-5":
 			if keyState == KeyStateDown {
@@ -521,13 +606,13 @@ func KeySoundHandler(keyState string, keycode string) {
 	// 从音频包配置中获取相关设置, 并根据配置决定如何播放
 
 	// TODO: 根据传入的具体按键Keycode, 来独立寻找其预设的播放配置, 以播放对应音频。
-	single := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState)
+	single := getValue(configGetter, "key_tone.single."+keycode+"."+keyState)
 	fmt.Println("single====", single)
 	if single != nil {
 		// 将single转换为map类型以便访问其中的值
-		soundEffectType := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".type")
+		soundEffectType := getValue(configGetter, "key_tone.single."+keycode+"."+keyState+".type")
 		// TIPS: 这个虽然 single和global都有, 但也没必要提取, 因为它仍旧只会执行一次。(但提取后, 会使得仅播放嵌入测试音时, 也执行这个无关紧要的逻辑)
-		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		audioPkgUUID, ok := audioPkgUUID, audioPkgUUID != ""
 		if !ok {
 			logger.Error("message", "error: 获取音频包UUID失败")
 			return
@@ -535,7 +620,15 @@ func KeySoundHandler(keyState string, keycode string) {
 
 		// TIPS: 没必要将single和global的 handleSoundEffect 的逻辑抽离到一个函数内。 因为这样我们在改传参的基础上, 还需要改返回值 并在此处调用后 通过返回值判断是否return。
 		if soundEffectType == "audio_files" {
-			audio_file_name := audioPackageConfig.GetValue("key_tone.single."+keycode+"."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.single."+keycode+"."+keyState+".value.type").(string)
+			sha256, ok := getValue(configGetter, "key_tone.single."+keycode+"."+keyState+".value.sha256").(string)
+			if !ok {
+				return
+			}
+			fileType, ok := getValue(configGetter, "key_tone.single."+keycode+"."+keyState+".value.type").(string)
+			if !ok {
+				return
+			}
+			audio_file_name := sha256 + fileType
 			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 
 			PlayKeySound(&AudioFilePath{
@@ -545,17 +638,23 @@ func KeySoundHandler(keyState string, keycode string) {
 		}
 
 		if soundEffectType == "sounds" {
-			sound_UUID := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".value")
+			sound_UUID := getValue(configGetter, "key_tone.single."+keycode+"."+keyState+".value")
+			if sound_UUID == nil {
+				return
+			}
 
-			soundParsePlay(sound_UUID.(string), audioPkgUUID)
+			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID)
 
 			return
 		}
 
 		if soundEffectType == "key_sounds" {
-			key_sound_UUID := audioPackageConfig.GetValue("key_tone.single." + keycode + "." + keyState + ".value")
+			key_sound_UUID := getValue(configGetter, "key_tone.single."+keycode+"."+keyState+".value")
+			if key_sound_UUID == nil {
+				return
+			}
 
-			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
+			keySoundParsePlayWith(configGetter, key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
@@ -565,21 +664,29 @@ func KeySoundHandler(keyState string, keycode string) {
 	}
 
 	// TODO: 若具体按键配置为空, 则根据全局配置决定如何播放
-	global := audioPackageConfig.GetValue("key_tone.global." + keyState)
+	global := getValue(configGetter, "key_tone.global."+keyState)
 	fmt.Println("global====", global)
 	// * 如果global不为空, 则根据global的值来决定如何播放, 否则使用后续逻辑中的默认音频
 	if global != nil {
 		// 将global转换为map类型以便访问其中的值
-		soundEffectType := audioPackageConfig.GetValue("key_tone.global." + keyState + ".type")
+		soundEffectType := getValue(configGetter, "key_tone.global."+keyState+".type")
 		// soundEffectValue := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
-		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		audioPkgUUID, ok := audioPkgUUID, audioPkgUUID != ""
 		if !ok {
 			logger.Error("message", "error: 获取音频包UUID失败")
 			return
 		}
 
 		if soundEffectType == "audio_files" {
-			audio_file_name := audioPackageConfig.GetValue("key_tone.global."+keyState+".value.sha256").(string) + audioPackageConfig.GetValue("key_tone.global."+keyState+".value.type").(string)
+			sha256, ok := getValue(configGetter, "key_tone.global."+keyState+".value.sha256").(string)
+			if !ok {
+				return
+			}
+			fileType, ok := getValue(configGetter, "key_tone.global."+keyState+".value.type").(string)
+			if !ok {
+				return
+			}
+			audio_file_name := sha256 + fileType
 			audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 
 			PlayKeySound(&AudioFilePath{
@@ -589,17 +696,23 @@ func KeySoundHandler(keyState string, keycode string) {
 		}
 
 		if soundEffectType == "sounds" {
-			sound_UUID := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+			sound_UUID := getValue(configGetter, "key_tone.global."+keyState+".value")
+			if sound_UUID == nil {
+				return
+			}
 
-			soundParsePlay(sound_UUID.(string), audioPkgUUID)
+			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID)
 
 			return
 		}
 
 		if soundEffectType == "key_sounds" {
-			key_sound_UUID := audioPackageConfig.GetValue("key_tone.global." + keyState + ".value")
+			key_sound_UUID := getValue(configGetter, "key_tone.global."+keyState+".value")
+			if key_sound_UUID == nil {
+				return
+			}
 
-			keySoundParsePlay(key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
+			keySoundParsePlayWith(configGetter, key_sound_UUID.(string), keyState, audioPkgUUID, true, keycode, 0)
 			// PlayKeySound(&AudioFilePath{
 			// 	Global: audio_file_path,
 			// }, nil)
@@ -610,7 +723,7 @@ func KeySoundHandler(keyState string, keycode string) {
 
 	// 若全局配置中为空, 则获取配置中内置测试音效的启用状态, 以决定是否使用默认音频进行播放。(优先级最低)
 	// * 我们没有对is_enable_embedded_test_sound做类型断言, 因此其可能为nil或bool,
-	isEnableEmbeddedTestSound := audioPackageConfig.GetValue("key_tone.is_enable_embedded_test_sound." + keyState)
+	isEnableEmbeddedTestSound := getValue(configGetter, "key_tone.is_enable_embedded_test_sound."+keyState)
 	// * 只要不是主动设置为false, 我们都使用默认音频
 	if isEnableEmbeddedTestSound == true || isEnableEmbeddedTestSound == nil {
 		switch keycode {
@@ -645,13 +758,17 @@ func KeySoundHandler(keyState string, keycode string) {
 //   - sound_UUID: 声音的UUID值
 //   - audioPkgUUID: 音频包的UUID
 func soundParsePlay(sound_UUID string, audioPkgUUID string) {
-	sha256, ok := audioPackageConfig.GetValue("sounds." + sound_UUID + ".source_file_for_sound" + ".sha256").(string)
+	soundParsePlayWith(audioPackageConfig.GetValue, sound_UUID, audioPkgUUID)
+}
+
+func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string) {
+	sha256, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".sha256").(string)
 	if !ok {
 		logger.Error("message", "error: sha256 value is nil or not a string")
 		return
 	}
 
-	fileType, ok := audioPackageConfig.GetValue("sounds." + sound_UUID + ".source_file_for_sound" + ".type").(string)
+	fileType, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".type").(string)
 	if !ok {
 		logger.Error("message", "error: file type value is nil or not a string")
 		return
@@ -660,14 +777,13 @@ func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 	audio_file_name := sha256 + fileType
 	audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 	cut := &Cut{
-		StartMS: int64(audioPackageConfig.GetValue("sounds." + sound_UUID + ".cut.start_time").(float64)),
-		EndMS:   int64(audioPackageConfig.GetValue("sounds." + sound_UUID + ".cut.end_time").(float64)),
-		Volume:  audioPackageConfig.GetValue("sounds." + sound_UUID + ".cut.volume").(float64),
+		StartMS: int64(getValue(get, "sounds."+sound_UUID+".cut.start_time").(float64)),
+		EndMS:   int64(getValue(get, "sounds."+sound_UUID+".cut.end_time").(float64)),
+		Volume:  getValue(get, "sounds."+sound_UUID+".cut.volume").(float64),
 	}
 	PlayKeySound(&AudioFilePath{
 		Global: audio_file_path,
 	}, cut)
-	return
 }
 
 // 键音解析, 获取 实际音频文件的路径 以及 播放参数
@@ -685,6 +801,10 @@ func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 //   - random: 随机音效模式,随机选择一个音效播放
 //   - loop:   循环音效模式,循环播放配置的音效
 func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode string, count uint16) {
+	keySoundParsePlayWith(audioPackageConfig.GetValue, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
+}
+
+func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState string, audioPkgUUID string, isGlobal bool, keycode string, count uint16) {
 	// 此处限制键音的嵌套数量上限为1000层, 这样即使键音专辑中存在至臻键音间的无限循环依赖也不必担心因此可能引起的  cpu超负荷风险 或 内存占用过多的内存溢出风险。
 	// * 理论上, 设置9999甚至更高也是可行的, 但没必要, 因为没有人会去制作继承嵌套超过1000层的键音。
 	if count > 1000 {
@@ -692,9 +812,9 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 	}
 	count = count + 1
 
-	mode := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".mode")
+	mode := getValue(get, "key_sounds."+key_sound_UUID+"."+keyState+".mode")
 	if mode == "single" {
-		value := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".value")
+		value := getValue(get, "key_sounds."+key_sound_UUID+"."+keyState+".value")
 
 		if value != nil {
 			for _, v := range value.([]interface{}) {
@@ -708,21 +828,21 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 					}, nil)
 					return
 				}
-				if vMap["type"] == "sounds" {
-					sound_UUID := vMap["value"].(string)
-					soundParsePlay(sound_UUID, audioPkgUUID)
+						if vMap["type"] == "sounds" {
+							sound_UUID := vMap["value"].(string)
+							soundParsePlayWith(get, sound_UUID, audioPkgUUID)
 					return
 				}
-				if vMap["type"] == "key_sounds" {
-					key_sound_UUID := vMap["value"].(string)
-					keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
+						if vMap["type"] == "key_sounds" {
+							key_sound_UUID := vMap["value"].(string)
+							keySoundParsePlayWith(get, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 					return
 				}
 			}
 		}
 	}
 	if mode == "random" {
-		value := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".value")
+		value := getValue(get, "key_sounds."+key_sound_UUID+"."+keyState+".value")
 		if value != nil {
 			values := value.([]interface{})
 			// TIPS: 防止因空值造成后续步骤panic。
@@ -748,18 +868,18 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 			}
 			if vMap["type"] == "sounds" {
 				sound_UUID := vMap["value"].(string)
-				soundParsePlay(sound_UUID, audioPkgUUID)
+				soundParsePlayWith(get, sound_UUID, audioPkgUUID)
 				return
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_UUID := vMap["value"].(string)
-				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
+				keySoundParsePlayWith(get, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 				return
 			}
 		}
 	}
 	if mode == "loop" {
-		value := audioPackageConfig.GetValue("key_sounds." + key_sound_UUID + "." + keyState + ".value")
+		value := getValue(get, "key_sounds."+key_sound_UUID+"."+keyState+".value")
 		if value != nil {
 
 			// 检测音频包是否发生切换
@@ -777,9 +897,9 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 			// 使用简单的key来标识不同的键音
 			var key string
 			if isGlobal {
-				key = fmt.Sprintf("global_%d_%s_%s", keycode, key_sound_UUID, keyState)
+				key = fmt.Sprintf("global_%s_%s_%s", keycode, key_sound_UUID, keyState)
 			} else {
-				key = fmt.Sprintf("%d_%s_%s", keycode, key_sound_UUID, keyState)
+				key = fmt.Sprintf("%s_%s_%s", keycode, key_sound_UUID, keyState)
 			}
 
 			// 获取当前索引
@@ -809,12 +929,12 @@ func keySoundParsePlay(key_sound_UUID string, keyState string, audioPkgUUID stri
 			}
 			if vMap["type"] == "sounds" {
 				sound_UUID := vMap["value"].(string)
-				soundParsePlay(sound_UUID, audioPkgUUID)
+				soundParsePlayWith(get, sound_UUID, audioPkgUUID)
 				return
 			}
 			if vMap["type"] == "key_sounds" {
 				key_sound_UUID := vMap["value"].(string)
-				keySoundParsePlay(key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
+				keySoundParsePlayWith(get, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 				return
 			}
 		}

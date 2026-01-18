@@ -18,6 +18,11 @@
     "licenseText": "KeyTone is released under the {license}",
     "privacyPolicy": "Privacy Policy",
     "userAgreement": "User Agreement",
+    "routing": {
+      "splitLabel": "Split keyboard/mouse",
+      "keyboardLabel": "Keyboard playback album",
+      "mouseLabel": "Mouse playback album"
+    },
     "emptyState": {
       "noAlbum": "No key sound albums",
       "goToAlbumPage": "Go to album page",
@@ -55,6 +60,10 @@
       "saveAsNew": "Save as new",
       "cancel": "Cancel",
       "confirm": "OK"
+    },
+    "editorNotice": {
+      "message": "This page is for creating and editing albums. To avoid affecting daily playback, we switched to Editor Preview mode. Please create a new album or select one to edit.",
+      "dismiss": "Don't show again"
     }
   },
   "KeyToneAlbum": {

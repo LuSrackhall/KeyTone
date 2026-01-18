@@ -18,6 +18,11 @@
     "licenseText": "KeyTone 根据 {license} 许可证发布",
     "privacyPolicy": "隐私政策",
     "userAgreement": "用户协议",
+    "routing": {
+      "splitLabel": "键盘/鼠标分离",
+      "keyboardLabel": "键盘播放专辑",
+      "mouseLabel": "鼠标播放专辑"
+    },
     "emptyState": {
       "noAlbum": "暂无键音专辑",
       "goToAlbumPage": "前往键音专辑页面",
@@ -55,6 +60,10 @@
       "saveAsNew": "保存为新专辑",
       "cancel": "取消导入",
       "confirm": "确认"
+    },
+    "editorNotice": {
+      "message": "键音专辑页面用于创作与编辑。为避免影响主页日常使用，我们已临时切换到“编辑试听模式”。请创建新的专辑，或选择要编辑的专辑。",
+      "dismiss": "不再提示"
     }
   },
   "KeyToneAlbum": {

@@ -97,6 +97,71 @@ export async function LoadConfig(audioPkgUUID: string, isCreate: boolean) {
     });
 }
 
+export async function ApplyPlaybackRouting(payload: {
+  mode: 'unified' | 'split';
+  unifiedAlbumPath?: string;
+  keyboardAlbumPath?: string;
+  mouseAlbumPath?: string;
+}) {
+  // 应用播放路由：生成只读快照，确保播放热路径无 IO
+  return await api
+    .post('/keytone_pkg/apply_playback_routing', payload)
+    .then((req) => {
+      console.debug('status=', req.status, '->ApplyPlaybackRouting 请求已成功执行并返回->', req.data);
+      if (req.data.message === 'ok' || req.data.message === 'partial') {
+        return req.data;
+      }
+      return false;
+    })
+    .catch((error) => {
+      console.group('ApplyPlaybackRouting 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确,或其它种类的错误可能');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}
+
+export async function SetPlaybackSourceMode(payload: { mode: 'editor' | 'route'; editorAlbumPath?: string }) {
+  // 切换播放来源模式：editor(编辑试听) / route(日常路由)
+  return await api
+    .post('/keytone_pkg/set_playback_source_mode', payload)
+    .then((req) => {
+      console.debug('status=', req.status, '->SetPlaybackSourceMode 请求已成功执行并返回->', req.data);
+      if (req.data.message === 'ok') {
+        return req.data;
+      }
+      return false;
+    })
+    .catch((error) => {
+      console.group('SetPlaybackSourceMode 请求执行失败');
+      if (error.response) {
+        console.error('Error:', '请求已经发出且收到响应，但是服务器返回了一个非 2xx 的状态码');
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+      } else if (error.request) {
+        console.error('Error:', '请求已经发出，但是没有收到响应');
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error:', '请求未正常发出,请检查请求地址是否正确,或其它种类的错误可能');
+        console.error('Error message:', error.message);
+      }
+      console.error('Error config:', error.config);
+      console.groupEnd();
+      return false;
+    });
+}
+
 export async function ConfigSet(key: string, value: any) {
   return await api
     .post('/keytone_pkg/set', {

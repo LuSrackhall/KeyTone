@@ -134,6 +134,23 @@ export const useSettingStore = defineStore('setting', () => {
     selectedKeyTonePkg: '',
   });
 
+  const playbackRouting = ref({
+    // 播放路由模式：
+    // - unified：键盘/鼠标共用一个播放专辑（默认，兼容旧行为）
+    // - split：键盘/鼠标分别指定播放专辑
+    mode: 'unified',
+    // unifiedAlbumPath：统一模式下的“播放专辑”。
+    // 说明：这里存的是“专辑路径或 UUID”，后端会做 resolve。
+    unifiedAlbumPath: '',
+    // keyboardAlbumPath / mouseAlbumPath：分离模式下的“播放专辑”。
+    // 注意：这两个字段只影响主页日常播放，不影响编辑页（编辑页使用 editor 模式）。
+    keyboardAlbumPath: '',
+    mouseAlbumPath: '',
+    // editorNoticeDismissed：编辑页提示是否“不再显示”。
+    // 该提示以底部通知展示，不应影响页面布局；用户可手动关闭或选择不再提示。
+    editorNoticeDismissed: false,
+  });
+
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
   // ...
   // ...
@@ -227,6 +244,49 @@ export const useSettingStore = defineStore('setting', () => {
         // 也就是说, 不止在主页面中通过watch监听触发此函数, 在sse回调中也再次调用此函数, 以保证用户的选择能够最大程度上被可靠的加载。
         // 并且无需担心, 重复调用此函数也不会引发重复加载相同的键音包。
         main_store.LoadSelectedKeyTonePkg();
+      }
+
+      // legacySelected 用于迁移历史字段到新的路由字段。
+      // 迁移目标：升级后默认保持旧行为（一个专辑同时用于键盘+鼠标播放）。
+      const legacySelected = settingStorage.main_home?.selected_key_tone_pkg ?? '';
+      const routingStorage = settingStorage.playback?.routing ?? {};
+
+      if (routingStorage.mode !== undefined) {
+        playbackRouting.value.mode = routingStorage.mode || 'unified';
+      } else {
+        // 初次迁移：默认 unified
+        playbackRouting.value.mode = 'unified';
+        StoreSet('playback.routing.mode', playbackRouting.value.mode);
+      }
+
+      if (routingStorage.unified_album_path !== undefined) {
+        playbackRouting.value.unifiedAlbumPath = routingStorage.unified_album_path || '';
+      } else {
+        // 迁移：使用历史 selected_key_tone_pkg
+        playbackRouting.value.unifiedAlbumPath = legacySelected;
+        StoreSet('playback.routing.unified_album_path', playbackRouting.value.unifiedAlbumPath);
+      }
+
+      if (routingStorage.keyboard_album_path !== undefined) {
+        playbackRouting.value.keyboardAlbumPath = routingStorage.keyboard_album_path || '';
+      } else {
+        playbackRouting.value.keyboardAlbumPath = legacySelected;
+        StoreSet('playback.routing.keyboard_album_path', playbackRouting.value.keyboardAlbumPath);
+      }
+
+      if (routingStorage.mouse_album_path !== undefined) {
+        playbackRouting.value.mouseAlbumPath = routingStorage.mouse_album_path || '';
+      } else {
+        playbackRouting.value.mouseAlbumPath = legacySelected;
+        StoreSet('playback.routing.mouse_album_path', playbackRouting.value.mouseAlbumPath);
+      }
+
+      if (routingStorage.editor_notice_dismissed !== undefined) {
+        playbackRouting.value.editorNoticeDismissed = !!routingStorage.editor_notice_dismissed;
+      } else {
+        // 新增字段：默认展示提示（false）。
+        playbackRouting.value.editorNoticeDismissed = false;
+        StoreSet('playback.routing.editor_notice_dismissed', playbackRouting.value.editorNoticeDismissed);
       }
     });
   }
@@ -343,6 +403,41 @@ export const useSettingStore = defineStore('setting', () => {
         StoreSet('main_home.selected_key_tone_pkg', mainHome.value.selectedKeyTonePkg);
       }
     );
+
+    watch(
+      () => playbackRouting.value.mode,
+      () => {
+        StoreSet('playback.routing.mode', playbackRouting.value.mode);
+      }
+    );
+
+    watch(
+      () => playbackRouting.value.unifiedAlbumPath,
+      () => {
+        StoreSet('playback.routing.unified_album_path', playbackRouting.value.unifiedAlbumPath);
+      }
+    );
+
+    watch(
+      () => playbackRouting.value.keyboardAlbumPath,
+      () => {
+        StoreSet('playback.routing.keyboard_album_path', playbackRouting.value.keyboardAlbumPath);
+      }
+    );
+
+    watch(
+      () => playbackRouting.value.mouseAlbumPath,
+      () => {
+        StoreSet('playback.routing.mouse_album_path', playbackRouting.value.mouseAlbumPath);
+      }
+    );
+
+    watch(
+      () => playbackRouting.value.editorNoticeDismissed,
+      () => {
+        StoreSet('playback.routing.editor_notice_dismissed', playbackRouting.value.editorNoticeDismissed);
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -361,6 +456,7 @@ export const useSettingStore = defineStore('setting', () => {
     autoStartup,
     audioVolumeProcessing,
     mainHome,
+    playbackRouting,
     getConfigFileToUi,
     settingInitAndRealTimeStorage,
   };

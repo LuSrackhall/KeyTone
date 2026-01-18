@@ -665,6 +665,79 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// 应用播放路由（只读快照加载）
+	keytonePkgRouters.POST("/apply_playback_routing", func(ctx *gin.Context) {
+		type Arg struct {
+			Mode             string `json:"mode"`
+			UnifiedAlbumPath string `json:"unifiedAlbumPath"`
+			KeyboardAlbumPath string `json:"keyboardAlbumPath"`
+			MouseAlbumPath   string `json:"mouseAlbumPath"`
+		}
+
+		// 请求语义：
+		// - mode=unified：只使用 unifiedAlbumPath（键盘/鼠标共享）
+		// - mode=split：使用 keyboardAlbumPath + mouseAlbumPath（键盘/鼠标分离）
+		// - album path 既可传“绝对路径”，也可仅传“UUID”（SDK 会拼成 AudioPackagePath/UUID）
+
+		var arg Arg
+		if err := ctx.ShouldBindJSON(&arg); err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		// 该调用会在内存中生成只读快照（viper.New() + ReadConfig），保证播放热路径无磁盘 IO。
+		// 返回值 result 内包含每个来源的 requested/resolved/loaded/error，便于前端诊断。
+		result, err := keySound.ApplyPlaybackRouting(arg.Mode, arg.UnifiedAlbumPath, arg.KeyboardAlbumPath, arg.MouseAlbumPath)
+		if err != nil {
+			// partial：允许“部分成功”（例如键盘快照成功但鼠标失败）。
+			// 前端应根据 result 判断是否需要提示用户、或回退到统一模式。
+			ctx.JSON(200, gin.H{
+				"message": "partial",
+				"error":   err.Error(),
+				"result":  result,
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"result":  result,
+		})
+	})
+
+	// 切换播放来源模式（editor / route）
+	keytonePkgRouters.POST("/set_playback_source_mode", func(ctx *gin.Context) {
+		type Arg struct {
+			Mode            string `json:"mode"`
+			EditorAlbumPath string `json:"editorAlbumPath"`
+		}
+
+		var arg Arg
+		if err := ctx.ShouldBindJSON(&arg); err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收--收到的前端数据内容值, 不符合接口规定格式:" + err.Error(),
+			})
+			return
+		}
+
+		// editor：播放依赖可编辑配置（audioPackageConfig.Viper），用于编辑页实时试听。
+		// route：播放依赖只读快照（由 apply_playback_routing 生成），用于主页日常播放。
+		state, err := keySound.SetPlaybackSourceMode(arg.Mode, arg.EditorAlbumPath)
+		if err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: " + err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(200, gin.H{
+			"message": "ok",
+			"mode":    state.SourceMode,
+		})
+	})
+
 	// 接收前端上传的音频文件, 并存入本地路径
 	keytonePkgRouters.POST("/add_new_sound_file", func(ctx *gin.Context) {
 		file, err := ctx.FormFile("file")

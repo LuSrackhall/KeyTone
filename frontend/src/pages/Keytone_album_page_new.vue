@@ -399,6 +399,8 @@ import {
   ImportAlbumOverwrite,
   ImportAlbumAsNew,
   LoadConfig,
+  ApplyPlaybackRouting,
+  SetPlaybackSourceMode,
   GetAlbumMeta,
   GetAvailableSignaturesForExport,
   type AlbumMeta,
@@ -415,6 +417,8 @@ import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
 
 const q = useQuasar();
 const { t } = useI18n();
+// 说明：模板内使用 $t；script 内没有自动注入 $t。
+// 这里显式做一个别名，便于统一阅读与减少改动范围。
 const $t = t;
 const main_store = useMainStore();
 const setting_store = useSettingStore();
@@ -432,6 +436,55 @@ const isAtTop = ref(true);
 // // * 两个阶段完成后, 即创建成功。(实际上第一阶段完成就算创建成功, 第二阶段仅影响前端展示)
 // // * 如果第一阶段进行了一般, 即将UUID传入了后端api但未进行获取返回值等后续步骤, 则存在失败的可能。
 const keytoneAlbum_PathOrUUID = ref<string>(setting_store.mainHome.selectedKeyTonePkg); // 用于向KeytoneAlbum组件传递键音包的路径或UUID
+
+async function enterEditorPlaybackMode() {
+  // 进入编辑页：切换播放来源为 editor，并立即加载可编辑专辑
+  await SetPlaybackSourceMode({
+    mode: 'editor',
+    editorAlbumPath: setting_store.mainHome.selectedKeyTonePkg,
+  });
+
+  // 仅在用户未选择“不再提示”时显示编辑页提醒（底部通知）
+  if (!setting_store.playbackRouting.editorNoticeDismissed) {
+    q.notify({
+      type: 'info',
+      position: 'bottom',
+      // timeout=0：保持常驻，直到用户手动关闭。
+      timeout: 0,
+      message: $t('keyToneAlbumPage.editorNotice.message'),
+      actions: [
+        {
+          label: $t('KeyToneAlbum.close'),
+          color: 'white',
+        },
+        {
+          label: $t('keyToneAlbumPage.editorNotice.dismiss'),
+          color: 'white',
+          // “不再提示”：写入前端持久化字段 playback.routing.editor_notice_dismissed
+          // 由 setting-store.ts 的 watch 负责落盘。
+          handler: () => {
+            setting_store.playbackRouting.editorNoticeDismissed = true;
+          },
+        },
+      ],
+    });
+  }
+
+  if (setting_store.mainHome.selectedKeyTonePkg) {
+    await LoadConfig(setting_store.mainHome.selectedKeyTonePkg, false);
+  }
+}
+
+async function restoreRoutePlaybackMode() {
+  // 退出编辑页：恢复路由播放，并重新 apply 快照
+  await SetPlaybackSourceMode({ mode: 'route' });
+  await ApplyPlaybackRouting({
+    mode: setting_store.playbackRouting.mode as 'unified' | 'split',
+    unifiedAlbumPath: setting_store.playbackRouting.unifiedAlbumPath,
+    keyboardAlbumPath: setting_store.playbackRouting.keyboardAlbumPath,
+    mouseAlbumPath: setting_store.playbackRouting.mouseAlbumPath,
+  });
+}
 
 // Export Signature Flow 初始化
 const exportFlow = useExportSignatureFlow();
@@ -639,8 +692,10 @@ const createNewAlbum = () => {
 watch(
   () => setting_store.mainHome.selectedKeyTonePkg,
   () => {
+    // 编辑专辑变更后，刷新编辑试听来源
     keytoneAlbum_store.isCreateNewKeytoneAlbum = false; // 避免递归创建
     keytoneAlbum_PathOrUUID.value = setting_store.mainHome.selectedKeyTonePkg;
+    enterEditorPlaybackMode();
   }
 );
 
@@ -987,16 +1042,18 @@ watch(
   }
 );
 
-onMounted(() => {
+onMounted(async () => {
   setupScrollListeners();
+  await enterEditorPlaybackMode();
 });
 
-onUnmounted(() => {
+onUnmounted(async () => {
   const scrollContainer = keytoneAlbumRef.value?.$el.querySelector('.q-scrollarea__container');
   if (scrollContainer) {
     scrollContainer.removeEventListener('scroll', handleAlbumScroll);
     scrollContainer.removeEventListener('wheel', handleAlbumScroll);
   }
+  await restoreRoutePlaybackMode();
 });
 
 const importAlbum = async () => {

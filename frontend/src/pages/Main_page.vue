@@ -48,9 +48,16 @@
 
     <div :class="['flex flex-col']">
       <div class="flex flex-col items-center">
+        <div class="flex items-center gap-2 mb-2">
+          <!-- 路由模式切换：统一/分离（键盘/鼠标） -->
+          <q-toggle v-model="isSplitRouting" size="sm" dense />
+          <div class="text-xs text-gray-500">{{ $t('mainHome.routing.splitLabel') }}</div>
+        </div>
+
         <q-select
+          v-if="!isSplitRouting"
           :class="['w-[216px]', 'select-component-label-show']"
-          v-model="setting_store.mainHome.selectedKeyTonePkg"
+          v-model="setting_store.playbackRouting.unifiedAlbumPath"
           :options="main_store.keyTonePkgOptions"
           :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
           :label="$t('mainHome.selectedKeySoundAlbum')"
@@ -61,19 +68,17 @@
           map-options
           behavior="dialog"
           popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-          ref="selectedKeyTonePkgRef"
+          ref="unifiedKeyTonePkgRef"
           @popup-hide="blur()"
         >
-          <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
-            <!-- 由于直接使用默认的clearable, 会使得mode=null, 而我希望点击清楚按钮时mode=""即空字符串。因此使用插槽来实现。 -->
+          <template v-if="setting_store.playbackRouting.unifiedAlbumPath" v-slot:append>
             <q-icon
               name="cancel"
-              @click.stop.prevent="setting_store.mainHome.selectedKeyTonePkg = ''"
+              @click.stop.prevent="setting_store.playbackRouting.unifiedAlbumPath = ''"
               class="cursor-pointer text-lg"
             />
           </template>
 
-          <!-- 空状态提示 -->
           <template v-slot:no-option>
             <div class="flex flex-col items-center py-4 text-gray-500">
               <q-icon name="library_music" size="40px" class="mb-2 opacity-50" />
@@ -90,6 +95,59 @@
             </div>
           </template>
         </q-select>
+
+        <div v-else class="flex flex-col items-center gap-2">
+          <!-- 分离模式：分别选择键盘/鼠标播放专辑 -->
+          <q-select
+            :class="['w-[216px]', 'select-component-label-show']"
+            v-model="setting_store.playbackRouting.keyboardAlbumPath"
+            :options="main_store.keyTonePkgOptions"
+            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+            :label="$t('mainHome.routing.keyboardLabel')"
+            :virtual-scroll-slice-size="999999"
+            outlined
+            dense
+            emit-value
+            map-options
+            behavior="dialog"
+            popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+            ref="keyboardKeyTonePkgRef"
+            @popup-hide="blur()"
+          >
+            <template v-if="setting_store.playbackRouting.keyboardAlbumPath" v-slot:append>
+              <q-icon
+                name="cancel"
+                @click.stop.prevent="setting_store.playbackRouting.keyboardAlbumPath = ''"
+                class="cursor-pointer text-lg"
+              />
+            </template>
+          </q-select>
+
+          <q-select
+            :class="['w-[216px]', 'select-component-label-show']"
+            v-model="setting_store.playbackRouting.mouseAlbumPath"
+            :options="main_store.keyTonePkgOptions"
+            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+            :label="$t('mainHome.routing.mouseLabel')"
+            :virtual-scroll-slice-size="999999"
+            outlined
+            dense
+            emit-value
+            map-options
+            behavior="dialog"
+            popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+            ref="mouseKeyTonePkgRef"
+            @popup-hide="blur()"
+          >
+            <template v-if="setting_store.playbackRouting.mouseAlbumPath" v-slot:append>
+              <q-icon
+                name="cancel"
+                @click.stop.prevent="setting_store.playbackRouting.mouseAlbumPath = ''"
+                class="cursor-pointer text-lg"
+              />
+            </template>
+          </q-select>
+        </div>
 
         <!-- 空状态额外提示 -->
         <transition name="fade">
@@ -237,6 +295,7 @@ import { useSettingStore } from 'src/stores/setting-store';
 import { computed, useTemplateRef, watch, onMounted, ref, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { ApplyPlaybackRouting, SetPlaybackSourceMode } from 'src/boot/query/keytonePkg-query';
 
 const q = useQuasar();
 const router = useRouter();
@@ -276,6 +335,9 @@ onMounted(async () => {
 
   // 初始化完成后再显示
   isInitialized.value = true;
+
+  await SetPlaybackSourceMode({ mode: 'route' });
+  await applyRouting();
 });
 
 // 修改volumeAmplify的监听
@@ -416,25 +478,52 @@ const isSilent = (event: any) => {
     !setting_store.mainHome.audioVolumeProcessing.volumeSilent;
 };
 
-// 每次用户的主动选择, 都会触发实际选择的键音包重新进行加载。
-watch(
-  () => setting_store.mainHome.selectedKeyTonePkg,
-  () => {
-    // 即使多次调用此函数也无妨, 相同uuid的键音包动作, 不会影响已加载并使用中的键音包。
-    // TIPS: 在sse回调中也再次调用此函数, 以保证用户的选择能够最大程度上被可靠的加载, 并且无需担心, 重复调用此函数也不会引发重复加载相同的键音包
-    main_store.LoadSelectedKeyTonePkg();
-  }
-  // TIPS: 放弃下方立即执行的相关代码, 而是将相关逻辑移动到它该有的地方, 以保证逻辑的清晰性。(也就是App.vue中, 或是boot中。)
-  //       * 对于 从 创建/编辑键音包界面返回的场景也无需担心。 只需在对应界面稀释逻辑中, 触发加载用户所选的键音包的逻辑即可。(这样可以简化逻辑, 也可以保证逻辑的清晰性)
-  // ~~立即执行, 使得每次进入主界面时, 都会加载用户所选的键音包。(主要是软件启动时, 适配加载用户所选的键音包)~~
-  // ~~{ immediate: true }~~
-);
+const isSplitRouting = computed({
+  get() {
+    return setting_store.playbackRouting.mode === 'split';
+  },
+  set(value: boolean) {
+    setting_store.playbackRouting.mode = value ? 'split' : 'unified';
+  },
+});
 
-const selectedKeyTonePkgRef = useTemplateRef<QSelect>('selectedKeyTonePkgRef');
+const unifiedKeyTonePkgRef = useTemplateRef<QSelect>('unifiedKeyTonePkgRef');
+const keyboardKeyTonePkgRef = useTemplateRef<QSelect>('keyboardKeyTonePkgRef');
+const mouseKeyTonePkgRef = useTemplateRef<QSelect>('mouseKeyTonePkgRef');
+
+async function applyRouting() {
+  // 根据当前路由状态提交后端，生成只读快照。
+  // 这样播放热路径（KeyEvent -> SDK -> KeySound）只做内存读取，不会在按键触发时才去读盘/解密/解析。
+  const payload = {
+    mode: setting_store.playbackRouting.mode as 'unified' | 'split',
+    unifiedAlbumPath: setting_store.playbackRouting.unifiedAlbumPath,
+    keyboardAlbumPath: setting_store.playbackRouting.keyboardAlbumPath,
+    mouseAlbumPath: setting_store.playbackRouting.mouseAlbumPath,
+  };
+  await ApplyPlaybackRouting(payload);
+}
+
+watch(
+  () => [
+    setting_store.playbackRouting.mode,
+    setting_store.playbackRouting.unifiedAlbumPath,
+    setting_store.playbackRouting.keyboardAlbumPath,
+    setting_store.playbackRouting.mouseAlbumPath,
+  ],
+  () => {
+    // 路由变更即刻生成快照：
+    // - 保证“下一次按键播放”命中最新路由
+    // - 保证播放热路径无 IO
+    applyRouting();
+  }
+);
 
 const blur = () => {
   setTimeout(() => {
-    selectedKeyTonePkgRef?.value?.blur();
+    // 统一处理三个选择器的 blur
+    unifiedKeyTonePkgRef?.value?.blur();
+    keyboardKeyTonePkgRef?.value?.blur();
+    mouseKeyTonePkgRef?.value?.blur();
     // TIPS: 这里需要延迟后再blur, 以确保blur的正确触发(太早触发blur会不起作用, 经验证, 本人电脑延迟10ms后, 可以正确触发blur使焦点丧失, 为确保适配更多的低性能设备, 这里保险起见设置为66ms)
   }, 66);
 };
