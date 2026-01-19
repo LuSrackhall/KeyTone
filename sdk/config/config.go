@@ -214,6 +214,9 @@ func settingDefaultConfig() {
 	viper.SetDefault("playback.routing.keyboard_album_path", "")
 	viper.SetDefault("playback.routing.mouse_album_path", "")
 	viper.SetDefault("playback.routing.editor_notice_dismissed", false)
+	// mouse_fallback_to_keyboard：分离模式下，鼠标专辑缺失时是否回退到键盘专辑。
+	// 默认 false：彻底分离，鼠标无专辑则无声；用户可在设置中开启回退。
+	viper.SetDefault("playback.routing.mouse_fallback_to_keyboard", false)
 
 }
 

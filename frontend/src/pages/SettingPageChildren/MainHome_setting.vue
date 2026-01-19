@@ -57,6 +57,25 @@
       <q-toggle v-model="setting_store.mainHome.audioVolumeProcessing.isOpenVolumeDebugSlider" />
     </q-item-section>
   </q-item>
+
+  <!-- =============================
+       鼠标回退到键盘开关
+       =============================
+       功能说明：
+       - 仅在"键盘/鼠标分离"模式下生效
+       - 默认关闭：分离模式下鼠标无专辑则无专辑, 彻底分离
+       - 开启后：鼠标专辑缺失时会回退到键盘专辑（复用键盘配置）
+  -->
+  <q-item>
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.mouseFallback.index') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.mouseFallback.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-toggle v-model="setting_store.playbackRouting.mouseFallbackToKeyboard" />
+    </q-item-section>
+  </q-item>
 </template>
 
 <script setup lang="ts">

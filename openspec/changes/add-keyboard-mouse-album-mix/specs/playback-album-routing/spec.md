@@ -58,13 +58,23 @@ Normative: In split mode, the SDK playback path MUST NOT perform disk IO (includ
 
 Normative: When an album is missing, corrupted, or cannot be loaded for routing, the system MUST fall back to the unified album if available; if no album is available, it MUST fall back to the embedded test sound behavior.
 
-#### Scenario: 鼠标专辑加载失败时回退
+#### Scenario: 鼠标专辑加载失败时回退（用户启用了回退策略）
 
 - **GIVEN** 用户启用分离模式并设置了鼠标播放专辑
 - **AND** 鼠标专辑因损坏/缺失导致加载失败
+- **AND** 用户在设置中启用了 `mouse_fallback_to_keyboard`
 - **WHEN** 用户触发鼠标按键事件
 - **THEN** 系统 MUST fall back to the unified/keyboard album if present
 - **AND** 若仍不可用则 MUST fall back to embedded test sounds
+
+#### Scenario: 鼠标专辑缺失时不回退（默认行为）
+
+- **GIVEN** 用户启用分离模式
+- **AND** 鼠标专辑未选择或加载失败
+- **AND** 用户未启用 `mouse_fallback_to_keyboard`（默认 false）
+- **WHEN** 用户触发鼠标按键事件
+- **THEN** 系统 MUST fall back to embedded test sounds directly
+- **AND** MUST NOT use keyboard album
 
 #### Scenario: 统一专辑加载失败时回退到内嵌测试音
 
@@ -181,6 +191,7 @@ Normative: The frontend MUST persist playback routing using dedicated keys, and 
   - `playback.routing.keyboard_album_path`
   - `playback.routing.mouse_album_path`
   - `playback.routing.editor_notice_dismissed`
+  - `playback.routing.mouse_fallback_to_keyboard`
 
 ---
 

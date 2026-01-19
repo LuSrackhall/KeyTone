@@ -86,9 +86,16 @@
   - `playback.routing.keyboard_album_path`
   - `playback.routing.mouse_album_path`
   - `playback.routing.editor_notice_dismissed`
+  - `playback.routing.mouse_fallback_to_keyboard`（默认 false：彻底分离，鼠标无专辑则无声）
 - 键音专辑页“编辑专辑选择”沿用历史字段 `main_home.selected_key_tone_pkg`，用于记忆上次编辑专辑。
 - UI：默认只显示一个选择器（兼容旧体验）；开启分离时显示第二个选择器。
 - SDK：新增 API 供前端提交 routing；并新增“播放来源模式”API，在主页与编辑页之间切换。
+
+### 回退策略设计（新增）
+
+- 默认行为：分离模式下，鼠标专辑缺失时不回退到键盘专辑，鼠标事件使用内嵌测试音或静音。
+- 用户可在设置界面的“主页面相关设置”中开启 `mouse_fallback_to_keyboard`，开启后分离模式下鼠标专辑缺失时会回退到键盘专辑。
+- 该选项仅影响分离模式，统一模式下无意义（因为键盘/鼠标本就共用一个专辑）。
 
 ### UX Copy（专辑编辑页提示）
 

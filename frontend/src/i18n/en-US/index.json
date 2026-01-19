@@ -322,6 +322,10 @@
       "音量调试滑块": {
         "index": "Volume Debug slider",
         "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
+      },
+      "mouseFallback": {
+        "index": "Mouse fallback to keyboard",
+        "caption": "In split mode, use keyboard album when mouse album is missing. Default off: fully separated"
       }
     }
   },

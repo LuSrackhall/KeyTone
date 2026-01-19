@@ -48,8 +48,13 @@
 
     <div :class="['flex flex-col']">
       <div class="flex flex-col items-center">
-        <div class="flex items-center gap-2 mb-2">
-          <!-- 路由模式切换：统一/分离（键盘/鼠标） -->
+        <!-- =============================
+             路由模式切换：统一/分离（键盘/鼠标）
+             =============================
+             - 默认关闭（unified）：键盘鼠标共用一个专辑
+             - 开启（split）：键盘鼠标各自选择专辑
+        -->
+        <div class="flex items-center gap-2 mb-1">
           <q-toggle v-model="isSplitRouting" size="sm" dense />
           <div class="text-xs text-gray-500">{{ $t('mainHome.routing.splitLabel') }}</div>
         </div>

@@ -547,12 +547,20 @@ func resolvePlaybackConfig(keycode string) (ConfigGetter, string) {
 			// 统一路由：键盘/鼠标共享快照。
 			snapshot = state.Routing.UnifiedSnapshot
 		} else {
+			// =============================
+			// 分离路由：键盘/鼠标各自使用独立快照
+			// =============================
 			if isMouse {
-				// 分离路由：鼠标优先使用 MouseSnapshot，若为空回退到 KeyboardSnapshot。
-				// 说明：允许鼠标专辑缺失时回退到键盘专辑，避免鼠标事件完全失声。
 				snapshot = state.Routing.MouseSnapshot
+				// 回退逻辑：仅当用户在设置中启用 mouse_fallback_to_keyboard 时，
+				// 鼠标专辑缺失才会回退到键盘专辑。
+				// 默认行为：彻底分离，鼠标无专辑则无声（返回 nil 后使用内嵌测试音或静音）。
 				if snapshot == nil {
-					snapshot = state.Routing.KeyboardSnapshot
+					// 读取回退开关配置（热路径内只做内存读取，配置已在 SDK 初始化时加载）
+					fallbackEnabled, _ := config.GetValue("playback.routing.mouse_fallback_to_keyboard").(bool)
+					if fallbackEnabled {
+						snapshot = state.Routing.KeyboardSnapshot
+					}
 				}
 			} else {
 				snapshot = state.Routing.KeyboardSnapshot

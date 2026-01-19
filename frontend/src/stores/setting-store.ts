@@ -149,6 +149,10 @@ export const useSettingStore = defineStore('setting', () => {
     // editorNoticeDismissed：编辑页提示是否“不再显示”。
     // 该提示以底部通知展示，不应影响页面布局；用户可手动关闭或选择不再提示。
     editorNoticeDismissed: false,
+    // mouseFallbackToKeyboard：分离模式下，鼠标专辑缺失时是否回退到键盘专辑。
+    // 默认 false：彻底分离，鼠标无专辑则无声（使用内嵌测试音）。
+    // 用户可在设置页面开启此选项以复用键盘专辑处理鼠标事件。
+    mouseFallbackToKeyboard: false,
   });
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- mainHome end   -_-^_^-_- ^_^-_-^_^-_-
@@ -287,6 +291,15 @@ export const useSettingStore = defineStore('setting', () => {
         // 新增字段：默认展示提示（false）。
         playbackRouting.value.editorNoticeDismissed = false;
         StoreSet('playback.routing.editor_notice_dismissed', playbackRouting.value.editorNoticeDismissed);
+      }
+
+      // mouseFallbackToKeyboard：分离模式下鼠标专辑缺失时的回退策略
+      if (routingStorage.mouse_fallback_to_keyboard !== undefined) {
+        playbackRouting.value.mouseFallbackToKeyboard = !!routingStorage.mouse_fallback_to_keyboard;
+      } else {
+        // 新增字段：默认不回退（彻底分离）
+        playbackRouting.value.mouseFallbackToKeyboard = false;
+        StoreSet('playback.routing.mouse_fallback_to_keyboard', playbackRouting.value.mouseFallbackToKeyboard);
       }
     });
   }
@@ -436,6 +449,14 @@ export const useSettingStore = defineStore('setting', () => {
       () => playbackRouting.value.editorNoticeDismissed,
       () => {
         StoreSet('playback.routing.editor_notice_dismissed', playbackRouting.value.editorNoticeDismissed);
+      }
+    );
+
+    // 监听鼠标回退到键盘开关的变化，实时持久化
+    watch(
+      () => playbackRouting.value.mouseFallbackToKeyboard,
+      () => {
+        StoreSet('playback.routing.mouse_fallback_to_keyboard', playbackRouting.value.mouseFallbackToKeyboard);
       }
     );
   }

@@ -24,9 +24,12 @@
 - [x] 3.4 新增后端 API：`POST /keytone_pkg/apply_playback_routing`（一次性加载并缓存，失败时返回可诊断信息）
 - [x] 3.5 新增后端 API：`POST /keytone_pkg/set_playback_source_mode`（`editor`/`route`），保证播放来源互斥
 - [x] 3.6 当从 `editor` 返回 `route` 时，确保下一次 apply 能生成最新快照（必要时清理旧快照）
+- [x] 3.7 新增 `mouse_fallback_to_keyboard` 配置项（默认 false），修改回退逻辑
 
 ## 4. Verification
 
 - [ ] 4.1 手动验证：统一模式下行为与旧版本一致
 - [ ] 4.2 手动验证：分离模式下键盘触发与鼠标触发分别来自不同专辑
-- [ ] 4.3 低延迟验证：播放热路径不做磁盘 IO（只读缓存）
+- [ ] 4.3 手动验证：分离模式下鼠标专辑缺失时默认无声（不回退）
+- [ ] 4.4 手动验证：开启回退选项后，鼠标专辑缺失回退到键盘专辑
+- [ ] 4.5 低延迟验证：播放热路径不做磁盘 IO（只读缓存）
