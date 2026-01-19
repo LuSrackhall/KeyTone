@@ -73,42 +73,45 @@
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card>
-      <q-card-section class="row items-center q-pb-none text-h6">
-        {{ ctx.$t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
-      </q-card-section>
+    <q-card class="dialog-card">
+      <!-- 可滚动的内容区域（包含粘滞按钮） -->
+      <div class="dialog-scroll-area">
+        <q-card-section class="row items-center q-pb-none text-h6">
+          {{ ctx.$t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
+        </q-card-section>
 
-      <q-card-section>
-        <div class="text-gray-600 text-xs">{{ ctx.$t('KeyToneAlbum.loadAudioFile.dragAndDrop') }}</div>
-        <q-file
-          :class="['w-56', 'zl-ll']"
-          dense
-          v-model="ctx.files.value"
-          :label="ctx.$t('KeyToneAlbum.loadAudioFile.audioFile')"
-          outlined
-          use-chips
-          multiple
-          append
-          accept=".wav,.mp3,.ogg"
-          excludeAcceptAllOption
-          style="max-width: 300px"
-          :hint="ctx.$t('KeyToneAlbum.loadAudioFile.supportedFormats')"
-        />
-      </q-card-section>
+        <q-card-section>
+          <div class="text-gray-600 text-xs">{{ ctx.$t('KeyToneAlbum.loadAudioFile.dragAndDrop') }}</div>
+          <q-file
+            class="audio-file-selector"
+            dense
+            v-model="ctx.files.value"
+            :label="ctx.$t('KeyToneAlbum.loadAudioFile.audioFile')"
+            outlined
+            use-chips
+            multiple
+            append
+            accept=".wav,.mp3,.ogg"
+            excludeAcceptAllOption
+            :hint="ctx.$t('KeyToneAlbum.loadAudioFile.supportedFormats')"
+          />
+        </q-card-section>
 
-      <q-card-section>
-        <div>{{ ctx.$t('KeyToneAlbum.loadAudioFile.addAsNeeded') }}</div>
-      </q-card-section>
+        <q-card-section>
+          <div>{{ ctx.$t('KeyToneAlbum.loadAudioFile.addAsNeeded') }}</div>
+        </q-card-section>
 
-      <q-card-actions align="right">
-        <q-btn
-          flat
-          @click="handleConfirmAdd"
-          color="primary"
-          :label="ctx.$t('KeyToneAlbum.loadAudioFile.confirmAdd')"
-        />
-        <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
-      </q-card-actions>
+        <!-- 固定粘滞的底部按钮区域 -->
+        <q-card-actions align="right" class="dialog-actions-sticky">
+          <q-btn
+            flat
+            @click="handleConfirmAdd"
+            color="primary"
+            :label="ctx.$t('KeyToneAlbum.loadAudioFile.confirmAdd')"
+          />
+          <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
+        </q-card-actions>
+      </div>
     </q-card>
   </q-dialog>
 </template>
@@ -180,6 +183,54 @@ async function handleConfirmAdd() {
  * AddAudioFileDialog 组件样式
  */
 
+// 对话框卡片样式 - 限制最大高度，使用flex布局
+.dialog-card {
+  @apply flex flex-col;
+  max-height: 80vh;
+  min-width: 280px;
+  @apply overflow-hidden;
+}
+
+// 可滚动内容区域
+.dialog-scroll-area {
+  @apply flex-1 overflow-y-auto;
+  // 自定义滚动条样式（更贴合项目）
+  &::-webkit-scrollbar {
+    @apply w-1;
+  }
+  &::-webkit-scrollbar-track {
+    @apply bg-blueGray-200/40 dark:bg-blueGray-700/40 rounded-full;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-blueGray-500/60 dark:bg-blueGray-400/60 rounded-full;
+  border: 0px solid transparent;
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    &:hover {
+      @apply bg-blue-500/70 dark:bg-blue-400/70;
+    }
+  }
+}
+
+// 底部按钮粘滞区域 - 毛玻璃效果
+.dialog-actions-sticky {
+  @apply sticky bottom-0;
+  @apply bg-white/70 dark:bg-gray-900/70;
+  backdrop-filter: blur(5px) saturate(1.2);
+  -webkit-backdrop-filter: blur(5px) saturate(1.2);
+  @apply border-t border-gray-200/50 dark:border-gray-700/50;
+  @apply z-10;
+  // 增加顶部渐变，增强毛玻璃层次
+  background-image: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.75),
+    rgba(255, 255, 255, 0.55)
+  );
+  @apply dark:bg-gray-900/70;
+  @apply dark:[background-image:linear-gradient(to_top,rgba(17,24,39,0.75),rgba(17,24,39,0.55))];
+}
+
 // 按钮样式 - 统一按钮外观
 .q-btn {
   @apply text-xs;
@@ -189,14 +240,41 @@ async function handleConfirmAdd() {
   @apply scale-103;
 }
 
-// 选择器样式 - 处理溢出
+// 音频文件选择器样式
+.audio-file-selector {
+  @apply w-56;
+  max-width: 300px;
+}
+
+// 选择器样式 - 自动扩展高度显示所有文件
 :deep(.q-field__native) {
-  @apply max-w-full overflow-auto whitespace-nowrap;
-  @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50 [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
+  @apply max-w-full;
+  // 移除固定高度，允许自动扩展
+  height: auto !important;
+  min-height: 1.5rem;
+  // 允许内容换行显示
+  @apply flex flex-wrap gap-1;
+  white-space: normal;
+}
+
+// 文件 chips 样式
+:deep(.q-chip) {
+  @apply m-0.5;
 }
 
 // 输入框标签样式
 :deep(.q-field__label) {
   @apply overflow-visible -ml-1.5 text-[0.8rem];
+}
+
+// 输入框控件容器 - 确保自动高度
+:deep(.q-field__control) {
+  height: auto !important;
+  min-height: 40px;
+}
+
+// 输入框内部容器
+:deep(.q-field__control-container) {
+  @apply flex-wrap;
 }
 </style>
