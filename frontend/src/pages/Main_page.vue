@@ -28,7 +28,7 @@
     <div
       :class="[
         '',
-        'w-auto h-50 flex flex-col items-center',
+        'w-auto h-36 flex flex-col items-center',
         // 使页面文本无法选择, 免得影响界面体验。
         'select-none',
       ]"
@@ -38,7 +38,7 @@
           '',
           // 设置整体头像的尺寸大小。 至于内部相关文字的尺寸大小(如果有的话  可通过设置text-[8rem] leading-[10rem]实现)
           'size-56',
-          '',
+          '-mt-4',
         ]"
       >
         <!-- draggable="false"使得图片无法拖动, 免得影响界面体验 -->
@@ -61,7 +61,7 @@
 
         <q-select
           v-if="!isSplitRouting"
-          :class="['w-[216px]', 'select-component-label-show']"
+          :class="['w-[216px]', 'select-component-label-show', 'mt-12']"
           v-model="setting_store.playbackRouting.unifiedAlbumPath"
           :options="main_store.keyTonePkgOptions"
           :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
@@ -101,7 +101,7 @@
           </template>
         </q-select>
 
-        <div v-else class="flex flex-col items-center gap-2">
+        <div v-else class="flex flex-col items-center gap-2 mt-3">
           <!-- 分离模式：分别选择键盘/鼠标播放专辑 -->
           <q-select
             :class="['w-[216px]', 'select-component-label-show']"
@@ -194,7 +194,7 @@
     <div
       :class="[
         '',
-        'w-full flex flex-col items-center pr-5 mt-10',
+        'w-full flex flex-col items-center pr-5 mt-7',
         // 使页面文本无法选择, 免得影响界面体验。
         'select-none',
       ]"
