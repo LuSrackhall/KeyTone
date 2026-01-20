@@ -187,11 +187,11 @@
                       use-chips
                       :class="['zl-ll']"
                       dense
-                      :max-values="ctx.selectedKeySound.value.keySoundValue.down.mode.mode === 'single' ? 1 : Infinity"
+                      :max-values="getPlayMode(ctx.selectedKeySound.value.keySoundValue.down.mode) === 'single' ? 1 : Infinity"
                       counter
                       :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                       :error="
-                        ctx.selectedKeySound.value.keySoundValue.down.mode.mode === 'single' &&
+                        getPlayMode(ctx.selectedKeySound.value.keySoundValue.down.mode) === 'single' &&
                         ctx.selectedKeySound.value.keySoundValue.down.value.length > 1
                       "
                       ref="edit_downSoundSelectDom"
@@ -328,11 +328,11 @@
                       use-chips
                       :class="['zl-ll']"
                       dense
-                      :max-values="ctx.selectedKeySound.value.keySoundValue.up.mode.mode === 'single' ? 1 : Infinity"
+                      :max-values="getPlayMode(ctx.selectedKeySound.value.keySoundValue.up.mode) === 'single' ? 1 : Infinity"
                       counter
                       :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                       :error="
-                        ctx.selectedKeySound.value.keySoundValue.up.mode.mode === 'single' &&
+                        getPlayMode(ctx.selectedKeySound.value.keySoundValue.up.mode) === 'single' &&
                         ctx.selectedKeySound.value.keySoundValue.up.value.length > 1
                       "
                       ref="edit_upSoundSelectDom"
@@ -472,8 +472,9 @@
  * 【注意事项】
  * selectedKeySound 的 down/up value 结构在父组件的 watch 中会被转换，
  * 以适配选择输入框组件的使用需求。
- * - mode 被转换为 { mode: string } 对象形式
  * - value 中的 uuid 被转换为完整的对象引用
+ * - mode 可能来自历史结构或 UI 中间态，既可能是字符串，也可能是 { mode: string }
+ *   因此这里统一通过解析函数读取，避免保存时写回 undefined。
  * 详见父组件中的 watch(selectedKeySound) 实现。
  */
 
@@ -487,13 +488,17 @@ const q = useQuasar();
 // ============================================================================
 // 注入父组件提供的上下文
 // ============================================================================
-const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY);
+if (!ctx) {
+  // 这里必须存在父组件的 provide；若不存在说明组件被错误地单独挂载
+  throw new Error('EditKeySoundDialog requires KEYTONE_ALBUM_CONTEXT_KEY');
+}
 
 // ============================================================================
 // DOM 引用
 // ============================================================================
-const edit_downSoundSelectDom = ref<any>(null);
-const edit_upSoundSelectDom = ref<any>(null);
+const edit_downSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
+const edit_upSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
 
 // ============================================================================
 // 工具函数
@@ -513,7 +518,17 @@ const edit_upSoundSelectDom = ref<any>(null);
  * 使其类型提前由 uuid 转换成了相关对象。
  * 因此，此处仍按照对应对象处理即可。
  */
-function getOptionValue(item: any) {
+type KeySoundOption = {
+  type: 'audio_files' | 'sounds' | 'key_sounds';
+  value?: {
+    sha256?: string;
+    name_id?: string;
+    soundKey?: string;
+    keySoundKey?: string;
+  };
+};
+
+function getOptionValue(item: KeySoundOption) {
   if (item.type === 'audio_files') {
     return item.value?.sha256 + item.value?.name_id;
   }
@@ -525,6 +540,24 @@ function getOptionValue(item: any) {
   }
 }
 
+/**
+ * 解析播放模式值，统一为 string。
+ *
+ * 【兼容性说明】
+ * - 旧数据或中间态可能使用 { mode: string }
+ * - 现有 UI 期望使用 string
+ * 这里做兼容解析，避免保存时写回 undefined。
+ */
+function getPlayMode(mode: unknown, fallback = 'random') {
+  if (typeof mode === 'string') {
+    return mode;
+  }
+  if (mode && typeof mode === 'object' && 'mode' in mode && typeof (mode as { mode?: unknown }).mode === 'string') {
+    return (mode as { mode: string }).mode;
+  }
+  return fallback;
+}
+
 // ============================================================================
 // 事件处理函数
 // ============================================================================
@@ -534,7 +567,7 @@ function getOptionValue(item: any) {
  *
  * 【重要】
  * selectedKeySound.keySoundValue.down/up 的结构已在父组件的 watch 中被转换，
- * 其 mode 变成了 { mode: string } 对象形式，因此这里需要取 .mode.mode。
+ * 其 mode 可能是字符串或对象，因此这里必须使用解析函数读取。
  */
 function handleSave() {
   if (!ctx.selectedKeySound.value) return;
@@ -543,11 +576,11 @@ function handleSave() {
     key: ctx.selectedKeySound.value.keySoundKey,
     name: ctx.selectedKeySound.value.keySoundValue.name,
     down: {
-      mode: ctx.selectedKeySound.value.keySoundValue.down.mode.mode,
+      mode: getPlayMode(ctx.selectedKeySound.value.keySoundValue.down.mode),
       value: ctx.selectedKeySound.value.keySoundValue.down.value,
     },
     up: {
-      mode: ctx.selectedKeySound.value.keySoundValue.up.mode.mode,
+      mode: getPlayMode(ctx.selectedKeySound.value.keySoundValue.up.mode),
       value: ctx.selectedKeySound.value.keySoundValue.up.value,
     },
   });

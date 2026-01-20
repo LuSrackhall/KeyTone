@@ -664,9 +664,28 @@ watch(selectedKeySound, (newVal, oldVal) => {
   console.debug('观察selectedKeySound=', newVal);
 
   // 创建深拷贝避免修改keySoundList中的原始数据
-  const originalKeySound = keySoundList.value.find(ks => ks.keySoundKey === newVal.keySoundKey);
+  const originalKeySound = keySoundList.value.find((ks) => ks.keySoundKey === newVal.keySoundKey);
   if (originalKeySound) {
     selectedKeySound.value = JSON.parse(JSON.stringify(originalKeySound));
+
+    /**
+     * 规范化播放模式字段
+     *
+     * 背景：历史数据或 UI 中间态可能出现两种结构：
+     * - string: "single" | "random" | "loop"
+     * - object: { mode: "single" | "random" | "loop" }
+     *
+     * 目的：统一为 string，避免编辑对话框在保存时读到 undefined。
+     */
+    const normalizePlayMode = (mode: unknown, fallback = 'random') => {
+      if (typeof mode === 'string') {
+        return mode;
+      }
+      if (mode && typeof mode === 'object' && 'mode' in mode && typeof (mode as { mode?: unknown }).mode === 'string') {
+        return (mode as { mode: string }).mode;
+      }
+      return fallback;
+    };
 
     // 对拷贝的数据进行UI格式转换
     selectedKeySound.value.keySoundValue.down.value = selectedKeySound.value.keySoundValue.down.value.map((item: any) => {
@@ -699,6 +718,11 @@ watch(selectedKeySound, (newVal, oldVal) => {
       return item;
     });
 
+    // 规范化 down 播放模式（保证后续 UI 与保存逻辑统一读取 string）
+    selectedKeySound.value.keySoundValue.down.mode = normalizePlayMode(
+      selectedKeySound.value.keySoundValue.down.mode
+    );
+
     selectedKeySound.value.keySoundValue.up.value = selectedKeySound.value.keySoundValue.up.value.map((item: any) => {
       /**
        * json中的存储格式分别是
@@ -728,6 +752,11 @@ watch(selectedKeySound, (newVal, oldVal) => {
       }
       return item;
     });
+
+    // 规范化 up 播放模式（保证后续 UI 与保存逻辑统一读取 string）
+    selectedKeySound.value.keySoundValue.up.mode = normalizePlayMode(
+      selectedKeySound.value.keySoundValue.up.mode
+    );
   }
 });
 
