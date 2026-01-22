@@ -515,10 +515,17 @@ onUnmounted(() => {
   border-radius: 12px;
   overflow: hidden;
 
-  /* 毛玻璃效果 */
-  background: rgba(255, 255, 255, 0.85);
+  /* 毛玻璃效果：降低不透明度，确保下方内容可见且模糊 */
+  background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+
+  /* 轻微叠加层，增强可读性又不遮挡背景 */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
 
   /* 阴影和边框 */
   box-shadow:
