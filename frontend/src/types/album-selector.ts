@@ -26,19 +26,50 @@
  * AlbumSignatureSummary - 专辑签名摘要信息
  *
  * 用于在专辑选择器列表中展示签名作者的基本信息，
- * 这是一个轻量级的数据结构，避免加载完整的签名数据。
+ * 包含原始作者和直接导出作者的完整信息，供悬停卡片使用。
+ *
+ * 设计说明：
+ * - 当 isSameAuthor 为 true 时，表示原始作者与直接导出作者是同一人
+ * - 此时前端应只展示一个作者区块，避免信息重复
  *
  * @property hasSignature - 是否有签名
+ * @property originalAuthorName - 原始作者的名称
+ * @property originalAuthorImage - 原始作者的图片路径（相对于专辑目录）
+ * @property originalAuthorIntro - 原始作者的介绍
  * @property directExportAuthorName - 直接导出作者的名称
  * @property directExportAuthorImage - 直接导出作者的图片路径（相对于专辑目录）
+ * @property directExportAuthorIntro - 直接导出作者的介绍
+ * @property isSameAuthor - 原始作者与直接导出作者是否为同一人
  */
 export interface AlbumSignatureSummary {
   /** 是否有签名 */
   hasSignature: boolean;
+
+  // ============================================================================
+  // 原始作者信息
+  // ============================================================================
+  /** 原始作者名称 */
+  originalAuthorName: string;
+  /** 原始作者图片路径（相对于专辑目录） */
+  originalAuthorImage: string;
+  /** 原始作者介绍 */
+  originalAuthorIntro: string;
+
+  // ============================================================================
+  // 直接导出作者信息
+  // ============================================================================
   /** 直接导出作者名称 */
   directExportAuthorName: string;
   /** 直接导出作者图片路径（相对于专辑目录） */
   directExportAuthorImage: string;
+  /** 直接导出作者介绍 */
+  directExportAuthorIntro: string;
+
+  // ============================================================================
+  // 是否为同一作者标记
+  // ============================================================================
+  /** 原始作者与直接导出作者是否为同一人 */
+  isSameAuthor: boolean;
 }
 
 /**

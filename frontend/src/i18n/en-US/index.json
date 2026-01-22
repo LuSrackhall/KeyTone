@@ -668,7 +668,9 @@
   },
   "albumSelector": {
     "signatureHoverCard": {
+      "originalAuthor": "Original Author",
       "directExportAuthor": "Direct Export Author",
+      "sameAuthor": "Original Author / Direct Exporter",
       "viewDetails": "Click to view details"
     }
   }

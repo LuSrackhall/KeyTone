@@ -19,12 +19,18 @@
 
 <!--
   ============================================================================
-  AlbumSignatureBadge.vue - 专辑签名徽章组件
+  AlbumSignatureBadge.vue - 专辑签名徽章组件（芯片样式）
 
   功能说明：
     - 在专辑选择器中展示签名作者信息
     - 显示直接导出作者的头像（图片或签名图标占位符）和名称
+    - 采用芯片（Chip）样式，宽度根据内容自适应，不占整行
     - 支持两种尺寸模式：normal（正常）和 small（紧凑）
+
+  设计特点：
+    - 内联显示（inline-flex），宽度由内容决定
+    - 圆角胶囊形状，视觉上类似芯片/标签
+    - 背景采用琥珀色调，与签名主题一致
 
   Props:
     - albumPath: 专辑路径，用于获取签名图片
@@ -43,32 +49,36 @@
 -->
 
 <template>
-  <!-- 签名徽章容器 -->
+  <!-- ============================================================================
+       签名徽章容器（芯片样式）
+       - 使用 inline-flex 确保宽度由内容决定
+       - 圆角胶囊形状
+       ============================================================================ -->
   <div
     class="album-signature-badge"
-    :class="[size === 'small' ? 'badge-small' : 'badge-normal', 'flex items-center gap-1.5', 'select-none']"
+    :class="[
+      size === 'small' ? 'badge-small' : 'badge-normal',
+    ]"
   >
     <!-- 作者头像 / 签名图标占位符 -->
-    <div
-      class="avatar-container flex-shrink-0 rounded-full overflow-hidden bg-gray-200/50"
-      :class="[size === 'small' ? 'w-4 h-4' : 'w-5 h-5']"
-    >
+    <div class="avatar-container" :class="[size === 'small' ? 'avatar-small' : 'avatar-normal']">
       <!-- 有图片时显示图片 -->
-      <img v-if="imageUrl" :src="imageUrl" class="w-full h-full object-cover" @error="handleImageError" />
+      <img
+        v-if="imageUrl"
+        :src="imageUrl"
+        class="avatar-img"
+        @error="handleImageError"
+      />
       <!-- 无图片时显示签名图标 -->
-      <div
-        v-else
-        class="w-full h-full flex items-center justify-center"
-        :class="[size === 'small' ? 'text-[10px]' : 'text-xs']"
-      >
-        <q-icon name="badge" color="amber-7" />
+      <div v-else class="avatar-placeholder">
+        <q-icon name="badge" color="amber-7" :size="size === 'small' ? '10px' : '12px'" />
       </div>
     </div>
 
     <!-- 作者名称 -->
     <span
-      class="author-name text-gray-600 truncate"
-      :class="[size === 'small' ? 'text-[10px] max-w-[80px]' : 'text-xs max-w-[100px]']"
+      class="author-name"
+      :class="[size === 'small' ? 'name-small' : 'name-normal']"
       :title="authorName"
     >
       {{ authorName }}
@@ -78,9 +88,10 @@
 
 <script setup lang="ts">
 /**
- * AlbumSignatureBadge - 专辑签名徽章组件
+ * AlbumSignatureBadge - 专辑签名徽章组件（芯片样式）
  *
  * 用于在专辑选择器的列表项和选中状态中展示签名作者信息
+ * 采用芯片样式，宽度自适应，视觉效果更紧凑美观
  */
 import { ref, watch, onUnmounted } from 'vue';
 import { GetAlbumFile } from 'src/boot/query/keytonePkg-query';
@@ -174,36 +185,91 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 签名徽章基础样式 */
+/* ============================================================================
+   签名徽章基础样式（芯片/Chip 样式）
+   - inline-flex: 宽度由内容决定，不占整行
+   - 圆角胶囊形状
+   - 琥珀色背景
+   ============================================================================ */
 .album-signature-badge {
-  /* 使用 CSS 变量便于主题定制 */
-  --badge-bg: rgba(251, 191, 36, 0.1); /* amber-400/10 */
-  --badge-border: rgba(251, 191, 36, 0.3); /* amber-400/30 */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 999px; /* 胶囊形状 */
+  user-select: none;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
-/* 正常尺寸模式 */
+/* ============================================================================
+   正常尺寸模式
+   ============================================================================ */
 .badge-normal {
-  padding: 2px 6px;
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
-  border-radius: 4px;
+  padding: 2px 8px 2px 3px;
 }
 
-/* 紧凑尺寸模式 */
+/* ============================================================================
+   紧凑尺寸模式（用于列表项）
+   ============================================================================ */
 .badge-small {
-  padding: 1px 4px;
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
-  border-radius: 3px;
+  padding: 1px 6px 1px 2px;
 }
 
-/* 头像容器阴影效果 */
+/* ============================================================================
+   头像容器
+   ============================================================================ */
 .avatar-container {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(251, 191, 36, 0.15);
 }
 
-/* 作者名称文本样式 */
+.avatar-normal {
+  width: 18px;
+  height: 18px;
+}
+
+.avatar-small {
+  width: 14px;
+  height: 14px;
+}
+
+/* 头像图片 */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 头像占位符 */
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================================
+   作者名称
+   ============================================================================ */
 .author-name {
+  color: #92400e; /* amber-800 */
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.2;
+}
+
+.name-normal {
+  font-size: 11px;
+  max-width: 100px;
+}
+
+.name-small {
+  font-size: 10px;
+  max-width: 80px;
 }
 </style>

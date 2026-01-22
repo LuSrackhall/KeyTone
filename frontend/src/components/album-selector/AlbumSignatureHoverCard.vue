@@ -24,21 +24,25 @@
   功能说明：
     - 包裹签名徽章组件，提供悬停时的详情卡片展示
     - 鼠标悬停在触发区域时显示详情卡片
-    - 鼠标可移动到卡片上，卡片保持显示不消失
+    - 鼠标可移动到卡片上，卡片保持显示
+    - 鼠标离开触发区域和卡片后，延迟隐藏卡片
     - 卡片右下角提供"点击查看详细信息"可点击标签
     - 点击标签打开 SignatureAuthorsDialog 对话框
+    - 卡片具有毛玻璃效果（backdrop-filter: blur）
+
+  展示内容：
+    - 当 isSameAuthor=true 时，只展示一个作者区块（原始作者=直接导出作者）
+    - 当 isSameAuthor=false 时，展示两个作者区块（原始作者 + 直接导出作者）
 
   交互逻辑：
     1. 鼠标进入触发区域 → 延迟显示卡片（避免快速划过时闪烁）
     2. 鼠标离开触发区域但进入卡片 → 卡片保持显示
-    3. 鼠标离开卡片且不在触发区域 → 延迟隐藏卡片
+    3. 鼠标离开卡片 → 检查是否在触发区域，若不在则延迟隐藏
     4. 点击"查看详细信息" → 触发 @view-details 事件
 
   Props:
     - albumPath: 专辑路径
-    - authorName: 作者名称
-    - authorImage: 作者图片路径
-    - authorIntro: 作者介绍（可选）
+    - signatureInfo: 签名摘要信息（包含原始作者和直接导出作者）
 
   Events:
     - view-details: 点击"查看详细信息"时触发
@@ -46,8 +50,7 @@
   使用示例：
     <AlbumSignatureHoverCard
       :album-path="albumPath"
-      :author-name="signatureInfo.directExportAuthorName"
-      :author-image="signatureInfo.directExportAuthorImage"
+      :signature-info="signatureInfo"
       @view-details="openSignatureDialog"
     >
       <AlbumSignatureBadge ... />
@@ -66,56 +69,140 @@
     <slot />
   </div>
 
-  <!-- 悬停卡片：使用 Teleport 渲染到 body，避免被父元素 overflow 裁剪 -->
+  <!-- ============================================================================
+       悬停卡片：使用 Teleport 渲染到 body，避免被父元素 overflow 裁剪
+       具有毛玻璃效果（backdrop-filter: blur(8px)）
+       ============================================================================ -->
   <Teleport to="body">
     <Transition name="hover-card-fade">
       <div
-        v-if="showCard"
+        v-if="isCardVisible"
         ref="cardRef"
-        class="signature-hover-card fixed z-[9999] bg-white rounded-lg shadow-lg border border-gray-200"
+        class="signature-hover-card"
         :style="cardPosition"
         @mouseenter="onCardEnter"
         @mouseleave="onCardLeave"
       >
         <!-- 卡片内容区域 -->
-        <div class="card-content p-3">
-          <!-- 作者信息头部 -->
-          <div class="flex items-start gap-3">
-            <!-- 作者头像 -->
-            <div class="avatar-wrapper flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100 shadow-sm">
-              <img v-if="imageUrl" :src="imageUrl" class="w-full h-full object-cover" @error="handleImageError" />
-              <div v-else class="w-full h-full flex items-center justify-center">
-                <q-icon name="badge" color="amber-7" size="24px" />
+        <div class="card-content">
+          <!-- ============================================================================
+               作者信息展示
+               - isSameAuthor=true: 只展示一个作者区块
+               - isSameAuthor=false: 展示原始作者 + 直接导出作者
+               ============================================================================ -->
+
+          <!-- 情况1: 原始作者与直接导出作者是同一人 -->
+          <template v-if="signatureInfo.isSameAuthor">
+            <div class="author-section">
+              <!-- 作者标签 -->
+              <div class="author-label text-amber-600">
+                {{ $t('albumSelector.signatureHoverCard.sameAuthor') }}
+              </div>
+              <!-- 作者信息 -->
+              <div class="author-row">
+                <div class="avatar-wrapper">
+                  <img
+                    v-if="directExportAuthorImageUrl"
+                    :src="directExportAuthorImageUrl"
+                    class="avatar-img"
+                    @error="handleDirectExportImageError"
+                  />
+                  <div v-else class="avatar-placeholder">
+                    <q-icon name="badge" color="amber-7" size="20px" />
+                  </div>
+                </div>
+                <div class="author-info">
+                  <div class="author-name" :title="signatureInfo.directExportAuthorName">
+                    {{ signatureInfo.directExportAuthorName }}
+                  </div>
+                  <div
+                    v-if="signatureInfo.directExportAuthorIntro"
+                    class="author-intro"
+                    :title="signatureInfo.directExportAuthorIntro"
+                  >
+                    {{ signatureInfo.directExportAuthorIntro }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- 情况2: 原始作者与直接导出作者不同 -->
+          <template v-else>
+            <!-- 原始作者区块 -->
+            <div class="author-section">
+              <div class="author-label text-amber-600">
+                {{ $t('albumSelector.signatureHoverCard.originalAuthor') }}
+              </div>
+              <div class="author-row">
+                <div class="avatar-wrapper">
+                  <img
+                    v-if="originalAuthorImageUrl"
+                    :src="originalAuthorImageUrl"
+                    class="avatar-img"
+                    @error="handleOriginalImageError"
+                  />
+                  <div v-else class="avatar-placeholder">
+                    <q-icon name="badge" color="amber-7" size="20px" />
+                  </div>
+                </div>
+                <div class="author-info">
+                  <div class="author-name" :title="signatureInfo.originalAuthorName">
+                    {{ signatureInfo.originalAuthorName }}
+                  </div>
+                  <div
+                    v-if="signatureInfo.originalAuthorIntro"
+                    class="author-intro"
+                    :title="signatureInfo.originalAuthorIntro"
+                  >
+                    {{ signatureInfo.originalAuthorIntro }}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- 作者信息 -->
-            <div class="author-info flex-1 min-w-0">
-              <!-- 作者名称 -->
-              <div class="author-name text-sm font-medium text-gray-900 truncate" :title="authorName">
-                {{ authorName }}
-              </div>
-              <!-- 直接导出作者标签 -->
-              <div class="author-role text-[10px] text-amber-600 mt-0.5">
+            <!-- 分隔线 -->
+            <div class="section-divider"></div>
+
+            <!-- 直接导出作者区块 -->
+            <div class="author-section">
+              <div class="author-label text-blue-600">
                 {{ $t('albumSelector.signatureHoverCard.directExportAuthor') }}
               </div>
-              <!-- 作者介绍（如有） -->
-              <div v-if="authorIntro" class="author-intro text-xs text-gray-500 mt-1 line-clamp-2" :title="authorIntro">
-                {{ authorIntro }}
+              <div class="author-row">
+                <div class="avatar-wrapper">
+                  <img
+                    v-if="directExportAuthorImageUrl"
+                    :src="directExportAuthorImageUrl"
+                    class="avatar-img"
+                    @error="handleDirectExportImageError"
+                  />
+                  <div v-else class="avatar-placeholder">
+                    <q-icon name="badge" color="blue-6" size="20px" />
+                  </div>
+                </div>
+                <div class="author-info">
+                  <div class="author-name" :title="signatureInfo.directExportAuthorName">
+                    {{ signatureInfo.directExportAuthorName }}
+                  </div>
+                  <div
+                    v-if="signatureInfo.directExportAuthorIntro"
+                    class="author-intro"
+                    :title="signatureInfo.directExportAuthorIntro"
+                  >
+                    {{ signatureInfo.directExportAuthorIntro }}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
 
           <!-- 分隔线 -->
-          <div class="divider my-2 border-t border-gray-100"></div>
+          <div class="footer-divider"></div>
 
           <!-- 底部操作区域 -->
-          <div class="card-footer flex justify-end">
-            <!-- 查看详细信息链接 -->
-            <span
-              class="view-details-link text-xs text-blue-500 hover:text-blue-700 cursor-pointer hover:underline transition-colors"
-              @click="handleViewDetails"
-            >
+          <div class="card-footer">
+            <span class="view-details-link" @click="handleViewDetails">
               {{ $t('albumSelector.signatureHoverCard.viewDetails') }}
             </span>
           </div>
@@ -130,28 +217,21 @@
  * AlbumSignatureHoverCard - 专辑签名悬停详情卡片组件
  *
  * 提供悬停时的签名详情预览，支持点击查看完整签名信息
+ * 展示原始作者和直接导出作者的信息
  */
-import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import { ref, watch, onUnmounted, nextTick } from 'vue';
 import { GetAlbumFile } from 'src/boot/query/keytonePkg-query';
+import type { AlbumSignatureSummary } from 'src/types/album-selector';
 
 // ============================================================================
 // Props 定义
 // ============================================================================
-const props = withDefaults(
-  defineProps<{
-    /** 专辑路径，用于获取签名图片 */
-    albumPath: string;
-    /** 作者名称 */
-    authorName: string;
-    /** 作者图片路径（相对于专辑目录） */
-    authorImage: string;
-    /** 作者介绍（可选） */
-    authorIntro?: string;
-  }>(),
-  {
-    authorIntro: '',
-  }
-);
+const props = defineProps<{
+  /** 专辑路径，用于通过 GetAlbumFile API 获取签名图片 */
+  albumPath: string;
+  /** 签名摘要信息（包含原始作者和直接导出作者的完整信息） */
+  signatureInfo: AlbumSignatureSummary;
+}>();
 
 // ============================================================================
 // Events 定义
@@ -163,13 +243,11 @@ const emit = defineEmits<{
 
 // ============================================================================
 // 悬停状态管理
-// 使用两个独立的状态变量跟踪鼠标是否在触发区域或卡片上
+// 使用标志位跟踪鼠标是否在触发区域或卡片上
 // ============================================================================
 const isHoverOnTrigger = ref(false);
 const isHoverOnCard = ref(false);
-
-/** 控制卡片显示的计算属性 */
-const showCard = computed(() => isHoverOnTrigger.value || isHoverOnCard.value);
+const isCardVisible = ref(false);
 
 // 延迟定时器引用
 let showDelayTimer: ReturnType<typeof setTimeout> | null = null;
@@ -177,16 +255,22 @@ let hideDelayTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 延迟时间配置（毫秒）
 const SHOW_DELAY = 200; // 显示延迟，避免快速划过时闪烁
-const HIDE_DELAY = 150; // 隐藏延迟，确保鼠标能移动到卡片上
+const HIDE_DELAY = 100; // 隐藏延迟，确保鼠标能移动到卡片上
 
 /**
- * 清除所有延迟定时器
+ * 清除显示定时器
  */
-function clearTimers() {
+function clearShowTimer() {
   if (showDelayTimer) {
     clearTimeout(showDelayTimer);
     showDelayTimer = null;
   }
+}
+
+/**
+ * 清除隐藏定时器
+ */
+function clearHideTimer() {
   if (hideDelayTimer) {
     clearTimeout(hideDelayTimer);
     hideDelayTimer = null;
@@ -194,13 +278,26 @@ function clearTimers() {
 }
 
 /**
+ * 检查是否应该隐藏卡片
+ * 只有当鼠标既不在触发区域也不在卡片上时才隐藏
+ */
+function checkAndHideCard() {
+  if (!isHoverOnTrigger.value && !isHoverOnCard.value) {
+    isCardVisible.value = false;
+  }
+}
+
+/**
  * 鼠标进入触发区域
  */
 function onTriggerEnter() {
-  clearTimers();
+  isHoverOnTrigger.value = true;
+  clearHideTimer(); // 取消隐藏计时
+
   // 延迟显示卡片
+  clearShowTimer();
   showDelayTimer = setTimeout(() => {
-    isHoverOnTrigger.value = true;
+    isCardVisible.value = true;
     // 显示后更新卡片位置
     nextTick(() => {
       updateCardPosition();
@@ -212,10 +309,13 @@ function onTriggerEnter() {
  * 鼠标离开触发区域
  */
 function onTriggerLeave() {
-  clearTimers();
-  // 延迟隐藏，给鼠标移动到卡片的时间
+  isHoverOnTrigger.value = false;
+  clearShowTimer(); // 如果还在显示延迟中，取消显示
+
+  // 延迟检查是否隐藏
+  clearHideTimer();
   hideDelayTimer = setTimeout(() => {
-    isHoverOnTrigger.value = false;
+    checkAndHideCard();
   }, HIDE_DELAY);
 }
 
@@ -223,18 +323,20 @@ function onTriggerLeave() {
  * 鼠标进入卡片
  */
 function onCardEnter() {
-  clearTimers();
   isHoverOnCard.value = true;
+  clearHideTimer(); // 取消隐藏计时
 }
 
 /**
  * 鼠标离开卡片
  */
 function onCardLeave() {
-  clearTimers();
-  // 延迟隐藏
+  isHoverOnCard.value = false;
+
+  // 延迟检查是否隐藏
+  clearHideTimer();
   hideDelayTimer = setTimeout(() => {
-    isHoverOnCard.value = false;
+    checkAndHideCard();
   }, HIDE_DELAY);
 }
 
@@ -245,6 +347,9 @@ function handleViewDetails() {
   // 立即隐藏卡片
   isHoverOnTrigger.value = false;
   isHoverOnCard.value = false;
+  isCardVisible.value = false;
+  clearShowTimer();
+  clearHideTimer();
   // 触发事件
   emit('view-details');
 }
@@ -259,19 +364,19 @@ const cardPosition = ref<{ top: string; left: string }>({ top: '0px', left: '0px
 
 /**
  * 更新卡片位置
- * 将卡片定位在触发区域的正下方
+ * 将卡片定位在触发区域的正下方或正上方（根据空间情况）
  */
 function updateCardPosition() {
   if (!triggerRef.value) return;
 
   const triggerRect = triggerRef.value.getBoundingClientRect();
-  const cardWidth = 240; // 卡片预估宽度
-  const cardHeight = 150; // 卡片预估高度
+  const cardWidth = 280; // 卡片宽度
+  const cardHeight = props.signatureInfo.isSameAuthor ? 140 : 220; // 根据内容估算高度
   const offset = 8; // 与触发区域的间距
 
-  // 计算初始位置（触发区域下方居中）
+  // 计算初始位置（触发区域下方，左对齐）
   let top = triggerRect.bottom + offset;
-  let left = triggerRect.left + (triggerRect.width - cardWidth) / 2;
+  let left = triggerRect.left;
 
   // 边界检查：防止卡片超出视口
   const viewportWidth = window.innerWidth;
@@ -289,6 +394,10 @@ function updateCardPosition() {
   if (top + cardHeight > viewportHeight - 10) {
     top = triggerRect.top - cardHeight - offset;
   }
+  // 上边界检查
+  if (top < 10) {
+    top = 10;
+  }
 
   cardPosition.value = {
     top: `${top}px`,
@@ -298,89 +407,254 @@ function updateCardPosition() {
 
 // ============================================================================
 // 图片 URL 管理
+// 分别管理原始作者和直接导出作者的图片
 // ============================================================================
-const imageUrl = ref<string | null>(null);
+const originalAuthorImageUrl = ref<string | null>(null);
+const directExportAuthorImageUrl = ref<string | null>(null);
 
 /**
- * 加载签名图片
+ * 加载原始作者图片
  */
-async function loadImage() {
-  imageUrl.value = null;
-
-  if (!props.authorImage || !props.albumPath) {
+async function loadOriginalAuthorImage() {
+  if (!props.signatureInfo.originalAuthorImage || !props.albumPath) {
+    originalAuthorImageUrl.value = null;
     return;
   }
 
   try {
-    const blob = await GetAlbumFile(props.albumPath, props.authorImage);
+    const blob = await GetAlbumFile(props.albumPath, props.signatureInfo.originalAuthorImage);
     if (blob) {
-      if (imageUrl.value) {
-        URL.revokeObjectURL(imageUrl.value);
+      if (originalAuthorImageUrl.value) {
+        URL.revokeObjectURL(originalAuthorImageUrl.value);
       }
-      imageUrl.value = URL.createObjectURL(blob);
+      originalAuthorImageUrl.value = URL.createObjectURL(blob);
     }
   } catch (error) {
-    console.warn('AlbumSignatureHoverCard: 加载签名图片失败', error);
+    console.warn('AlbumSignatureHoverCard: 加载原始作者图片失败', error);
+    originalAuthorImageUrl.value = null;
   }
 }
 
 /**
- * 处理图片加载错误
+ * 加载直接导出作者图片
  */
-function handleImageError() {
-  if (imageUrl.value) {
-    URL.revokeObjectURL(imageUrl.value);
-    imageUrl.value = null;
+async function loadDirectExportAuthorImage() {
+  if (!props.signatureInfo.directExportAuthorImage || !props.albumPath) {
+    directExportAuthorImageUrl.value = null;
+    return;
+  }
+
+  try {
+    const blob = await GetAlbumFile(props.albumPath, props.signatureInfo.directExportAuthorImage);
+    if (blob) {
+      if (directExportAuthorImageUrl.value) {
+        URL.revokeObjectURL(directExportAuthorImageUrl.value);
+      }
+      directExportAuthorImageUrl.value = URL.createObjectURL(blob);
+    }
+  } catch (error) {
+    console.warn('AlbumSignatureHoverCard: 加载直接导出作者图片失败', error);
+    directExportAuthorImageUrl.value = null;
+  }
+}
+
+/**
+ * 处理原始作者图片加载错误
+ */
+function handleOriginalImageError() {
+  if (originalAuthorImageUrl.value) {
+    URL.revokeObjectURL(originalAuthorImageUrl.value);
+    originalAuthorImageUrl.value = null;
+  }
+}
+
+/**
+ * 处理直接导出作者图片加载错误
+ */
+function handleDirectExportImageError() {
+  if (directExportAuthorImageUrl.value) {
+    URL.revokeObjectURL(directExportAuthorImageUrl.value);
+    directExportAuthorImageUrl.value = null;
   }
 }
 
 // 监听 props 变化，重新加载图片
 watch(
-  () => [props.albumPath, props.authorImage],
+  () => [props.albumPath, props.signatureInfo],
   () => {
-    loadImage();
+    loadOriginalAuthorImage();
+    loadDirectExportAuthorImage();
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 
 // 组件卸载时清理
 onUnmounted(() => {
-  clearTimers();
-  if (imageUrl.value) {
-    URL.revokeObjectURL(imageUrl.value);
+  clearShowTimer();
+  clearHideTimer();
+  if (originalAuthorImageUrl.value) {
+    URL.revokeObjectURL(originalAuthorImageUrl.value);
+  }
+  if (directExportAuthorImageUrl.value) {
+    URL.revokeObjectURL(directExportAuthorImageUrl.value);
   }
 });
 </script>
 
 <style scoped>
-/* 悬停卡片样式 */
+/* ============================================================================
+   悬停卡片主样式
+   - 毛玻璃效果：backdrop-filter: blur(8px)
+   - 半透明白色背景
+   ============================================================================ */
 .signature-hover-card {
-  width: 240px;
+  position: fixed;
+  z-index: 9999;
+  width: 280px;
   max-width: calc(100vw - 20px);
+  border-radius: 12px;
+  overflow: hidden;
+
+  /* 毛玻璃效果 */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* 阴影和边框 */
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.12),
+    0 0 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* 卡片淡入淡出动画 */
+/* 卡片内容区域 */
+.card-content {
+  padding: 12px;
+}
+
+/* 作者区块 */
+.author-section {
+  margin-bottom: 8px;
+}
+
+/* 作者标签（原始作者/直接导出作者） */
+.author-label {
+  font-size: 10px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 作者信息行 */
+.author-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* 头像包装器 */
+.avatar-wrapper {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 头像图片 */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 头像占位符 */
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+/* 作者信息容器 */
+.author-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 作者名称 */
+.author-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 作者介绍 */
+.author-intro {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* 区块分隔线 */
+.section-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 8px 0;
+}
+
+/* 底部分隔线 */
+.footer-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 8px 0 6px 0;
+}
+
+/* 底部操作区域 */
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 查看详细信息链接 */
+.view-details-link {
+  font-size: 11px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.view-details-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   卡片淡入淡出动画
+   ============================================================================ */
 .hover-card-fade-enter-active,
 .hover-card-fade-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .hover-card-fade-enter-from,
 .hover-card-fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
-}
-
-/* 作者介绍文本截断 */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 头像包装器阴影 */
-.avatar-wrapper {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>

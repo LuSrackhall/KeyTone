@@ -660,7 +660,9 @@
   },
   "albumSelector": {
     "signatureHoverCard": {
+      "originalAuthor": "原始作者",
       "directExportAuthor": "直接导出作者",
+      "sameAuthor": "原始作者 / 直接导出作者",
       "viewDetails": "点击查看详细信息"
     }
   }

@@ -37,14 +37,40 @@ import (
 // ============================================================================
 // AlbumSignatureSummary 专辑签名摘要信息
 // 用于在专辑列表展示时提供签名信息预览，避免加载完整签名数据
+//
+// 包含原始作者和直接导出作者的基本信息，用于悬停卡片展示
+// 当原始作者与直接导出作者相同时，前端只展示一个作者区块
 // ============================================================================
 type AlbumSignatureSummary struct {
 	// HasSignature 是否有签名
 	HasSignature bool `json:"hasSignature"`
+
+	// ============================================================================
+	// 原始作者信息
+	// ============================================================================
+	// OriginalAuthorName 原始作者名称
+	OriginalAuthorName string `json:"originalAuthorName"`
+	// OriginalAuthorImage 原始作者图片路径（相对于专辑目录）
+	OriginalAuthorImage string `json:"originalAuthorImage"`
+	// OriginalAuthorIntro 原始作者介绍
+	OriginalAuthorIntro string `json:"originalAuthorIntro"`
+
+	// ============================================================================
+	// 直接导出作者信息
+	// ============================================================================
 	// DirectExportAuthorName 直接导出作者名称
 	DirectExportAuthorName string `json:"directExportAuthorName"`
 	// DirectExportAuthorImage 直接导出作者图片路径（相对于专辑目录）
 	DirectExportAuthorImage string `json:"directExportAuthorImage"`
+	// DirectExportAuthorIntro 直接导出作者介绍
+	DirectExportAuthorIntro string `json:"directExportAuthorIntro"`
+
+	// ============================================================================
+	// 是否为同一作者标记
+	// ============================================================================
+	// IsSameAuthor 原始作者与直接导出作者是否为同一人
+	// 前端可根据此标记决定只展示一个作者区块
+	IsSameAuthor bool `json:"isSameAuthor"`
 }
 
 // migrateConfigFile 自动检测并迁移旧的 config.json 为 package.json
@@ -257,20 +283,21 @@ func UpdateAlbumUUID(albumPath string, newUUID string, originalUUID string) erro
 // 功能说明：
 //   - 读取专辑配置的 signature 字段
 //   - 解密并解析签名数据
-//   - 提取直接导出作者的名称和图片路径
-//   - 返回轻量级的签名摘要供前端列表展示使用
+//   - 提取原始作者和直接导出作者的名称、图片路径、介绍
+//   - 返回轻量级的签名摘要供前端列表展示和悬停卡片使用
 //
 // 参数：
 //   - albumPath: 专辑目录的绝对路径
 //
 // 返回值：
-//   - *AlbumSignatureSummary: 签名摘要信息
+//   - *AlbumSignatureSummary: 签名摘要信息（包含原始作者和直接导出作者）
 //   - error: 错误信息
 //
 // 设计考虑：
-//   - 此函数为轻量级实现，仅提取展示所需的最小数据
+//   - 此函数为轻量级实现，仅提取展示所需的数据
 //   - 独立创建 Viper 实例并在函数结束时释放，避免内存泄漏
 //   - 用于遍历专辑列表时批量获取签名信息
+//   - 当原始作者与直接导出作者相同时，设置 IsSameAuthor=true
 // ============================================================================
 func GetAlbumSignatureSummary(albumPath string) (*AlbumSignatureSummary, error) {
 	// 创建独立的 Viper 实例（避免影响全局配置）
@@ -356,9 +383,13 @@ func GetAlbumSignatureSummary(albumPath string) (*AlbumSignatureSummary, error) 
 		return &AlbumSignatureSummary{HasSignature: false}, nil
 	}
 
-	// 解析签名数据 - 使用简化的结构仅提取需要的字段
+	// ============================================================================
+	// 解析签名数据 - 提取原始作者和直接导出作者的完整信息
+	// 包含 name, cardImagePath, intro 字段
+	// ============================================================================
 	var albumSignatureMap map[string]struct {
 		Name          string `json:"name"`
+		Intro         string `json:"intro"`
 		CardImagePath string `json:"cardImagePath"`
 		Authorization *struct {
 			DirectExportAuthor string `json:"directExportAuthor"`
@@ -370,28 +401,49 @@ func GetAlbumSignatureSummary(albumPath string) (*AlbumSignatureSummary, error) 
 		return &AlbumSignatureSummary{HasSignature: false}, nil
 	}
 
-	// 查找直接导出作者
+	// ============================================================================
+	// 查找原始作者和直接导出作者
+	// 原始作者：具有 authorization 字段的签名
+	// 直接导出作者：由原始作者的 authorization.directExportAuthor 指向
+	// ============================================================================
+	var originalAuthorQualCode string
 	var directExportAuthorQualCode string
-	for _, entry := range albumSignatureMap {
+
+	// 第一步：找到原始作者（具有 authorization 字段的签名）
+	for qualCode, entry := range albumSignatureMap {
 		if entry.Authorization != nil {
-			// 找到原始作者签名，获取直接导出作者的资格码
+			originalAuthorQualCode = qualCode
 			directExportAuthorQualCode = entry.Authorization.DirectExportAuthor
 			break
 		}
 	}
 
-	// 如果找到了直接导出作者的资格码，获取其信息
+	// 如果没有找到原始作者，返回无签名
+	if originalAuthorQualCode == "" {
+		return &AlbumSignatureSummary{HasSignature: false}, nil
+	}
+
+	// 获取原始作者信息
+	originalAuthor := albumSignatureMap[originalAuthorQualCode]
+
+	// 构建签名摘要
+	summary := &AlbumSignatureSummary{
+		HasSignature:        true,
+		OriginalAuthorName:  originalAuthor.Name,
+		OriginalAuthorImage: originalAuthor.CardImagePath,
+		OriginalAuthorIntro: originalAuthor.Intro,
+	}
+
+	// 获取直接导出作者信息
 	if directExportAuthorQualCode != "" {
-		if entry, exists := albumSignatureMap[directExportAuthorQualCode]; exists {
-			return &AlbumSignatureSummary{
-				HasSignature:            true,
-				DirectExportAuthorName:  entry.Name,
-				DirectExportAuthorImage: entry.CardImagePath,
-			}, nil
+		if directAuthor, exists := albumSignatureMap[directExportAuthorQualCode]; exists {
+			summary.DirectExportAuthorName = directAuthor.Name
+			summary.DirectExportAuthorImage = directAuthor.CardImagePath
+			summary.DirectExportAuthorIntro = directAuthor.Intro
+			// 判断是否为同一作者
+			summary.IsSameAuthor = (originalAuthorQualCode == directExportAuthorQualCode)
 		}
 	}
 
-	// 有签名但无法确定直接导出作者（理论上不应发生）
-	// 返回有签名状态但无作者信息
-	return &AlbumSignatureSummary{HasSignature: true}, nil
+	return summary, nil
 }
