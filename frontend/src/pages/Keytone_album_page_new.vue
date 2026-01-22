@@ -163,8 +163,35 @@
             </q-btn>
           </div>
 
-          <!-- 键音专辑选择器 -->
-          <div class="relative">
+          <!-- ============================================================================
+               键音专辑选择器
+               - 选中状态：在上边框右侧展示签名徽章（Legend 效果）
+               - 列表项：在专辑名称下方展示签名芯片，并支持悬停卡片
+               ============================================================================ -->
+          <div class="selector-with-legend-container relative">
+            <!-- ============================================================================
+                 选中状态签名徽章（Legend 效果）
+                 - 位于选择器边框上，遮挡边框线
+                 - 仅当选中专辑有签名时显示
+                 ============================================================================ -->
+            <div
+              v-if="selectedAlbumSignatureInfo?.hasSignature && setting_store.mainHome.selectedKeyTonePkg"
+              class="signature-legend-wrapper"
+            >
+              <AlbumSignatureHoverCard
+                :album-path="setting_store.mainHome.selectedKeyTonePkg"
+                :signature-info="selectedAlbumSignatureInfo"
+                @view-details="openSignatureDialog(setting_store.mainHome.selectedKeyTonePkg)"
+              >
+                <AlbumSignatureBadge
+                  :album-path="setting_store.mainHome.selectedKeyTonePkg"
+                  :author-name="selectedAlbumSignatureInfo.directExportAuthorName"
+                  :author-image="selectedAlbumSignatureInfo.directExportAuthorImage"
+                  size="small"
+                />
+              </AlbumSignatureHoverCard>
+            </div>
+
             <q-select
               v-model="setting_store.mainHome.selectedKeyTonePkg"
               :options="main_store.keyTonePkgOptions"
@@ -185,6 +212,34 @@
               "
               popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
             >
+              <!-- 自定义列表项：专辑名称 + 签名芯片（支持悬停卡片） -->
+              <template v-slot:option="{ itemProps, opt }">
+                <q-item v-bind="itemProps" class="py-2">
+                  <q-item-section>
+                    <q-item-label>{{ main_store.keyTonePkgOptionsName.get(opt) }}</q-item-label>
+                    <!-- 签名信息（仅当专辑有签名时显示） -->
+                    <q-item-label
+                      v-if="main_store.getSignatureInfoByPath(opt)?.hasSignature"
+                      caption
+                      class="mt-1"
+                    >
+                      <AlbumSignatureHoverCard
+                        :album-path="opt"
+                        :signature-info="main_store.getSignatureInfoByPath(opt)!"
+                        @view-details="openSignatureDialog(opt)"
+                      >
+                        <AlbumSignatureBadge
+                          :album-path="opt"
+                          :author-name="main_store.getSignatureInfoByPath(opt)?.directExportAuthorName || ''"
+                          :author-image="main_store.getSignatureInfoByPath(opt)?.directExportAuthorImage || ''"
+                          size="small"
+                        />
+                      </AlbumSignatureHoverCard>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
               <template v-if="setting_store.mainHome.selectedKeyTonePkg" v-slot:append>
                 <q-icon
                   name="cancel"
@@ -360,7 +415,7 @@
     <!-- 签名作者信息对话框 -->
     <SignatureAuthorsDialog
       ref="signatureAuthorsDialogRef"
-      :album-path="setting_store.mainHome.selectedKeyTonePkg || ''"
+      :album-path="signatureDialogAlbumPath || ''"
     />
   </div>
 </template>
@@ -385,6 +440,8 @@ import AuthRequestDialog from 'src/components/export-flow/AuthRequestDialog.vue'
 import SignatureFormDialog from 'src/components/SignatureFormDialog.vue';
 import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
 import SignatureSelectionDialog from 'src/components/export-flow/SignatureSelectionDialog.vue';
+// 专辑选择器签名展示组件
+import { AlbumSignatureBadge, AlbumSignatureHoverCard } from 'src/components/album-selector';
 import {
   useExportSignatureFlow,
   type ExportSignatureFlowResult,
@@ -650,8 +707,15 @@ const onSignatureFormSuccess = async () => {
 
 // 签名信息对话框控制
 const signatureAuthorsDialogRef = ref<InstanceType<typeof SignatureAuthorsDialog> | null>(null);
-const showAlbumSignatureInfo = () => {
-  if (!setting_store.mainHome.selectedKeyTonePkg) {
+// 当前用于打开签名对话框的专辑路径
+const signatureDialogAlbumPath = ref('');
+
+/**
+ * 打开签名作者信息对话框
+ * @param albumPath 目标专辑路径（可来自列表项或当前选中）
+ */
+const openSignatureDialog = (albumPath: string) => {
+  if (!albumPath) {
     q.notify({
       type: 'warning',
       message: '请先选择一个专辑',
@@ -659,8 +723,40 @@ const showAlbumSignatureInfo = () => {
     });
     return;
   }
-  signatureAuthorsDialogRef.value?.open();
+  // 先更新对话框的专辑路径，再打开对话框
+  signatureDialogAlbumPath.value = albumPath;
+  nextTick(() => {
+    signatureAuthorsDialogRef.value?.open();
+  });
 };
+
+/**
+ * 点击工具栏“查看签名信息”按钮
+ * - 使用当前选中的专辑路径
+ */
+const showAlbumSignatureInfo = () => {
+  openSignatureDialog(setting_store.mainHome.selectedKeyTonePkg || '');
+};
+
+/**
+ * 当前选中专辑的签名摘要信息
+ * - 用于选择器 Legend 区域展示
+ */
+const selectedAlbumSignatureInfo = computed(() => {
+  const albumPath = setting_store.mainHome.selectedKeyTonePkg;
+  if (!albumPath) return null;
+  return main_store.getSignatureInfoByPath(albumPath) || null;
+});
+
+// 当选中专辑变化时，同步更新对话框默认专辑路径
+watch(
+  () => setting_store.mainHome.selectedKeyTonePkg,
+  (albumPath) => {
+    if (albumPath) {
+      signatureDialogAlbumPath.value = albumPath;
+    }
+  }
+);
 
 // 实现删除专辑的逻辑
 const deleteAlbum = async () => {
@@ -1242,6 +1338,28 @@ const i18n_fontSize = computed(() => {
 <style lang="scss" scoped>
 .selector-container {
   transform-origin: top;
+}
+
+/* ============================================================================
+   选择器 Legend 效果样式
+   - 用于在键音专辑页面的选择器边框上展示签名徽章
+   - 背景与控件一致，避免出现黑色矩形
+   ============================================================================ */
+.selector-with-legend-container {
+  position: relative;
+}
+
+.signature-legend-wrapper {
+  position: absolute;
+  top: -9px;
+  right: 12px;
+  z-index: 10;
+  /* 使用与控件一致的半透明背景，制造"打断边框"效果 */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0 6px;
+  border-radius: 999px;
 }
 
 // 滑动动画

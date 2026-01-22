@@ -54,11 +54,11 @@
 
 ## 6. 键音专辑页面选择器改造
 
-- [ ] 6.1 修改 `frontend/src/pages/Keytone_album_page_new.vue`
-  - [ ] 6.1.1 实现 Legend 效果：签名徽章位于选择器边框上
-  - [ ] 6.1.2 使用 `option` 插槽自定义列表项，添加签名芯片和悬停卡片
-  - [ ] 6.1.3 集成 `SignatureAuthorsDialog` 组件
-  - [ ] 6.1.4 添加详细注释说明改造目的和实现方式
+- [x] 6.1 修改 `frontend/src/pages/Keytone_album_page_new.vue`
+  - [x] 6.1.1 实现 Legend 效果：签名徽章位于选择器边框上
+  - [x] 6.1.2 使用 `option` 插槽自定义列表项，添加签名芯片和悬停卡片
+  - [x] 6.1.3 集成 `SignatureAuthorsDialog` 组件
+  - [x] 6.1.4 添加详细注释说明改造目的和实现方式
 
 ## 7. 国际化支持
 
