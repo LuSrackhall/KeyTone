@@ -4,13 +4,13 @@
 
 ### Requirement: 专辑选择器签名信息展示
 
-Normative: The album selector component SHALL display direct export author signature information for albums that have signatures; the selected state display MUST be positioned at the top-right border area of the selector; the list item display MUST be positioned below the album name; signature information SHALL only be shown when the album has a signature; the signature display MUST include the author's avatar image (or a badge icon as placeholder when image is not loaded) and the author name.
+Normative: The album selector component SHALL display direct export author signature information for albums that have signatures; the selected state display MUST be positioned on the top-right border line of the selector (legend effect) and MUST mask the border line using a background that matches the selector control to avoid a visible dark block; the list item display MUST be positioned below the album name and rendered as a chip that sizes to content (not full-width); signature information SHALL only be shown when the album has a signature; the signature display MUST include the author's avatar image (or a badge icon as placeholder when image is not loaded) and the author name; the list item signature chip SHALL support the same hover card as the selected state.
 
 #### Scenario: 选中专辑后展示签名信息
 
 - **GIVEN** 用户已选择一个带有签名的专辑
 - **WHEN** 选择器显示选中状态
-- **THEN** 在选择器上边框靠右位置展示直接导出作者的头像（若无图片则显示 badge 图标）和名称
+- **THEN** 在选择器上边框靠右位置展示直接导出作者的头像（若无图片则显示 badge 图标）和名称，背景遮挡边框线且不出现明显黑色矩形
 
 #### Scenario: 选中无签名专辑
 
@@ -22,7 +22,7 @@ Normative: The album selector component SHALL display direct export author signa
 
 - **GIVEN** 专辑选择器下拉列表展开
 - **WHEN** 列表中存在带有签名的专辑
-- **THEN** 该专辑的列表项在专辑名称下方展示直接导出作者的头像（若无图片则显示 badge 图标）和名称，增加列表项信息展示密度
+- **THEN** 该专辑的列表项在专辑名称下方以芯片样式展示直接导出作者的头像（若无图片则显示 badge 图标）和名称，芯片宽度随内容自适应且支持悬停详情卡片
 
 #### Scenario: 列表项中无签名专辑
 
@@ -34,13 +34,13 @@ Normative: The album selector component SHALL display direct export author signa
 
 ### Requirement: 专辑选择器签名悬停详情卡片
 
-Normative: The album selector SHALL provide a hover card for signature information; the hover card MUST remain visible when the user's mouse moves onto the card; the hover card MUST display detailed signature information; the hover card MUST include a clickable "点击查看详细信息" label at the bottom-right corner; clicking the label SHALL open the `SignatureAuthorsDialog` dialog to display complete album and signature information.
+Normative: The album selector SHALL provide a hover card for signature information; the hover card MUST remain visible when the user's mouse moves onto the card; the hover card MUST display detailed signature information for both the original author and the direct export author (image, name, intro); when the original author and direct export author are the same, the hover card MUST show a single combined section; the hover card MUST include a clickable "点击查看详细信息" label at the bottom-right corner; clicking the label SHALL open the `SignatureAuthorsDialog` dialog to display complete album and signature information.
 
 #### Scenario: 鼠标悬停显示详情卡片
 
 - **GIVEN** 用户将鼠标悬停在签名信息区域
 - **WHEN** 悬停持续一定时间（如 200ms）
-- **THEN** 显示一个详情卡片，包含更详细的签名作者信息
+- **THEN** 显示一个详情卡片，包含原始作者与直接导出作者的图片、名称、介绍
 
 #### Scenario: 鼠标移入卡片保持显示
 
@@ -52,7 +52,7 @@ Normative: The album selector SHALL provide a hover card for signature informati
 
 - **GIVEN** 详情卡片已显示
 - **WHEN** 用户将鼠标移出签名信息区域和详情卡片
-- **THEN** 详情卡片在短暂延迟后消失（如 150ms）
+- **THEN** 详情卡片在短暂延迟后消失（如 100-150ms）
 
 #### Scenario: 点击查看详细信息
 
@@ -64,7 +64,7 @@ Normative: The album selector SHALL provide a hover card for signature informati
 
 ### Requirement: 专辑列表签名信息获取
 
-Normative: The system SHALL fetch signature summary information for each album when loading the album list; the signature information MUST be obtained during the existing album traversal process (reusing Viper instances); the Viper instances MUST be released promptly after traversal to free memory; the signature summary SHALL include: `hasSignature`, `directExportAuthorName`, and `directExportAuthorImage` fields.
+Normative: The system SHALL fetch signature summary information for each album when loading the album list; the signature information MUST be obtained during the existing album traversal process (using an isolated Viper instance per album); the Viper instances MUST be released promptly after traversal to free memory; the signature summary SHALL include: `hasSignature`, original author fields (`originalAuthorName`, `originalAuthorImage`, `originalAuthorIntro`), direct export author fields (`directExportAuthorName`, `directExportAuthorImage`, `directExportAuthorIntro`), and `isSameAuthor`.
 
 #### Scenario: 获取专辑列表时同步获取签名摘要
 
@@ -76,13 +76,13 @@ Normative: The system SHALL fetch signature summary information for each album w
 
 - **GIVEN** 专辑包含签名
 - **WHEN** API 返回签名摘要
-- **THEN** 摘要包含 `hasSignature: true`、`directExportAuthorName`（作者名称）、`directExportAuthorImage`（相对于专辑目录的图片路径）
+- **THEN** 摘要包含 `hasSignature: true`、原始作者字段、直接导出作者字段，以及 `isSameAuthor` 标记
 
 #### Scenario: 无签名专辑的摘要
 
 - **GIVEN** 专辑不包含签名
 - **WHEN** API 返回签名摘要
-- **THEN** 摘要包含 `hasSignature: false`，其他字段为空字符串
+- **THEN** 摘要包含 `hasSignature: false`，其他字段为空字符串或 false
 
 #### Scenario: 及时释放 Viper 实例
 

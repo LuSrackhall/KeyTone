@@ -38,6 +38,7 @@ KeyTone 已实现键音专辑的签名功能，包括：
 - 签名摘要信息量小，不会显著增加响应大小
 
 **数据结构**：
+
 ```typescript
 // 签名摘要（用于列表展示和悬停卡片）
 interface AlbumSignatureSummary {
@@ -60,6 +61,7 @@ interface AlbumSignatureSummary {
 **选择**：使用绝对定位 + 背景色遮挡边框
 
 **实现方式**：
+ 
 ```css
 /* 带有 legend 效果的选择器容器 */
 .selector-with-legend-container {
@@ -72,13 +74,18 @@ interface AlbumSignatureSummary {
   top: -9px;           /* 垂直定位：与边框顶部对齐 */
   right: 12px;         /* 水平定位：靠右 */
   z-index: 10;
-  background: linear-gradient(135deg, #1e2433 0%, #2a3241 100%); /* 与页面背景相同 */
-  padding: 0 4px;      /* 左右 padding 确保边框被完全遮挡 */
+  /* 使用与选择器控件一致的半透明背景，避免黑色矩形 */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0 6px;      /* 左右 padding 确保边框被完全遮挡 */
+  border-radius: 999px; /* 轻微圆角，避免背景块显得生硬 */
 }
 ```
 
 **效果示意**：
-```
+ 
+```text
       ┌─────────────────────────[签名徽章]─┐
       │                                    │
       │     专辑名称                        │
@@ -112,6 +119,7 @@ interface AlbumSignatureSummary {
 **选择**：使用独立的状态标志 + 延迟检查
 
 **实现逻辑**：
+
 ```typescript
 const isHoverOnTrigger = ref(false);  // 鼠标是否在触发区域
 const isHoverOnCard = ref(false);      // 鼠标是否在卡片上
@@ -132,7 +140,8 @@ function checkAndHideCard() {
 
 ## Component Architecture
 
-```
+ 
+```text
 album-selector/
 ├── AlbumSignatureBadge.vue      # 签名徽章（芯片样式）
 ├── AlbumSignatureHoverCard.vue  # 悬停详情卡片（毛玻璃效果）

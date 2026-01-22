@@ -888,10 +888,15 @@ function getMacOSStatus() {
   right: 12px;
   z-index: 10;
   /* 背景色：用于遮挡边框线，创造"打断"效果 */
-  /* 使用与页面背景相同的颜色 */
-  background: linear-gradient(135deg, #1e2433 0%, #2a3241 100%);
+  /* 使用与选择器控件背景一致的半透明色，避免出现明显黑色矩形 */
+  background: rgba(255, 255, 255, 0.05);
+  /* 与选择器一致的毛玻璃感，提升融合度 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   /* 左右添加一点 padding，确保边框被完全遮挡 */
-  padding: 0 4px;
+  padding: 0 6px;
+  /* 轻微圆角，避免背景块显得生硬 */
+  border-radius: 999px;
 }
 </style>
 
