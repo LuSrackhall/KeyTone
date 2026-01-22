@@ -665,5 +665,11 @@
       "unexpectedError": "An unexpected error occurred",
       "noChanges": "No changes detected"
     }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "directExportAuthor": "Direct Export Author",
+      "viewDetails": "Click to view details"
+    }
   }
 }

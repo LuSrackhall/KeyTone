@@ -1060,6 +1060,24 @@ func keytonePkgRouters(r *gin.Engine) {
 		})
 	})
 
+	// ============================================================================
+	// GET /get_audio_package_list - 获取专辑列表（含签名摘要）
+	//
+	// 功能说明：
+	//   - 获取所有专辑的路径列表
+	//   - 同时获取每个专辑的签名摘要信息（直接导出作者名称、图片）
+	//   - 签名摘要用于前端列表展示，避免逐个请求签名详情
+	//
+	// 返回格式：
+	//   {
+	//     "message": "ok",
+	//     "list": ["path1", "path2", ...],
+	//     "signatureInfo": {
+	//       "path1": { "hasSignature": true, "directExportAuthorName": "...", "directExportAuthorImage": "..." },
+	//       "path2": { "hasSignature": false }
+	//     }
+	//   }
+	// ============================================================================
 	keytonePkgRouters.GET("/get_audio_package_list", func(ctx *gin.Context) {
 		list, err := audioPackageList.GetAudioPackageList(audioPackageConfig.AudioPackagePath)
 		if err != nil {
@@ -1068,9 +1086,25 @@ func keytonePkgRouters(r *gin.Engine) {
 			})
 			return
 		}
+
+		// 获取每个专辑的签名摘要信息
+		// TIPS: 遍历过程中为每个专辑独立创建和释放 Viper 实例，避免内存泄漏
+		signatureInfo := make(map[string]*audioPackageList.AlbumSignatureSummary)
+		for _, albumPath := range list {
+			summary, err := audioPackageList.GetAlbumSignatureSummary(albumPath)
+			if err != nil {
+				// 获取签名摘要失败时，使用默认值（无签名）
+				logger.Warn("获取专辑签名摘要失败", "albumPath", albumPath, "err", err.Error())
+				signatureInfo[albumPath] = &audioPackageList.AlbumSignatureSummary{HasSignature: false}
+			} else {
+				signatureInfo[albumPath] = summary
+			}
+		}
+
 		ctx.JSON(200, gin.H{
-			"message": "ok",
-			"list":    list,
+			"message":       "ok",
+			"list":          list,
+			"signatureInfo": signatureInfo,
 		})
 	})
 
