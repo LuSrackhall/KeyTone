@@ -60,6 +60,12 @@ Normative: The album selector SHALL provide a hover card for signature informati
 - **WHEN** 用户点击"点击查看详细信息" label
 - **THEN** 打开 `SignatureAuthorsDialog` 对话框，展示完整的专辑及签名信息
 
+#### Scenario: 列表项中点击查看详细信息
+
+- **GIVEN** 专辑选择器列表已展开且签名悬停卡片可见
+- **WHEN** 用户在列表项的悬停卡片中按下（pointerdown.capture）"点击查看详细信息"
+- **THEN** 选择器弹层保持打开（不改变选择器状态），卡片根节点阻止 pointerdown/mousedown 冒泡，并在 pointerdown.capture 阶段打开 `SignatureAuthorsDialog` 对话框，避免弹层关闭导致 click 丢失
+
 ---
 
 ### Requirement: 专辑列表签名信息获取

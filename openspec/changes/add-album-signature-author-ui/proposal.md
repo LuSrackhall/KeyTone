@@ -47,6 +47,7 @@
 - 视觉效果：**毛玻璃效果**（backdrop-filter: blur(8px)），增加高级感
 - 操作：右下角显示"点击查看详细信息"可点击 label
 - 点击行为：打开 `SignatureAuthorsDialog` 对话框
+- 列表项场景：点击"查看详细信息"时保持选择器弹层不关闭，使用 pointerdown.capture 触发并在卡片根节点阻止 pointerdown/mousedown 冒泡，避免弹层关闭导致 click 丢失
 
 ### 4. 涉及页面
 

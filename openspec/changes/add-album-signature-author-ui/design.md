@@ -138,6 +138,9 @@ function checkAndHideCard() {
 }
 ```
 
+**列表项点击打开对话框**：
+- 在选择器列表中点击“查看详细信息”时，先关闭 QSelect 弹层，再延迟打开 `SignatureAuthorsDialog`，避免弹层关闭流程打断对话框打开。
+
 ## Component Architecture
 
  

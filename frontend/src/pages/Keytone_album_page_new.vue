@@ -226,7 +226,7 @@
                       <AlbumSignatureHoverCard
                         :album-path="opt"
                         :signature-info="main_store.getSignatureInfoByPath(opt)!"
-                        @view-details="openSignatureDialog(opt)"
+                        @view-details="openSignatureDialogFromList(opt)"
                       >
                         <AlbumSignatureBadge
                           :album-path="opt"
@@ -728,6 +728,38 @@ const openSignatureDialog = (albumPath: string) => {
   nextTick(() => {
     signatureAuthorsDialogRef.value?.open();
   });
+};
+
+/**
+ * 从选择器列表项打开签名作者信息对话框
+ *
+ * 说明：
+ * - 当前策略：保持选择器弹层不关闭，避免状态被改变
+ * - 通过阻止点击事件冒泡（在 HoverCard 内部处理）避免弹层被自动关闭
+ * - 这里仅负责设置专辑路径并打开对话框
+ *
+ * @param albumPath 列表项对应的专辑路径
+ */
+const openSignatureDialogFromList = async (albumPath: string) => {
+  if (!albumPath) {
+    q.notify({
+      type: 'warning',
+      message: '请先选择一个专辑',
+      position: 'top',
+    });
+    return;
+  }
+
+  // 更新对话框目标专辑
+  signatureDialogAlbumPath.value = albumPath;
+
+  // 等待一次 DOM 更新，确保 props 已同步到对话框
+  await nextTick();
+
+  // 打开对话框（不主动关闭选择器弹层）
+  window.setTimeout(() => {
+    signatureAuthorsDialogRef.value?.open();
+  }, 0);
 };
 
 /**

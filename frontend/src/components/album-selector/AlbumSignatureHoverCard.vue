@@ -82,6 +82,8 @@
         :style="cardPosition"
         @mouseenter="onCardEnter"
         @mouseleave="onCardLeave"
+        @pointerdown.stop
+        @mousedown.stop
       >
         <!-- 卡片内容区域 -->
         <div class="card-content">
@@ -202,7 +204,10 @@
 
           <!-- 底部操作区域 -->
           <div class="card-footer">
-            <span class="view-details-link" @click="handleViewDetails">
+            <span
+              class="view-details-link"
+              @pointerdown.capture.stop.prevent="handleViewDetails"
+            >
               {{ $t('albumSelector.signatureHoverCard.viewDetails') }}
             </span>
           </div>
@@ -342,6 +347,11 @@ function onCardLeave() {
 
 /**
  * 点击"查看详细信息"
+ *
+ * 说明：
+ * - 使用 pointerdown.capture 触发，确保在 QSelect 弹层监听到外部点击前就打开对话框
+ * - 卡片根节点也会 stop pointerdown/mousedown，避免弹层把该点击视为"外部点击"
+ * - 避免 click 阶段因列表项卸载而导致事件丢失
  */
 function handleViewDetails() {
   // 立即隐藏卡片
