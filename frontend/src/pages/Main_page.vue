@@ -59,99 +59,257 @@
           <div class="text-xs text-gray-500">{{ $t('mainHome.routing.splitLabel') }}</div>
         </div>
 
-        <q-select
-          v-if="!isSplitRouting"
-          :class="['w-[216px]', 'select-component-label-show', 'mt-12']"
-          v-model="setting_store.playbackRouting.unifiedAlbumPath"
-          :options="main_store.keyTonePkgOptions"
-          :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-          :label="$t('mainHome.selectedKeySoundAlbum')"
-          :virtual-scroll-slice-size="999999"
-          outlined
-          dense
-          emit-value
-          map-options
-          behavior="dialog"
-          popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-          ref="unifiedKeyTonePkgRef"
-          @popup-hide="blur()"
-        >
-          <template v-if="setting_store.playbackRouting.unifiedAlbumPath" v-slot:append>
-            <q-icon
-              name="cancel"
-              @click.stop.prevent="setting_store.playbackRouting.unifiedAlbumPath = ''"
-              class="cursor-pointer text-lg"
-            />
-          </template>
+        <!-- ============================================================================
+             统一模式选择器（键盘鼠标共用一个专辑）
+             - 使用 q-select 的 option 插槽自定义列表项，展示签名信息
+             - 在选择器上边框右侧展示选中专辑的签名信息（legend 效果）
+             ============================================================================ -->
+        <div v-if="!isSplitRouting" class="selector-with-legend-container relative mt-12">
+          <!-- ============================================================================
+               签名徽章（Legend 效果）
+               - 定位在选择器上边框的右侧
+               - 使用背景色遮挡边框线，创造"打断"效果
+               ============================================================================ -->
+          <div
+            v-if="unifiedSignatureInfo?.hasSignature && setting_store.playbackRouting.unifiedAlbumPath"
+            class="signature-legend-wrapper"
+          >
+            <AlbumSignatureHoverCard
+              :album-path="setting_store.playbackRouting.unifiedAlbumPath"
+              :signature-info="unifiedSignatureInfo"
+              @view-details="openSignatureDialog(setting_store.playbackRouting.unifiedAlbumPath)"
+            >
+              <AlbumSignatureBadge
+                :album-path="setting_store.playbackRouting.unifiedAlbumPath"
+                :author-name="unifiedSignatureInfo.directExportAuthorName"
+                :author-image="unifiedSignatureInfo.directExportAuthorImage"
+                size="small"
+              />
+            </AlbumSignatureHoverCard>
+          </div>
 
-          <template v-slot:no-option>
-            <div class="flex flex-col items-center py-4 text-gray-500">
-              <q-icon name="library_music" size="40px" class="mb-2 opacity-50" />
-              <div class="text-sm mb-3">{{ $t('mainHome.emptyState.noAlbum') }}</div>
-              <q-btn
-                flat
-                dense
-                class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
-                @click="goToAlbumPage"
+          <q-select
+            :class="['w-[216px]', 'select-component-label-show']"
+            v-model="setting_store.playbackRouting.unifiedAlbumPath"
+            :options="main_store.keyTonePkgOptions"
+            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+            :label="$t('mainHome.selectedKeySoundAlbum')"
+            :virtual-scroll-slice-size="999999"
+            outlined
+            dense
+            emit-value
+            map-options
+            behavior="dialog"
+            popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+            ref="unifiedKeyTonePkgRef"
+            @popup-hide="blur()"
+          >
+            <!-- 自定义列表项：展示专辑名称和签名信息 -->
+            <template v-slot:option="{ itemProps, opt }">
+              <q-item v-bind="itemProps" class="py-2">
+                <q-item-section>
+                  <q-item-label>{{ main_store.keyTonePkgOptionsName.get(opt) }}</q-item-label>
+                  <!-- 签名信息（仅当专辑有签名时显示）- 芯片样式，支持悬停 -->
+                  <q-item-label
+                    v-if="main_store.getSignatureInfoByPath(opt)?.hasSignature"
+                    caption
+                    class="mt-1"
+                  >
+                    <AlbumSignatureHoverCard
+                      :album-path="opt"
+                      :signature-info="main_store.getSignatureInfoByPath(opt)!"
+                      @view-details="openSignatureDialog(opt)"
+                    >
+                      <AlbumSignatureBadge
+                        :album-path="opt"
+                        :author-name="main_store.getSignatureInfoByPath(opt)?.directExportAuthorName || ''"
+                        :author-image="main_store.getSignatureInfoByPath(opt)?.directExportAuthorImage || ''"
+                        size="small"
+                      />
+                    </AlbumSignatureHoverCard>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+
+            <template v-if="setting_store.playbackRouting.unifiedAlbumPath" v-slot:append>
+              <q-icon
+                name="cancel"
+                @click.stop.prevent="setting_store.playbackRouting.unifiedAlbumPath = ''"
+                class="cursor-pointer text-lg"
+              />
+            </template>
+
+            <template v-slot:no-option>
+              <div class="flex flex-col items-center py-4 text-gray-500">
+                <q-icon name="library_music" size="40px" class="mb-2 opacity-50" />
+                <div class="text-sm mb-3">{{ $t('mainHome.emptyState.noAlbum') }}</div>
+                <q-btn
+                  flat
+                  dense
+                  class="empty-state-btn flex items-center bg-blue-500/10 px-4 py-1.5 rounded-lg"
+                  @click="goToAlbumPage"
+                >
+                  <q-icon name="keyboard_arrow_right" size="20px" class="mr-1" />
+                  <span class="text-sm">{{ $t('mainHome.emptyState.goToAlbumPage') }}</span>
+                </q-btn>
+              </div>
+            </template>
+          </q-select>
+        </div>
+
+        <!-- ============================================================================
+             分离模式选择器（键盘/鼠标各自选择专辑）
+             - 每个选择器上边框右侧展示选中专辑的签名信息（legend 效果）
+             ============================================================================ -->
+        <div v-else class="flex flex-col items-center gap-4 mt-3">
+          <!-- 键盘播放专辑选择器 -->
+          <div class="selector-with-legend-container relative">
+            <!-- 签名信息展示（Legend 效果） -->
+            <div
+              v-if="keyboardSignatureInfo?.hasSignature && setting_store.playbackRouting.keyboardAlbumPath"
+              class="signature-legend-wrapper"
+            >
+              <AlbumSignatureHoverCard
+                :album-path="setting_store.playbackRouting.keyboardAlbumPath"
+                :signature-info="keyboardSignatureInfo"
+                @view-details="openSignatureDialog(setting_store.playbackRouting.keyboardAlbumPath)"
               >
-                <q-icon name="keyboard_arrow_right" size="20px" class="mr-1" />
-                <span class="text-sm">{{ $t('mainHome.emptyState.goToAlbumPage') }}</span>
-              </q-btn>
+                <AlbumSignatureBadge
+                  :album-path="setting_store.playbackRouting.keyboardAlbumPath"
+                  :author-name="keyboardSignatureInfo.directExportAuthorName"
+                  :author-image="keyboardSignatureInfo.directExportAuthorImage"
+                  size="small"
+                />
+              </AlbumSignatureHoverCard>
             </div>
-          </template>
-        </q-select>
 
-        <div v-else class="flex flex-col items-center gap-2 mt-3">
-          <!-- 分离模式：分别选择键盘/鼠标播放专辑 -->
-          <q-select
-            :class="['w-[216px]', 'select-component-label-show']"
-            v-model="setting_store.playbackRouting.keyboardAlbumPath"
-            :options="main_store.keyTonePkgOptions"
-            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-            :label="$t('mainHome.routing.keyboardLabel')"
-            :virtual-scroll-slice-size="999999"
-            outlined
-            dense
-            emit-value
-            map-options
-            behavior="dialog"
-            popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-            ref="keyboardKeyTonePkgRef"
-            @popup-hide="blur()"
-          >
-            <template v-if="setting_store.playbackRouting.keyboardAlbumPath" v-slot:append>
-              <q-icon
-                name="cancel"
-                @click.stop.prevent="setting_store.playbackRouting.keyboardAlbumPath = ''"
-                class="cursor-pointer text-lg"
-              />
-            </template>
-          </q-select>
+            <q-select
+              :class="['w-[216px]', 'select-component-label-show']"
+              v-model="setting_store.playbackRouting.keyboardAlbumPath"
+              :options="main_store.keyTonePkgOptions"
+              :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+              :label="$t('mainHome.routing.keyboardLabel')"
+              :virtual-scroll-slice-size="999999"
+              outlined
+              dense
+              emit-value
+              map-options
+              behavior="dialog"
+              popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+              ref="keyboardKeyTonePkgRef"
+              @popup-hide="blur()"
+            >
+              <!-- 自定义列表项：展示专辑名称和签名信息（芯片样式，支持悬停） -->
+              <template v-slot:option="{ itemProps, opt }">
+                <q-item v-bind="itemProps" class="py-2">
+                  <q-item-section>
+                    <q-item-label>{{ main_store.keyTonePkgOptionsName.get(opt) }}</q-item-label>
+                    <q-item-label
+                      v-if="main_store.getSignatureInfoByPath(opt)?.hasSignature"
+                      caption
+                      class="mt-1"
+                    >
+                      <AlbumSignatureHoverCard
+                        :album-path="opt"
+                        :signature-info="main_store.getSignatureInfoByPath(opt)!"
+                        @view-details="openSignatureDialog(opt)"
+                      >
+                        <AlbumSignatureBadge
+                          :album-path="opt"
+                          :author-name="main_store.getSignatureInfoByPath(opt)?.directExportAuthorName || ''"
+                          :author-image="main_store.getSignatureInfoByPath(opt)?.directExportAuthorImage || ''"
+                          size="small"
+                        />
+                      </AlbumSignatureHoverCard>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
 
-          <q-select
-            :class="['w-[216px]', 'select-component-label-show']"
-            v-model="setting_store.playbackRouting.mouseAlbumPath"
-            :options="main_store.keyTonePkgOptions"
-            :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
-            :label="$t('mainHome.routing.mouseLabel')"
-            :virtual-scroll-slice-size="999999"
-            outlined
-            dense
-            emit-value
-            map-options
-            behavior="dialog"
-            popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-            ref="mouseKeyTonePkgRef"
-            @popup-hide="blur()"
-          >
-            <template v-if="setting_store.playbackRouting.mouseAlbumPath" v-slot:append>
-              <q-icon
-                name="cancel"
-                @click.stop.prevent="setting_store.playbackRouting.mouseAlbumPath = ''"
-                class="cursor-pointer text-lg"
-              />
-            </template>
-          </q-select>
+              <template v-if="setting_store.playbackRouting.keyboardAlbumPath" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="setting_store.playbackRouting.keyboardAlbumPath = ''"
+                  class="cursor-pointer text-lg"
+                />
+              </template>
+            </q-select>
+          </div>
+
+          <!-- 鼠标播放专辑选择器 -->
+          <div class="selector-with-legend-container relative">
+            <!-- 签名信息展示（Legend 效果） -->
+            <div
+              v-if="mouseSignatureInfo?.hasSignature && setting_store.playbackRouting.mouseAlbumPath"
+              class="signature-legend-wrapper"
+            >
+              <AlbumSignatureHoverCard
+                :album-path="setting_store.playbackRouting.mouseAlbumPath"
+                :signature-info="mouseSignatureInfo"
+                @view-details="openSignatureDialog(setting_store.playbackRouting.mouseAlbumPath)"
+              >
+                <AlbumSignatureBadge
+                  :album-path="setting_store.playbackRouting.mouseAlbumPath"
+                  :author-name="mouseSignatureInfo.directExportAuthorName"
+                  :author-image="mouseSignatureInfo.directExportAuthorImage"
+                  size="small"
+                />
+              </AlbumSignatureHoverCard>
+            </div>
+
+            <q-select
+              :class="['w-[216px]', 'select-component-label-show']"
+              v-model="setting_store.playbackRouting.mouseAlbumPath"
+              :options="main_store.keyTonePkgOptions"
+              :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
+              :label="$t('mainHome.routing.mouseLabel')"
+              :virtual-scroll-slice-size="999999"
+              outlined
+              dense
+              emit-value
+              map-options
+              behavior="dialog"
+              popup-content-class="w-[100%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
+              ref="mouseKeyTonePkgRef"
+              @popup-hide="blur()"
+            >
+              <!-- 自定义列表项：展示专辑名称和签名信息（芯片样式，支持悬停） -->
+              <template v-slot:option="{ itemProps, opt }">
+                <q-item v-bind="itemProps" class="py-2">
+                  <q-item-section>
+                    <q-item-label>{{ main_store.keyTonePkgOptionsName.get(opt) }}</q-item-label>
+                    <q-item-label
+                      v-if="main_store.getSignatureInfoByPath(opt)?.hasSignature"
+                      caption
+                      class="mt-1"
+                    >
+                      <AlbumSignatureHoverCard
+                        :album-path="opt"
+                        :signature-info="main_store.getSignatureInfoByPath(opt)!"
+                        @view-details="openSignatureDialog(opt)"
+                      >
+                        <AlbumSignatureBadge
+                          :album-path="opt"
+                          :author-name="main_store.getSignatureInfoByPath(opt)?.directExportAuthorName || ''"
+                          :author-image="main_store.getSignatureInfoByPath(opt)?.directExportAuthorImage || ''"
+                          size="small"
+                        />
+                      </AlbumSignatureHoverCard>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+
+              <template v-if="setting_store.playbackRouting.mouseAlbumPath" v-slot:append>
+                <q-icon
+                  name="cancel"
+                  @click.stop.prevent="setting_store.playbackRouting.mouseAlbumPath = ''"
+                  class="cursor-pointer text-lg"
+                />
+              </template>
+            </q-select>
+          </div>
         </div>
 
         <!-- 空状态额外提示 -->
@@ -289,6 +447,15 @@
         </div>
       </div>
     </div>
+
+    <!-- ============================================================================
+         签名作者信息对话框
+         用于展示专辑中所有签名的详细信息
+         ============================================================================ -->
+    <SignatureAuthorsDialog
+      ref="signatureAuthorsDialogRef"
+      :album-path="signatureDialogAlbumPath"
+    />
   </q-page>
 </template>
 
@@ -301,6 +468,11 @@ import { computed, useTemplateRef, watch, onMounted, ref, onBeforeUnmount } from
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ApplyPlaybackRouting, SetPlaybackSourceMode } from 'src/boot/query/keytonePkg-query';
+// ============================================================================
+// 专辑签名信息展示组件
+// ============================================================================
+import { AlbumSignatureBadge, AlbumSignatureHoverCard } from 'src/components/album-selector';
+import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsDialog.vue';
 
 const q = useQuasar();
 const router = useRouter();
@@ -308,6 +480,51 @@ const { t } = useI18n();
 const $t = t;
 const setting_store = useSettingStore();
 const main_store = useMainStore();
+
+// ============================================================================
+// 签名信息对话框引用和方法
+// ============================================================================
+const signatureAuthorsDialogRef = ref<InstanceType<typeof SignatureAuthorsDialog> | null>(null);
+const signatureDialogAlbumPath = ref('');
+const showSignatureDialog = ref(false);
+
+/**
+ * 打开签名信息对话框
+ * @param albumPath 专辑路径
+ */
+function openSignatureDialog(albumPath: string) {
+  signatureDialogAlbumPath.value = albumPath;
+  // 等待 albumPath 更新后再打开对话框
+  setTimeout(() => {
+    signatureAuthorsDialogRef.value?.open();
+  }, 0);
+}
+
+// ============================================================================
+// 签名摘要信息计算属性
+// 根据选中的专辑路径，从 main_store 获取对应的签名摘要
+// ============================================================================
+
+/** 统一模式选择器选中专辑的签名信息 */
+const unifiedSignatureInfo = computed(() => {
+  const albumPath = setting_store.playbackRouting.unifiedAlbumPath;
+  if (!albumPath) return null;
+  return main_store.getSignatureInfoByPath(albumPath) || null;
+});
+
+/** 分离模式-键盘专辑的签名信息 */
+const keyboardSignatureInfo = computed(() => {
+  const albumPath = setting_store.playbackRouting.keyboardAlbumPath;
+  if (!albumPath) return null;
+  return main_store.getSignatureInfoByPath(albumPath) || null;
+});
+
+/** 分离模式-鼠标专辑的签名信息 */
+const mouseSignatureInfo = computed(() => {
+  const albumPath = setting_store.playbackRouting.mouseAlbumPath;
+  if (!albumPath) return null;
+  return main_store.getSignatureInfoByPath(albumPath) || null;
+});
 
 // 导航到键音专辑页面
 const goToAlbumPage = () => {
@@ -649,6 +866,37 @@ function getMacOSStatus() {
 
 :deep(.q-field__label) {
   @apply overflow-visible;
+}
+
+/* ============================================================================
+   签名徽章 Legend 效果样式
+   - 签名徽章位于选择器边框上，打断边框线
+   - 类似 HTML <fieldset> 的 <legend> 效果
+   ============================================================================ */
+
+/* 带有 legend 效果的选择器容器 */
+.selector-with-legend-container {
+  position: relative;
+}
+
+/* 签名徽章包装器：定位在边框上 */
+.signature-legend-wrapper {
+  position: absolute;
+  /* 垂直定位：与边框顶部对齐（边框线高度约 1px，徽章高度约 18px） */
+  top: -9px;
+  /* 水平定位：靠右，留出一些边距 */
+  right: 12px;
+  z-index: 10;
+  /* 背景色：用于遮挡边框线，创造"打断"效果 */
+  /* 使用与选择器控件背景一致的半透明色，避免出现明显黑色矩形 */
+  background: rgba(255, 255, 255, 0.05);
+  /* 与选择器一致的毛玻璃感，提升融合度 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* 左右添加一点 padding，确保边框被完全遮挡 */
+  padding: 0 6px;
+  /* 轻微圆角，避免背景块显得生硬 */
+  border-radius: 999px;
 }
 </style>
 

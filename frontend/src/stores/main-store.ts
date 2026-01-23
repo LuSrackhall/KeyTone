@@ -5,6 +5,7 @@ import { useSettingStore } from './setting-store';
 import { useQuasar } from 'quasar';
 import { StoreGet, StoreSet } from 'src/boot/query/store-query';
 import { useKeytoneAlbumStore } from 'src/stores/keytoneAlbum-store';
+import type { AlbumSignatureSummary } from 'src/types/album-selector';
 
 export const useMainStore = defineStore('main', () => {
   const keytoneAlbum_store = useKeytoneAlbumStore();
@@ -41,9 +42,26 @@ export const useMainStore = defineStore('main', () => {
   const keyTonePkgOptions = ref([]);
   const keyTonePkgOptionsName = ref(new Map());
 
+  // ============================================================================
+  // 专辑签名摘要信息
+  // 用于在专辑选择器中展示签名作者信息（直接导出作者的名称和图片）
+  // key 为专辑路径，value 为签名摘要
+  // ============================================================================
+  const keyTonePkgSignatureInfo = ref<Map<string, AlbumSignatureSummary>>(new Map());
+
+  /**
+   * 根据专辑路径获取签名摘要信息
+   * @param albumPath 专辑路径
+   * @returns 签名摘要信息，如果没有则返回 undefined
+   */
+  function getSignatureInfoByPath(albumPath: string): AlbumSignatureSummary | undefined {
+    return keyTonePkgSignatureInfo.value.get(albumPath);
+  }
+
   /**
    * 获取键音包列表
    * * 可用于在应用启动时初始化键音包列表, 或是在创建/编辑键音包后, 更新键音包列表。
+   * * 同时获取每个专辑的签名摘要信息，用于选择器中展示签名作者
    */
   function GetKeyToneAlbumList() {
     // 获取键音包列表的初始化逻辑, 没必要在main_store中进行, 而是应该在其所相关的对应逻辑中进行(比如在App.vue或是boot中)。
@@ -58,8 +76,21 @@ export const useMainStore = defineStore('main', () => {
             keyTonePkgOptionsName.value.set(item, res.name);
           });
         });
+
+        // ============================================================================
+        // 处理签名摘要信息
+        // 从 API 响应中提取每个专辑的签名摘要，存储到 keyTonePkgSignatureInfo
+        // ============================================================================
+        keyTonePkgSignatureInfo.value.clear();
+        if (res.signatureInfo) {
+          Object.entries(res.signatureInfo).forEach(([path, info]) => {
+            keyTonePkgSignatureInfo.value.set(path, info as AlbumSignatureSummary);
+          });
+          console.log('keyTonePkgSignatureInfo', keyTonePkgSignatureInfo.value);
+        }
       } else {
         keyTonePkgOptions.value = [];
+        keyTonePkgSignatureInfo.value.clear();
       }
     });
   }
@@ -124,6 +155,8 @@ export const useMainStore = defineStore('main', () => {
     volumeNormalReduceScope,
     keyTonePkgOptions,
     keyTonePkgOptionsName,
+    keyTonePkgSignatureInfo,
+    getSignatureInfoByPath,
     GetKeyToneAlbumList,
     LoadSelectedKeyTonePkg,
   };
