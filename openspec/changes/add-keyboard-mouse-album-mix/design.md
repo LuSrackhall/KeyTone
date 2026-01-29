@@ -87,6 +87,12 @@
   - `playback.routing.mouse_album_path`
   - `playback.routing.editor_notice_dismissed`
   - `playback.routing.mouse_fallback_to_keyboard`（默认 false：彻底分离，鼠标无专辑则无声）
+  - `main_home.split_audio_volume_processing.keyboard.volume_normal`
+  - `main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope`
+  - `main_home.split_audio_volume_processing.keyboard.is_open_volume_debug_slider`
+  - `main_home.split_audio_volume_processing.mouse.volume_normal`
+  - `main_home.split_audio_volume_processing.mouse.volume_normal_reduce_scope`
+  - `main_home.split_audio_volume_processing.mouse.is_open_volume_debug_slider`
 - 键音专辑页“编辑专辑选择”沿用历史字段 `main_home.selected_key_tone_pkg`，用于记忆上次编辑专辑。
 - UI：默认只显示一个选择器（兼容旧体验）；开启分离时显示第二个选择器。
 - SDK：新增 API 供前端提交 routing；并新增“播放来源模式”API，在主页与编辑页之间切换。
@@ -96,6 +102,37 @@
 - 默认行为：分离模式下，鼠标专辑缺失时不回退到键盘专辑，鼠标事件使用内嵌测试音或静音。
 - 用户可在设置界面的“主页面相关设置”中开启 `mouse_fallback_to_keyboard`，开启后分离模式下鼠标专辑缺失时会回退到键盘专辑。
 - 该选项仅影响分离模式，统一模式下无意义（因为键盘/鼠标本就共用一个专辑）。
+
+### 分离模式音量设计（新增）
+
+- 在分离模式下，用户可为键盘与鼠标分别设置独立音量（默认 0，不增不减）。
+- 独立音量在播放路径中叠加在“主页面全局音量”之后：
+  - `finalVolume = globalVolume * splitDeviceVolume`
+- 独立音量上限为 0，避免放大超过原始音量。
+- 分离模式下允许对键盘/鼠标进行独立静音（与全局静音叠加）。
+- 该配置仅在 `route-split` 播放来源模式下生效；`editor` 与 `route-unified` 不生效。
+
+#### 设置页 UI 规范（补充）
+
+- 分离音量设置使用展开栏展示，不在设置页提供分离开关。
+- 展开栏头部使用自定义可点击行（替代默认 expansion item），保留左侧竖条与缩进一致性，但不显示图标（可在代码注释保留图标引用）。
+- 展开/收起避免高度动画，使用轻量 opacity + transform 过渡，减少视觉延迟感。
+- 展开栏头部背景默认透明，仅在 hover/点击时显示。
+- 内容区域右侧需保留更大间距，避免影响滚动条展示。
+- 键盘/鼠标独立音量滑块应与主页面音量控件保持一致（含静音图标与滑块宽度）。
+- 滑块行仅显示“键盘/鼠标”字样，不额外缩进、也不展示竖条。
+- 调试滑块紧随对应滑块下方；降幅输入在两组滑块之后；调试开关在降幅之后。
+- 调试滑块与降幅设置保留竖条但不额外缩进。
+- 主滑块的百分比标签仅在用户拖动时显示；调试滑块数字默认常显。
+- 需要为滑块标签预留纵向空间，避免标签被遮挡或与上下内容重叠。
+- 主滑块标签通过放开 overflow 解决裁剪问题（包括 q-item__section 等容器），避免过度增加垂直留白。
+  - 由于 scoped 样式可能在不同组件间产生同等特异性覆盖，必要时可使用 `overflow: visible !important` 做可见性兜底。
+- 需确保滑块容器允许溢出显示，避免标签被父层裁剪。
+- 展开内容背景层级需低于滑块行内容，且展开容器需允许溢出，避免标签被背景覆盖/裁剪。
+- 键盘/鼠标字样与滑块需水平对齐（不做刻意错位）。
+- 展开内容区建议使用更柔和的背景/边框/轻微阴影，降低“突兀感”。
+- 分离音量的静音图标需可点击切换，行为与主页面一致（音量为 0% 时不允许取消静音，并提示）。
+- 设置页的滑块百分比标签需始终可见，避免被容器样式遮挡。
 
 ### UX Copy（专辑编辑页提示）
 

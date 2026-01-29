@@ -131,6 +131,22 @@ export const useSettingStore = defineStore('setting', () => {
       volumeSilent: false,
       isOpenVolumeDebugSlider: false,
     },
+    // 分离模式下的键盘/鼠标独立音量设置（仅在 split 模式生效）
+    // 说明：这些值会在全局音量处理的基础上叠加，默认值为 0（不增不减）。
+    splitAudioVolumeProcessing: {
+      keyboard: {
+        volumeNormal: 0,
+        volumeNormalReduceScope: 5,
+        volumeSilent: false,
+        isOpenVolumeDebugSlider: false,
+      },
+      mouse: {
+        volumeNormal: 0,
+        volumeNormalReduceScope: 5,
+        volumeSilent: false,
+        isOpenVolumeDebugSlider: false,
+      },
+    },
     selectedKeyTonePkg: '',
   });
 
@@ -241,6 +257,69 @@ export const useSettingStore = defineStore('setting', () => {
       if (settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider !== undefined) {
         mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider =
           settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
+      }
+
+      // 分离模式下的键盘/鼠标独立音量设置（默认值为 0 / 5 / false）
+      const splitVolumeStorage = settingStorage.main_home?.split_audio_volume_processing ?? {};
+
+      if (splitVolumeStorage.keyboard?.volume_normal !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormal = splitVolumeStorage.keyboard.volume_normal;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormal = 0;
+        StoreSet('main_home.split_audio_volume_processing.keyboard.volume_normal', 0);
+      }
+
+      if (splitVolumeStorage.keyboard?.volume_normal_reduce_scope !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormalReduceScope =
+          splitVolumeStorage.keyboard.volume_normal_reduce_scope;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormalReduceScope = 5;
+        StoreSet('main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope', 5);
+      }
+
+      if (splitVolumeStorage.keyboard?.is_open_volume_debug_slider !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.isOpenVolumeDebugSlider =
+          splitVolumeStorage.keyboard.is_open_volume_debug_slider;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.isOpenVolumeDebugSlider = false;
+        StoreSet('main_home.split_audio_volume_processing.keyboard.is_open_volume_debug_slider', false);
+      }
+
+      if (splitVolumeStorage.keyboard?.volume_silent !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeSilent = splitVolumeStorage.keyboard.volume_silent;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.keyboard.volumeSilent = false;
+        StoreSet('main_home.split_audio_volume_processing.keyboard.volume_silent', false);
+      }
+
+      if (splitVolumeStorage.mouse?.volume_normal !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormal = splitVolumeStorage.mouse.volume_normal;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormal = 0;
+        StoreSet('main_home.split_audio_volume_processing.mouse.volume_normal', 0);
+      }
+
+      if (splitVolumeStorage.mouse?.volume_normal_reduce_scope !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormalReduceScope =
+          splitVolumeStorage.mouse.volume_normal_reduce_scope;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormalReduceScope = 5;
+        StoreSet('main_home.split_audio_volume_processing.mouse.volume_normal_reduce_scope', 5);
+      }
+
+      if (splitVolumeStorage.mouse?.is_open_volume_debug_slider !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.mouse.isOpenVolumeDebugSlider =
+          splitVolumeStorage.mouse.is_open_volume_debug_slider;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.mouse.isOpenVolumeDebugSlider = false;
+        StoreSet('main_home.split_audio_volume_processing.mouse.is_open_volume_debug_slider', false);
+      }
+
+      if (splitVolumeStorage.mouse?.volume_silent !== undefined) {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeSilent = splitVolumeStorage.mouse.volume_silent;
+      } else {
+        mainHome.value.splitAudioVolumeProcessing.mouse.volumeSilent = false;
+        StoreSet('main_home.split_audio_volume_processing.mouse.volume_silent', false);
       }
       if (settingStorage.main_home.selected_key_tone_pkg !== undefined) {
         mainHome.value.selectedKeyTonePkg = settingStorage.main_home.selected_key_tone_pkg;
@@ -414,6 +493,82 @@ export const useSettingStore = defineStore('setting', () => {
       () => mainHome.value.selectedKeyTonePkg,
       () => {
         StoreSet('main_home.selected_key_tone_pkg', mainHome.value.selectedKeyTonePkg);
+      }
+    );
+
+    // 分离模式：键盘音量设置持久化
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormal,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.keyboard.volume_normal',
+          mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormal
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormalReduceScope,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope',
+          mainHome.value.splitAudioVolumeProcessing.keyboard.volumeNormalReduceScope
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.keyboard.isOpenVolumeDebugSlider,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.keyboard.is_open_volume_debug_slider',
+          mainHome.value.splitAudioVolumeProcessing.keyboard.isOpenVolumeDebugSlider
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.keyboard.volumeSilent,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.keyboard.volume_silent',
+          mainHome.value.splitAudioVolumeProcessing.keyboard.volumeSilent
+        );
+      }
+    );
+
+    // 分离模式：鼠标音量设置持久化
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormal,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.mouse.volume_normal',
+          mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormal
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormalReduceScope,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.mouse.volume_normal_reduce_scope',
+          mainHome.value.splitAudioVolumeProcessing.mouse.volumeNormalReduceScope
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.mouse.isOpenVolumeDebugSlider,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.mouse.is_open_volume_debug_slider',
+          mainHome.value.splitAudioVolumeProcessing.mouse.isOpenVolumeDebugSlider
+        );
+      }
+    );
+    watch(
+      () => mainHome.value.splitAudioVolumeProcessing.mouse.volumeSilent,
+      () => {
+        StoreSet(
+          'main_home.split_audio_volume_processing.mouse.volume_silent',
+          mainHome.value.splitAudioVolumeProcessing.mouse.volumeSilent
+        );
       }
     );
 

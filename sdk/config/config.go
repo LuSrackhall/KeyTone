@@ -188,6 +188,17 @@ const Main_home___audio_volume_processing___volume_normal_reduce_scope = 5.0    
 const Main_home___audio_volume_processing___volume_silent = false               // 当其为true时, 代表静音。
 const Main_home___audio_volume_processing___is_open_volume_debug_slider = false // 用于在设置页面 和 主页面上显示 音量调试滑块
 
+// 分离模式下的键盘/鼠标音量默认设置
+// * 该配置仅在路由为 split 且发生对应输入事件时生效，最终音量与主页面全局音量叠加。
+const Main_home___split_audio_volume_processing___keyboard_volume_normal = 0.0              // (-无穷)~0
+const Main_home___split_audio_volume_processing___keyboard_volume_normal_reduce_scope = 5.0 // 默认为5.0
+const Main_home___split_audio_volume_processing___keyboard_is_open_volume_debug_slider = false
+const Main_home___split_audio_volume_processing___keyboard_volume_silent = false
+const Main_home___split_audio_volume_processing___mouse_volume_normal = 0.0              // (-无穷)~0
+const Main_home___split_audio_volume_processing___mouse_volume_normal_reduce_scope = 5.0 // 默认为5.0
+const Main_home___split_audio_volume_processing___mouse_is_open_volume_debug_slider = false
+const Main_home___split_audio_volume_processing___mouse_volume_silent = false
+
 func settingDefaultConfig() {
 	// 手动打开应用时的默认设置
 	viper.SetDefault("startup.is_hide_windows", Startup___is_hide_windows)
@@ -217,6 +228,16 @@ func settingDefaultConfig() {
 	// mouse_fallback_to_keyboard：分离模式下，鼠标专辑缺失时是否回退到键盘专辑。
 	// 默认 false：彻底分离，鼠标无专辑则无声；用户可在设置中开启回退。
 	viper.SetDefault("playback.routing.mouse_fallback_to_keyboard", false)
+
+	// 分离模式下键盘/鼠标音量默认设置
+	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.volume_normal", Main_home___split_audio_volume_processing___keyboard_volume_normal)
+	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope", Main_home___split_audio_volume_processing___keyboard_volume_normal_reduce_scope)
+	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.is_open_volume_debug_slider", Main_home___split_audio_volume_processing___keyboard_is_open_volume_debug_slider)
+	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.volume_silent", Main_home___split_audio_volume_processing___keyboard_volume_silent)
+	viper.SetDefault("main_home.split_audio_volume_processing.mouse.volume_normal", Main_home___split_audio_volume_processing___mouse_volume_normal)
+	viper.SetDefault("main_home.split_audio_volume_processing.mouse.volume_normal_reduce_scope", Main_home___split_audio_volume_processing___mouse_volume_normal_reduce_scope)
+	viper.SetDefault("main_home.split_audio_volume_processing.mouse.is_open_volume_debug_slider", Main_home___split_audio_volume_processing___mouse_is_open_volume_debug_slider)
+	viper.SetDefault("main_home.split_audio_volume_processing.mouse.volume_silent", Main_home___split_audio_volume_processing___mouse_volume_silent)
 
 }
 

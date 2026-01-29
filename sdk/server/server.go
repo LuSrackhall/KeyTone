@@ -1053,7 +1053,7 @@ func keytonePkgRouters(r *gin.Engine) {
 			StartMS: int64(arg.StartTime),
 			EndMS:   int64(arg.EndTime),
 			Volume:  arg.Volume,
-		}, arg.IsPreviewMode)
+		}, "", arg.IsPreviewMode)
 
 		ctx.JSON(200, gin.H{
 			"message": "ok",

@@ -317,6 +317,30 @@
       },
       "重置": "重置",
       "音量调试滑块": { "index": "音量调试滑块", "caption": "打开后, 会在主页的音量进度条下方, 额外显示音量调试滑块" },
+      "routingSplit": {
+        "index": "键盘/鼠标分离",
+        "caption": "开启后可分别为键盘与鼠标设置播放专辑与独立音量"
+      },
+      "splitVolumePanel": {
+        "title": "分离模式音量设置",
+        "caption": "仅在主页面开启分离时生效（与全局音量叠加）"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "键盘音量",
+          "caption": "仅在分离模式下生效，叠加在全局音量之上",
+          "shortLabel": "键盘",
+          "reduceScope": "键盘音量降幅",
+          "debugSlider": "键盘音量调试滑块"
+        },
+        "mouse": {
+          "title": "鼠标音量",
+          "caption": "仅在分离模式下生效，叠加在全局音量之上",
+          "shortLabel": "鼠标",
+          "reduceScope": "鼠标音量降幅",
+          "debugSlider": "鼠标音量调试滑块"
+        }
+      },
       "mouseFallback": {
         "index": "鼠标回退到键盘",
         "caption": "分离模式下，若鼠标专辑缺失则使用键盘专辑。默认关闭：彻底分离"

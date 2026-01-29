@@ -85,6 +85,33 @@ Normative: When an album is missing, corrupted, or cannot be loaded for routing,
 
 ---
 
+### Requirement: 分离模式下的键盘/鼠标独立音量
+
+Normative: In split mode, the system SHALL allow users to configure independent volume adjustments for keyboard and mouse playback, and these adjustments MUST be layered on top of the global main-home volume settings.
+
+#### Scenario: 分离模式下键盘/鼠标独立音量生效
+
+- **GIVEN** 用户启用了“键盘/鼠标分离”模式
+- **AND** 用户在设置页面为键盘与鼠标分别设置独立音量
+- **WHEN** 用户触发键盘按键事件
+- **THEN** 系统 MUST apply “global main-home volume” and then apply “keyboard split volume”
+- **WHEN** 用户触发鼠标按键事件
+- **THEN** 系统 MUST apply “global main-home volume” and then apply “mouse split volume”
+
+#### Scenario: 默认值与上限约束
+
+- **GIVEN** 用户未调整分离音量设置
+- **THEN** 键盘与鼠标的独立音量默认值 MUST be 0（不增不减）
+- **AND** 分离音量 MUST NOT exceed 0（避免放大超过原始音量）
+
+#### Scenario: 分离模式下独立静音
+
+- **GIVEN** 用户启用分离模式并开启键盘或鼠标的独立静音
+- **WHEN** 对应输入事件触发播放
+- **THEN** 系统 MUST apply split mute on top of global volume
+
+---
+
 ### Requirement: 前端选择与 SDK 路由提交解耦于编辑器
 
 Normative: The system SHALL treat “Album Editor” as an exclusive mode that is decoupled from playback routing selection, so editing never implicitly changes the home playback routing, and home routing never implicitly changes the album being edited.
@@ -192,6 +219,55 @@ Normative: The frontend MUST persist playback routing using dedicated keys, and 
   - `playback.routing.mouse_album_path`
   - `playback.routing.editor_notice_dismissed`
   - `playback.routing.mouse_fallback_to_keyboard`
+
+---
+
+### Requirement: 分离音量设置持久化键名
+
+Normative: The frontend MUST persist split-mode keyboard/mouse volume settings using dedicated keys.
+
+#### Scenario: 键盘/鼠标独立音量持久化
+
+- **GIVEN** 用户在设置页面调整了分离模式音量参数
+- **WHEN** 系统写入持久化存储
+- **THEN** MUST 使用以下键名：
+  - `main_home.split_audio_volume_processing.keyboard.volume_normal`
+  - `main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope`
+  - `main_home.split_audio_volume_processing.keyboard.is_open_volume_debug_slider`
+  - `main_home.split_audio_volume_processing.keyboard.volume_silent`
+  - `main_home.split_audio_volume_processing.mouse.volume_normal`
+  - `main_home.split_audio_volume_processing.mouse.volume_normal_reduce_scope`
+  - `main_home.split_audio_volume_processing.mouse.is_open_volume_debug_slider`
+  - `main_home.split_audio_volume_processing.mouse.volume_silent`
+
+---
+
+### Requirement: 设置页分离音量 UI 一致性
+
+Normative: The settings page MUST present split-mode keyboard/mouse volume controls with UI cues consistent with the main page volume control, and MUST visually indicate nested child settings.
+
+#### Scenario: UI 与主页面一致
+
+- **GIVEN** 用户在设置页展开“分离模式音量设置”
+- **WHEN** 系统展示键盘/鼠标独立音量滑块
+- **THEN** the expand header MUST be a custom clickable row that keeps the left vertical indicator and indent consistent with other settings items
+- **AND** the header MUST NOT display an icon (icon reference may be kept in code comments)
+- **AND** the expand/collapse SHOULD avoid height animations and use lightweight opacity + transform transitions to reduce perceived lag
+- **AND** the header background MUST be transparent by default and only appear on hover/active
+- **AND** the content container MUST leave extra right-side margin to avoid covering the scrollbar
+- **AND** slider rows MUST show only “keyboard/mouse” labels on the left (no extra indent or vertical bar)
+- **AND** debug sliders MUST appear directly beneath their corresponding sliders
+- **AND** reduce-scope inputs MUST appear after both keyboard/mouse sliders
+- **AND** debug toggles MUST appear after reduce-scope inputs
+- **AND** main sliders MUST show percentage labels only while dragging (consistent with main page)
+- **AND** debug sliders MUST show numeric labels by default (label-always)
+- **AND** settings layout MUST reserve vertical space for slider labels to avoid clipping/overlap
+- **AND** slider labels MUST NOT be clipped by any overflow constraints
+- **AND** item sections (e.g., q-item__section) MUST allow visible overflow so labels are not cut off
+- **AND** slider labels MUST NOT be clipped by parent overflow
+- **AND** slider labels MUST NOT be covered or clipped by expansion content/background layers
+- **AND** keyboard/mouse labels MUST align horizontally with their sliders (no intentional vertical offset)
+- **AND** mute toggle MUST follow the main page rule: when volume is 0%, do not allow unmute and show a warning
 
 ---
 

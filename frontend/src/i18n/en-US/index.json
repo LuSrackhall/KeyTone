@@ -323,6 +323,30 @@
         "index": "Volume Debug slider",
         "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
       },
+      "routingSplit": {
+        "index": "Keyboard/Mouse Split",
+        "caption": "Enable to configure separate albums and per-device volume"
+      },
+      "splitVolumePanel": {
+        "title": "Split-mode volume",
+        "caption": "Effective only when split is enabled on the main page (layered on global volume)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Keyboard Volume",
+          "caption": "Only active in split mode; layered on top of global volume",
+          "shortLabel": "Keyboard",
+          "reduceScope": "Keyboard volume decrease range",
+          "debugSlider": "Keyboard volume debug slider"
+        },
+        "mouse": {
+          "title": "Mouse Volume",
+          "caption": "Only active in split mode; layered on top of global volume",
+          "shortLabel": "Mouse",
+          "reduceScope": "Mouse volume decrease range",
+          "debugSlider": "Mouse volume debug slider"
+        }
+      },
       "mouseFallback": {
         "index": "Mouse fallback to keyboard",
         "caption": "In split mode, use keyboard album when mouse album is missing. Default off: fully separated"
