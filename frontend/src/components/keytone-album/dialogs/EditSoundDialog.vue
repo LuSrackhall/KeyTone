@@ -168,6 +168,16 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
                 </q-tooltip>
               </q-icon>
             </div>
+
+            <!-- 波形裁剪（可视化选区） -->
+            <WaveformTrimmer
+              v-if="ctx.showEditSoundDialog.value"
+              :sha256="ctx.selectedSound.value.soundValue.source_file_for_sound.sha256"
+              :file-type="ctx.selectedSound.value.soundValue.source_file_for_sound.type"
+              v-model:startMs="ctx.selectedSound.value.soundValue.cut.start_time"
+              v-model:endMs="ctx.selectedSound.value.soundValue.cut.end_time"
+            />
+
             <!--
               TIPS: 注意 number 类型使用时需要使用 v-model.number
               这样可以自动处理 01、00.55 这种输入
@@ -232,7 +242,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               @click="handlePreview"
             >
               <q-tooltip
-                :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
                 :delay="600"
               >
                 {{ ctx.$t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
@@ -289,6 +299,7 @@ import { inject, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
+import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 
 const q = useQuasar();
 

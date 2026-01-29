@@ -119,6 +119,16 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
             </q-tooltip>
           </q-icon>
         </div>
+
+        <!-- 波形裁剪（可视化选区） -->
+        <WaveformTrimmer
+          v-if="ctx.createNewSound.value"
+          :sha256="ctx.sourceFileForSound.value.sha256"
+          :file-type="ctx.sourceFileForSound.value.type"
+          v-model:startMs="ctx.soundStartTime.value"
+          v-model:endMs="ctx.soundEndTime.value"
+        />
+
         <!--
           TIPS: 注意 number 类型使用时需要使用 v-model.number
           这样可以自动处理 01、00.55 这种输入，将其自动变更为 1、0.55
@@ -182,7 +192,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
           color="secondary"
         >
           <q-tooltip
-            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
             :delay="600"
           >
             {{ ctx.$t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
@@ -224,6 +234,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
 
 import { inject, computed } from 'vue';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
+import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 
 // ============================================================================
 // 注入父组件提供的上下文

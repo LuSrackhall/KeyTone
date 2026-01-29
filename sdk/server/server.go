@@ -37,6 +37,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -1058,6 +1059,83 @@ func keytonePkgRouters(r *gin.Engine) {
 		ctx.JSON(200, gin.H{
 			"message": "ok",
 		})
+	})
+
+	// ============================================================================
+	// GET /get_audio_stream - 读取当前编辑专辑下的音频源文件（用于前端波形渲染）
+	//
+	// 说明：
+	// - 前端通过 sha256 + type（扩展名，如 ".wav"）定位 audioFiles/<sha256><type>
+	// - 该接口返回音频文件内容，支持 Range（由 http.ServeContent 处理）
+	// - 仅用于编辑器场景（依赖 audio_pkg_uuid 已加载）
+	// ============================================================================
+	keytonePkgRouters.GET("/get_audio_stream", func(ctx *gin.Context) {
+		type Arg struct {
+			Sha256 string `form:"sha256"`
+			Type   string `form:"type"`
+		}
+
+		var arg Arg
+		if err := ctx.ShouldBindQuery(&arg); err != nil || arg.Sha256 == "" || arg.Type == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收失败",
+			})
+			return
+		}
+
+		// 基础校验：防止路径穿越/非法扩展名
+		if len(arg.Sha256) != 64 {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: sha256 格式不正确"})
+			return
+		}
+		if _, err := hex.DecodeString(arg.Sha256); err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: sha256 格式不正确"})
+			return
+		}
+		if !strings.HasPrefix(arg.Type, ".") {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: type 格式不正确"})
+			return
+		}
+		for _, r := range arg.Type[1:] {
+			if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+				ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: type 格式不正确"})
+				return
+			}
+		}
+
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok || audioPkgUUID == "" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包UUID失败",
+			})
+			return
+		}
+
+		fileName := arg.Sha256 + arg.Type
+		filePath := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", fileName)
+
+		f, err := os.Open(filePath)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "error: 音频文件不存在"})
+			return
+		}
+		defer f.Close()
+
+		info, err := f.Stat()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "error: 读取音频文件失败"})
+			return
+		}
+
+		// content-type：根据扩展名推断
+		contentType := mime.TypeByExtension(arg.Type)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+		ctx.Header("Content-Type", contentType)
+		ctx.Header("Content-Disposition", "inline; filename=\""+fileName+"\"")
+
+		http.ServeContent(ctx.Writer, ctx.Request, fileName, info.ModTime(), f)
 	})
 
 	// ============================================================================
