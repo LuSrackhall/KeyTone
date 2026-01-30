@@ -57,6 +57,8 @@ Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 
 
 Normative: 波形区域 SHALL 提供一条横向音量指示线，用户可通过上下拖动快速调整当前裁剪的 `cut.volume`，并与数值输入框保持双向同步；当 `cut.volume == 0` 时，指示线在 UI 上 SHALL 位于中位（unity gain 参考线）。
 
+Non-normative: 为符合剪辑软件直觉，音量调整过程中波形本体 SHOULD 提供适度的视觉反馈（例如纵向高度变化），但该反馈不得影响时间映射与选区可操作性。
+
 #### Scenario: 拖动音量指示线修改音量
 
 - **GIVEN** 用户打开“创建声音/编辑声音”对话框且波形组件可见

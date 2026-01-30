@@ -107,7 +107,16 @@
       </q-banner>
     </div>
 
-    <div v-show="hasSource" class="waveform-host">
+    <div
+      v-show="hasSource"
+      class="waveform-host"
+      :style="{
+        // 通过 CSS 变量把“音量对波形视觉的影响”注入到样式层：
+        // - 不改变真实音频数据（不会影响裁剪时间与选区逻辑）
+        // - 只做纵向 scale，符合剪辑软件中“音量变大 => 波形看起来更高”的直觉
+        '--kt-waveform-y-scale': String(waveformYScale),
+      }"
+    >
       <div
         ref="containerEl"
         class="waveform"
@@ -124,7 +133,11 @@
           * 向下拖动 => 音量降低
         - 该控件仅影响当前音频裁剪的 cut.volume（与输入框双向同步）。
       -->
-      <div class="volume-overlay" aria-hidden="true">
+      <div
+        class="volume-overlay"
+        aria-hidden="true"
+        :style="{ height: `${height}px` }"
+      >
         <!--
           0 基准线（永远位于中位）：
           - 这是“UI 对齐认知”的辅助线：让用户一眼知道“0=中位（unity gain）”。
@@ -132,13 +145,23 @@
         -->
         <div class="volume-zero-line" />
         <div class="volume-line" :style="{ top: volumeLineTop }" />
-        <div class="volume-handle" :style="{ top: volumeLineTop }" />
-        <div
-          class="volume-line-hit"
-          :style="{ top: volumeLineTop }"
-          @pointerdown="onVolumePointerDown"
-        />
       </div>
+
+      <!--
+        交互命中区必须放在 pointer-events 可用的层级中。
+
+        说明：
+        - 我们希望“音量线/手柄”不阻挡波形本体的交互（seek、右键选区等），因此视觉层 .volume-overlay
+          设置为 pointer-events:none。
+        - 但在部分浏览器/Electron 组合下，父节点 pointer-events:none 会导致后代元素无法成为命中目标，
+          即使子元素显式 pointer-events:auto 也可能无效。
+        - 因此把命中区单独作为 overlay 的兄弟节点：既不会挡住波形整体交互，又能稳定接收拖动事件。
+      -->
+      <div
+        class="volume-line-hit"
+        :style="{ top: volumeLineTopPx }"
+        @pointerdown="onVolumePointerDown"
+      />
     </div>
 
     <div v-if="isReady && durationMs" class="text-[12px] text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
@@ -300,7 +323,43 @@ const volumeLineTop = computed(() => {
   const clamped = Math.max(volumeMin, Math.min(volumeMax, raw));
   const ratio = (clamped - volumeMin) / (volumeMax - volumeMin); // 0..1
   // ratio=1 => top=0（最大音量在最上）; ratio=0 => top=100%（最小音量在最下）
-  return `${Math.round((1 - ratio) * 100)}%`;
+  // 注意：这里不要做 Math.round。
+  // - 用户明确要求：volume=0 必须与波形中位重合。
+  // - 若做整数百分比四舍五入，会在某些高度下造成 1px 级别的偏移，让用户产生“没对齐”的感知。
+  // - 保留小数百分比可以保证 0 映射为精确 50%。
+  return `${(1 - ratio) * 100}%`;
+});
+
+const volumeLineTopPx = computed(() => {
+  // 计算音量指示线的纵向位置（像素值，用于命中区的精确定位）。
+  //
+  // 为何需要像素值：
+  // - 命中区（volume-line-hit）需要基于波形绘制区域高度（props.height）进行定位，
+  //   而非整个 .waveform 容器高度（可能包含滚动条）。
+  // - 使用百分比时，若命中区位于与 overlay 不同高度的容器中，会导致位置偏移。
+  // - 因此这里直接计算像素值：top = (1 - ratio) * props.height。
+  const raw = props.volume ?? 0;
+  const clamped = Math.max(volumeMin, Math.min(volumeMax, raw));
+  const ratio = (clamped - volumeMin) / (volumeMax - volumeMin);
+  return `${(1 - ratio) * props.height}px`;
+});
+
+const waveformYScale = computed(() => {
+  // 体验增强：音量调整时，波形“看起来”也应该发生变化。
+  //
+  // 重要边界：
+  // - 这不应该改变音频数据本身，仅做视觉层的纵向缩放。
+  // - 缩放要“适度”：太大/太小会导致波形超出容器或接近不可见。
+  //
+  // 这里采用“与音量指数曲线同源、但更温和”的映射：
+  // - SDK 的听感：gain = 1.6 ^ volume
+  // - 视觉缩放：scale = 1.6 ^ (volume * 0.1)
+  //   => volume=0 时 scale=1（完全不变）
+  //   => volume=10 时 scale≈1.6（明显但不过分）
+  //   => volume=-10 时 scale≈0.625（降低但仍可见）
+  const volume = props.volume ?? 0;
+  const scale = Math.pow(1.6, volume * 0.1);
+  return Math.max(0.5, Math.min(2.0, scale));
 });
 
 // 视觉：选区使用半透明填充。
@@ -638,16 +697,25 @@ function pointerEventToVolume(ev: PointerEvent, host: HTMLElement): number {
   // 将鼠标位置映射为音量值：
   // - 顶部 => volumeMax
   // - 底部 => volumeMin
+  //
+  // 关键修复（音量线与波形中线不对齐的根因）：
+  // - 不能使用 host.getBoundingClientRect().height，因为它包含滚动条高度。
+  // - 必须使用 props.height（波形绘制区域的实际高度）作为映射基准。
+  // - 这样 volume=0 才会精确对应波形纵向中点。
   const rect = host.getBoundingClientRect();
-  const y = Math.max(0, Math.min(rect.height, ev.clientY - rect.top));
-  const ratio = 1 - y / rect.height; // 0..1（顶端=1）
+  const waveformHeight = props.height;
+  const y = Math.max(0, Math.min(waveformHeight, ev.clientY - rect.top));
+  const ratio = 1 - y / waveformHeight; // 0..1（顶端=1）
   return volumeMin + ratio * (volumeMax - volumeMin);
 }
 
 function onVolumePointerDown(ev: PointerEvent) {
   // 仅响应主键拖动（避免与右键选区冲突）
   if (ev.button !== 0) return;
+  // 关键：阻止波形区域的默认交互（dragToSeek 等）接管该手势。
+  // 否则在部分环境下会出现“拖音量线时播放头在动/音量线不动”，用户会感知为“无法拖动”。
   ev.preventDefault();
+  ev.stopPropagation();
 
   const host = containerEl.value;
   if (!host) return;
@@ -671,12 +739,13 @@ function onVolumePointerDown(ev: PointerEvent) {
   // - 触控板/浏览器手势接管了指针流
   // - OS 层中断（弹出菜单、窗口切换等）
   // 如果不处理，用户会感知为“拖动时灵时不灵/有时突然失效”。
-  window.addEventListener('pointercancel', onVolumePointerUp, { passive: false });
+  window.addEventListener('pointercancel', onVolumePointerCancel, { passive: false });
 }
 
 function onVolumePointerMove(ev: PointerEvent) {
   if (!isVolumeDragging.value) return;
   ev.preventDefault();
+  ev.stopPropagation();
 
   const host = containerEl.value;
   if (!host) return;
@@ -685,9 +754,18 @@ function onVolumePointerMove(ev: PointerEvent) {
   emit('update:volume', Number(nextVolume.toFixed(3)));
 }
 
+function onVolumePointerCancel(ev: PointerEvent) {
+  // pointercancel 在以下场景可能触发：
+  // - 触控板/浏览器手势接管了指针流
+  // - OS 层中断（弹出菜单、窗口切换等）
+  // 若不统一走清理逻辑，会留下 window listener 与 dragging 状态，导致后续拖动异常。
+  onVolumePointerUp(ev);
+}
+
 function onVolumePointerUp(ev: PointerEvent) {
   if (!isVolumeDragging.value) return;
   ev.preventDefault();
+  ev.stopPropagation();
 
   try {
     if (volumeDragTargetEl.value && volumeDragPointerId.value !== null) {
@@ -703,7 +781,7 @@ function onVolumePointerUp(ev: PointerEvent) {
 
   window.removeEventListener('pointermove', onVolumePointerMove);
   window.removeEventListener('pointerup', onVolumePointerUp);
-  window.removeEventListener('pointercancel', onVolumePointerUp);
+  window.removeEventListener('pointercancel', onVolumePointerCancel);
 }
 
 /**
@@ -712,7 +790,7 @@ function onVolumePointerUp(ev: PointerEvent) {
  * SDK：amplitude = 1.6 ^ volume
  *
  * 前端：使用 WebAudio backend 时，可以设置 gain > 1 来模拟“增益”。
- * 为避免爆音与设备差异，这里加一个保守上限（可按需再调）。
+ * 本项目以 SDK 预览为准，因此这里不做额外 clamp（与 SDK 的 Base=1.6 行为保持一致）。
  */
 function sdkVolumeToFrontendGain(volume: number): number {
   const base = 1.6;
@@ -1121,9 +1199,33 @@ watch(
   @apply [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50;
 }
 
+// 视觉增强：音量变化时，让波形“高度”产生适度反馈。
+//
+// 为什么只对 canvas/svg 做 transform：
+// - Regions/光标/选区手柄等是独立的 DOM 层（div），不应被一起缩放，否则会影响可点选区域与对齐。
+// - 波形本体通常由 canvas（或 svg）绘制，因此只缩放这些绘图层能达到“符合直觉”的效果。
+// 视觉增强：音量变化时，让波形"高度"产生适度反馈。
+//
+// wavesurfer.js v7 的 DOM 结构：
+// - 波形由内部的 <div style="..."> 包裹的 canvas 绘制。
+// - 使用 :deep() 穿透 scoped style，对所有后代 canvas 应用 scaleY。
+//
+// 注意：
+// - Regions/光标/选区手柄等是独立的 DOM 层（div），不应被一起缩放，否则会影响可点选区域与对齐。
+// - 因此只对 canvas 做 transform（不对整个 .waveform 做）。
+// - 使用 !important 确保优先级高于 wavesurfer 的内联样式。
+.waveform :deep(canvas) {
+  transform: scaleY(var(--kt-waveform-y-scale, 1)) !important;
+  transform-origin: 50% 50%;
+}
+
 // 音量快捷调节条
+//
+// 定位说明：
+// - 使用 top:0 left:0 right:0 而非 inset-0，因为高度由 :style 显式指定（等于波形绘制区域高度）。
+// - 这样音量线的百分比定位才能正确映射到波形区域，而不会被滚动条撑大。
 .volume-overlay {
-  @apply absolute inset-0;
+  @apply absolute top-0 left-0 right-0;
   @apply pointer-events-none;
   @apply z-10;
 }
@@ -1143,15 +1245,7 @@ watch(
   @apply bg-sky-500/70;
 }
 
-.volume-handle {
-  @apply absolute;
-  @apply left-2;
-  @apply w-2 h-2;
-  @apply -translate-y-1/2;
-  @apply rounded-full;
-  @apply bg-sky-500;
-  @apply shadow-sm;
-}
+// .volume-handle 已删除：用户反馈蓝色小圆点无用，现仅保留横线作为视觉指示。
 
 .volume-line-hit {
   @apply absolute left-0 right-0;
@@ -1162,6 +1256,9 @@ watch(
   @apply pointer-events-auto;
   @apply cursor-ns-resize;
   @apply bg-transparent;
+
+  // 命中区必须处于波形本体之上，确保能吃到 pointerdown。
+  @apply z-20;
 
   // 防止浏览器把拖动当成滚动/选择手势（尤其是触控板 + Electron 环境）
   touch-action: none;
