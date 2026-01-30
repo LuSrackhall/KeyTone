@@ -242,11 +242,16 @@ const hasSource = computed(() => !!audioUrl.value);
 
 const isSyncingFromProps = ref(false);
 
-// 视觉：region（有长度）用半透明填充；marker（start==end）用更高对比度的线条。
-// 说明：用户右键“按下瞬间定起点”时，start==end 属于 marker 形态。
-// 若 marker 颜色太淡，用户会感知为“选区 UI 消失”。
+// 视觉：选区使用半透明填充。
+// 注意：本组件只保留“可双端拖动”的选区版本。
+// 因此即使 start==end（例如右键按下瞬间或用户只修改了一个输入框导致暂时 end<=start），
+// 也会被渲染为一个“极小的非零区间”，以确保左右两侧的拖动指针始终可用。
 const regionFillColor = 'rgba(14, 165, 233, 0.18)';
-const markerLineColor = 'rgba(14, 165, 233, 0.85)';
+
+// 选区的最小非零长度（秒）：用于在 start==end 时仍能展示两侧可拖动指针。
+// - 这是渲染层的“非零化”，不等价于产品层的“最小裁剪长度”限制。
+// - 数值取 1ms：足够让 Regions 进入“region”形态，而不会引入可感知的最小长度。
+const minNonZeroSelectionSec = 0.001;
 
 // ============================================================================
 // 右键拖拽快速选区（无菜单）
@@ -355,23 +360,48 @@ function getTrimRegion(regionsApi: RegionsApi): Region | undefined {
   return list.find((r) => r.id === regionId);
 }
 
-function ensureTrimRegion(regionsApi: RegionsApi, startSec: number, endSec: number): Region | undefined {
+function normalizeSelectionSec(instance: WaveSurfer, startSec: number, endSec: number): { startSec: number; endSec: number } {
+  // 统一把选区规范化为一个“可操作”的非零区间：end MUST > start。
+  // 这样 Regions 插件才会绘制为带两侧拖动手柄的 region，而不是 marker/线条。
+  let start = clampTimeSec(instance, startSec);
+  let end = clampTimeSec(instance, endSec);
+
+  // 若 end 与 start 重合（或被 clamp 后变为重合），则做最小非零扩展。
+  if (end <= start) {
+    const dur = instance.getDuration();
+    if (!Number.isFinite(dur) || dur <= 0) {
+      end = start + minNonZeroSelectionSec;
+    } else {
+      const proposedEnd = Math.min(dur, start + minNonZeroSelectionSec);
+      if (proposedEnd > start) {
+        end = proposedEnd;
+      } else {
+        // 位于音频尾部且无法向右扩展：将 start 向左挪一点，保证 end>start。
+        start = Math.max(0, dur - minNonZeroSelectionSec);
+        end = dur;
+      }
+    }
+  }
+
+  return { startSec: start, endSec: end };
+}
+
+function ensureTrimRegion(regionsApi: RegionsApi, instance: WaveSurfer, startSec: number, endSec: number): Region | undefined {
   // 统一入口：没有就创建，有就更新
   const existing = getTrimRegion(regionsApi);
 
-  const isMarker = endSec === startSec;
-  const color = isMarker ? markerLineColor : regionFillColor;
+  const normalized = normalizeSelectionSec(instance, startSec, endSec);
+  const color = regionFillColor;
 
   if (existing) {
-    // 同步更新颜色：marker 与 region 的视觉不同。
-    existing.setOptions?.({ start: startSec, end: endSec, color });
+    existing.setOptions?.({ start: normalized.startSec, end: normalized.endSec, color });
     return existing;
   }
 
   return regionsApi.addRegion?.({
     id: regionId,
-    start: startSec,
-    end: endSec,
+    start: normalized.startSec,
+    end: normalized.endSec,
     color,
     drag: true,
     resize: true,
@@ -412,7 +442,8 @@ function onWaveformPointerDown(ev: PointerEvent) {
   // 注意：此处属于“用户主动操作 region”，不应该触发 isSyncingFromProps 的防循环。
   // 但 region.setOptions 会触发 region-updated 事件，继而 emit 到外部 startMs/endMs。
   // 这是我们想要的：右键拖拽 = 快速设置输入框数值。
-  ensureTrimRegion(regionsApi, startSec, startSec);
+  const normalized = normalizeSelectionSec(instance, startSec, startSec);
+  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
   // 重要：这里必须显式 emit start/end。
   // 原因：wavesurfer v7 的 Regions 在 region.setOptions(...) 时，不一定会触发 region-updated 事件。
@@ -421,8 +452,8 @@ function onWaveformPointerDown(ev: PointerEvent) {
   // - 用户会直接感知为“右键没效果/没反应”
   //
   // 因此右键快速选区这一条交互链路，采用“右键事件驱动 -> 直接 emit”来保证 UI 始终同步。
-  emit('update:startMs', Math.max(0, Math.round(startSec * 1000)));
-  emit('update:endMs', Math.max(0, Math.round(startSec * 1000)));
+  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
 
   // 捕获后续 move/up：即使鼠标移出波形，也能持续更新
   window.addEventListener('pointermove', onWaveformPointerMove, { passive: false });
@@ -451,11 +482,12 @@ function onWaveformMouseDown(ev: MouseEvent) {
   const startSec = pointerEventToTimeSec(instance, ev as unknown as PointerEvent);
   rightDragStartSec.value = startSec;
   isRightDragSelecting.value = true;
-  ensureTrimRegion(regionsApi, startSec, startSec);
+  const normalized = normalizeSelectionSec(instance, startSec, startSec);
+  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
   // mouse 兜底路径同上：同样显式 emit，避免依赖 regions 的事件。
-  emit('update:startMs', Math.max(0, Math.round(startSec * 1000)));
-  emit('update:endMs', Math.max(0, Math.round(startSec * 1000)));
+  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
 
   const onMove = (moveEv: MouseEvent) => onWaveformPointerMove(moveEv as unknown as PointerEvent);
   const onUp = (upEv: MouseEvent) => {
@@ -484,11 +516,12 @@ function onWaveformPointerMove(ev: PointerEvent) {
   // 严格按需求：只“向右拖动”决定 end。
   // 若用户向左拖动，则 end 固定为 start（不反向选择）。
   const endSec = Math.max(rightDragStartSec.value, currentSec);
-  ensureTrimRegion(regionsApi, rightDragStartSec.value, endSec);
+  const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
+  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
   // 同上：显式回写输入框，确保“拖动过程中 end 实时变化”可见。
-  emit('update:startMs', Math.max(0, Math.round(rightDragStartSec.value * 1000)));
-  emit('update:endMs', Math.max(0, Math.round(endSec * 1000)));
+  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
 }
 
 function onWaveformPointerUp(ev: PointerEvent) {
@@ -512,10 +545,11 @@ function onWaveformPointerUp(ev: PointerEvent) {
   if (instance && regionsApi && isWaveSurferInteractive(instance) && rightDragStartSec.value !== null) {
     const currentSec = pointerEventToTimeSec(instance, ev);
     const endSec = Math.max(rightDragStartSec.value, currentSec);
-    ensureTrimRegion(regionsApi, rightDragStartSec.value, endSec);
+    const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
+    ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
-    emit('update:startMs', Math.max(0, Math.round(rightDragStartSec.value * 1000)));
-    emit('update:endMs', Math.max(0, Math.round(endSec * 1000)));
+    emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+    emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
   }
 
   isRightDragSelecting.value = false;
@@ -779,14 +813,12 @@ function syncRegionFromProps() {
   // - 过去在 end<=start 时直接 return，导致用户“先改 start（或先改 end）”完全看不到任何波形变化。
   // - 这会被用户感知为“没效果”。
   //
-  // 现在改为：当 end<=start 时，仍然把 region 渲染为一个 marker（start==end）。
-  // - 这样用户逐个编辑 start/end 时也能看到指针（marker）实时移动
-  // - 当 end 变得 > start 时，marker 会自然扩展为选区
-  const endSec = endMs > startMs ? endMs / 1000 : startSec;
-
-  // 与 ensureTrimRegion 的逻辑保持一致：marker 与 region 使用不同颜色，避免“看不到”。
-  const isMarker = endSec === startSec;
-  const color = isMarker ? markerLineColor : regionFillColor;
+  // 现在改为：当 end<=start 时，仍然渲染一个“可操作的非零选区”，以确保两侧拖动指针始终可用。
+  // 说明：这属于渲染层的非零化（1ms），用于避免 Regions 退化为 marker。
+  // 在用户输入尚未完成时（例如先改 start 或先改 end），让 UI 保持可见且可编辑。
+  const rawEndSec = endMs > startMs ? endMs / 1000 : startSec;
+  const normalized = normalizeSelectionSec(instance, startSec, rawEndSec);
+  const color = regionFillColor;
 
   isSyncingFromProps.value = true;
   try {
@@ -794,9 +826,16 @@ function syncRegionFromProps() {
     const existing = list.find((r) => r.id === regionId);
     if (existing) {
       // 关键修复点：wavesurfer v7 的 Region 没有 update()，应使用 setOptions()
-      existing.setOptions?.({ start: startSec, end: endSec, color });
+      existing.setOptions?.({ start: normalized.startSec, end: normalized.endSec, color });
     } else {
-      regionsApi.addRegion?.({ id: regionId, start: startSec, end: endSec, color, drag: true, resize: true });
+      regionsApi.addRegion?.({
+        id: regionId,
+        start: normalized.startSec,
+        end: normalized.endSec,
+        color,
+        drag: true,
+        resize: true,
+      });
     }
   } catch {
     // ignore
