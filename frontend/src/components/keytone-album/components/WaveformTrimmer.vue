@@ -631,25 +631,85 @@ function togglePlay() {
 }
 
 function bindWheelZoom() {
-  // Ctrl + 滚轮缩放：属于加成体验，不影响 slider 主入口
+  // Ctrl + 滚轮缩放：属于加成体验，不影响 slider 主入口。
+  //
+  // 用户反馈：旧实现“步进跳变大 + 无锚点”，体验很差。
+  // 这里改为：
+  // 1) 使用指数缩放（更接近剪辑软件/地图缩放的手感）
+  // 2) 使用 requestAnimationFrame 节流（避免 trackpad 高频 wheel 造成抖动）
+  // 3) 以鼠标所在时间点为锚点（缩放后该时间点仍留在鼠标位置附近，不会“飘”）
   const el = containerEl.value;
   if (!el) return;
 
+  let rafId: number | null = null;
+  let accumulatedDeltaY = 0;
+  let lastClientX = 0;
+
+  const applyZoomFrame = () => {
+    rafId = null;
+
+    const instance = ws.value;
+    if (!instance || !isReady.value) {
+      accumulatedDeltaY = 0;
+      return;
+    }
+
+    // 计算锚点时间（缩放前）：用当前 DOM 宽度/滚动来映射，确保与用户视觉一致。
+    const scrollEl = resolveWaveformScrollElement(instance);
+    const rect = scrollEl.getBoundingClientRect();
+    const xInView = Math.max(0, Math.min(rect.width, lastClientX - rect.left));
+    const anchorTimeSec = pointerEventToTimeSec(
+      instance,
+      ({ clientX: lastClientX, button: 0 } as unknown as PointerEvent)
+    );
+
+    // 指数缩放系数：deltaY>0(向下滚) => 缩小；deltaY<0(向上滚) => 放大
+    // 系数选择：0.002 在触控板与鼠标滚轮上都相对平滑；可按体验继续微调。
+    const factor = Math.exp(-accumulatedDeltaY * 0.002);
+    accumulatedDeltaY = 0;
+
+    const currentZoom = zoomMinPxPerSec.value;
+    const targetZoom = Math.max(zoomMin, Math.min(zoomMax, Math.round(currentZoom * factor)));
+    if (targetZoom === currentZoom) return;
+
+    // 通过更新响应式 zoom 值触发后续的 instance.zoom(...)（见下方 watch）。
+    zoomMinPxPerSec.value = targetZoom;
+
+    // 锚点滚动校正：在 zoom 生效并重绘后，把 scrollLeft 调整到让锚点时间仍对应鼠标位置。
+    // 注意：重绘是异步的，scrollWidth 会在下一帧/下下帧才稳定。
+    requestAnimationFrame(() => {
+      const dur = instance.getDuration();
+      if (!Number.isFinite(dur) || dur <= 0) return;
+
+      const newScrollEl = resolveWaveformScrollElement(instance);
+      const newTotalWidth = newScrollEl.scrollWidth || newScrollEl.clientWidth || 0;
+      if (!Number.isFinite(newTotalWidth) || newTotalWidth <= 0) return;
+
+      const desiredGlobalX = (anchorTimeSec / dur) * newTotalWidth;
+      const desiredScrollLeft = Math.max(0, desiredGlobalX - xInView);
+      newScrollEl.scrollLeft = desiredScrollLeft;
+    });
+  };
+
   const onWheel = (ev: WheelEvent) => {
     if (!ev.ctrlKey) return;
+    // 方向确认：用户选择 3A（向上滚 = 放大；向下滚 = 缩小）。这与 deltaY 的标准方向一致。
     ev.preventDefault();
 
-    // deltaY > 0 往下滚：缩小；deltaY < 0 往上滚：放大
-    const direction = ev.deltaY > 0 ? -1 : 1;
-    const next = Math.max(zoomMin, Math.min(zoomMax, zoomMinPxPerSec.value + direction * 50));
-    zoomMinPxPerSec.value = next;
+    // 聚合 delta，交给 RAF 一次性计算，减少“齿轮感/跳变”。
+    accumulatedDeltaY += ev.deltaY;
+    lastClientX = ev.clientX;
+    if (rafId === null) rafId = requestAnimationFrame(applyZoomFrame);
   };
 
   // passive:false 才能 preventDefault
   // 注意：为避免 TS 在 add/remove 的 listener 类型上产生不必要的噪音，这里显式转为 EventListener。
   const listener = onWheel as unknown as EventListener;
   el.addEventListener('wheel', listener, { passive: false });
-  return () => el.removeEventListener('wheel', listener);
+  return () => {
+    if (rafId !== null) cancelAnimationFrame(rafId);
+    el.removeEventListener('wheel', listener);
+  };
 }
 
 async function initWaveSurfer() {
@@ -673,7 +733,12 @@ async function initWaveSurfer() {
       progressColor: '#64748b',
       cursorColor: '#0ea5e9',
       cursorWidth: 2,
-      normalize: true,
+      // 波形显示不做 normalize：
+      // - normalize 会把全曲最大峰值拉满高度。
+      // - 在高缩放（minPxPerSec 较大）时，底噪/静音段的细小波动会被“视觉夸张”，
+      //   用户会误以为静音段也有明显波形（反馈为“缩放>=100后波形异常”）。
+      // - 关闭 normalize 后，波形高度更接近真实相对振幅：小噪声仍会显示，但不会被夸张放大。
+      normalize: false,
       interact: true,
       dragToSeek: true,
       autoScroll: true,
