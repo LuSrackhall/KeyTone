@@ -174,6 +174,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               v-if="ctx.showEditSoundDialog.value"
               :sha256="ctx.selectedSound.value.soundValue.source_file_for_sound.sha256"
               :file-type="ctx.selectedSound.value.soundValue.source_file_for_sound.type"
+              :volume="ctx.selectedSound.value.soundValue.cut.volume"
               v-model:startMs="ctx.selectedSound.value.soundValue.cut.start_time"
               v-model:endMs="ctx.selectedSound.value.soundValue.cut.end_time"
             />

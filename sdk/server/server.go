@@ -1042,6 +1042,23 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// ============================================================================
+		// 体验策略：SDK 预览播放严格限制 <= 5000ms
+		//
+		// 背景：SDK 侧目前缺少“暂停”能力；如果允许长片段预览，将造成体验不可控。
+		// 处理：当 isPreviewMode=true 时，严格拒绝超过 5 秒的预览请求。
+		// 注意：这里既做服务端兜底（权威限制），前端也会做一次提前校验以给更友好的提示。
+		// ============================================================================
+		if arg.IsPreviewMode {
+			const maxPreviewMs = 5000.0
+			if (arg.EndTime - arg.StartTime) > maxPreviewMs {
+				ctx.JSON(http.StatusNotAcceptable, gin.H{
+					"message": "error: SDK预览播放仅支持<=5000ms的片段，请使用前端试听播放条",
+				})
+				return
+			}
+		}
+
 		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
 		if !ok {
 			ctx.JSON(http.StatusInternalServerError, gin.H{

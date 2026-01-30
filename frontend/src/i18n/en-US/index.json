@@ -184,6 +184,24 @@
         "volume": "0=original, >0=amplify, <0=attenuate. Use 0.1 increments",
         "volume_1": "Of course, you can also manually input to make a more detailed adjustment, such as 0.0001, etc. Please preview again after each volume adjustment to check the effect, to prevent the volume from being too small or too large.",
         "previewSound": "The sounds used for key presses are usually very short, so the sounds from consecutive previews will play concurrently and will not provide a progress bar or stop button (if necessary, you can restart this application to stop them). Therefore, please follow the principles of sound definition."
+      },
+      "waveformTrimmer": {
+        "play": "Play",
+        "pause": "Pause",
+        "stop": "Stop",
+        "zoom": "Zoom",
+
+        "playScopeAll": "Play All",
+        "playScopeSelection": "Play Selection",
+
+        "noSource": "Select an audio source file to show the waveform.",
+        "loading": "Loading waveform...",
+        "unavailableFallback": "Waveform is unavailable. Falling back to manual trimming.",
+
+        "current": "Current: ",
+        "total": "Total: ",
+        "selection": "Selection: ",
+        "hint": "(Drag/click the playhead; Ctrl + wheel to zoom; right-drag to quickly select a range)"
       }
     },
     "craftKeySounds": {

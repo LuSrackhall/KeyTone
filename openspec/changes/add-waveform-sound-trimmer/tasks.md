@@ -14,18 +14,25 @@
 
 ## 3. 前端组件实现
 
-- [ ] 引入并封装波形组件（建议使用 wavesurfer.js + Regions/Timeline/Hover 插件，或等价实现）。
-- [ ] 与现有 start/end 输入框双向同步：
+- [x] 引入并封装波形组件（建议使用 wavesurfer.js + Regions/Timeline/Hover 插件，或等价实现）。
+- [x] 修复与现有 start/end 输入框双向同步：
   - 拖拽选区 -> 更新 start/end
   - 编辑 start/end -> 更新选区
-- [ ] 加入边界与校验：start>=0、end>start、end<=duration（如能获取 duration）。
+- [x] 新增交互：右键按下即定起点、拖动实时更新终点、松开定终点（无菜单）。
+- [x] 加入边界与校验：start>=0、end>start、end<=duration（如能获取 duration）。
+- [x] 增强体验：zoom/滚动（可观察到约 100ms 级别片段）。
+- [x] 增强体验：前端试听播放条（播放/暂停、拖动播放头、显示当前时间与选区时长；默认播放全部，支持切换为播放选区；不做循环播放）。
+- [x] 前端试听音量参考当前音量设置（尽量贴近 SDK 的 volume 行为）。
+- [x] i18n：波形组件新增 UI 文案接入 i18n（至少中文与英文），并在提示中包含“右键拖拽快速选区”的说明（跨平台表述）。
+- [x] 移除开发期临时调试 UI（不在交付版本展示内部状态）。
 - [ ] 与预览按钮协作：
   - 预览时使用当前选区与音量参数（保持现有 previewSound 行为）。
 
 ## 4. 后端支持（如采用路线 A 或 B）
 
-- [ ] 提供按 sha256+type 的音频流接口，并明确错误响应：文件不存在、类型不支持、读取失败。
-- [ ] 确保仅访问当前编辑的专辑目录下 audioFiles，避免路径穿越风险。
+- [x] 提供按 sha256+type 的音频流接口，并明确错误响应：文件不存在、类型不支持、读取失败。
+- [x] 确保仅访问当前编辑的专辑目录下 audioFiles，避免路径穿越风险。
+- [x] SDK 预览播放模式严格限制 <=5000ms：超限请求返回明确错误。
 
 ## 5. 体验打磨
 
@@ -39,4 +46,8 @@
   - 拖拽选区后，start/end 正确更新且可保存。
   - 直接输入 start/end 后，选区正确跟随。
   - 波形不可用时，仍能完成创建/编辑与预览。
-- [ ] 运行 `openspec validate add-waveform-sound-trimmer --strict --no-interactive` 通过。
+- [ ] 手动验收：
+  - 缩放/滚动可用，能定位到约 100ms 级别片段。
+  - 前端试听播放条可播放/暂停/拖动播放头，显示当前时间与选区时长。
+  - SDK 预览超过 5000ms 会拒绝并提示，引导使用前端试听。
+- [x] 运行 `openspec validate add-waveform-sound-trimmer --strict --no-interactive` 通过。
