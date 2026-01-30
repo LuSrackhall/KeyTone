@@ -110,12 +110,6 @@
     <div
       v-show="hasSource"
       class="waveform-host"
-      :style="{
-        // 通过 CSS 变量把“音量对波形视觉的影响”注入到样式层：
-        // - 不改变真实音频数据（不会影响裁剪时间与选区逻辑）
-        // - 只做纵向 scale，符合剪辑软件中“音量变大 => 波形看起来更高”的直觉
-        '--kt-waveform-y-scale': String(waveformYScale),
-      }"
     >
       <div
         ref="containerEl"
@@ -267,7 +261,10 @@ const playScopeOptions = computed(() => [
 // minPxPerSec 越大，波形越“拉长”，越容易观察 100ms 级别细节。
 const zoomMin = 50;
 const zoomMax = 1000;
-const zoomMinPxPerSec = ref(200);
+// 默认缩放：50
+// - 之前的默认值 200 在多数音频上“过度放大”，初始打开时会显得很拥挤。
+// - 用户期望默认更“放得开”，先从整体观察，再按需放大。
+const zoomMinPxPerSec = ref(50);
 
 const selectionDurationMs = computed(() => {
   if (!(props.endMs > props.startMs) || props.startMs < 0 || props.endMs < 0) return null;
@@ -345,22 +342,65 @@ const volumeLineTopPx = computed(() => {
 });
 
 const waveformYScale = computed(() => {
-  // 体验增强：音量调整时，波形“看起来”也应该发生变化。
+  // 体验增强：音量调整时，波形“看起来”也应该发生变化（剪辑软件直觉）。
   //
-  // 重要边界：
-  // - 这不应该改变音频数据本身，仅做视觉层的纵向缩放。
-  // - 缩放要“适度”：太大/太小会导致波形超出容器或接近不可见。
+  // 关键澄清（库能力边界）：
+  // - wavesurfer.js 的 waveform 是根据“音频采样数据”渲染出来的。
+  // - playback volume（setVolume / cut.volume）只影响播放增益，不会自动影响波形渲染。
+  // - wavesurfer.js 提供了用于渲染阶段的“纵向缩放参数”（barHeight），可改变渲染出来的波形高度。
   //
-  // 这里采用“与音量指数曲线同源、但更温和”的映射：
-  // - SDK 的听感：gain = 1.6 ^ volume
-  // - 视觉缩放：scale = 1.6 ^ (volume * 0.1)
-  //   => volume=0 时 scale=1（完全不变）
-  //   => volume=10 时 scale≈1.6（明显但不过分）
-  //   => volume=-10 时 scale≈0.625（降低但仍可见）
+  // 为什么不用 canvas 的 transform(scaleY)：
+  // - transform 会对像素进行缩放插值，容易出现你反馈的“静音中位线变粗/发糊/加醋”的伪影。
+  // - 特别是在缩放到最大值瞬间，插值会更明显。
+  //
+  // 因此我们把该值用于 wavesurfer 的 barHeight（渲染阶段缩放），并触发重绘：
+  // - 渲染出来的线条更干净
+  // - 不会产生 transform 插值导致的粗线伪影
+  //
+  // 映射策略：与 SDK 听感曲线同源，但更温和，并限制最大最小，避免极端时过于“顶满”。
+  // - SDK 听感：gain = 1.6 ^ volume
+  // - 视觉缩放：scale = 1.6 ^ (volume * 0.08)
+  //   => volume=0  => 1
+  //   => volume=10 => ~1.48（明显但不会把整体顶满得太夸张）
+  //   => volume=-10=> ~0.68
   const volume = props.volume ?? 0;
-  const scale = Math.pow(1.6, volume * 0.1);
-  return Math.max(0.5, Math.min(2.0, scale));
+  const scale = Math.pow(1.6, volume * 0.08);
+  return Math.max(0.65, Math.min(1.5, scale));
 });
+
+// =============================================================================
+// 波形“音量反馈”实现（更美观的方式）
+//
+// 目标：音量变化时波形高度随之变化，但不产生 transform 插值伪影。
+// 实现：使用 wavesurfer.js 的渲染参数 barHeight，并在音量变化时 setOptions 触发重绘。
+//
+// 性能注意：
+// - 用户拖动音量线会产生高频更新（pointermove）。
+// - 直接在每次事件里 setOptions 会导致过多重绘。
+// - 因此这里用 requestAnimationFrame 做“每帧最多一次”的合并更新。
+// =============================================================================
+let barHeightRafId: number | null = null;
+let pendingBarHeight: number | null = null;
+
+function scheduleApplyWaveformBarHeight() {
+  const instance = ws.value;
+  if (!instance) return;
+
+  // 记录本次希望应用的值（会被后续更新覆盖，确保最后一次赢）
+  pendingBarHeight = waveformYScale.value;
+
+  if (barHeightRafId !== null) return;
+  barHeightRafId = requestAnimationFrame(() => {
+    barHeightRafId = null;
+    const next = pendingBarHeight;
+    pendingBarHeight = null;
+    if (next === null) return;
+
+    // 核心：通过渲染参数改变波形高度（而不是对 canvas 做 transform）。
+    // setOptions 会触发内部 reRender，从而更新波形绘制结果。
+    instance.setOptions({ barHeight: next });
+  });
+}
 
 // 视觉：选区使用半透明填充。
 // 注意：本组件只保留“可双端拖动”的选区版本。
@@ -945,6 +985,11 @@ async function initWaveSurfer() {
       progressColor: '#64748b',
       cursorColor: '#0ea5e9',
       cursorWidth: 2,
+      // 纵向高度缩放（视觉反馈）：
+      // - wavesurfer 的波形渲染支持 barHeight（渲染阶段缩放）。
+      // - 这比对 canvas 做 transform 更干净，不会出现“静音中位线变粗/糊”的伪影。
+      // - 初始值使用当前 props.volume 映射出来的 scale。
+      barHeight: waveformYScale.value,
       // 波形显示不做 normalize：
       // - normalize 会把全曲最大峰值拉满高度。
       // - 在高缩放（minPxPerSec 较大）时，底噪/静音段的细小波动会被“视觉夸张”，
@@ -991,6 +1036,10 @@ async function initWaveSurfer() {
 
       // 音量：尽量贴近 SDK 的 cut.volume 听感（映射为前端 gain）
       applyFrontendPreviewVolume();
+      // 初始化波形纵向缩放（渲染参数 barHeight）。
+      // 说明：虽然 create() 里已传入 barHeight，但在某些情况下（例如 ready 后首次完整渲染）
+      // 再做一次 schedule 可以确保视觉状态与当前 volume 完全一致。
+      scheduleApplyWaveformBarHeight();
 
       // 允许拖拽创建 region
       try {
@@ -1134,6 +1183,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // 避免组件销毁后 RAF 回调仍尝试操作 instance。
+  if (barHeightRafId !== null) cancelAnimationFrame(barHeightRafId);
+  barHeightRafId = null;
+  pendingBarHeight = null;
   destroyWaveSurfer();
 });
 
@@ -1149,6 +1202,9 @@ watch(
   () => props.volume,
   () => {
     applyFrontendPreviewVolume();
+    // 音量变化时同步更新波形纵向缩放（视觉反馈）：
+    // - 使用 barHeight（渲染阶段缩放）而非 canvas transform（避免伪影）。
+    scheduleApplyWaveformBarHeight();
   }
 );
 
@@ -1201,23 +1257,13 @@ watch(
 
 // 视觉增强：音量变化时，让波形“高度”产生适度反馈。
 //
-// 为什么只对 canvas/svg 做 transform：
-// - Regions/光标/选区手柄等是独立的 DOM 层（div），不应被一起缩放，否则会影响可点选区域与对齐。
-// - 波形本体通常由 canvas（或 svg）绘制，因此只缩放这些绘图层能达到“符合直觉”的效果。
-// 视觉增强：音量变化时，让波形"高度"产生适度反馈。
+// 当前实现说明：
+// - 不使用对 canvas 做 transform(scaleY) 的方式：
+//   该方式会引入插值伪影（例如静音中位线变粗/发糊），观感不佳。
+// - 改用 wavesurfer 的渲染参数 barHeight：
+//   这是渲染阶段缩放，线条更干净，也更符合用户对“波形高度变化”的直觉。
 //
-// wavesurfer.js v7 的 DOM 结构：
-// - 波形由内部的 <div style="..."> 包裹的 canvas 绘制。
-// - 使用 :deep() 穿透 scoped style，对所有后代 canvas 应用 scaleY。
-//
-// 注意：
-// - Regions/光标/选区手柄等是独立的 DOM 层（div），不应被一起缩放，否则会影响可点选区域与对齐。
-// - 因此只对 canvas 做 transform（不对整个 .waveform 做）。
-// - 使用 !important 确保优先级高于 wavesurfer 的内联样式。
-.waveform :deep(canvas) {
-  transform: scaleY(var(--kt-waveform-y-scale, 1)) !important;
-  transform-origin: 50% 50%;
-}
+// 代码实现位于脚本区：scheduleApplyWaveformBarHeight()。
 
 // 音量快捷调节条
 //

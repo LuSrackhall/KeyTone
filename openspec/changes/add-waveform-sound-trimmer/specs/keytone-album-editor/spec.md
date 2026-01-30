@@ -29,6 +29,8 @@ Normative: 在键音专辑编辑器 Step2「定义声音」中，系统 SHALL �
 
 Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 SHALL 提供前端试听播放条以支持暂停与拖动播放头；默认播放范围 SHALL 为“播放全部”，并允许切换为“播放选区”。
 
+Normative: 波形组件在首次加载成功后，其默认 zoom（minPxPerSec） SHALL 为 `50`。
+
 #### Scenario: 缩放/滚动辅助精确定位
 
 - **GIVEN** 用户已加载波形
@@ -58,6 +60,8 @@ Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 
 Normative: 波形区域 SHALL 提供一条横向音量指示线，用户可通过上下拖动快速调整当前裁剪的 `cut.volume`，并与数值输入框保持双向同步；当 `cut.volume == 0` 时，指示线在 UI 上 SHALL 位于中位（unity gain 参考线）。
 
 Non-normative: 为符合剪辑软件直觉，音量调整过程中波形本体 SHOULD 提供适度的视觉反馈（例如纵向高度变化），但该反馈不得影响时间映射与选区可操作性。
+
+Non-normative: 实现应避免对 canvas 施加 `transform: scaleY(...)` 造成的插值伪影（例如静音中位线变粗/发糊）；若使用 wavesurfer.js，优先考虑通过渲染参数（例如 `barHeight`）进行渲染阶段缩放并触发重绘。
 
 #### Scenario: 拖动音量指示线修改音量
 
