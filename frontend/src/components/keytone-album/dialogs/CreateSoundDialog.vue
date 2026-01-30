@@ -125,7 +125,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
           v-if="ctx.createNewSound.value"
           :sha256="ctx.sourceFileForSound.value.sha256"
           :file-type="ctx.sourceFileForSound.value.type"
-          :volume="ctx.soundVolume.value"
+          v-model:volume="ctx.soundVolume.value"
           v-model:startMs="ctx.soundStartTime.value"
           v-model:endMs="ctx.soundEndTime.value"
         />

@@ -107,14 +107,39 @@
       </q-banner>
     </div>
 
-    <div
-      v-show="hasSource"
-      ref="containerEl"
-      class="waveform"
-      @pointerdown.capture="onWaveformPointerDown"
-      @mousedown.capture="onWaveformMouseDown"
-      @contextmenu.prevent
-    />
+    <div v-show="hasSource" class="waveform-host">
+      <div
+        ref="containerEl"
+        class="waveform"
+        @pointerdown.capture="onWaveformPointerDown"
+        @mousedown.capture="onWaveformMouseDown"
+        @contextmenu.prevent
+      />
+
+      <!--
+        音量快捷调节条（剪辑软件风格）：
+        - 一条横向指示线代表当前音量（0 位于中线）。
+        - 在指示线附近按下并拖动：
+          * 向上拖动 => 音量增加
+          * 向下拖动 => 音量降低
+        - 该控件仅影响当前音频裁剪的 cut.volume（与输入框双向同步）。
+      -->
+      <div class="volume-overlay" aria-hidden="true">
+        <!--
+          0 基准线（永远位于中位）：
+          - 这是“UI 对齐认知”的辅助线：让用户一眼知道“0=中位（unity gain）”。
+          - 当当前音量刚好为 0 时，蓝色音量线会与该线重合。
+        -->
+        <div class="volume-zero-line" />
+        <div class="volume-line" :style="{ top: volumeLineTop }" />
+        <div class="volume-handle" :style="{ top: volumeLineTop }" />
+        <div
+          class="volume-line-hit"
+          :style="{ top: volumeLineTop }"
+          @pointerdown="onVolumePointerDown"
+        />
+      </div>
+    </div>
 
     <div v-if="isReady && durationMs" class="text-[12px] text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
       <div>{{ t('KeyToneAlbum.defineSounds.waveformTrimmer.current') }}{{ formatMs(currentTimeMs) }}</div>
@@ -193,6 +218,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:startMs', value: number): void;
   (e: 'update:endMs', value: number): void;
+  (e: 'update:volume', value: number): void;
   (e: 'loaded', payload: { durationMs: number }): void;
 }>();
 
@@ -241,6 +267,41 @@ const audioUrl = computed(() => {
 const hasSource = computed(() => !!audioUrl.value);
 
 const isSyncingFromProps = ref(false);
+
+// ============================================================================
+// 音量快捷调节（水平指示线 + 垂直拖拽）
+//
+// 需求：模拟剪辑软件的“水平音量指针条”。
+// - 0 音量对应中线；向上拖动增加音量，向下拖动降低音量。
+// - 使用 cut.volume 的“原始尺度”（Base=1.6 的指数音量），不转换为 dB。
+// - 以 SDK 预览为准：前端预览采用同一映射，不再额外 clamp。
+//
+// 设计：
+// - 为避免无穷范围带来的 UI 不可控，这里定义“可视范围”用于拖拽/指示线位置映射。
+// - 该范围不限制用户输入的数值：手动输入超出范围时，指示线会贴边显示；
+//   用户拖拽时则会把值限定在可视范围内（这是交互层的合理约束）。
+// ============================================================================
+// “可视范围”的定义必须保证 0 永远在中位。
+//
+// 用户诉求：UI 上 volume=0 一定处于中位，但不影响实际的 cut.volume 语义。
+// 因此这里采用“对称区间”来定义拖拽映射：[-X, +X]。
+// - 这只是 UI 映射范围：用于拖拽与指示线定位。
+// - 不限制用户通过输入框直接输入更大/更小的值（超出范围时指示线会贴边显示）。
+const volumeVisibleAbsMax = 10;
+const volumeMin = -volumeVisibleAbsMax;
+const volumeMax = volumeVisibleAbsMax;
+
+const isVolumeDragging = ref(false);
+const volumeDragPointerId = ref<number | null>(null);
+const volumeDragTargetEl = ref<HTMLElement | null>(null);
+
+const volumeLineTop = computed(() => {
+  const raw = props.volume ?? 0;
+  const clamped = Math.max(volumeMin, Math.min(volumeMax, raw));
+  const ratio = (clamped - volumeMin) / (volumeMax - volumeMin); // 0..1
+  // ratio=1 => top=0（最大音量在最上）; ratio=0 => top=100%（最小音量在最下）
+  return `${Math.round((1 - ratio) * 100)}%`;
+});
 
 // 视觉：选区使用半透明填充。
 // 注意：本组件只保留“可双端拖动”的选区版本。
@@ -573,6 +634,78 @@ function destroyWaveSurfer() {
   ws.value = null;
 }
 
+function pointerEventToVolume(ev: PointerEvent, host: HTMLElement): number {
+  // 将鼠标位置映射为音量值：
+  // - 顶部 => volumeMax
+  // - 底部 => volumeMin
+  const rect = host.getBoundingClientRect();
+  const y = Math.max(0, Math.min(rect.height, ev.clientY - rect.top));
+  const ratio = 1 - y / rect.height; // 0..1（顶端=1）
+  return volumeMin + ratio * (volumeMax - volumeMin);
+}
+
+function onVolumePointerDown(ev: PointerEvent) {
+  // 仅响应主键拖动（避免与右键选区冲突）
+  if (ev.button !== 0) return;
+  ev.preventDefault();
+
+  const host = containerEl.value;
+  if (!host) return;
+
+  isVolumeDragging.value = true;
+  volumeDragPointerId.value = ev.pointerId;
+  volumeDragTargetEl.value = ev.currentTarget as HTMLElement | null;
+
+  try {
+    volumeDragTargetEl.value?.setPointerCapture?.(ev.pointerId);
+  } catch {
+    // ignore
+  }
+
+  const nextVolume = pointerEventToVolume(ev, host);
+  emit('update:volume', Number(nextVolume.toFixed(3)));
+
+  window.addEventListener('pointermove', onVolumePointerMove, { passive: false });
+  window.addEventListener('pointerup', onVolumePointerUp, { passive: false });
+  // pointercancel 在以下场景可能触发：
+  // - 触控板/浏览器手势接管了指针流
+  // - OS 层中断（弹出菜单、窗口切换等）
+  // 如果不处理，用户会感知为“拖动时灵时不灵/有时突然失效”。
+  window.addEventListener('pointercancel', onVolumePointerUp, { passive: false });
+}
+
+function onVolumePointerMove(ev: PointerEvent) {
+  if (!isVolumeDragging.value) return;
+  ev.preventDefault();
+
+  const host = containerEl.value;
+  if (!host) return;
+
+  const nextVolume = pointerEventToVolume(ev, host);
+  emit('update:volume', Number(nextVolume.toFixed(3)));
+}
+
+function onVolumePointerUp(ev: PointerEvent) {
+  if (!isVolumeDragging.value) return;
+  ev.preventDefault();
+
+  try {
+    if (volumeDragTargetEl.value && volumeDragPointerId.value !== null) {
+      volumeDragTargetEl.value.releasePointerCapture?.(volumeDragPointerId.value);
+    }
+  } catch {
+    // ignore
+  } finally {
+    isVolumeDragging.value = false;
+    volumeDragPointerId.value = null;
+    volumeDragTargetEl.value = null;
+  }
+
+  window.removeEventListener('pointermove', onVolumePointerMove);
+  window.removeEventListener('pointerup', onVolumePointerUp);
+  window.removeEventListener('pointercancel', onVolumePointerUp);
+}
+
 /**
  * 将 SDK 的 cut.volume（Base=1.6 的指数音量）映射为前端试听用的线性 gain。
  *
@@ -583,9 +716,10 @@ function destroyWaveSurfer() {
  */
 function sdkVolumeToFrontendGain(volume: number): number {
   const base = 1.6;
-  const gain = Math.pow(base, volume);
-  // 保护：避免极端值导致爆音/失真
-  return Math.max(0, Math.min(gain, 4));
+  // SDK 预览模式使用 beep/effects.Volume：
+  // amplitude = Base ^ Volume （Base=1.6）。
+  // 前端预览以 SDK 预览为准，因此这里不做额外 clamp，保持与 SDK 一致的增益曲线。
+  return Math.pow(base, volume);
 }
 
 function applyFrontendPreviewVolume() {
@@ -832,10 +966,15 @@ async function initWaveSurfer() {
       instance.on('destroy', () => {
         window.removeEventListener('pointermove', onWaveformPointerMove);
         window.removeEventListener('pointerup', onWaveformPointerUp);
+        window.removeEventListener('pointermove', onVolumePointerMove);
+        window.removeEventListener('pointerup', onVolumePointerUp);
         isRightDragSelecting.value = false;
         rightDragStartSec.value = null;
         rightDragCapturedEl.value = null;
         rightDragCapturedPointerId.value = null;
+        isVolumeDragging.value = false;
+        volumeDragPointerId.value = null;
+        volumeDragTargetEl.value = null;
       });
     });
 
@@ -959,6 +1098,10 @@ watch(
   @apply mt-2;
 }
 
+.waveform-host {
+  @apply relative;
+}
+
 .waveform {
   @apply w-full;
   @apply rounded-md;
@@ -976,5 +1119,52 @@ watch(
   @apply [&::-webkit-scrollbar-thumb]:bg-zinc-900/30;
   @apply [&::-webkit-scrollbar-thumb]:rounded-full;
   @apply [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50;
+}
+
+// 音量快捷调节条
+.volume-overlay {
+  @apply absolute inset-0;
+  @apply pointer-events-none;
+  @apply z-10;
+}
+
+.volume-zero-line {
+  // 0 基准线：永远在中位（50%）。
+  // 该线仅作为视觉参照，不参与交互。
+  @apply absolute left-0 right-0;
+  top: 50%;
+  @apply h-px;
+  @apply bg-zinc-400/40;
+}
+
+.volume-line {
+  @apply absolute left-0 right-0;
+  @apply h-px;
+  @apply bg-sky-500/70;
+}
+
+.volume-handle {
+  @apply absolute;
+  @apply left-2;
+  @apply w-2 h-2;
+  @apply -translate-y-1/2;
+  @apply rounded-full;
+  @apply bg-sky-500;
+  @apply shadow-sm;
+}
+
+.volume-line-hit {
+  @apply absolute left-0 right-0;
+  // 命中区做大：这是“拖动时灵时不灵”的主要根因。
+  // 之前仅 3px 很难点中，用户稍微偏一点就点到波形本体（被 wavesurfer 接管），导致看起来像没响应。
+  @apply h-6;
+  @apply -translate-y-1/2;
+  @apply pointer-events-auto;
+  @apply cursor-ns-resize;
+  @apply bg-transparent;
+
+  // 防止浏览器把拖动当成滚动/选择手势（尤其是触控板 + Electron 环境）
+  touch-action: none;
+  user-select: none;
 }
 </style>

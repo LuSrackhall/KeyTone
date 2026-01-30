@@ -53,6 +53,35 @@ Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 
 
 ---
 
+### Requirement: 波形区域提供快捷音量调节条
+
+Normative: 波形区域 SHALL 提供一条横向音量指示线，用户可通过上下拖动快速调整当前裁剪的 `cut.volume`，并与数值输入框保持双向同步；当 `cut.volume == 0` 时，指示线在 UI 上 SHALL 位于中位（unity gain 参考线）。
+
+#### Scenario: 拖动音量指示线修改音量
+
+- **GIVEN** 用户打开“创建声音/编辑声音”对话框且波形组件可见
+- **WHEN** 用户在音量指示线附近按下并向上拖动
+- **THEN** 系统 SHALL 提升当前裁剪的 `cut.volume`
+- **AND** 数值输入框 SHALL 同步更新
+
+#### Scenario: 拖动命中区稳定且易用
+
+- **GIVEN** 用户打开“创建声音/编辑声音”对话框且波形组件可见
+- **WHEN** 用户尝试在音量指示线附近按下并拖动
+- **THEN** 系统 SHOULD 提供足够大的命中区以保证拖动稳定
+- **AND** 系统 SHOULD 在手势/系统中断（例如 pointercancel）时正确结束拖动状态，避免交互卡死或失效
+
+#### Scenario: 向下拖动降低音量
+
+- **GIVEN** 用户打开“创建声音/编辑声音”对话框且波形组件可见
+- **WHEN** 用户在音量指示线附近按下并向下拖动
+- **THEN** 系统 SHALL 降低当前裁剪的 `cut.volume`
+- **AND** 数值输入框 SHALL 同步更新
+
+---
+
+---
+
 ### Requirement: 为波形渲染提供音频流数据源
 
 Normative: 系统 SHALL 提供可被前端访问的音频流数据源，用于从当前专辑的音频源文件生成波形；该数据源应当能够通过源文件引用信息定位（例如 sha256 + type）。
@@ -145,3 +174,15 @@ Normative: 系统 SHALL 对裁剪区间进行基础校验，避免保存明显�
 - **GIVEN** 用户选择或输入了裁剪区间
 - **WHEN** start < 0 或 end < 0
 - **THEN** 系统 SHALL 提示错误并要求修正
+
+---
+
+### Requirement: 前端试听音量与 SDK 预览一致
+
+Normative: 前端试听播放的音量映射 SHALL 与 SDK 预览模式一致（Base=1.6 的指数曲线），不应额外 clamp 或引入与 SDK 不一致的增益处理。
+
+#### Scenario: 前端试听音量与 SDK 预览一致
+
+- **GIVEN** 用户将 `cut.volume` 设置为任意值（例如 5）
+- **WHEN** 用户分别使用前端试听播放条与 SDK 预览进行试听
+- **THEN** 两者的音量变化趋势与相对听感 SHOULD 保持一致（以 SDK 预览为准）
