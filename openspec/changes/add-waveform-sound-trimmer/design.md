@@ -115,6 +115,7 @@
   - 事件节流/合并（例如 requestAnimationFrame），避免触控板高频滚动导致抖动；
   - 以鼠标所在位置为锚点（缩放后该时间点不应大幅漂移），便于精确定位。
   - macOS 上优先使用 getModifierState('Control') 识别外接键盘的 Control 键，必要时允许 Meta 作为兼容兜底。
+  - 若 wheel 事件未反映 ctrlKey，可在 window 层记录 Control/Command 按键状态作为兜底。
 
 #### 波形“静音段显示异常”的说明与处理
 

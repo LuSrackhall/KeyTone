@@ -282,6 +282,31 @@ const { t } = useI18n();
 // - 其他：Ctrl + 滚轮
 const zoomHintText = computed(() => (Platform.is.mac ? t('KeyToneAlbum.defineSounds.waveformTrimmer.hintMac') : t('KeyToneAlbum.defineSounds.waveformTrimmer.hint')));
 
+// macOS 外接键盘修饰键状态（兜底）：
+// - 某些外接机械键盘的 Control 键在 wheel 事件里不会稳定反映到 ctrlKey。
+// - 因此在 window 层记录 keydown/keyup 作为备用判断。
+const macModifierState = {
+  control: false,
+  meta: false,
+};
+
+function onMacModifierKeyDown(ev: KeyboardEvent) {
+  if (!Platform.is.mac) return;
+  if (ev.key === 'Control') macModifierState.control = true;
+  if (ev.key === 'Meta') macModifierState.meta = true;
+}
+
+function onMacModifierKeyUp(ev: KeyboardEvent) {
+  if (!Platform.is.mac) return;
+  if (ev.key === 'Control') macModifierState.control = false;
+  if (ev.key === 'Meta') macModifierState.meta = false;
+}
+
+function resetMacModifierState() {
+  macModifierState.control = false;
+  macModifierState.meta = false;
+}
+
 const audioUrl = computed(() => {
   if (!props.sha256 || !props.fileType) return '';
   const baseURL = api.defaults.baseURL || '';
@@ -1625,12 +1650,20 @@ function bindWheelZoom() {
 
   // 判断是否触发“缩放手势”。
   // macOS：
-  // - 优先使用 getModifierState('Control')，兼容外接机械键盘的 Control 键。
-  // - 某些键盘把 Control 映射为 Meta/Command，作为兜底允许。
+  // - 优先使用 getModifierState('Control') + ev.ctrlKey
+  // - 若外接键盘未在 wheel 事件里反映 ctrlKey，则使用 window 记录的修饰键状态兜底
+  // - 某些键盘把 Control 映射为 Meta/Command，作为兜底允许
   // 其他平台：仅识别 Ctrl。
   const isZoomGesture = (ev: WheelEvent) => {
     if (Platform.is.mac) {
-      return ev.getModifierState?.('Control') || ev.ctrlKey || ev.getModifierState?.('Meta') || ev.metaKey;
+      return (
+        ev.getModifierState?.('Control') ||
+        ev.ctrlKey ||
+        macModifierState.control ||
+        ev.getModifierState?.('Meta') ||
+        ev.metaKey ||
+        macModifierState.meta
+      );
     }
     return ev.ctrlKey;
   };
@@ -1872,9 +1905,23 @@ function syncRegionFromProps() {
 
 onMounted(() => {
   initWaveSurfer();
+
+  // macOS 外接键盘修饰键兜底：在 window 级别跟踪 Control/Command 按键状态。
+  if (Platform.is.mac) {
+    window.addEventListener('keydown', onMacModifierKeyDown);
+    window.addEventListener('keyup', onMacModifierKeyUp);
+    window.addEventListener('blur', resetMacModifierState);
+  }
 });
 
 onBeforeUnmount(() => {
+  if (Platform.is.mac) {
+    window.removeEventListener('keydown', onMacModifierKeyDown);
+    window.removeEventListener('keyup', onMacModifierKeyUp);
+    window.removeEventListener('blur', resetMacModifierState);
+    resetMacModifierState();
+  }
+
   // 右键快捷选区的 live 可见性刷新：避免组件销毁后 RAF 回调仍运行。
   if (quickSelectLiveRafId !== null) cancelAnimationFrame(quickSelectLiveRafId);
   quickSelectLiveRafId = null;
