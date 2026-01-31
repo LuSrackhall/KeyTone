@@ -37,6 +37,7 @@
   - 左键拖拽应在 pointermove 与自动滚动帧内持续更新位置，确保全程丝滑。
   - 为保证体验一致，可由组件接管左键拖拽（按命中元素判定播放头/选区/指针）并自行更新位置，避免内部拖拽冲突。
   - 命中识别建议使用 composedPath + `part` token（region / region-handle-left/right），确保识别稳定。
+  - 自动滚动速度可做平滑，并使用预测 scrollLeft 计算时间点，避免“滚动与指针不同步”的割裂感。
 
 ## Notes
 

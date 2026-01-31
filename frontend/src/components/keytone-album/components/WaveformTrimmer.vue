@@ -522,6 +522,29 @@ function pointerEventToTimeSec(instance: WaveSurfer, ev: PointerEvent): number {
 }
 
 /**
+ * 使用指定 scrollLeft 计算 clientX 对应时间点（用于自动滚动帧内预测）。
+ */
+function clientXToTimeSecWithScrollLeft(
+  instance: WaveSurfer,
+  clientX: number,
+  scrollLeftOverride?: number
+): number {
+  const scrollEl = resolveWaveformScrollElement(instance);
+  const rect = scrollEl.getBoundingClientRect();
+  const xInView = Math.max(0, Math.min(rect.width, clientX - rect.left));
+
+  const dur = instance.getDuration();
+  if (!Number.isFinite(dur) || dur <= 0) return 0;
+
+  const scrollLeft = scrollLeftOverride ?? scrollEl.scrollLeft ?? 0;
+  const totalWidth = scrollEl.scrollWidth || scrollEl.clientWidth || 0;
+  if (!Number.isFinite(totalWidth) || totalWidth <= 0) return 0;
+
+  const xGlobal = xInView + scrollLeft;
+  return clampTimeSec(instance, (xGlobal / totalWidth) * dur);
+}
+
+/**
  * 将给定时间范围滚动到可见区域内（尽量少移动视图）。
  *
  * 为什么需要：
@@ -656,6 +679,8 @@ let leftDragAutoScrollRafId: number | null = null;
 let leftDragAutoScrollLastTs: number | null = null;
 let leftDragCapturedEl: HTMLElement | null = null;
 let leftDragCapturedPointerId: number | null = null;
+// 左键自动滚动速度（平滑用）：避免抖动/卡顿
+let leftDragScrollVelocity = 0; // px/s
 
 /**
  * 左键拖拽时“跟手更新”的统一入口。
@@ -665,9 +690,9 @@ let leftDragCapturedPointerId: number | null = null;
  * - 选区指针拖拽：光标在哪，对应指针就在哪（start/end 其中一侧跟随）。
  * - 在自动滚动与非自动滚动场景下都保持一致。
  */
-function updateLeftDragTarget(instance: WaveSurfer, clientX: number) {
+function updateLeftDragTarget(instance: WaveSurfer, clientX: number, targetSecOverride?: number) {
   const syntheticEv = { clientX, button: 0 } as unknown as PointerEvent;
-  const targetSec = pointerEventToTimeSec(instance, syntheticEv);
+  const targetSec = targetSecOverride ?? pointerEventToTimeSec(instance, syntheticEv);
 
   // 播放头拖拽：直接 setTime，保证跟手。
   if (leftDragMode.value === 'playhead') {
@@ -906,9 +931,15 @@ function scheduleLeftDragEdgeAutoScroll(instance: WaveSurfer) {
     leftDragAutoScrollLastTs = ts;
     const dtSec = Math.max(0, Math.min(0.05, (ts - lastTs) / 1000));
 
+    // 目标速度（渐进）：越接近边缘越快。
     const eased = intensity * intensity;
-    const speed = eased * leftDragAutoScrollMaxSpeedPxPerSec;
-    const deltaPx = direction * speed * dtSec;
+    const targetSpeed = eased * leftDragAutoScrollMaxSpeedPxPerSec; // px/s
+
+    // 速度平滑：一阶低通，避免忽快忽慢导致“卡点感”。
+    const alpha = 1 - Math.pow(0.15, dtSec * 60);
+    leftDragScrollVelocity = leftDragScrollVelocity + (targetSpeed - leftDragScrollVelocity) * alpha;
+
+    const deltaPx = direction * leftDragScrollVelocity * dtSec;
 
     const maxScrollLeft = Math.max(0, (scrollEl.scrollWidth || 0) - scrollEl.clientWidth);
     const before = scrollEl.scrollLeft;
@@ -916,15 +947,13 @@ function scheduleLeftDragEdgeAutoScroll(instance: WaveSurfer) {
 
     // 无论滚动是否发生，都必须“每帧”更新光标对应的时间点。
     // 这是“指针跟手”的关键：
-    // - 在边缘渐进区，滚动速度可能非常小（甚至 < 0.5px）。
-    // - 若仅在 scrollLeft 变化足够大时才更新，就会出现你反馈的“只在临界线位置跟手”。
-    // 每帧都更新目标位置：确保在渐进边缘区也保持跟手。
-    updateLeftDragTarget(instance, x);
+    // - 在边缘渐进区，滚动速度可能非常小。
+    // - 若仅在 scrollLeft 变化足够大时才更新，就会出现“卡在临界线”。
+    const targetSec = clientXToTimeSecWithScrollLeft(instance, x, next);
+    updateLeftDragTarget(instance, x, targetSec);
 
-    // 在需要时才真正滚动：避免无意义的 scrollLeft 写入。
-    if (Math.abs(next - before) >= 0.1) {
-      scrollEl.scrollLeft = next;
-    }
+    // 始终写入 scrollLeft（即便很小），避免“速度很小 -> 不写入 -> 视觉卡住”。
+    scrollEl.scrollLeft = next;
 
     leftDragAutoScrollRafId = requestAnimationFrame(step);
   };
@@ -1224,6 +1253,7 @@ function onWaveformLeftPointerUp() {
   if (leftDragAutoScrollRafId !== null) cancelAnimationFrame(leftDragAutoScrollRafId);
   leftDragAutoScrollRafId = null;
   leftDragAutoScrollLastTs = null;
+  leftDragScrollVelocity = 0;
 
   window.removeEventListener('pointermove', onWaveformLeftPointerMove);
   window.removeEventListener('pointerup', onWaveformLeftPointerUp);

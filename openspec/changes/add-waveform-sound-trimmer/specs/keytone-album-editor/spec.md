@@ -38,6 +38,7 @@ Non-normative: 在边缘渐进区（滚动速度很小）也 SHOULD 持续更新
 Non-normative: 左键拖拽场景下（播放头/选区指针），应在 pointermove 与自动滚动帧内持续更新位置，保证全程跟手。
 Non-normative: 为保证拖拽丝滑一致，组件可接管左键拖拽逻辑（基于命中元素判定播放头/选区/指针），避免与第三方库内部拖拽冲突。
 Non-normative: 命中识别可基于 composedPath 中的 `part` token（region / region-handle-left/right），保证识别稳定。
+Non-normative: 自动滚动速度 SHOULD 进行平滑（例如一阶低通），并使用预测的 scrollLeft 计算光标时间点，以保证跟手与滚动同步。
 
 #### Scenario: 缩放/滚动辅助精确定位
 
