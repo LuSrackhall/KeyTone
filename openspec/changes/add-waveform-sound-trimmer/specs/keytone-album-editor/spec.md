@@ -31,6 +31,14 @@ Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 
 
 Normative: 波形组件在首次加载成功后，其默认 zoom（minPxPerSec） SHALL 为 `50`。
 
+Non-normative: 当用户拖拽播放头或拖拽选区两侧指针时，波形 SHOULD 提供“边缘触发”的自动滚动体验（指针靠近视窗左右边缘才滚动，速度渐进），以便在高 zoom 下持续拖动至视野外区域。
+Non-normative: 自动滚动过程中播放头 SHOULD 保持与光标位置一致（避免出现“滚动后播放头跳跃/不跟手”）。
+Non-normative: 自动滚动过程中，选区两侧指针 SHOULD 与光标保持一致；必要时可直接更新 region 并回写 start/end，以避免内部拖拽逻辑滞后。
+Non-normative: 在边缘渐进区（滚动速度很小）也 SHOULD 持续更新光标对应的时间点，避免指针卡在临界线位置。
+Non-normative: 左键拖拽场景下（播放头/选区指针），应在 pointermove 与自动滚动帧内持续更新位置，保证全程跟手。
+Non-normative: 为保证拖拽丝滑一致，组件可接管左键拖拽逻辑（基于命中元素判定播放头/选区/指针），避免与第三方库内部拖拽冲突。
+Non-normative: 命中识别可基于 composedPath 中的 `part` token（region / region-handle-left/right），保证识别稳定。
+
 #### Scenario: 缩放/滚动辅助精确定位
 
 - **GIVEN** 用户已加载波形

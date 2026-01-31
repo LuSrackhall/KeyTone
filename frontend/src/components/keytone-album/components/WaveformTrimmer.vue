@@ -430,6 +430,22 @@ const minNonZeroSelectionSec = 0.001;
 const isRightDragSelecting = ref(false);
 const rightDragStartSec = ref<number | null>(null);
 
+// 左键拖拽类型：
+// - playhead：播放头拖拽
+// - region-move：拖拽整个选区
+// - region-resize-start / region-resize-end：拖拽选区左右指针
+//
+// 说明：
+// - 我们在这里显式区分拖拽模式，以避免 wavesurfer 内部拖拽状态机与自动滚动“打架”。
+// - 由我们统一更新播放头/选区位置，确保“跟手、丝滑”。
+type LeftDragMode = 'none' | 'playhead' | 'region-move' | 'region-resize-start' | 'region-resize-end';
+const leftDragMode = ref<LeftDragMode>('none');
+
+// 左键拖拽的基准信息（用于计算 delta 或固定另一端）：
+const leftDragStartSec = ref<number | null>(null);
+let leftDragRegionStartSec: number | null = null;
+let leftDragRegionEndSec: number | null = null;
+
 // pointer capture 的释放需要拿到同一个 element + pointerId。
 // 注意：我们的 pointerup 监听是挂在 window 上的，因此 pointerup 的 currentTarget 并不是当初按下的元素。
 // 所以这里显式记录按下时的 element 与 pointerId，用于在结束时成对释放。
@@ -625,6 +641,91 @@ let quickSelectAutoScrollRafId: number | null = null;
 let quickSelectAutoScrollLastTs: number | null = null;
 let quickSelectLastClientX: number | null = null;
 
+// 左键拖拽相关（播放头拖拽 / 选区两侧指针拖拽）：
+// - 复用“边缘触发”自动滚动手感
+// - 与右键快捷选区逻辑分离，避免互相干扰
+const leftDragAutoScrollEdgePx = quickSelectAutoScrollEdgePx;
+const leftDragAutoScrollMaxSpeedPxPerSec = quickSelectAutoScrollMaxSpeedPxPerSec;
+const leftDragMoveThresholdPx = 3; // 防止点击误触发拖拽滚动
+
+let leftDragActive = false;
+let leftDragMoved = false;
+let leftDragStartClientX: number | null = null;
+let leftDragLastClientX: number | null = null;
+let leftDragAutoScrollRafId: number | null = null;
+let leftDragAutoScrollLastTs: number | null = null;
+let leftDragCapturedEl: HTMLElement | null = null;
+let leftDragCapturedPointerId: number | null = null;
+
+/**
+ * 左键拖拽时“跟手更新”的统一入口。
+ *
+ * 设计目标：
+ * - 播放头拖拽：光标在哪，播放头就在哪（始终跟随）。
+ * - 选区指针拖拽：光标在哪，对应指针就在哪（start/end 其中一侧跟随）。
+ * - 在自动滚动与非自动滚动场景下都保持一致。
+ */
+function updateLeftDragTarget(instance: WaveSurfer, clientX: number) {
+  const syntheticEv = { clientX, button: 0 } as unknown as PointerEvent;
+  const targetSec = pointerEventToTimeSec(instance, syntheticEv);
+
+  // 播放头拖拽：直接 setTime，保证跟手。
+  if (leftDragMode.value === 'playhead') {
+    instance.setTime(targetSec);
+    return;
+  }
+
+  // 选区相关拖拽：直接更新 region。
+  const regionsApi = regionsPlugin.value;
+  if (!regionsApi) return;
+  const region = getTrimRegion(regionsApi);
+  if (!region) return;
+
+  const baseStart = leftDragRegionStartSec ?? region.start;
+  const baseEnd = leftDragRegionEndSec ?? region.end;
+
+  let nextStart = baseStart;
+  let nextEnd = baseEnd;
+
+  if (leftDragMode.value === 'region-resize-start') {
+    nextStart = targetSec;
+  } else if (leftDragMode.value === 'region-resize-end') {
+    nextEnd = targetSec;
+  } else if (leftDragMode.value === 'region-move') {
+    // 拖拽整个选区：按光标相对位移整体平移。
+    // 使用 leftDragStartSec 作为“拖拽起点”，计算 delta。
+    if (leftDragStartSec.value !== null) {
+      const delta = targetSec - leftDragStartSec.value;
+      nextStart = baseStart + delta;
+      nextEnd = baseEnd + delta;
+    }
+  }
+
+  const normalized = normalizeSelectionSec(instance, nextStart, nextEnd);
+  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
+
+  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+
+  // best-effort：仍派发 synthetic pointermove，兼容内部状态机
+  try {
+    const wrapper = instance.getWrapper() as HTMLElement | null;
+    if (wrapper) {
+      const wrapRect = wrapper.getBoundingClientRect();
+      const synthetic = new PointerEvent('pointermove', {
+        clientX,
+        clientY: wrapRect.top + wrapRect.height / 2,
+        button: 0,
+        buttons: 1,
+        bubbles: true,
+      });
+      wrapper.dispatchEvent(synthetic);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: number, endSec: number) {
   // 记录最新区间（拖动过程中会被持续覆盖，最后一次赢）
   pendingQuickSelectRange = { startSec, endSec };
@@ -752,6 +853,86 @@ function scheduleQuickSelectEdgeAutoScroll(instance: WaveSurfer) {
 }
 
 /**
+ * 左键拖拽时的边缘自动滚动（用于播放头拖拽、选区拖拽/缩放）。
+ *
+ * 关键点：
+ * - 只有在“确定是拖拽”（移动距离超过阈值）时才启用滚动，避免点击播放头时视图乱动。
+ * - 自动滚动时，需要让 wavesurfer/regions 的拖拽逻辑“继续收到 pointermove”。
+ *   否则会出现“滚动了，但播放头/选区没跟着动”的割裂感。
+ * - 这里通过派发 synthetic pointermove 到 wrapper 尝试触发内部拖拽更新。
+ *   （这是 best-effort，不依赖私有 API，失败也不会影响正常拖拽）。
+ */
+function scheduleLeftDragEdgeAutoScroll(instance: WaveSurfer) {
+  if (leftDragAutoScrollRafId !== null) return;
+
+  const step = (ts: number) => {
+    leftDragAutoScrollRafId = null;
+
+    if (!leftDragActive || !leftDragMoved) {
+      leftDragAutoScrollLastTs = null;
+      return;
+    }
+
+    if (leftDragLastClientX === null) {
+      leftDragAutoScrollLastTs = null;
+      return;
+    }
+
+    const scrollEl = resolveWaveformScrollElement(instance);
+    const rect = scrollEl.getBoundingClientRect();
+
+    const leftEdge = rect.left + leftDragAutoScrollEdgePx;
+    const rightEdge = rect.right - leftDragAutoScrollEdgePx;
+    const x = leftDragLastClientX;
+
+    let direction = 0;
+    let intensity = 0;
+    if (x <= leftEdge) {
+      direction = -1;
+      const dist = Math.min(leftDragAutoScrollEdgePx, leftEdge - x);
+      intensity = dist / leftDragAutoScrollEdgePx;
+    } else if (x >= rightEdge) {
+      direction = 1;
+      const dist = Math.min(leftDragAutoScrollEdgePx, x - rightEdge);
+      intensity = dist / leftDragAutoScrollEdgePx;
+    }
+
+    if (direction === 0 || intensity <= 0) {
+      leftDragAutoScrollLastTs = null;
+      return;
+    }
+
+    const lastTs = leftDragAutoScrollLastTs ?? ts;
+    leftDragAutoScrollLastTs = ts;
+    const dtSec = Math.max(0, Math.min(0.05, (ts - lastTs) / 1000));
+
+    const eased = intensity * intensity;
+    const speed = eased * leftDragAutoScrollMaxSpeedPxPerSec;
+    const deltaPx = direction * speed * dtSec;
+
+    const maxScrollLeft = Math.max(0, (scrollEl.scrollWidth || 0) - scrollEl.clientWidth);
+    const before = scrollEl.scrollLeft;
+    const next = Math.max(0, Math.min(maxScrollLeft, before + deltaPx));
+
+    // 无论滚动是否发生，都必须“每帧”更新光标对应的时间点。
+    // 这是“指针跟手”的关键：
+    // - 在边缘渐进区，滚动速度可能非常小（甚至 < 0.5px）。
+    // - 若仅在 scrollLeft 变化足够大时才更新，就会出现你反馈的“只在临界线位置跟手”。
+    // 每帧都更新目标位置：确保在渐进边缘区也保持跟手。
+    updateLeftDragTarget(instance, x);
+
+    // 在需要时才真正滚动：避免无意义的 scrollLeft 写入。
+    if (Math.abs(next - before) >= 0.1) {
+      scrollEl.scrollLeft = next;
+    }
+
+    leftDragAutoScrollRafId = requestAnimationFrame(step);
+  };
+
+  leftDragAutoScrollRafId = requestAnimationFrame(step);
+}
+
+/**
  * 修复：高 zoom 下“右键快捷选区”后选区偶发不可见。
  *
  * 用户现象：
@@ -795,6 +976,26 @@ function ensureQuickSelectRegionVisible(instance: WaveSurfer, startSec: number, 
  */
 function isSecondaryPointerDown(ev: PointerEvent): boolean {
   return ev.button === 2;
+}
+
+/**
+ * 在 composedPath 中查找具有指定 part token 的元素。
+ *
+ * 背景：
+ * - wavesurfer Regions 使用 `part` 标记区域与手柄（region / region-handle-left/right）。
+ * - 事件目标可能不是 handle 本身（例如点击到 handle 内部或子节点）。
+ * - 使用 composedPath 可以稳定找到真实命中元素。
+ */
+function findPartInComposedPath(ev: Event, token: string): Element | null {
+  const path = (ev.composedPath?.() || []) as Array<EventTarget>;
+  for (const node of path) {
+    if (!(node instanceof Element)) continue;
+    const part = node.getAttribute('part');
+    if (!part) continue;
+    const parts = part.split(/\s+/);
+    if (parts.includes(token)) return node;
+  }
+  return null;
 }
 
 function getTrimRegion(regionsApi: RegionsApi): Region | undefined {
@@ -851,64 +1052,182 @@ function ensureTrimRegion(regionsApi: RegionsApi, instance: WaveSurfer, startSec
 }
 
 function onWaveformPointerDown(ev: PointerEvent) {
-  // 仅响应“右键语义”（含 ctrl+click）
-  if (!isSecondaryPointerDown(ev)) return;
-  // 防抖：在 pointerdown + mousedown 同时触发的环境里避免重复启动
-  if (isRightDragSelecting.value) return;
-  // 阻止默认右键菜单与选择行为。
-  // 注意：这里不使用 stopPropagation。
-  // - stopPropagation 会让 wavesurfer 内部的一些状态机（如 dragToSeek）无法收到事件，可能引发“UI 消失/不响应”。
-  // - 我们只需要阻止浏览器默认行为即可。
-  ev.preventDefault();
+  // 优先处理“右键语义”（含 ctrl+click）
+  if (isSecondaryPointerDown(ev)) {
+    // 防抖：在 pointerdown + mousedown 同时触发的环境里避免重复启动
+    if (isRightDragSelecting.value) return;
+    // 阻止默认右键菜单与选择行为。
+    // 注意：这里不使用 stopPropagation。
+    // - stopPropagation 会让 wavesurfer 内部的一些状态机（如 dragToSeek）无法收到事件，可能引发“UI 消失/不响应”。
+    // - 我们只需要阻止浏览器默认行为即可。
+    ev.preventDefault();
 
-  const instance = ws.value;
-  const regionsApi = regionsPlugin.value;
-  if (!instance || !regionsApi) return;
-  if (!isWaveSurferInteractive(instance)) return;
+    const instance = ws.value;
+    const regionsApi = regionsPlugin.value;
+    if (!instance || !regionsApi) return;
+    if (!isWaveSurferInteractive(instance)) return;
 
-  // 关键：使用 pointer capture，确保后续 pointermove/pointerup 一定能收到。
-  // macOS/Electron 下右键拖动可能会离开元素区域，如果不 capture 会出现：按下有效，但拖动/松开没有事件 -> “右键没反应”。
-  rightDragCapturedEl.value = ev.currentTarget as HTMLElement | null;
-  rightDragCapturedPointerId.value = ev.pointerId;
-  try {
-    rightDragCapturedEl.value?.setPointerCapture?.(ev.pointerId);
-  } catch {
-    // ignore
+    // 关键：使用 pointer capture，确保后续 pointermove/pointerup 一定能收到。
+    // macOS/Electron 下右键拖动可能会离开元素区域，如果不 capture 会出现：按下有效，但拖动/松开没有事件 -> “右键没反应”。
+    rightDragCapturedEl.value = ev.currentTarget as HTMLElement | null;
+    rightDragCapturedPointerId.value = ev.pointerId;
+    try {
+      rightDragCapturedEl.value?.setPointerCapture?.(ev.pointerId);
+    } catch {
+      // ignore
+    }
+
+    // 右键按下：立即确定 start
+    const startSec = pointerEventToTimeSec(instance, ev);
+    rightDragStartSec.value = startSec;
+    isRightDragSelecting.value = true;
+    // 记录指针位置：用于边缘自动滚动（即使后续不再触发 pointermove）。
+    quickSelectLastClientX = ev.clientX;
+
+    // 注意：此处属于“用户主动操作 region”，不应该触发 isSyncingFromProps 的防循环。
+    // 但 region.setOptions 会触发 region-updated 事件，继而 emit 到外部 startMs/endMs。
+    // 这是我们想要的：右键拖拽 = 快速设置输入框数值。
+    const normalized = normalizeSelectionSec(instance, startSec, startSec);
+    ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
+
+    // 修复（可见性）：在高 zoom 下，右键按下后“选区起点”也应该立刻可见。
+    // 这一步是“全过程可见”的起点：让用户从按下瞬间开始就能看到一个最小非零选区。
+    scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+
+    // 启动“边缘自动滚动”循环（如果指针不在边缘区，会在第一帧自动退出）。
+    scheduleQuickSelectEdgeAutoScroll(instance);
+
+    // 重要：这里必须显式 emit start/end。
+    // 原因：wavesurfer v7 的 Regions 在 region.setOptions(...) 时，不一定会触发 region-updated 事件。
+    // 如果仅依赖 regions.on('region-updated' ...) 回写输入框，会出现：
+    // - 用户右键按下/拖动时 region 可能更新了，但输入框数值不变
+    // - 用户会直接感知为“右键没效果/没反应”
+    //
+    // 因此右键快速选区这一条交互链路，采用“右键事件驱动 -> 直接 emit”来保证 UI 始终同步。
+    emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+    emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+
+    // 捕获后续 move/up：即使鼠标移出波形，也能持续更新
+    window.addEventListener('pointermove', onWaveformPointerMove, { passive: false });
+    window.addEventListener('pointerup', onWaveformPointerUp, { passive: false });
+    return;
   }
 
-  // 右键按下：立即确定 start
-  const startSec = pointerEventToTimeSec(instance, ev);
-  rightDragStartSec.value = startSec;
-  isRightDragSelecting.value = true;
-  // 记录指针位置：用于边缘自动滚动（即使后续不再触发 pointermove）。
-  quickSelectLastClientX = ev.clientX;
+  // 处理左键拖拽（播放头拖拽 / 选区拖拽 / 选区指针拖拽）：
+  // - 我们接管拖拽逻辑，避免 wavesurfer 内部拖拽与自动滚动“打架”。
+  // - 因此这里对左键拖拽使用 preventDefault + stopPropagation。
+  if (ev.button === 0) {
+    const instance = ws.value;
+    const regionsApi = regionsPlugin.value;
+    if (!instance) return;
 
-  // 注意：此处属于“用户主动操作 region”，不应该触发 isSyncingFromProps 的防循环。
-  // 但 region.setOptions 会触发 region-updated 事件，继而 emit 到外部 startMs/endMs。
-  // 这是我们想要的：右键拖拽 = 快速设置输入框数值。
-  const normalized = normalizeSelectionSec(instance, startSec, startSec);
-  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
+    // 使用 composedPath 识别命中元素，避免 DOM 结构变化导致识别失败。
+    const handleLeft = findPartInComposedPath(ev, 'region-handle-left');
+    const handleRight = findPartInComposedPath(ev, 'region-handle-right');
+    const regionEl = findPartInComposedPath(ev, 'region');
 
-  // 修复（可见性）：在高 zoom 下，右键按下后“选区起点”也应该立刻可见。
-  // 这一步是“全过程可见”的起点：让用户从按下瞬间开始就能看到一个最小非零选区。
-  scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+    // 识别拖拽模式：优先 handle，其次 region，其次播放头。
+    if (handleLeft) leftDragMode.value = 'region-resize-start';
+    else if (handleRight) leftDragMode.value = 'region-resize-end';
+    else if (regionEl) leftDragMode.value = 'region-move';
+    else leftDragMode.value = 'playhead';
 
-  // 启动“边缘自动滚动”循环（如果指针不在边缘区，会在第一帧自动退出）。
-  scheduleQuickSelectEdgeAutoScroll(instance);
+    // 若是 region 相关拖拽，但当前还没有 region，则退回播放头拖拽。
+    const region = regionsApi ? getTrimRegion(regionsApi) : undefined;
+    if ((leftDragMode.value === 'region-move' || leftDragMode.value.startsWith('region-')) && !region) {
+      leftDragMode.value = 'playhead';
+    }
 
-  // 重要：这里必须显式 emit start/end。
-  // 原因：wavesurfer v7 的 Regions 在 region.setOptions(...) 时，不一定会触发 region-updated 事件。
-  // 如果仅依赖 regions.on('region-updated' ...) 回写输入框，会出现：
-  // - 用户右键按下/拖动时 region 可能更新了，但输入框数值不变
-  // - 用户会直接感知为“右键没效果/没反应”
-  //
-  // 因此右键快速选区这一条交互链路，采用“右键事件驱动 -> 直接 emit”来保证 UI 始终同步。
-  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
-  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+    // 进入左键拖拽模式：接管后续指针流。
+    // 说明：
+    // - 如果我们无法识别到 region/handle，则视为播放头拖拽。
+    // - 仍然由组件接管，以保证与自动滚动逻辑一致。
+    ev.preventDefault();
+    ev.stopPropagation();
 
-  // 捕获后续 move/up：即使鼠标移出波形，也能持续更新
-  window.addEventListener('pointermove', onWaveformPointerMove, { passive: false });
-  window.addEventListener('pointerup', onWaveformPointerUp, { passive: false });
+    leftDragActive = true;
+    leftDragMoved = false;
+    leftDragStartClientX = ev.clientX;
+    leftDragLastClientX = ev.clientX;
+
+    // 记录“拖拽起点”时间（用于 region-move 的 delta 计算）
+    const startSec = pointerEventToTimeSec(instance, ev);
+    leftDragStartSec.value = startSec;
+
+    // 记录 region 初始位置（用于 resize/move）。
+    leftDragRegionStartSec = region?.start ?? null;
+    leftDragRegionEndSec = region?.end ?? null;
+
+    // 立即更新一次（点击即生效，避免首帧不跟手）。
+    updateLeftDragTarget(instance, ev.clientX);
+
+    // 使用 pointer capture，确保移出波形区域仍能拖拽/自动滚动。
+    try {
+      leftDragCapturedEl = ev.currentTarget as HTMLElement | null;
+      leftDragCapturedPointerId = ev.pointerId;
+      leftDragCapturedEl?.setPointerCapture?.(ev.pointerId);
+    } catch {
+      // ignore
+    }
+
+    scheduleLeftDragEdgeAutoScroll(instance);
+
+    window.addEventListener('pointermove', onWaveformLeftPointerMove, { passive: false });
+    window.addEventListener('pointerup', onWaveformLeftPointerUp, { passive: false });
+    window.addEventListener('pointercancel', onWaveformLeftPointerUp, { passive: false });
+  }
+}
+
+// 左键拖拽：仅用于边缘自动滚动（播放头/选区拖拽的体验优化）。
+function onWaveformLeftPointerMove(ev: PointerEvent) {
+  if (!leftDragActive) return;
+  leftDragLastClientX = ev.clientX;
+
+  if (leftDragStartClientX !== null && !leftDragMoved) {
+    if (Math.abs(ev.clientX - leftDragStartClientX) >= leftDragMoveThresholdPx) {
+      leftDragMoved = true;
+    }
+  }
+
+  const instance = ws.value;
+  if (instance) {
+    // 立即根据光标更新目标（不等待自动滚动），保证“每个像素都跟手”。
+    updateLeftDragTarget(instance, ev.clientX);
+    // 启动/维持边缘自动滚动
+    scheduleLeftDragEdgeAutoScroll(instance);
+  }
+}
+
+function onWaveformLeftPointerUp() {
+  if (!leftDragActive) return;
+  // 释放 pointer capture（与 onWaveformPointerDown 左键分支配对）
+  try {
+    if (leftDragCapturedEl && leftDragCapturedPointerId !== null) {
+      leftDragCapturedEl.releasePointerCapture?.(leftDragCapturedPointerId);
+    }
+  } catch {
+    // ignore
+  } finally {
+    leftDragCapturedEl = null;
+    leftDragCapturedPointerId = null;
+  }
+
+  leftDragActive = false;
+  leftDragMoved = false;
+  leftDragStartClientX = null;
+  leftDragLastClientX = null;
+  leftDragMode.value = 'none';
+  leftDragStartSec.value = null;
+  leftDragRegionStartSec = null;
+  leftDragRegionEndSec = null;
+
+  if (leftDragAutoScrollRafId !== null) cancelAnimationFrame(leftDragAutoScrollRafId);
+  leftDragAutoScrollRafId = null;
+  leftDragAutoScrollLastTs = null;
+
+  window.removeEventListener('pointermove', onWaveformLeftPointerMove);
+  window.removeEventListener('pointerup', onWaveformLeftPointerUp);
+  window.removeEventListener('pointercancel', onWaveformLeftPointerUp);
 }
 
 /**
@@ -1518,6 +1837,15 @@ onBeforeUnmount(() => {
   quickSelectAutoScrollRafId = null;
   quickSelectAutoScrollLastTs = null;
   quickSelectLastClientX = null;
+
+  // 左键拖拽的边缘自动滚动：避免组件销毁后仍在滚动。
+  if (leftDragAutoScrollRafId !== null) cancelAnimationFrame(leftDragAutoScrollRafId);
+  leftDragAutoScrollRafId = null;
+  leftDragAutoScrollLastTs = null;
+  leftDragActive = false;
+  leftDragMoved = false;
+  leftDragStartClientX = null;
+  leftDragLastClientX = null;
 
   // 避免组件销毁后 RAF 回调仍尝试操作 instance。
   if (barHeightRafId !== null) cancelAnimationFrame(barHeightRafId);
