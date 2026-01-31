@@ -506,6 +506,183 @@ function pointerEventToTimeSec(instance: WaveSurfer, ev: PointerEvent): number {
 }
 
 /**
+ * 将给定时间范围滚动到可见区域内（尽量少移动视图）。
+ *
+ * 为什么需要：
+ * - 在 zoom 很大（minPxPerSec 很高）时，波形的总宽度（scrollWidth）会非常大。
+ * - 用户通过“右键快捷选区”创建/更新选区后，如果 Regions 的 DOM 刷新/重绘延迟，
+ *   或者选区恰好贴近视窗边缘，用户可能会主观感知为“选区没有显示”。
+ * - 手动轻微调整 zoom 会触发 wavesurfer reRender，选区又立刻出现（用户反馈的现象）。
+ *
+ * 本函数负责其中一半问题：
+ * - 让选区范围落在当前滚动视窗的可见范围内（带少量 padding），避免“选区其实在视野外”。
+ */
+function scrollTimeRangeIntoView(instance: WaveSurfer, startSec: number, endSec: number) {
+  const scrollEl = resolveWaveformScrollElement(instance);
+  const dur = instance.getDuration();
+  if (!Number.isFinite(dur) || dur <= 0) return;
+
+  const totalWidth = scrollEl.scrollWidth || scrollEl.clientWidth || 0;
+  const viewWidth = scrollEl.clientWidth || 0;
+  if (!Number.isFinite(totalWidth) || totalWidth <= 0) return;
+  if (!Number.isFinite(viewWidth) || viewWidth <= 0) return;
+
+  // 统一排序：避免出现 start>end 的输入。
+  const s = Math.min(startSec, endSec);
+  const e = Math.max(startSec, endSec);
+
+  // 映射到“全局像素坐标”（以 scrollWidth 为基准）。
+  const startX = (s / dur) * totalWidth;
+  const endX = (e / dur) * totalWidth;
+
+  // 可视区留白：让选区不要贴边，观感更像剪辑软件。
+  const padding = 24;
+
+  const currentLeft = scrollEl.scrollLeft || 0;
+  const currentRight = currentLeft + viewWidth;
+
+  // 如果整个选区已经完全可见，则不动。
+  if (startX >= currentLeft + padding && endX <= currentRight - padding) return;
+
+  // 若选区比视窗还宽：优先让 start 出现在可见区左侧附近。
+  if (endX - startX > viewWidth - padding * 2) {
+    const nextLeft = Math.max(0, Math.min(totalWidth - viewWidth, startX - padding));
+    scrollEl.scrollLeft = nextLeft;
+    return;
+  }
+
+  // 选区较短：尽量让整个选区可见。
+  if (startX < currentLeft + padding) {
+    const nextLeft = Math.max(0, Math.min(totalWidth - viewWidth, startX - padding));
+    scrollEl.scrollLeft = nextLeft;
+    return;
+  }
+
+  if (endX > currentRight - padding) {
+    const nextLeft = Math.max(0, Math.min(totalWidth - viewWidth, endX - (viewWidth - padding)));
+    scrollEl.scrollLeft = nextLeft;
+  }
+}
+
+/**
+ * 判断某个时间范围是否已在当前滚动视窗内“基本可见”。
+ *
+ * 之所以单独抽出来：
+ * - 右键拖拽选区时，我们希望做到“全过程可见”，并在必要时自动滚动。
+ * - 但如果每一帧都强行 scroll，会带来视图抖动/跳动。
+ * - 因此先判断是否真的需要滚动：只有选区跑出视野时才滚。
+ */
+function isTimeRangeVisible(instance: WaveSurfer, startSec: number, endSec: number, padding = 24): boolean {
+  const scrollEl = resolveWaveformScrollElement(instance);
+  const dur = instance.getDuration();
+  if (!Number.isFinite(dur) || dur <= 0) return true;
+
+  const totalWidth = scrollEl.scrollWidth || scrollEl.clientWidth || 0;
+  const viewWidth = scrollEl.clientWidth || 0;
+  if (!Number.isFinite(totalWidth) || totalWidth <= 0) return true;
+  if (!Number.isFinite(viewWidth) || viewWidth <= 0) return true;
+
+  const s = Math.min(startSec, endSec);
+  const e = Math.max(startSec, endSec);
+  const startX = (s / dur) * totalWidth;
+  const endX = (e / dur) * totalWidth;
+
+  const left = scrollEl.scrollLeft || 0;
+  const right = left + viewWidth;
+
+  return startX >= left + padding && endX <= right - padding;
+}
+
+// =============================================================================
+// 右键快捷选区：高 zoom 下“全过程不可见”的修复
+//
+// 现象（用户反馈）：
+// - zoom 很大时，右键按下/拖动过程中选区经常“不显示”。
+// - 松开右键时选区又出现，或轻微调整 zoom 后立即出现。
+//
+// 根因推断：
+// - wavesurfer/regions 的 region DOM 更新在某些渲染时序下会延迟，直到下一次 reRender。
+// - zoom 变化会触发 reRender，所以用户“微调 zoom”能把选区“唤醒”。
+//
+// 修复目标：
+// - 从右键按下的瞬间开始，到拖拽结束，全过程都应当看到选区。
+// - 同时避免在 pointermove 的高频触发下造成过多重绘。
+//
+// 实现策略：
+// - 使用 requestAnimationFrame 合并刷新：每帧最多触发一次“no-op zoom”来促使 reRender。
+// - 在必要时（选区跑出视野）自动滚动，让选区保持可见。
+// =============================================================================
+let quickSelectLiveRafId: number | null = null;
+let pendingQuickSelectRange: { startSec: number; endSec: number } | null = null;
+
+function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: number, endSec: number) {
+  // 记录最新区间（拖动过程中会被持续覆盖，最后一次赢）
+  pendingQuickSelectRange = { startSec, endSec };
+
+  if (quickSelectLiveRafId !== null) return;
+  quickSelectLiveRafId = requestAnimationFrame(() => {
+    quickSelectLiveRafId = null;
+
+    const next = pendingQuickSelectRange;
+    pendingQuickSelectRange = null;
+    if (!next) return;
+
+    // 1) 强制轻量重绘：no-op zoom
+    // 说明：zoom 值不变，但会走 renderer.reRender；用于解决 region DOM 更新延迟。
+    try {
+      instance.zoom(zoomMinPxPerSec.value);
+    } catch {
+      // ignore
+    }
+
+    // 2) 仅在需要时滚动：避免每帧 scroll 造成跳动。
+    //    这里不追求“强制居中”，只要选区落在视野里即可。
+    if (!isTimeRangeVisible(instance, next.startSec, next.endSec, 24)) {
+      // reRender 可能会在下一帧才稳定 scrollWidth，因此滚动放到下一帧做。
+      requestAnimationFrame(() => {
+        scrollTimeRangeIntoView(instance, next.startSec, next.endSec);
+      });
+    }
+  });
+}
+
+/**
+ * 修复：高 zoom 下“右键快捷选区”后选区偶发不可见。
+ *
+ * 用户现象：
+ * - zoom 很大时，右键拖拽选区完成后，看不到新选区。
+ * - 轻微调整 zoom（哪怕只改一点）后选区立刻出现。
+ *
+ * 推断根因：
+ * - wavesurfer/regions 在某些渲染时序下，region DOM 的定位更新可能延迟到下一次 reRender。
+ * - zoom 变化会触发 reRender，所以用户手动改 zoom 能“立刻修复”。
+ *
+ * 解决策略：
+ * 1) 完成右键选区后，做一次“no-op zoom”触发 wavesurfer reRender（zoom 值不变）。
+ * 2) 在重绘后，把选区滚动到可见（避免其实在视野外）。
+ *
+ * 性能说明：
+ * - 该修复只在“右键选区完成（pointerup）”时执行一次，不会在拖动过程中高频触发。
+ */
+function ensureQuickSelectRegionVisible(instance: WaveSurfer, startSec: number, endSec: number) {
+  const zoom = zoomMinPxPerSec.value;
+
+  // 第 1 帧：触发 reRender（值不变，但会走 renderer.reRender）。
+  requestAnimationFrame(() => {
+    try {
+      instance.zoom(zoom);
+    } catch {
+      // ignore
+    }
+
+    // 第 2 帧：在 reRender 基本完成后再滚动，避免 scrollWidth 尚未稳定。
+    requestAnimationFrame(() => {
+      scrollTimeRangeIntoView(instance, startSec, endSec);
+    });
+  });
+}
+
+/**
  * 判断是否为“右键按下”。
  *
  * 注意：提案/规范定义的是“右键拖拽快速选区”。
@@ -605,6 +782,10 @@ function onWaveformPointerDown(ev: PointerEvent) {
   const normalized = normalizeSelectionSec(instance, startSec, startSec);
   ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
+  // 修复（可见性）：在高 zoom 下，右键按下后“选区起点”也应该立刻可见。
+  // 这一步是“全过程可见”的起点：让用户从按下瞬间开始就能看到一个最小非零选区。
+  scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+
   // 重要：这里必须显式 emit start/end。
   // 原因：wavesurfer v7 的 Regions 在 region.setOptions(...) 时，不一定会触发 region-updated 事件。
   // 如果仅依赖 regions.on('region-updated' ...) 回写输入框，会出现：
@@ -679,6 +860,11 @@ function onWaveformPointerMove(ev: PointerEvent) {
   const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
   ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
+  // 修复（可见性）：拖动过程中保持选区可见。
+  // - rAF 合并避免高频重绘
+  // - 必要时自动滚动，让 end 不会“拖到视野外但看不到”
+  scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+
   // 同上：显式回写输入框，确保“拖动过程中 end 实时变化”可见。
   emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
   emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
@@ -702,6 +888,11 @@ function onWaveformPointerUp(ev: PointerEvent) {
 
   const instance = ws.value;
   const regionsApi = regionsPlugin.value;
+
+  // 记录最终选区，用于后续“强制刷新 + 滚动到可见”的修复逻辑。
+  // 注意：这里不要依赖 props（因为 props 更新在 emit 之后是异步的）。
+  let finalized: { startSec: number; endSec: number } | null = null;
+
   if (instance && regionsApi && isWaveSurferInteractive(instance) && rightDragStartSec.value !== null) {
     const currentSec = pointerEventToTimeSec(instance, ev);
     const endSec = Math.max(rightDragStartSec.value, currentSec);
@@ -710,12 +901,24 @@ function onWaveformPointerUp(ev: PointerEvent) {
 
     emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
     emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+
+    finalized = { startSec: normalized.startSec, endSec: normalized.endSec };
   }
 
   isRightDragSelecting.value = false;
   rightDragStartSec.value = null;
   window.removeEventListener('pointermove', onWaveformPointerMove);
   window.removeEventListener('pointerup', onWaveformPointerUp);
+
+  // 修复：高倍缩放下，右键快捷选区后选区偶发不可见。
+  // - 该问题的一个强信号是：用户轻微调整 zoom 后选区会立刻出现。
+  // - 因此这里在 finalize 后主动触发一次“no-op zoom”重绘，并滚动让选区进入视野。
+  if (finalized && instance) {
+    ensureQuickSelectRegionVisible(instance, finalized.startSec, finalized.endSec);
+  }
+
+  // 结束拖动后，清空 live 刷新队列，避免下一帧还在尝试滚动。
+  pendingQuickSelectRange = null;
 }
 
 function destroyWaveSurfer() {
@@ -1183,6 +1386,11 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // 右键快捷选区的 live 可见性刷新：避免组件销毁后 RAF 回调仍运行。
+  if (quickSelectLiveRafId !== null) cancelAnimationFrame(quickSelectLiveRafId);
+  quickSelectLiveRafId = null;
+  pendingQuickSelectRange = null;
+
   // 避免组件销毁后 RAF 回调仍尝试操作 instance。
   if (barHeightRafId !== null) cancelAnimationFrame(barHeightRafId);
   barHeightRafId = null;
