@@ -615,6 +615,16 @@ function isTimeRangeVisible(instance: WaveSurfer, startSec: number, endSec: numb
 let quickSelectLiveRafId: number | null = null;
 let pendingQuickSelectRange: { startSec: number; endSec: number } | null = null;
 
+// 右键拖拽时的“边缘自动滚动”状态：
+// - 体验目标：像剪辑软件一样，鼠标靠近左右边缘时才自动滚动，且速度随靠近程度渐进。
+// - 重要：自动滚动过程中，即使鼠标不再移动（不产生 pointermove），选区 end 也应持续更新。
+//   因为 scrollLeft 变化会改变“同一 clientX 对应的时间点”。
+const quickSelectAutoScrollEdgePx = 48;
+const quickSelectAutoScrollMaxSpeedPxPerSec = 1400;
+let quickSelectAutoScrollRafId: number | null = null;
+let quickSelectAutoScrollLastTs: number | null = null;
+let quickSelectLastClientX: number | null = null;
+
 function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: number, endSec: number) {
   // 记录最新区间（拖动过程中会被持续覆盖，最后一次赢）
   pendingQuickSelectRange = { startSec, endSec };
@@ -635,15 +645,110 @@ function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: numbe
       // ignore
     }
 
-    // 2) 仅在需要时滚动：避免每帧 scroll 造成跳动。
-    //    这里不追求“强制居中”，只要选区落在视野里即可。
-    if (!isTimeRangeVisible(instance, next.startSec, next.endSec, 24)) {
-      // reRender 可能会在下一帧才稳定 scrollWidth，因此滚动放到下一帧做。
-      requestAnimationFrame(() => {
-        scrollTimeRangeIntoView(instance, next.startSec, next.endSec);
-      });
-    }
+    // 2) 这里不做“自动滚动到可见”。
+    // 原因：
+    // - 拖动过程中的自动滚动，应该采用“边缘触发”模型（靠近边缘才滚），否则会出现视图莫名跳动。
+    // - finalize（松开右键）后我们仍会调用 ensureQuickSelectRegionVisible 做兜底滚动。
   });
+}
+
+/**
+ * 右键拖拽的边缘自动滚动（剪辑软件式）。
+ *
+ * 行为定义：
+ * - 当鼠标指针靠近波形滚动视窗的左/右边缘时，自动滚动。
+ * - 指针越靠近边缘（甚至越过边缘），滚动速度越快（渐进）。
+ * - 指针回到中间区域，立即停止自动滚动。
+ *
+ * 为什么要做一个独立的 RAF 循环：
+ * - pointermove 事件不一定会持续触发（例如用户把鼠标停在边缘不动）。
+ * - 但在自动滚动时，scrollLeft 每帧变化，end 对应的时间点也应该每帧更新。
+ */
+function scheduleQuickSelectEdgeAutoScroll(instance: WaveSurfer) {
+  if (quickSelectAutoScrollRafId !== null) return;
+
+  const step = (ts: number) => {
+    quickSelectAutoScrollRafId = null;
+
+    // 只有在右键拖拽进行中才允许自动滚动。
+    if (!isRightDragSelecting.value) {
+      quickSelectAutoScrollLastTs = null;
+      return;
+    }
+
+    // 必须有 start 与 clientX，才能根据滚动更新 end。
+    if (rightDragStartSec.value === null || quickSelectLastClientX === null) {
+      quickSelectAutoScrollLastTs = null;
+      return;
+    }
+
+    const scrollEl = resolveWaveformScrollElement(instance);
+    const rect = scrollEl.getBoundingClientRect();
+
+    // 计算边缘“渗透程度”并映射为速度：
+    // - 进入边缘区：速度从 0 平滑增长
+    // - 越过边缘：速度饱和到 max
+    const leftEdge = rect.left + quickSelectAutoScrollEdgePx;
+    const rightEdge = rect.right - quickSelectAutoScrollEdgePx;
+    const x = quickSelectLastClientX;
+
+    let direction = 0; // -1 向左滚，+1 向右滚
+    let intensity = 0; // 0..1
+    if (x < leftEdge) {
+      direction = -1;
+      const dist = Math.min(quickSelectAutoScrollEdgePx, leftEdge - x);
+      intensity = dist / quickSelectAutoScrollEdgePx;
+    } else if (x > rightEdge) {
+      direction = 1;
+      const dist = Math.min(quickSelectAutoScrollEdgePx, x - rightEdge);
+      intensity = dist / quickSelectAutoScrollEdgePx;
+    }
+
+    // 不在边缘区：不滚动也不继续循环。
+    if (direction === 0 || intensity <= 0) {
+      quickSelectAutoScrollLastTs = null;
+      return;
+    }
+
+    // dt：使用高精度时间戳，避免不同帧率下速度不一致。
+    const lastTs = quickSelectAutoScrollLastTs ?? ts;
+    quickSelectAutoScrollLastTs = ts;
+    const dtSec = Math.max(0, Math.min(0.05, (ts - lastTs) / 1000));
+
+    // 使用二次曲线让速度更“柔和”：靠近边缘一点点不会突然很快。
+    const eased = intensity * intensity;
+    const speed = eased * quickSelectAutoScrollMaxSpeedPxPerSec; // px/s
+    const deltaPx = direction * speed * dtSec;
+
+    const maxScrollLeft = Math.max(0, (scrollEl.scrollWidth || 0) - scrollEl.clientWidth);
+    const before = scrollEl.scrollLeft;
+    const next = Math.max(0, Math.min(maxScrollLeft, before + deltaPx));
+    if (Math.abs(next - before) >= 0.5) {
+      scrollEl.scrollLeft = next;
+
+      // scrollLeft 改变后，需要用“同一 clientX”重新映射 end。
+      // 这里复用 pointerEventToTimeSec：它会读取最新的 scrollLeft/scrollWidth。
+      const syntheticEv = { clientX: x, button: 2 } as unknown as PointerEvent;
+      const currentSec = pointerEventToTimeSec(instance, syntheticEv);
+      const endSec = Math.max(rightDragStartSec.value, currentSec);
+      const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
+
+      const regionsApi = regionsPlugin.value;
+      if (regionsApi) {
+        ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
+        emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+        emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+      }
+
+      // 同步做一次轻量重绘合并（解决高 zoom 下 region DOM 更新延迟）。
+      scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+    }
+
+    // 继续下一帧：只要仍在边缘区且仍在拖拽。
+    quickSelectAutoScrollRafId = requestAnimationFrame(step);
+  };
+
+  quickSelectAutoScrollRafId = requestAnimationFrame(step);
 }
 
 /**
@@ -775,6 +880,8 @@ function onWaveformPointerDown(ev: PointerEvent) {
   const startSec = pointerEventToTimeSec(instance, ev);
   rightDragStartSec.value = startSec;
   isRightDragSelecting.value = true;
+  // 记录指针位置：用于边缘自动滚动（即使后续不再触发 pointermove）。
+  quickSelectLastClientX = ev.clientX;
 
   // 注意：此处属于“用户主动操作 region”，不应该触发 isSyncingFromProps 的防循环。
   // 但 region.setOptions 会触发 region-updated 事件，继而 emit 到外部 startMs/endMs。
@@ -785,6 +892,9 @@ function onWaveformPointerDown(ev: PointerEvent) {
   // 修复（可见性）：在高 zoom 下，右键按下后“选区起点”也应该立刻可见。
   // 这一步是“全过程可见”的起点：让用户从按下瞬间开始就能看到一个最小非零选区。
   scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+
+  // 启动“边缘自动滚动”循环（如果指针不在边缘区，会在第一帧自动退出）。
+  scheduleQuickSelectEdgeAutoScroll(instance);
 
   // 重要：这里必须显式 emit start/end。
   // 原因：wavesurfer v7 的 Regions 在 region.setOptions(...) 时，不一定会触发 region-updated 事件。
@@ -854,6 +964,9 @@ function onWaveformPointerMove(ev: PointerEvent) {
 
   const currentSec = pointerEventToTimeSec(instance, ev);
 
+  // 更新最后一次指针位置：用于边缘自动滚动。
+  quickSelectLastClientX = ev.clientX;
+
   // 严格按需求：只“向右拖动”决定 end。
   // 若用户向左拖动，则 end 固定为 start（不反向选择）。
   const endSec = Math.max(rightDragStartSec.value, currentSec);
@@ -864,6 +977,9 @@ function onWaveformPointerMove(ev: PointerEvent) {
   // - rAF 合并避免高频重绘
   // - 必要时自动滚动，让 end 不会“拖到视野外但看不到”
   scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+
+  // 若用户把指针拖到边缘，启动/维持边缘自动滚动。
+  scheduleQuickSelectEdgeAutoScroll(instance);
 
   // 同上：显式回写输入框，确保“拖动过程中 end 实时变化”可见。
   emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
@@ -919,6 +1035,12 @@ function onWaveformPointerUp(ev: PointerEvent) {
 
   // 结束拖动后，清空 live 刷新队列，避免下一帧还在尝试滚动。
   pendingQuickSelectRange = null;
+
+  // 停止边缘自动滚动循环并清理状态。
+  if (quickSelectAutoScrollRafId !== null) cancelAnimationFrame(quickSelectAutoScrollRafId);
+  quickSelectAutoScrollRafId = null;
+  quickSelectAutoScrollLastTs = null;
+  quickSelectLastClientX = null;
 }
 
 function destroyWaveSurfer() {
@@ -1390,6 +1512,12 @@ onBeforeUnmount(() => {
   if (quickSelectLiveRafId !== null) cancelAnimationFrame(quickSelectLiveRafId);
   quickSelectLiveRafId = null;
   pendingQuickSelectRange = null;
+
+  // 右键快捷选区的边缘自动滚动：避免组件销毁后仍在滚动。
+  if (quickSelectAutoScrollRafId !== null) cancelAnimationFrame(quickSelectAutoScrollRafId);
+  quickSelectAutoScrollRafId = null;
+  quickSelectAutoScrollLastTs = null;
+  quickSelectLastClientX = null;
 
   // 避免组件销毁后 RAF 回调仍尝试操作 instance。
   if (barHeightRafId !== null) cancelAnimationFrame(barHeightRafId);
