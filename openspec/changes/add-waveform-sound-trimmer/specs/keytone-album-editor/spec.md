@@ -31,6 +31,8 @@ Normative: 波形组件 SHALL 提供缩放（zoom）与横向滚动能力，并 
 
 Normative: 波形组件在首次加载成功后，其默认 zoom（minPxPerSec） SHALL 为 `50`。
 
+Non-normative: macOS 平台的快捷缩放提示可显示为“Control/Command + 滚轮或触控板捏合”，并优先使用 getModifierState('Control') 识别外接键盘的 Control 键。
+
 Non-normative: 当用户拖拽播放头或拖拽选区两侧指针时，波形 SHOULD 提供“边缘触发”的自动滚动体验（指针靠近视窗左右边缘才滚动，速度渐进），以便在高 zoom 下持续拖动至视野外区域。
 Non-normative: 自动滚动过程中播放头 SHOULD 保持与光标位置一致（避免出现“滚动后播放头跳跃/不跟手”）。
 Non-normative: 自动滚动过程中，选区两侧指针 SHOULD 与光标保持一致；必要时可直接更新 region 并回写 start/end，以避免内部拖拽逻辑滞后。

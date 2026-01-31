@@ -164,7 +164,7 @@
       <div v-if="selectionDurationMs !== null">
         {{ t('KeyToneAlbum.defineSounds.waveformTrimmer.selection') }}{{ formatMs(selectionDurationMs) }}
       </div>
-      <div class="text-gray-400">{{ t('KeyToneAlbum.defineSounds.waveformTrimmer.hint') }}</div>
+      <div class="text-gray-400">{{ zoomHintText }}</div>
     </div>
   </div>
 </template>
@@ -173,6 +173,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import WaveSurfer from 'wavesurfer.js';
+import { Platform } from 'quasar';
 // wavesurfer.js v7 插件（ESM）
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import { api } from 'boot/axios';
@@ -275,6 +276,11 @@ const selectionDurationMs = computed(() => {
 // - 本项目同时支持多语言（至少中英文）。
 // - 这个组件新增了较多 UI 文案（播放/缩放/提示/错误提示等），必须全部走 i18n，避免后续漏翻译与难维护。
 const { t } = useI18n();
+
+// 缩放提示文案：根据平台展示合适的快捷键说明
+// - macOS：Control + 滚轮 / 触控板捏合
+// - 其他：Ctrl + 滚轮
+const zoomHintText = computed(() => (Platform.is.mac ? t('KeyToneAlbum.defineSounds.waveformTrimmer.hintMac') : t('KeyToneAlbum.defineSounds.waveformTrimmer.hint')));
 
 const audioUrl = computed(() => {
   if (!props.sha256 || !props.fileType) return '';
@@ -1617,8 +1623,20 @@ function bindWheelZoom() {
     });
   };
 
+  // 判断是否触发“缩放手势”。
+  // macOS：
+  // - 优先使用 getModifierState('Control')，兼容外接机械键盘的 Control 键。
+  // - 某些键盘把 Control 映射为 Meta/Command，作为兜底允许。
+  // 其他平台：仅识别 Ctrl。
+  const isZoomGesture = (ev: WheelEvent) => {
+    if (Platform.is.mac) {
+      return ev.getModifierState?.('Control') || ev.ctrlKey || ev.getModifierState?.('Meta') || ev.metaKey;
+    }
+    return ev.ctrlKey;
+  };
+
   const onWheel = (ev: WheelEvent) => {
-    if (!ev.ctrlKey) return;
+    if (!isZoomGesture(ev)) return;
     // 方向确认：用户选择 3A（向上滚 = 放大；向下滚 = 缩小）。这与 deltaY 的标准方向一致。
     ev.preventDefault();
 

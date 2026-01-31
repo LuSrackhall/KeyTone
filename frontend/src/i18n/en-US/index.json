@@ -201,7 +201,8 @@
         "current": "Current: ",
         "total": "Total: ",
         "selection": "Selection: ",
-        "hint": "(Drag/click the playhead; Ctrl + wheel to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))"
+        "hint": "(Drag/click the playhead; Ctrl + wheel to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))",
+        "hintMac": "(Drag/click the playhead; Control/Command + wheel or trackpad pinch to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))"
       }
     },
     "craftKeySounds": {
