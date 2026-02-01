@@ -78,7 +78,9 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
         width: calc(100vw - 8px);
         max-width: calc(100vw - 8px);
       "
-      :class="['p-l-2 p-r-5']"
+      :class="['p-l-2 p-r-5',
+        { 'mr-0': isMac } // Mac 平台下, 右侧不留额外空隙, 因为阴影用的是原生的
+      ]"
     >
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6">
@@ -253,6 +255,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
  */
 
 import { inject, computed } from 'vue';
+import { Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 
@@ -260,6 +263,9 @@ import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+// 使用 Quasar 提供的前端平台检测，仅依赖前端环境
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // dB <-> cut.volume 换算（Base=1.6）
