@@ -83,6 +83,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
         width: calc(100vw - 8px);
         max-width: calc(100vw - 8px);
       "
+      :class="[{ 'mr-0': isMac }]"
     >
       <!-- 对话框标题（sticky 置顶） -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
@@ -128,7 +129,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
         :class="['flex flex-col m-t-3']"
         v-if="ctx.selectedSound.value?.soundKey !== '' && ctx.selectedSound.value !== undefined"
       >
-        <q-card :class="['flex flex-col pb-3 w-[100%]']" v-if="ctx.selectedSound.value">
+        <q-card :class="['flex flex-col pb-3 w-[100%]', { 'mr-0': isMac }]" v-if="ctx.selectedSound.value">
           <!-- 声音名称输入 -->
           <q-card-section :class="['p-b-1 mt-3']">
             <q-input
@@ -314,7 +315,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
  */
 
 import { inject, computed } from 'vue';
-import { useQuasar } from 'quasar';
+import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 import WaveformTrimmer from '../components/WaveformTrimmer.vue';
@@ -348,6 +349,8 @@ const selectedSoundVolumeDb = computed({
 });
 
 const isSelectedSoundVolumeDbOutOfRange = computed(() => Math.abs(selectedSoundVolumeDb.value) > 18);
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 辅助函数

@@ -49,7 +49,7 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
     v-model="ctx.isShowSingleKeySoundEffectEditDialog.value"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card style="min-width: 350px">
+    <q-card style="min-width: 350px" :class="[{ 'mr-0': isMac }]">
       <!-- 对话框标题 -->
       <q-card-section>
         <div class="text-base flex flex-row items-center">
@@ -257,13 +257,15 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
  * - 支持保存修改和删除配置
  */
 
-import { inject } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, computed } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 
 const q = useQuasar();
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 工具函数

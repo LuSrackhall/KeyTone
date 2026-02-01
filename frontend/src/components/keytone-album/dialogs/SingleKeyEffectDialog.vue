@@ -74,7 +74,7 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存单键声效配置 【关联文件
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card>
+    <q-card :class="[{ 'mr-0': isMac }]">
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.linkageEffects.singleKeySettings') }}
@@ -154,7 +154,8 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存单键声效配置 【关联文件
  * - EditSingleKeyEffectSubDialog: 编辑单键声效
  */
 
-import { inject } from 'vue';
+import { inject, computed } from 'vue';
+import { Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import AddSingleKeyEffectSubDialog from './AddSingleKeyEffectSubDialog.vue';
@@ -165,6 +166,8 @@ import EditSingleKeyEffectSubDialog from './EditSingleKeyEffectSubDialog.vue';
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 const keyEvent_store = useKeyEventStore();
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 事件处理函数

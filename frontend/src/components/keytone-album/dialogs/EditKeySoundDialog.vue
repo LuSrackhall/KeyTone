@@ -82,7 +82,7 @@
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card :class="['min-w-[100%]']">
+    <q-card :class="['min-w-[100%]', { 'mr-0': isMac }]">
       <!-- 对话框标题（sticky 置顶） -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.craftKeySounds.editExistingKeySound') }}
@@ -127,7 +127,7 @@
         :class="['flex flex-col -m-t-2']"
         v-if="ctx.selectedKeySound.value?.keySoundKey !== '' && ctx.selectedKeySound.value !== undefined"
       >
-        <q-card :class="['flex flex-col pb-3']" v-if="ctx.selectedKeySound.value">
+        <q-card :class="['flex flex-col pb-3', { 'mr-0': isMac }]" v-if="ctx.selectedKeySound.value">
           <!-- 按键音名称输入 -->
           <q-card-section :class="['p-b-1 mt-3']">
             <q-input
@@ -155,7 +155,7 @@
                 backdrop-filter="invert(70%)"
                 @mouseup="ctx.preventDefaultMouseWhenRecording"
               >
-                <q-card :class="['min-w-[80%]']">
+                <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
                   <q-card-section class="row items-center q-pb-none text-h6">
                     {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
                   </q-card-section>
@@ -296,7 +296,7 @@
                 backdrop-filter="invert(70%)"
                 @mouseup="ctx.preventDefaultMouseWhenRecording"
               >
-                <q-card :class="['min-w-[80%]']">
+                <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
                   <q-card-section class="row items-center q-pb-none text-h6">
                     {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
                   </q-card-section>
@@ -478,8 +478,8 @@
  * 详见父组件中的 watch(selectedKeySound) 实现。
  */
 
-import { inject, ref } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, ref, computed } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 
@@ -499,6 +499,8 @@ if (!ctx) {
 // ============================================================================
 const edit_downSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
 const edit_upSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 工具函数

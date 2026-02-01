@@ -57,7 +57,7 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card>
+    <q-card :class="[{ 'mr-0': isMac }]">
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.linkageEffects.single.addSingleKeyEffect') }}
@@ -323,8 +323,8 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
  * - 为选中的多个按键配置统一的声效
  */
 
-import { inject, ref } from 'vue';
-import { useQuasar, QSelect } from 'quasar';
+import { inject, ref, computed } from 'vue';
+import { useQuasar, QSelect, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import { useKeyEventStore } from 'src/stores/keyEvent-store';
 import { useSettingStore } from 'src/stores/setting-store';
@@ -334,6 +334,8 @@ const q = useQuasar();
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 const keyEvent_store = useKeyEventStore();
 const setting_store = useSettingStore();
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // 选择器引用
 const singleKeysSelectRef = ref<QSelect>();

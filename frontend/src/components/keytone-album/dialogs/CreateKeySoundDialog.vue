@@ -60,7 +60,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card :class="['min-w-[90%]']">
+    <q-card :class="['min-w-[90%]', { 'mr-0': isMac }]">
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6">
         {{ ctx.$t('KeyToneAlbum.craftKeySounds.newKeySound') }}
@@ -93,7 +93,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
             backdrop-filter="invert(70%)"
             @mouseup="ctx.preventDefaultMouseWhenRecording"
           >
-            <q-card :class="['min-w-[80%]']">
+            <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
               <q-card-section class="row items-center q-pb-none text-h6">
                 {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
               </q-card-section>
@@ -222,7 +222,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
             backdrop-filter="invert(70%)"
             @mouseup="ctx.preventDefaultMouseWhenRecording"
           >
-            <q-card :class="['min-w-[80%]']">
+            <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
               <q-card-section class="row items-center q-pb-none text-h6">
                 {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
               </q-card-section>
@@ -360,7 +360,8 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
  * - 保存功能
  */
 
-import { inject, ref } from 'vue';
+import { inject, ref, computed } from 'vue';
+import { Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 
@@ -368,6 +369,8 @@ import DependencyWarning from '../../DependencyWarning.vue';
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // DOM 引用

@@ -66,7 +66,7 @@ ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedS
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card>
+    <q-card :class="[{ 'mr-0': isMac }]">
       <!-- 对话框标题（sticky 置顶） -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.linkageEffects.globalSettings') }}
@@ -251,8 +251,8 @@ ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedS
  * 3. 删除声效时的联动逻辑在父组件的 watch 中处理，避免循环依赖
  */
 
-import { inject } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, computed } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 import { useSettingStore } from 'src/stores/setting-store';
@@ -264,6 +264,8 @@ const setting_store = useSettingStore();
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 工具函数
