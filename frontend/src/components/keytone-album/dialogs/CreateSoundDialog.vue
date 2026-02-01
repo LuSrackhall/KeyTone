@@ -61,6 +61,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
     v-model="ctx.createNewSound.value"
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
+    class="create-sound-dialog-单独影响global"
   >
     <!--
       重要：KeyTone 窗口有固定宽度（约 379~389px）。
@@ -77,6 +78,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
         width: calc(100vw - 8px);
         max-width: calc(100vw - 8px);
       "
+      :class="['p-l-2 p-r-5']"
     >
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6">
@@ -376,5 +378,16 @@ function handleSave() {
 // 输入框 placeholder 高度修复
 :deep(.q-placeholder) {
   @apply h-auto;
+}
+
+// TIPS: 对话框实际宽度调整, 只能通过覆盖全局样式实现(因为 q-dialog 实际是基于当前组件外部的全局组件实现的)
+// :global(.q-dialog__inner--minimized){ // TIPS: 我们可以通过添加类名的方式, 只修改特定对话框的样式, 具体见下方的操作。
+//   @apply p-4;
+// }
+
+// TIPS: 虽然对于全局样式的覆盖, 只能通过 :global 实现, 想要进修改单个组件的样式(不影响其他用到此组件的业务)
+//       > 可以在 :global 内部继续使用组件作用域的类名选择器继承的方式, 以避免影响其他组件的同名类选择器
+:global(.create-sound-dialog-单独影响global .q-dialog__inner--minimized) {
+  @apply p-x-2;
 }
 </style>
