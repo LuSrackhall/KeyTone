@@ -2193,7 +2193,7 @@ watch(
   // 波形区域内的超范围提示：轻量、靠右上角（避免遮挡内容与刻度）。
   @apply absolute;
   right: 6px;
-  top: 2px;
+  top: 0;
   @apply text-[10px] text-gray-500;
   @apply pointer-events-none;
 }
