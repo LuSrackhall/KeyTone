@@ -68,7 +68,22 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card class="min-w-[106%]">
+    <!--
+      重要：窗口宽度固定（约 379~389px）。
+      - 对话框不可超出窗口，但应尽可能利用可视空间。
+      - 使用视口宽度减去极小边距（8px），避免无意义留白。
+    -->
+    <q-card
+      style="
+        /*
+          同 CreateSoundDialog：
+          - 在固定窗口宽度内最大化对话框宽度。
+          - 不超出视口，避免窗口裁切。
+        */
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+      "
+    >
       <!-- 对话框标题（sticky 置顶） -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.defineSounds.editExistingSound') }}
@@ -215,10 +230,12 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               outlined
               stack-label
               dense
-              v-model.number="ctx.selectedSound.value.soundValue.cut.volume"
-              :label="ctx.$t('KeyToneAlbum.defineSounds.volume')"
+              v-model.number="selectedSoundVolumeDb"
+              :label="ctx.$t('KeyToneAlbum.defineSounds.volumeDb')"
               type="number"
               :step="0.1"
+              :hint="isSelectedSoundVolumeDbOutOfRange ? ctx.$t('KeyToneAlbum.defineSounds.volumeOutOfRange') : ''"
+              :hide-bottom-space="!isSelectedSoundVolumeDbOutOfRange"
             >
               <template v-slot:append>
                 <q-icon name="info" color="primary">
@@ -308,6 +325,29 @@ const q = useQuasar();
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+// ============================================================================
+// dB <-> cut.volume 换算（Base=1.6）
+// - SDK：gain = 1.6 ^ volume
+// - dB = 20 * log10(gain) = 20 * volume * log10(1.6)
+// - UI 以 dB 显示，内部仍使用 cut.volume
+// ==========================================================================
+const dbPerVolume = 20 * Math.log10(1.6);
+const volumeToDb = (volume: number) => volume * dbPerVolume;
+const dbToVolume = (db: number) => db / dbPerVolume;
+
+const selectedSoundVolumeDb = computed({
+  get: () => {
+    const volume = ctx.selectedSound.value?.soundValue.cut.volume ?? 0;
+    return Number(volumeToDb(volume).toFixed(1));
+  },
+  set: (db: number) => {
+    if (!ctx.selectedSound.value) return;
+    ctx.selectedSound.value.soundValue.cut.volume = dbToVolume(Number(db));
+  },
+});
+
+const isSelectedSoundVolumeDbOutOfRange = computed(() => Math.abs(selectedSoundVolumeDb.value) > 18);
 
 // ============================================================================
 // 辅助函数
@@ -428,8 +468,7 @@ function handleDelete() {
   @apply text-xs;
   font-size: var(--i18n_fontSize);
   @apply p-1.5;
-  @apply transition-transform hover:scale-105;
-  @apply scale-103;
+  // 恢复默认大小：避免“按钮被放大”的非预期视觉变化。
 }
 
 // 选择器样式 - 处理溢出

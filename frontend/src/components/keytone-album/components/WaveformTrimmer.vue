@@ -109,15 +109,27 @@
 
     <div
       v-show="hasSource"
-      class="waveform-host"
+      class="waveform-shell"
+      :style="{ '--volumeScaleW': `${volumeScaleWidthPx}px`, '--volumeScaleOffset': `${volumeScaleOffsetPx}px` }"
     >
-      <div
-        ref="containerEl"
-        class="waveform"
-        @pointerdown.capture="onWaveformPointerDown"
-        @mousedown.capture="onWaveformMouseDown"
-        @contextmenu.prevent
-      />
+      <!--
+        重要：用户明确要求“新增刻度不能压缩波形区域宽度”。
+        因此这里采用 overlay 方案：
+        - 左右刻度/当前 dB 作为覆盖层贴在波形左右边缘（不占用布局宽度）。
+        - 波形 DOM 宽度保持与改造前一致（100% 宽度，不额外减去侧栏）。
+        - 对话框宽度不足时，可通过对话框宽度上限（项目固定宽度）适度扩展；
+          但实现本身不会通过“分栏”挤压波形。
+      -->
+
+      <!-- 波形主区域（保持原有交互/渲染；宽度不被刻度挤压） -->
+      <div class="waveform-host">
+        <div
+          ref="containerEl"
+          class="waveform"
+          @pointerdown.capture="onWaveformPointerDown"
+          @mousedown.capture="onWaveformMouseDown"
+          @contextmenu.prevent
+        />
 
       <!--
         音量快捷调节条（剪辑软件风格）：
@@ -127,25 +139,13 @@
           * 向下拖动 => 音量降低
         - 该控件仅影响当前音频裁剪的 cut.volume（与输入框双向同步）。
       -->
-      <div
-        class="volume-overlay"
-        aria-hidden="true"
-        :style="{ height: `${height}px` }"
-      >
-        <!--
-          0 基准线（永远位于中位）：
-          - 这是“UI 对齐认知”的辅助线：让用户一眼知道“0=中位（unity gain）”。
-          - 当当前音量刚好为 0 时，蓝色音量线会与该线重合。
-        -->
-        <div class="volume-zero-line" />
-        <div class="volume-line" :style="{ top: volumeLineTop }" />
-      </div>
+      <!-- 音量线 overlay（覆盖在波形上，不阻挡交互） -->
 
       <!--
         交互命中区必须放在 pointer-events 可用的层级中。
 
         说明：
-        - 我们希望“音量线/手柄”不阻挡波形本体的交互（seek、右键选区等），因此视觉层 .volume-overlay
+        - 我们希望“音量线/手柄”不阻挡波形本体的交互（seek、右键选区等），因此视觉层 .volume-overlay-shell
           设置为 pointer-events:none。
         - 但在部分浏览器/Electron 组合下，父节点 pointer-events:none 会导致后代元素无法成为命中目标，
           即使子元素显式 pointer-events:auto 也可能无效。
@@ -156,6 +156,44 @@
         :style="{ top: volumeLineTopPx }"
         @pointerdown="onVolumePointerDown"
       />
+
+      <!--
+        超出范围提示（波形区域内）：
+        - 用户要求“波形组件处也有提示”。
+        - 放在右下角，避免遮挡刻度或主交互区域。
+        - 仅作轻量提示，不影响交互。
+      -->
+      <div v-if="isDbOutOfRange" class="volume-overflow-inline">
+        {{ t('KeyToneAlbum.defineSounds.waveformTrimmer.volumeOutOfRange') }}
+      </div>
+
+        <!--
+          横向音量线 overlay（仅覆盖波形区域）：
+          - 不再追求“贯穿整个对话框”，避免引入额外布局复杂度。
+          - 用户的核心诉求是“刻度贴近波形 + 不压缩波形宽度”。
+        -->
+        <div class="volume-overlay-shell" aria-hidden="true" :style="{ height: `${height}px` }">
+          <div class="volume-zero-line" />
+          <div class="volume-line" :style="{ top: volumeLineTop }" />
+        </div>
+      </div>
+
+      <!-- 左侧 dB 标尺（含负刻度；无单位，仅数字） -->
+      <div class="volume-scale-overlay volume-scale-left" :style="{ height: `${height}px` }">
+        <div
+          v-for="mark in volumeDbScaleMarks"
+          :key="`db-${mark}`"
+          :class="['volume-scale-mark', { 'is-zero': mark === 0 }]"
+          :style="{ top: dbToTopPercent(mark) }"
+        >
+          <span class="volume-scale-text">{{ formatDbMark(mark) }}</span>
+        </div>
+      </div>
+
+      <!-- 右侧当前音量显示（对齐蓝线，显示 dB 单位） -->
+      <div class="volume-scale-overlay volume-scale-right" :style="{ height: `${height}px` }">
+        <div class="volume-current-db" :style="{ top: volumeLineTop }">{{ currentDbLabel }}</div>
+      </div>
     </div>
 
     <div v-if="isReady && durationMs" class="text-[12px] text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
@@ -165,6 +203,13 @@
         {{ t('KeyToneAlbum.defineSounds.waveformTrimmer.selection') }}{{ formatMs(selectionDurationMs) }}
       </div>
       <div class="text-gray-400">{{ zoomHintText }}</div>
+      <!--
+        超范围提示移到信息行（避免与标尺/当前值重叠）。
+        语义：普通提示（非错误/警告），仅告知“显示被贴边”，实际数值仍有效。
+      -->
+      <div v-if="isDbOutOfRange" class="text-gray-400">
+        {{ t('KeyToneAlbum.defineSounds.waveformTrimmer.volumeOutOfRange') }}
+      </div>
     </div>
   </div>
 </template>
@@ -324,7 +369,7 @@ const isSyncingFromProps = ref(false);
 //
 // 需求：模拟剪辑软件的“水平音量指针条”。
 // - 0 音量对应中线；向上拖动增加音量，向下拖动降低音量。
-// - 使用 cut.volume 的“原始尺度”（Base=1.6 的指数音量），不转换为 dB。
+// - 内部仍使用 cut.volume（Base=1.6 的指数音量）；UI 显示为 dB。
 // - 以 SDK 预览为准：前端预览采用同一映射，不再额外 clamp。
 //
 // 设计：
@@ -332,24 +377,57 @@ const isSyncingFromProps = ref(false);
 // - 该范围不限制用户输入的数值：手动输入超出范围时，指示线会贴边显示；
 //   用户拖拽时则会把值限定在可视范围内（这是交互层的合理约束）。
 // ============================================================================
-// “可视范围”的定义必须保证 0 永远在中位。
+// “可视范围”的定义必须保证 0dB 永远在中位。
 //
 // 用户诉求：UI 上 volume=0 一定处于中位，但不影响实际的 cut.volume 语义。
 // 因此这里采用“对称区间”来定义拖拽映射：[-X, +X]。
 // - 这只是 UI 映射范围：用于拖拽与指示线定位。
 // - 不限制用户通过输入框直接输入更大/更小的值（超出范围时指示线会贴边显示）。
-const volumeVisibleAbsMax = 10;
-const volumeMin = -volumeVisibleAbsMax;
-const volumeMax = volumeVisibleAbsMax;
+// dB 可视范围（用户确认：±18 dB）
+const volumeDbVisibleAbsMax = 18;
+const volumeDbMin = -volumeDbVisibleAbsMax;
+const volumeDbMax = volumeDbVisibleAbsMax;
+
+// dB <-> cut.volume（Base=1.6）换算：
+// gain = 1.6 ^ volume
+// dB = 20 * log10(gain) = 20 * volume * log10(1.6)
+const dbPerVolume = 20 * Math.log10(1.6);
+const volumeToDb = (volume: number) => volume * dbPerVolume;
+const dbToVolume = (db: number) => db / dbPerVolume;
 
 const isVolumeDragging = ref(false);
 const volumeDragPointerId = ref<number | null>(null);
 const volumeDragTargetEl = ref<HTMLElement | null>(null);
 
+const currentDb = computed(() => volumeToDb(props.volume ?? 0));
+const isDbOutOfRange = computed(() => currentDb.value < volumeDbMin || currentDb.value > volumeDbMax);
+
+const currentDbLabel = computed(() => {
+  const val = currentDb.value;
+  const sign = val > 0 ? '+' : '';
+  return `${sign}${val.toFixed(1)} dB`;
+});
+
+const dbToTopPercent = (db: number) => {
+  const clamped = Math.max(volumeDbMin, Math.min(volumeDbMax, db));
+  const ratio = (clamped - volumeDbMin) / (volumeDbMax - volumeDbMin); // 0..1
+  return `${(1 - ratio) * 100}%`;
+};
+
+const volumeDbScaleMarks = [18, 12, 6, 0, -6, -12, -18];
+
+// 标尺与波形的“外侧间距”控制：
+// - 这里设为 0，使刻度紧贴波形边界外侧（符合你的要求）。
+// - 负刻度文本通过固定宽度容纳。
+const volumeScaleWidthPx = 24;
+const volumeScaleOffsetPx = 0;
+
+// 刻度显示文本：正分贝带 + 号，0 保持 0。
+const formatDbMark = (mark: number) => (mark > 0 ? `+${mark}` : `${mark}`);
+
 const volumeLineTop = computed(() => {
-  const raw = props.volume ?? 0;
-  const clamped = Math.max(volumeMin, Math.min(volumeMax, raw));
-  const ratio = (clamped - volumeMin) / (volumeMax - volumeMin); // 0..1
+  const clampedDb = Math.max(volumeDbMin, Math.min(volumeDbMax, currentDb.value));
+  const ratio = (clampedDb - volumeDbMin) / (volumeDbMax - volumeDbMin); // 0..1
   // ratio=1 => top=0（最大音量在最上）; ratio=0 => top=100%（最小音量在最下）
   // 注意：这里不要做 Math.round。
   // - 用户明确要求：volume=0 必须与波形中位重合。
@@ -366,9 +444,8 @@ const volumeLineTopPx = computed(() => {
   //   而非整个 .waveform 容器高度（可能包含滚动条）。
   // - 使用百分比时，若命中区位于与 overlay 不同高度的容器中，会导致位置偏移。
   // - 因此这里直接计算像素值：top = (1 - ratio) * props.height。
-  const raw = props.volume ?? 0;
-  const clamped = Math.max(volumeMin, Math.min(volumeMax, raw));
-  const ratio = (clamped - volumeMin) / (volumeMax - volumeMin);
+  const clampedDb = Math.max(volumeDbMin, Math.min(volumeDbMax, currentDb.value));
+  const ratio = (clampedDb - volumeDbMin) / (volumeDbMax - volumeDbMin);
   return `${(1 - ratio) * props.height}px`;
 });
 
@@ -1439,9 +1516,10 @@ function destroyWaveSurfer() {
 }
 
 function pointerEventToVolume(ev: PointerEvent, host: HTMLElement): number {
-  // 将鼠标位置映射为音量值：
-  // - 顶部 => volumeMax
-  // - 底部 => volumeMin
+  // 将鼠标位置映射为 dB：
+  // - 顶部 => +18 dB
+  // - 底部 => -18 dB
+  // 然后换算为 cut.volume（Base=1.6 的指数音量）。
   //
   // 关键修复（音量线与波形中线不对齐的根因）：
   // - 不能使用 host.getBoundingClientRect().height，因为它包含滚动条高度。
@@ -1451,7 +1529,8 @@ function pointerEventToVolume(ev: PointerEvent, host: HTMLElement): number {
   const waveformHeight = props.height;
   const y = Math.max(0, Math.min(waveformHeight, ev.clientY - rect.top));
   const ratio = 1 - y / waveformHeight; // 0..1（顶端=1）
-  return volumeMin + ratio * (volumeMax - volumeMin);
+  const db = volumeDbMin + ratio * (volumeDbMax - volumeDbMin);
+  return dbToVolume(db);
 }
 
 function onVolumePointerDown(ev: PointerEvent) {
@@ -1992,7 +2071,17 @@ watch(
 }
 
 .waveform-host {
+  // 波形主区域需要可伸缩（flex:1），并允许内部滚动条工作。
   @apply relative;
+  @apply flex-1;
+  @apply min-w-0;
+}
+
+.waveform-shell {
+  // 关键：波形宽度保持“原样”，不被刻度挤压。
+  // 刻度通过 overlay 贴在波形外侧显示，不参与布局宽度。
+  @apply relative;
+  @apply overflow-visible;
 }
 
 .waveform {
@@ -2029,10 +2118,84 @@ watch(
 // 定位说明：
 // - 使用 top:0 left:0 right:0 而非 inset-0，因为高度由 :style 显式指定（等于波形绘制区域高度）。
 // - 这样音量线的百分比定位才能正确映射到波形区域，而不会被滚动条撑大。
-.volume-overlay {
-  @apply absolute top-0 left-0 right-0;
+// shell 级 overlay：贯穿左右标尺 + 波形，确保蓝线能“碰到”标尺边界
+.volume-overlay-shell {
+  @apply absolute;
+  left: 0;
+  right: 0;
+  top: 0;
   @apply pointer-events-none;
   @apply z-10;
+}
+
+// 左右 dB 标尺与当前值显示（overlay，不占用布局宽度）
+.volume-scale-overlay {
+  @apply absolute top-0;
+  @apply text-[10px] text-gray-600;
+  @apply select-none;
+  @apply pointer-events-none;
+  @apply z-20;
+}
+
+.volume-scale-left {
+  // 左侧刻度在波形外侧，紧贴边界并向右对齐。
+  // 使用 right:100% 保证“右侧对齐到波形左边界”。
+  right: 100%;
+  margin-right: var(--volumeScaleOffset);
+  @apply text-right;
+  @apply w-[var(--volumeScaleW)];
+}
+
+.volume-scale-right {
+  // 当前 dB 在波形右外侧，贴边显示。
+  left: 100%;
+  margin-left: var(--volumeScaleOffset);
+  @apply text-left;
+  @apply w-[var(--volumeScaleW)];
+}
+
+.volume-scale-mark {
+  @apply absolute;
+  transform: translateY(-50%);
+  @apply flex items-center;
+  @apply tabular-nums;
+  @apply w-full;
+  @apply justify-end;
+}
+
+
+.volume-scale-text {
+  // 让刻度数字更“器材感”：
+  // - tabular-nums 保证数字宽度一致
+  // - 字重略提升，避免过轻导致看不清
+  @apply text-[10px];
+  @apply font-medium;
+  @apply text-right;
+  @apply block;
+  // 固定最小宽度，保证正负刻度（含 + 号）视觉宽度一致。
+  min-width: 3ch;
+}
+
+.volume-scale-mark.is-zero .volume-scale-text {
+  // 0dB（unity gain）是用户最常对齐的参考点，视觉上略强调。
+  @apply text-gray-700;
+}
+
+
+
+.volume-current-db {
+  @apply absolute;
+  @apply text-[11px] text-gray-700;
+  transform: translateY(-50%);
+}
+
+.volume-overflow-inline {
+  // 波形区域内的超范围提示：轻量、靠右上角（避免遮挡内容与刻度）。
+  @apply absolute;
+  right: 6px;
+  top: 2px;
+  @apply text-[10px] text-gray-500;
+  @apply pointer-events-none;
 }
 
 .volume-zero-line {
@@ -2041,7 +2204,7 @@ watch(
   @apply absolute left-0 right-0;
   top: 50%;
   @apply h-px;
-  @apply bg-zinc-400/40;
+  @apply bg-zinc-400/35;
 }
 
 .volume-line {
@@ -2053,6 +2216,7 @@ watch(
 // .volume-handle 已删除：用户反馈蓝色小圆点无用，现仅保留横线作为视觉指示。
 
 .volume-line-hit {
+  // 命中区位于 waveform-host 内部，因此 left/right 直接撑满即可。
   @apply absolute left-0 right-0;
   // 命中区做大：这是“拖动时灵时不灵”的主要根因。
   // 之前仅 3px 很难点中，用户稍微偏一点就点到波形本体（被 wavesurfer 接管），导致看起来像没响应。

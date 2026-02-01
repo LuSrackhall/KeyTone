@@ -169,6 +169,8 @@
       "startTime": "Start Time (ms)",
       "endTime": "End Time (ms)",
       "volume": "Volume",
+      "volumeDb": "Volume (dB)",
+      "volumeOutOfRange": "Out of visual range (±18 dB)",
       "error": {
         "negativeTime": "Time cannot be negative"
       },
@@ -181,8 +183,8 @@
         "multipleSoundsFromSameSource": "Multiple independent sounds can be created from the same source file.",
         "soundName": "Sound name",
         "soundDuration": "The start time and end time of the sound, in milliseconds. Since it is used for key presses, the duration should not be too long.",
-        "volume": "0=original, >0=amplify, <0=attenuate. Use 0.1 increments",
-        "volume_1": "Of course, you can also manually input to make a more detailed adjustment, such as 0.0001, etc. Please preview again after each volume adjustment to check the effect, to prevent the volume from being too small or too large.",
+        "volume": "Shown in dB. 0 dB is the original level; >0 boosts, <0 reduces.",
+        "volume_1": "Values beyond ±18 dB still take effect, but the waveform only shows up to the boundary; preview to confirm.",
         "previewSound": "The sounds used for key presses are usually very short, so the sounds from consecutive previews will play concurrently and will not provide a progress bar or stop button (if necessary, you can restart this application to stop them). Therefore, please follow the principles of sound definition."
       },
       "waveformTrimmer": {
@@ -202,7 +204,8 @@
         "total": "Total: ",
         "selection": "Selection: ",
         "hint": "(Drag/click the playhead; Ctrl + wheel to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))",
-        "hintMac": "(Drag/click the playhead; ⌃ Control / ⌘ Command + wheel or trackpad pinch to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))"
+        "hintMac": "(Drag/click the playhead; ⌃ Control / ⌘ Command + wheel or trackpad pinch to zoom; right-drag to quickly select a range; drag the center line to adjust volume (0 is centered))",
+        "volumeOutOfRange": "Out of visual range (±18 dB)"
       }
     },
     "craftKeySounds": {

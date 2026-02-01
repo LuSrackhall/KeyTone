@@ -62,7 +62,22 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card>
+    <!--
+      重要：KeyTone 窗口有固定宽度（约 379~389px）。
+      - 对话框不能超出窗口宽度，但需要尽可能利用可视空间。
+      - 这里直接使用视口宽度减去极小边距（8px），避免“看起来还能更宽”但被人为留白。
+    -->
+    <q-card
+      style="
+        /*
+          目标：
+          - 在固定窗口宽度下，尽可能放大对话框宽度（不超出窗口）。
+          - 为波形外侧刻度留空间，但不压缩波形本体宽度。
+        */
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+      "
+    >
       <!-- 对话框标题 -->
       <q-card-section class="row items-center q-pb-none text-h6">
         {{ ctx.$t('KeyToneAlbum.defineSounds.createNewSound') }}
@@ -166,10 +181,12 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
           outlined
           stack-label
           dense
-          v-model.number="ctx.soundVolume.value"
-          :label="ctx.$t('KeyToneAlbum.defineSounds.volume')"
+          v-model.number="soundVolumeDb"
+          :label="ctx.$t('KeyToneAlbum.defineSounds.volumeDb')"
           type="number"
           :step="0.1"
+          :hint="isSoundVolumeDbOutOfRange ? ctx.$t('KeyToneAlbum.defineSounds.volumeOutOfRange') : ''"
+          :hide-bottom-space="!isSoundVolumeDbOutOfRange"
         >
           <template v-slot:append>
             <q-icon name="info" color="primary">
@@ -241,6 +258,25 @@ import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+// ============================================================================
+// dB <-> cut.volume 换算（Base=1.6）
+// - SDK：gain = 1.6 ^ volume
+// - dB = 20 * log10(gain) = 20 * volume * log10(1.6)
+// - UI 以 dB 显示，内部仍使用 cut.volume
+// ==========================================================================
+const dbPerVolume = 20 * Math.log10(1.6);
+const volumeToDb = (volume: number) => volume * dbPerVolume;
+const dbToVolume = (db: number) => db / dbPerVolume;
+
+const soundVolumeDb = computed({
+  get: () => Number(volumeToDb(ctx.soundVolume.value || 0).toFixed(1)),
+  set: (db: number) => {
+    ctx.soundVolume.value = dbToVolume(Number(db));
+  },
+});
+
+const isSoundVolumeDbOutOfRange = computed(() => Math.abs(soundVolumeDb.value) > 18);
 
 // ============================================================================
 // 计算属性
@@ -323,8 +359,7 @@ function handleSave() {
   @apply text-xs;
   font-size: var(--i18n_fontSize);
   @apply p-1.5;
-  @apply transition-transform hover:scale-105;
-  @apply scale-103;
+  // 恢复默认大小：避免“按钮被放大”的非预期视觉变化。
 }
 
 // 选择器样式 - 处理溢出
