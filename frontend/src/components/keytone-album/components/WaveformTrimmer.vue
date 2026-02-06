@@ -215,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import WaveSurfer from 'wavesurfer.js';
 import { Platform } from 'quasar';
@@ -311,6 +311,7 @@ const zoomMax = 1000;
 // - 之前的默认值 200 在多数音频上“过度放大”，初始打开时会显得很拥挤。
 // - 用户期望默认更“放得开”，先从整体观察，再按需放大。
 const zoomMinPxPerSec = ref(50);
+const isZoomingFromWheel = ref(false);
 
 const selectionDurationMs = computed(() => {
   if (!(props.endMs > props.startMs) || props.startMs < 0 || props.endMs < 0) return null;
@@ -1900,11 +1901,19 @@ function bindWheelZoom() {
     if (targetZoom === currentZoom) return;
 
     // 通过更新响应式 zoom 值触发后续的 instance.zoom(...)（见下方 watch）。
+    // 标记来自滚轮，从而抑制 watch 里的“默认锚定播放头”逻辑，避免与这里的“锚定鼠标”冲突。
+    isZoomingFromWheel.value = true;
     zoomMinPxPerSec.value = targetZoom;
+    nextTick(() => {
+      isZoomingFromWheel.value = false;
+    });
 
     // 锚点滚动校正：在 zoom 生效并重绘后，把 scrollLeft 调整到让锚点时间仍对应鼠标位置。
     // 注意：重绘是异步的，scrollWidth 会在下一帧/下下帧才稳定。
     requestAnimationFrame(() => {
+      // 显式调用样式强制逻辑，确保 measure 前样式正确
+      applyWaveformWidth(instance);
+
       const dur = instance.getDuration();
       if (!Number.isFinite(dur) || dur <= 0) return;
 
@@ -2302,9 +2311,56 @@ watch(
     const instance = ws.value;
     if (!instance) return;
     if (!isReady.value) return;
+
+    // 滑块缩放逻辑（锚定播放头）：
+    // 若此次缩放不是由滚轮（已自带鼠标锚点逻辑）触发的，则执行“锚定播放头”逻辑。
+    let anchorTimeSec: number | null = null;
+    let anchorRatio = 0.5;
+
+    if (!isZoomingFromWheel.value) {
+      const scrollEl = resolveWaveformScrollElement(instance);
+      const clientWidth = scrollEl.clientWidth;
+      const scrollLeft = scrollEl.scrollLeft;
+      const scrollWidth = scrollEl.scrollWidth;
+      const duration = instance.getDuration();
+
+      if (duration > 0 && scrollWidth > 0 && clientWidth > 0) {
+        const currentTime = instance.getCurrentTime();
+        const playheadX = (currentTime / duration) * scrollWidth;
+
+        // 如果播放头在当前视口内（或非常接近边缘），则锚定播放头；否则锚定视口中心。
+        if (playheadX >= scrollLeft && playheadX <= scrollLeft + clientWidth) {
+          anchorTimeSec = currentTime;
+          anchorRatio = (playheadX - scrollLeft) / clientWidth;
+        } else {
+          // 播放头看不见时，锚定视口中心，防止迷路
+          const centerX = scrollLeft + clientWidth / 2;
+          anchorTimeSec = (centerX / scrollWidth) * duration;
+          anchorRatio = 0.5;
+        }
+      }
+    }
+
     instance.zoom(zoomMinPxPerSec.value);
+
     requestAnimationFrame(() => {
       applyWaveformWidth(instance);
+
+      // 应用“锚定播放头”的滚动修正
+      if (anchorTimeSec !== null) {
+        const dur = instance.getDuration();
+        if (!Number.isFinite(dur) || dur <= 0) return;
+
+        const newScrollEl = resolveWaveformScrollElement(instance);
+        const newTotalWidth = newScrollEl.scrollWidth || newScrollEl.clientWidth || 0;
+        const newClientWidth = newScrollEl.clientWidth || 0;
+
+        if (newTotalWidth > 0 && newClientWidth > 0) {
+          const newAnchorPixel = (anchorTimeSec / dur) * newTotalWidth;
+          const targetScrollLeft = newAnchorPixel - (anchorRatio * newClientWidth);
+          newScrollEl.scrollLeft = Math.max(0, targetScrollLeft);
+        }
+      }
     });
   }
 );
