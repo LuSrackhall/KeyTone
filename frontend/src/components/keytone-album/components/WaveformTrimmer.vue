@@ -364,6 +364,142 @@ const hasSource = computed(() => !!audioUrl.value);
 
 const isSyncingFromProps = ref(false);
 
+// 拖拽期间避免 props->region 的“第二通道”竞争（会引发闪烁/不跟手）
+const isAnyDragging = computed(() => isRightDragSelecting.value || leftDragMode.value !== 'none' || isVolumeDragging.value);
+
+const waveformWidthPx = ref<number | null>(null);
+
+let shadowScrollFixObserver: MutationObserver | null = null;
+let shadowScrollFixTargetPx = 0;
+let shadowScrollFixHost: HTMLElement | null = null;
+let shadowScrollFixApplying = false;
+
+function stopShadowScrollFixer() {
+  try {
+    shadowScrollFixObserver?.disconnect();
+  } catch {
+    // ignore
+  }
+  shadowScrollFixObserver = null;
+  shadowScrollFixHost = null;
+  shadowScrollFixTargetPx = 0;
+  shadowScrollFixApplying = false;
+}
+
+function applyShadowScrollFix(host: HTMLElement) {
+  const rootCandidate = Array.from(host.children).find((el) => (el as HTMLElement).shadowRoot) as
+    | HTMLElement
+    | undefined;
+  const sr = rootCandidate?.shadowRoot;
+  if (!sr) return;
+
+  // 约束 shadow host 本身，避免内容宽度把外层布局撑开。
+  if (rootCandidate) {
+    rootCandidate.style.display = 'block';
+    rootCandidate.style.width = '100%';
+    rootCandidate.style.maxWidth = '100%';
+    rootCandidate.style.minWidth = '0px';
+    rootCandidate.style.boxSizing = 'border-box';
+  }
+
+  const target = shadowScrollFixTargetPx;
+  if (!Number.isFinite(target) || target <= 0) return;
+
+  const scroll = (sr.querySelector('.scroll') as HTMLElement | null) || null;
+  const wrapperInShadow = (sr.querySelector('.wrapper') as HTMLElement | null) || null;
+  const canvases = (sr.querySelector('.canvases') as HTMLElement | null) || null;
+  const progress = (sr.querySelector('.progress') as HTMLElement | null) || null;
+
+  if (scroll) {
+    scroll.style.width = '100%';
+    scroll.style.maxWidth = '100%';
+    scroll.style.boxSizing = 'border-box';
+    scroll.style.overflowX = 'auto';
+    scroll.style.overflowY = 'hidden';
+    scroll.style.touchAction = 'pan-x';
+  }
+
+  const setWidth = (el: HTMLElement | null) => {
+    if (!el) return;
+    el.style.width = `${target}px`;
+    el.style.minWidth = `${target}px`;
+  };
+  setWidth(wrapperInShadow);
+  setWidth(canvases);
+  setWidth(progress);
+}
+
+function startShadowScrollFixer(host: HTMLElement) {
+  shadowScrollFixHost = host;
+
+  if (shadowScrollFixObserver) return;
+
+  const rootCandidate = Array.from(host.children).find((el) => (el as HTMLElement).shadowRoot) as
+    | HTMLElement
+    | undefined;
+  const sr = rootCandidate?.shadowRoot;
+  if (!sr) return;
+
+  shadowScrollFixObserver = new MutationObserver(() => {
+    if (shadowScrollFixApplying) return;
+    if (!shadowScrollFixHost) return;
+    shadowScrollFixApplying = true;
+    try {
+      applyShadowScrollFix(shadowScrollFixHost);
+    } catch {
+      // ignore
+    } finally {
+      shadowScrollFixApplying = false;
+    }
+  });
+
+  // 监听 reRender 导致的节点重建或 style 重置
+  shadowScrollFixObserver.observe(sr, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['style', 'class'],
+  });
+}
+
+function applyWaveformWidth(instance: WaveSurfer) {
+  const host = containerEl.value;
+  if (!host) return;
+  const dur = instance.getDuration();
+  if (!Number.isFinite(dur) || dur <= 0) return;
+
+  const target = Math.max(host.clientWidth || 0, Math.round(dur * zoomMinPxPerSec.value));
+  waveformWidthPx.value = target;
+
+  shadowScrollFixTargetPx = target;
+  startShadowScrollFixer(host);
+  applyShadowScrollFix(host);
+
+  // shadow DOM 相关的滚动/宽度由 fixer 统一处理（带 MutationObserver 兜底）。
+
+  const hasShadowRenderer = Array.from(host.children).some((el) => (el as HTMLElement).shadowRoot);
+  const wrapper = instance.getWrapper() as HTMLElement | null;
+
+  if (hasShadowRenderer) {
+    // 关键：shadow DOM 模式下，getWrapper() 往往对应“shadow host”。
+    // 若设为 target 宽度，会把外层容器也拉长 => 没有 overflow => 无法滚动。
+    if (wrapper) {
+      wrapper.style.width = '100%';
+      wrapper.style.maxWidth = '100%';
+      wrapper.style.minWidth = '0px';
+      wrapper.style.boxSizing = 'border-box';
+    }
+  } else {
+    if (wrapper) wrapper.style.width = `${target}px`;
+
+    const innerWrapper = (host.querySelector('.wavesurfer-wrapper') as HTMLElement | null) || null;
+    if (innerWrapper) innerWrapper.style.width = `${target}px`;
+
+    const waveSurferEl = (host.querySelector('.wavesurfer') as HTMLElement | null) || null;
+    if (waveSurferEl) waveSurferEl.style.width = `${target}px`;
+  }
+}
+
 // ============================================================================
 // 音量快捷调节（水平指示线 + 垂直拖拽）
 //
@@ -582,11 +718,28 @@ function resolveWaveformScrollElement(instance: WaveSurfer): HTMLElement {
   const wrapper = instance.getWrapper() as HTMLElement | null;
   const innerWrapper = (containerEl.value?.querySelector('.wavesurfer-wrapper') as HTMLElement | null) || null;
 
+  // wavesurfer v7：默认 renderer 可能使用 shadow DOM，实际滚动容器在 shadowRoot 内。
+  // 若忽略它，会导致：scrollLeft/scrollWidth 永远不变，从而无法滚动/自动滚动。
+  const host = containerEl.value;
+  const shadowScroll = (() => {
+    if (!host) return null;
+    const rootCandidate = Array.from(host.children).find((el) => (el as HTMLElement).shadowRoot) as
+      | HTMLElement
+      | undefined;
+    const sr = rootCandidate?.shadowRoot;
+    return (sr?.querySelector?.('.scroll') as HTMLElement | null) || null;
+  })();
+
+  // shadow DOM 模式下，真正滚动容器就是 .scroll。
+  // 即便当前还未产生 overflow（scrollWidth==clientWidth），也应优先使用它，
+  // 否则缩放/自动滚动会误用外层容器，导致布局被撑开且 scrollLeft 失效。
+  if (shadowScroll) return shadowScroll;
+
   const candidates: Array<HTMLElement | null | undefined> = [
-    // 最优：wavesurfer 内部常见的 wrapper
-    innerWrapper,
-    // 次优：外层容器（我们绑定事件的地方）
+    // 优先：外层容器（.waveform）作为滚动视窗
     containerEl.value,
+    // 次优：wavesurfer 内部常见的 wrapper
+    innerWrapper,
     // 再次：wrapper 的 parent 通常就是滚动容器
     wrapper?.parentElement as HTMLElement | null,
     // 最后兜底：wrapper 自身
@@ -762,6 +915,10 @@ function isTimeRangeVisible(instance: WaveSurfer, startSec: number, endSec: numb
 let quickSelectLiveRafId: number | null = null;
 let pendingQuickSelectRange: { startSec: number; endSec: number } | null = null;
 
+// 右键拖拽更新节流：每帧最多更新一次 region + emit
+let rightDragMoveRafId: number | null = null;
+let pendingRightDragClientX: number | null = null;
+
 // 右键拖拽时的“边缘自动滚动”状态：
 // - 体验目标：像剪辑软件一样，鼠标靠近左右边缘时才自动滚动，且速度随靠近程度渐进。
 // - 重要：自动滚动过程中，即使鼠标不再移动（不产生 pointermove），选区 end 也应持续更新。
@@ -871,15 +1028,11 @@ function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: numbe
     pendingQuickSelectRange = null;
     if (!next) return;
 
-    // 1) 强制轻量重绘：no-op zoom
-    // 说明：zoom 值不变，但会走 renderer.reRender；用于解决 region DOM 更新延迟。
-    try {
-      instance.zoom(zoomMinPxPerSec.value);
-    } catch {
-      // ignore
-    }
+    // 这里不再做“no-op zoom 强制重绘”。
+    // 原因：在 q-dialog 等复杂 UI 中，该操作会导致明显闪烁/抖动（canvas 重绘 + filter）。
+    // 选区可见性由 finalize 时的 ensureQuickSelectRegionVisible 兜底。
 
-    // 2) 这里不做“自动滚动到可见”。
+    // 这里不做“自动滚动到可见”。
     // 原因：
     // - 拖动过程中的自动滚动，应该采用“边缘触发”模型（靠近边缘才滚），否则会出现视图莫名跳动。
     // - finalize（松开右键）后我们仍会调用 ensureQuickSelectRegionVisible 做兜底滚动。
@@ -1419,28 +1572,60 @@ function onWaveformPointerMove(ev: PointerEvent) {
   if (!isWaveSurferInteractive(instance)) return;
   if (rightDragStartSec.value === null) return;
 
-  const currentSec = pointerEventToTimeSec(instance, ev);
-
   // 更新最后一次指针位置：用于边缘自动滚动。
   quickSelectLastClientX = ev.clientX;
+  pendingRightDragClientX = ev.clientX;
 
-  // 严格按需求：只“向右拖动”决定 end。
-  // 若用户向左拖动，则 end 固定为 start（不反向选择）。
-  const endSec = Math.max(rightDragStartSec.value, currentSec);
-  const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
-  ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
+  if (rightDragMoveRafId !== null) return;
+  rightDragMoveRafId = requestAnimationFrame(() => {
+    rightDragMoveRafId = null;
+    const x = pendingRightDragClientX;
+    pendingRightDragClientX = null;
+    if (x === null) return;
+    if (!isRightDragSelecting.value) return;
+    if (rightDragStartSec.value === null) return;
 
-  // 修复（可见性）：拖动过程中保持选区可见。
-  // - rAF 合并避免高频重绘
-  // - 必要时自动滚动，让 end 不会“拖到视野外但看不到”
-  scheduleQuickSelectLiveVisibility(instance, normalized.startSec, normalized.endSec);
+    const curSec = clientXToTimeSecWithScrollLeft(instance, x);
+    const endSec = Math.max(rightDragStartSec.value, curSec);
+    const normalized = normalizeSelectionSec(instance, rightDragStartSec.value, endSec);
+    ensureTrimRegion(regionsApi, instance, normalized.startSec, normalized.endSec);
 
-  // 若用户把指针拖到边缘，启动/维持边缘自动滚动。
-  scheduleQuickSelectEdgeAutoScroll(instance);
+    // 边缘自动滚动：每帧维持一次即可
+    scheduleQuickSelectEdgeAutoScroll(instance);
 
-  // 同上：显式回写输入框，确保“拖动过程中 end 实时变化”可见。
-  emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
-  emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+    emit('update:startMs', Math.max(0, Math.round(normalized.startSec * 1000)));
+    emit('update:endMs', Math.max(0, Math.round(normalized.endSec * 1000)));
+  });
+}
+
+function onWaveformPointerCancel(ev: PointerEvent) {
+  // 与 pointerup 同等处理：避免状态卡死导致后续滚动/拖拽失效
+  onWaveformPointerUp(ev);
+}
+
+function onWindowBlurWhileDragging() {
+  // window blur 时无法保证后续 pointerup 一定到达
+  if (isRightDragSelecting.value) {
+    try {
+      const synthetic = new PointerEvent('pointercancel', { button: 2 });
+      onWaveformPointerUp(synthetic);
+    } catch {
+      // 兜底：直接清理状态
+      isRightDragSelecting.value = false;
+      rightDragStartSec.value = null;
+      window.removeEventListener('pointermove', onWaveformPointerMove);
+      window.removeEventListener('pointerup', onWaveformPointerUp);
+      window.removeEventListener('pointercancel', onWaveformPointerCancel);
+    }
+  }
+  if (isVolumeDragging.value) {
+    try {
+      const synthetic = new PointerEvent('pointercancel', { button: 0 });
+      onVolumePointerUp(synthetic);
+    } catch {
+      // ignore
+    }
+  }
 }
 
 function onWaveformPointerUp(ev: PointerEvent) {
@@ -1482,6 +1667,8 @@ function onWaveformPointerUp(ev: PointerEvent) {
   rightDragStartSec.value = null;
   window.removeEventListener('pointermove', onWaveformPointerMove);
   window.removeEventListener('pointerup', onWaveformPointerUp);
+  window.removeEventListener('pointercancel', onWaveformPointerCancel);
+  window.removeEventListener('blur', onWindowBlurWhileDragging);
 
   // 修复：高倍缩放下，右键快捷选区后选区偶发不可见。
   // - 该问题的一个强信号是：用户轻微调整 zoom 后选区会立刻出现。
@@ -1504,6 +1691,8 @@ function destroyWaveSurfer() {
   isReady.value = false;
   hasError.value = false;
   durationMs.value = null;
+
+  stopShadowScrollFixer();
 
   regionsPlugin.value = null;
 
@@ -1564,6 +1753,7 @@ function onVolumePointerDown(ev: PointerEvent) {
   // - OS 层中断（弹出菜单、窗口切换等）
   // 如果不处理，用户会感知为“拖动时灵时不灵/有时突然失效”。
   window.addEventListener('pointercancel', onVolumePointerCancel, { passive: false });
+  window.addEventListener('blur', onWindowBlurWhileDragging);
 }
 
 function onVolumePointerMove(ev: PointerEvent) {
@@ -1606,6 +1796,7 @@ function onVolumePointerUp(ev: PointerEvent) {
   window.removeEventListener('pointermove', onVolumePointerMove);
   window.removeEventListener('pointerup', onVolumePointerUp);
   window.removeEventListener('pointercancel', onVolumePointerCancel);
+  window.removeEventListener('blur', onWindowBlurWhileDragging);
 }
 
 /**
@@ -1802,8 +1993,14 @@ async function initWaveSurfer() {
       normalize: false,
       interact: true,
       dragToSeek: true,
-      autoScroll: true,
+      // 关闭 wavesurfer 内置 autoScroll：在某些 q-dialog/布局场景下会与外层滚动视窗竞争。
+      // 统一由本组件在 timeupdate 中做“轻量跟随滚动”。
+      autoScroll: false,
       autoCenter: false,
+      // 关键：不 fillParent，让宽度由 duration*minPxPerSec 决定，确保产生横向溢出。
+      fillParent: false,
+      // 外层容器负责滚动，避免嵌套 scrollParent 导致滚动条不出现。
+      scrollParent: false,
       minPxPerSec: zoomMinPxPerSec.value,
       backend: 'WebAudio',
       plugins: [regions],
@@ -1825,8 +2022,48 @@ async function initWaveSurfer() {
     instance.on('finish', () => {
       isPlaying.value = false;
     });
+    // 播放位置与自动滚动（轻量跟随）
+    let playheadScrollRafId: number | null = null;
+    let pendingPlayheadTimeSec: number | null = null;
+    const schedulePlayheadScroll = (timeSec: number) => {
+      pendingPlayheadTimeSec = timeSec;
+      if (playheadScrollRafId !== null) return;
+      playheadScrollRafId = requestAnimationFrame(() => {
+        playheadScrollRafId = null;
+        const tSec = pendingPlayheadTimeSec;
+        pendingPlayheadTimeSec = null;
+        if (tSec === null) return;
+        if (isAnyDragging.value) return;
+
+        const scrollEl = resolveWaveformScrollElement(instance);
+        const dur = instance.getDuration();
+        if (!Number.isFinite(dur) || dur <= 0) return;
+        // scrollWidth 在部分渲染时序下可能短暂为 0 或与 clientWidth 相等。
+        // 这里提供 wrapper 宽度兜底，避免“能播但永远不触发滚动”。
+        const wrapperEl = instance.getWrapper() as HTMLElement | null;
+        const wrapperWidth =
+          (wrapperEl?.scrollWidth || 0) || Math.round(wrapperEl?.getBoundingClientRect?.().width || 0);
+        const totalWidth = Math.max(scrollEl.scrollWidth || 0, wrapperWidth);
+        const viewWidth = scrollEl.clientWidth || 0;
+        if (!Number.isFinite(totalWidth) || totalWidth <= 0) return;
+        if (!Number.isFinite(viewWidth) || viewWidth <= 0) return;
+        if (totalWidth <= viewWidth + 1) return;
+
+        const x = (tSec / dur) * totalWidth;
+        const left = scrollEl.scrollLeft || 0;
+        const right = left + viewWidth;
+        const softLeft = left + viewWidth * 0.2;
+        const softRight = right - viewWidth * 0.2;
+
+        if (x >= softLeft && x <= softRight) return;
+        const desiredLeft = Math.max(0, Math.min(totalWidth - viewWidth, x - viewWidth * 0.3));
+        scrollEl.scrollLeft = desiredLeft;
+      });
+    };
+
     instance.on('timeupdate', (t: number) => {
       currentTimeMs.value = Math.max(0, Math.round(t * 1000));
+      schedulePlayheadScroll(t);
     });
 
     instance.on('ready', () => {
@@ -1856,6 +2093,18 @@ async function initWaveSurfer() {
 
       // 如果外部已经有合法的裁剪区间，则创建/对齐 region
       syncRegionFromProps();
+
+      // 关键兜底：在部分环境下，create() 传入的 minPxPerSec/fillParent 不一定会在首帧 ready 后
+      // 立即反映为“可滚动的长波形”。这里在 ready 后做一次显式 zoom，强制 renderer 计算宽度。
+      // 只执行一次，避免在交互/拖拽过程中触发闪烁。
+      requestAnimationFrame(() => {
+        try {
+          instance.zoom(zoomMinPxPerSec.value);
+        } catch {
+          // ignore
+        }
+        applyWaveformWidth(instance);
+      });
 
       // 右键拖拽快速选区（无菜单）：
       // 事件绑定在模板的 .waveform 容器上（@pointerdown/@mousedown/@contextmenu），
@@ -2054,12 +2303,17 @@ watch(
     if (!instance) return;
     if (!isReady.value) return;
     instance.zoom(zoomMinPxPerSec.value);
+    requestAnimationFrame(() => {
+      applyWaveformWidth(instance);
+    });
   }
 );
 
 watch(
   () => [props.startMs, props.endMs],
   () => {
+    // 拖拽过程中不要走 props->region 同步：避免与拖拽通道竞争导致闪烁/不跟手。
+    if (isAnyDragging.value) return;
     syncRegionFromProps();
   }
 );
@@ -2090,10 +2344,12 @@ watch(
   @apply bg-zinc-50;
   @apply border border-zinc-200;
 
-  // 关键：zoom 后波形会变“很长”，需要允许横向滚动。
-  // 这里不使用 overflow-hidden，避免把滚动条与超出部分裁掉。
+  // 外层作为滚动容器，保证滚动条可见。
   @apply overflow-x-auto;
   @apply overflow-y-hidden;
+
+  // 允许触控板/触摸设备进行横向滚动。
+  touch-action: pan-x;
 
   // 轻量滚动条样式（仅做基础可用性，不追求强定制）
   @apply [&::-webkit-scrollbar]:h-2;
@@ -2101,6 +2357,22 @@ watch(
   @apply [&::-webkit-scrollbar-thumb]:bg-zinc-900/30;
   @apply [&::-webkit-scrollbar-thumb]:rounded-full;
   @apply [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50;
+}
+
+// wavesurfer 内部结构：确保其宽度可展开并计入 scrollWidth。
+:deep(.waveform .wavesurfer) {
+  display: inline-block;
+  width: max-content;
+}
+
+:deep(.waveform .wavesurfer-wrapper) {
+  display: inline-block;
+  width: max-content;
+  min-width: 100%;
+}
+
+:deep(.waveform canvas) {
+  display: block;
 }
 
 // 视觉增强：音量变化时，让波形“高度”产生适度反馈。

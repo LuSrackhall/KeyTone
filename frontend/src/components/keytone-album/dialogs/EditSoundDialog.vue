@@ -175,7 +175,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
           </q-card-section>
 
           <!-- 裁剪时间设置 -->
-          <q-card-section :class="['p-b-1']">
+          <q-card-section :class="['p-b-1', 'min-w-0', 'w-full']">
             <div class="text-[13.5px] text-gray-600 p-b-2">
               {{ ctx.$t('KeyToneAlbum.defineSounds.cropSound') }}
               <q-icon name="info" color="primary">
