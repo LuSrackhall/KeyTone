@@ -35,6 +35,7 @@
             <MainHome v-if="menuItem.to === '/setting-mainHome'"></MainHome>
             <StartupAndAutoStartup v-if="menuItem.to === '/setting-startupAndAutoStartup'"></StartupAndAutoStartup>
             <VolumeAmplify v-if="menuItem.to === '/setting-volumeAmplify'"></VolumeAmplify>
+            <KeytoneAlbumPage v-if="menuItem.to === '/setting-keytoneAlbumPage'"></KeytoneAlbumPage>
           </q-expansion-item>
           <q-separator :key="'sep' + index" v-if="menuItem.separator" />
         </template>
@@ -48,6 +49,7 @@ import Language from 'src/pages/SettingPageChildren/Language_setting.vue';
 import MainHome from 'src/pages/SettingPageChildren/MainHome_setting.vue';
 import StartupAndAutoStartup from 'src/pages/SettingPageChildren/StartupAndAutoStartup_setting.vue';
 import VolumeAmplify from './SettingPageChildren/VolumeAmplify_setting.vue';
+import KeytoneAlbumPage from './SettingPageChildren/KeytoneAlbumPage_setting.vue';
 import { useSettingStore } from 'src/stores/setting-store';
 
 const setting_store = useSettingStore();
@@ -80,6 +82,13 @@ const menuList = [
     caption: 'setting.原始音量增减调节.原始音量增减调节.caption',
     separator: true,
     to: '/setting-volumeAmplify',
+  },
+  {
+    icon: 'library_music',
+    label: 'KeyTone.setting.category.keytoneAlbumPage',
+    caption: 'KeyTone.setting.category.keytoneAlbumPageCaption',
+    separator: true,
+    to: '/setting-keytoneAlbumPage',
   },
 ];
 

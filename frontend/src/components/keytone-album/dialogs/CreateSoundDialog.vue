@@ -62,6 +62,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
     class="create-sound-dialog-单独影响global"
+    @before-hide="onDialogBeforeHide"
   >
     <!--
       重要：KeyTone 窗口有固定宽度（约 379~389px）。
@@ -141,7 +142,8 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
 
         <!-- 波形裁剪（可视化选区） -->
         <WaveformTrimmer
-          v-if="ctx.createNewSound.value"
+          ref="waveformRef"
+          v-show="ctx.createNewSound.value"
           :sha256="ctx.sourceFileForSound.value.sha256"
           :file-type="ctx.sourceFileForSound.value.type"
           v-model:volume="ctx.soundVolume.value"
@@ -254,7 +256,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
  * 这是因为 JS/TS 中对象是引用传递，解构也会复制所有属性。
  */
 
-import { inject, computed } from 'vue';
+import { inject, computed, ref, watch } from 'vue';
 import { Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import WaveformTrimmer from '../components/WaveformTrimmer.vue';
@@ -263,6 +265,25 @@ import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const waveformRef = ref<InstanceType<typeof WaveformTrimmer> | null>(null);
+
+/**
+ * 监听对话框关闭（before-hide）：
+ * - 在动画开始前立即停止音频播放，避免“关闭后仍有声音”的不符合直觉现象。
+ * - 使用 v-show 保持组件存在，避免销毁重计算导致关闭动画丢失。
+ */
+function onDialogBeforeHide() {
+  waveformRef.value?.stopPlayback?.();
+}
+
+// 兜底：当 dialog 通过任意方式关闭（包括外部强制设置 v-model=false）时，立即停止播放
+watch(
+  () => ctx.createNewSound.value,
+  (val) => {
+    if (!val) waveformRef.value?.stopPlayback?.();
+  }
+);
 
 // 使用 Quasar 提供的前端平台检测，仅依赖前端环境
 const isMac = computed(() => Platform.is.mac === true);

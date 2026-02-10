@@ -63,6 +63,18 @@
 - [x] 优化：左键拖拽由组件接管（命中识别播放头/选区/指针），避免内部拖拽冲突导致的卡点。
 - [x] 修复：左键拖拽命中识别使用 composedPath + part token（region/handle），避免识别失效导致只能拖播放头。
 - [x] 优化：左键自动滚动速度平滑 + 预测 scrollLeft 映射，提升跟手稳定性。
+- [x] 播放跟随滚动行为可配置：在设置页新增“键音专辑页相关”分类，提供 paged-jump（默认）和 edge-push 两种模式。
+- [x] 修复智能推挤模式播放头抖动：采用单向推挤算法（idealLeft > currentScrollLeft 才前推）。
+- [x] 修复暂停后“当前时间”显示与播放头实际位置不符：pause 事件中强制 getCurrentTime 校准。
+- [x] 设置持久化链路完整：StoreSet + getConfigFileToUi 中 StoreGet + watch 三环闭合。
+- [x] 修复 Dialog 关闭后音频未停止：onBeforeUnmount 中调用 ws.pause()。
+- [x] 修复智能推挤模式抖动：使用 Math.round/ceil 强制 scrollLeft 为整数，对齐浏览器渲染层行为。
+- [x] 修复播放头抖动：隐藏内置 cursor，使用自定义 overlay 播放头渲染。
+- [x] 修复关闭动画卡顿：波形组件改为 v-show 隐藏，before-hide 回调停止音频。
+- [x] 修复播放头高频颤动：播放中强制时间单调递增（lastPlayheadSec）以抵消 getCurrentTime 微回跳。
+- [x] 关闭时强制停音兜底：watch 监听 v-model 变化并触发 stopPlayback。
+- [x] 播放头像素量化：播放头与 scrollLeft 同步取整，移除亚像素抖动。
+- [x] 边缘推挤锁定播放头：达到阈值后播放头固定在 85% 位置，背景滚动承载移动。
 
 ## 6. 验证
 

@@ -131,6 +131,19 @@
           @contextmenu.prevent
         />
 
+        <!--
+          自定义播放头（稳定版）：
+          - WaveSurfer 内置播放头在高频滚动/推挤时存在轻微颤动（浮点位置与整数 scrollLeft 叠加导致）。
+          - 这里使用我们自己计算的像素位置渲染播放头，确保视觉稳定。
+          - pointer-events:none 保证不影响点击/拖拽交互。
+        -->
+        <div
+          v-show="isReady"
+          class="waveform-playhead"
+          :style="{ left: `${playheadLeftPx}px`, height: `${height}px` }"
+          aria-hidden="true"
+        />
+
       <!--
         音量快捷调节条（剪辑软件风格）：
         - 一条横向指示线代表当前音量（0 位于中线）。
@@ -215,9 +228,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, defineExpose, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import WaveSurfer from 'wavesurfer.js';
+import { useSettingStore } from 'src/stores/setting-store'; // 引入 Setting Store
 import { Platform } from 'quasar';
 // wavesurfer.js v7 插件（ESM）
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
@@ -297,6 +311,12 @@ const durationMs = ref<number | null>(null);
 // 播放条状态
 const isPlaying = ref(false);
 const currentTimeMs = ref(0);
+// 自定义播放头位置（像素），用于抑制内置播放头的颤动
+const playheadLeftPx = ref(0);
+// 边缘推挤期间锁定播放头位置（避免与滚动的像素取整产生相对抖动）
+const playheadLockLeftPx = ref<number | null>(null);
+// 播放中强制时间单调递增，避免 getCurrentTime 的微小回跳引发播放头抖动
+const lastPlayheadSec = ref(0);
 const playScope = ref<'all' | 'selection'>('all');
 const playScopeOptions = computed(() => [
   { label: t('KeyToneAlbum.defineSounds.waveformTrimmer.playScopeAll'), value: 'all' },
@@ -322,6 +342,8 @@ const selectionDurationMs = computed(() => {
 // - 本项目同时支持多语言（至少中英文）。
 // - 这个组件新增了较多 UI 文案（播放/缩放/提示/错误提示等），必须全部走 i18n，避免后续漏翻译与难维护。
 const { t } = useI18n();
+const settingStore = useSettingStore();
+const scrollBehavior = computed(() => settingStore.keytoneAlbumScrollBehavior);
 
 // 缩放提示文案：根据平台展示合适的快捷键说明
 // - macOS：Control + 滚轮 / 触控板捏合
@@ -335,6 +357,11 @@ const macModifierState = {
   control: false,
   meta: false,
 };
+
+// 播放跟随循环（在 initWaveSurfer 内赋值）
+let startPlayheadLoop: (() => void) | null = null;
+let stopPlayheadLoop: (() => void) | null = null;
+let updatePlayheadVisual: ((tSec: number) => void) | null = null;
 
 function onMacModifierKeyDown(ev: KeyboardEvent) {
   if (!Platform.is.mac) return;
@@ -1837,7 +1864,32 @@ function stop() {
   instance.pause();
   instance.setTime(0);
   isPlaying.value = false;
+  lastPlayheadSec.value = 0;
+  stopPlayheadLoop?.();
 }
+
+/**
+ * 停止播放（不重置时间）
+ * - 用于 dialog 关闭时立即停音
+ * - 不修改播放头时间，仅停止声音与跟随循环
+ */
+function stopPlayback() {
+  const instance = ws.value;
+  if (!instance) return;
+  // 先暂停，再尝试 stop（不同 wavesurfer 版本对 stop 的实现不同）
+  instance.pause();
+  // 使用可选链，确保旧版本不抛异常
+  instance.stop?.();
+  isPlaying.value = false;
+  stopPlayheadLoop?.();
+  // 强制同步 UI 当前时间，避免暂停后显示滞后
+  currentTimeMs.value = Math.max(0, Math.round(instance.getCurrentTime() * 1000));
+  lastPlayheadSec.value = instance.getCurrentTime();
+}
+
+defineExpose({
+  stopPlayback,
+});
 
 function togglePlay() {
   const instance = ws.value;
@@ -1852,7 +1904,16 @@ function togglePlay() {
   }
 
   if (playScope.value === 'selection' && selectionDurationMs.value !== null) {
-    instance.play(props.startMs / 1000, props.endMs / 1000);
+    const current = instance.getCurrentTime();
+    const start = props.startMs / 1000;
+    const end = props.endMs / 1000;
+    // 修复：暂停后继续播放时，不再强制回退到选区起点。
+    // 如果当前播放头已在选区内（允许 0.1s 误差），则从当前位置继续播放；否则才从起点开始。
+    if (current >= start - 0.1 && current < end - 0.1) {
+      instance.play(current, end);
+    } else {
+      instance.play(start, end);
+    }
   } else {
     instance.play();
   }
@@ -1987,8 +2048,9 @@ async function initWaveSurfer() {
       height: props.height,
       waveColor: '#94a3b8',
       progressColor: '#64748b',
-      cursorColor: '#0ea5e9',
-      cursorWidth: 2,
+      // 隐藏内置播放头，改用自定义 overlay 渲染，避免高频滚动时的视觉抖动
+      cursorWidth: 0,
+      cursorColor: 'transparent',
       // 纵向高度缩放（视觉反馈）：
       // - wavesurfer 的波形渲染支持 barHeight（渲染阶段缩放）。
       // - 这比对 canvas 做 transform 更干净，不会出现“静音中位线变粗/糊”的伪影。
@@ -2024,55 +2086,229 @@ async function initWaveSurfer() {
     // 播放状态与时间：用于“剪辑软件式”的播放条显示
     instance.on('play', () => {
       isPlaying.value = true;
+      // 播放开始时重置单调计时基准
+      lastPlayheadSec.value = instance.getCurrentTime();
+      startPlayheadLoop?.(); // 开始跟随循环
     });
     instance.on('pause', () => {
       isPlaying.value = false;
+      stopPlayheadLoop?.(); // 暂停播放，立即停止跟随，防止后续 RAF 意外修改 scrollLeft 导致“回跳"
+
+      // 修复：暂停时强制校准 UI 时间显示。
+      // timeupdate 事件可能在 pause 前最后一刻未触发，导致 UI 滞后于实际播放头位置。
+      currentTimeMs.value = Math.max(0, Math.round(instance.getCurrentTime() * 1000));
+      lastPlayheadSec.value = instance.getCurrentTime();
     });
     instance.on('finish', () => {
       isPlaying.value = false;
+      stopPlayheadLoop?.(); // 播放结束，停止跟随
+      lastPlayheadSec.value = instance.getCurrentTime();
     });
-    // 播放位置与自动滚动（轻量跟随）
-    let playheadScrollRafId: number | null = null;
-    let pendingPlayheadTimeSec: number | null = null;
-    const schedulePlayheadScroll = (timeSec: number) => {
-      pendingPlayheadTimeSec = timeSec;
-      if (playheadScrollRafId !== null) return;
-      playheadScrollRafId = requestAnimationFrame(() => {
-        playheadScrollRafId = null;
-        const tSec = pendingPlayheadTimeSec;
-        pendingPlayheadTimeSec = null;
-        if (tSec === null) return;
-        if (isAnyDragging.value) return;
 
-        const scrollEl = resolveWaveformScrollElement(instance);
-        const dur = instance.getDuration();
-        if (!Number.isFinite(dur) || dur <= 0) return;
-        // scrollWidth 在部分渲染时序下可能短暂为 0 或与 clientWidth 相等。
-        // 这里提供 wrapper 宽度兜底，避免“能播但永远不触发滚动”。
-        const wrapperEl = instance.getWrapper() as HTMLElement | null;
-        const wrapperWidth =
-          (wrapperEl?.scrollWidth || 0) || Math.round(wrapperEl?.getBoundingClientRect?.().width || 0);
-        const totalWidth = Math.max(scrollEl.scrollWidth || 0, wrapperWidth);
-        const viewWidth = scrollEl.clientWidth || 0;
-        if (!Number.isFinite(totalWidth) || totalWidth <= 0) return;
-        if (!Number.isFinite(viewWidth) || viewWidth <= 0) return;
-        if (totalWidth <= viewWidth + 1) return;
+    // --------------------------------------------------------------------------------
+    // 播放头跟随逻辑 (RAF Loop)
+    // - 解决卡顿问题：不再依赖稀疏的 timeupdate 事件 (仅 200ms+)，而是使用 requestAnimationFrame 高频查询。
+    // - 解决跳变问题：在“边缘推挤”模式下，每一帧都根据播放头位置微调 scrollLeft。
+    // --------------------------------------------------------------------------------
+    let playheadLoopRafId: number | null = null;
 
-        const x = (tSec / dur) * totalWidth;
-        const left = scrollEl.scrollLeft || 0;
-        const right = left + viewWidth;
-        const softLeft = left + viewWidth * 0.2;
-        const softRight = right - viewWidth * 0.2;
+    // 启动跟随循环
+    startPlayheadLoop = () => {
+      if (playheadLoopRafId !== null) return;
 
-        if (x >= softLeft && x <= softRight) return;
-        const desiredLeft = Math.max(0, Math.min(totalWidth - viewWidth, x - viewWidth * 0.3));
-        scrollEl.scrollLeft = desiredLeft;
-      });
+      const loop = () => {
+        // 如果已停止播放，终止循环
+        if (!isPlaying.value) {
+          playheadLoopRafId = null;
+          return;
+        }
+
+        // 核心：在每一帧对齐滚动位置
+        updateScrollPosition();
+
+        playheadLoopRafId = requestAnimationFrame(loop);
+      };
+
+      playheadLoopRafId = requestAnimationFrame(loop);
     };
 
+    // 停止跟随循环
+    stopPlayheadLoop = () => {
+      if (playheadLoopRafId !== null) {
+        cancelAnimationFrame(playheadLoopRafId);
+        playheadLoopRafId = null;
+      }
+    };
+
+    // 更新自定义播放头的位置（像素级）
+    updatePlayheadVisual = (tSec: number) => {
+      const duration = instance.getDuration();
+      if (!Number.isFinite(duration) || duration <= 0) return;
+
+      const scrollEl = resolveWaveformScrollElement(instance);
+      const totalWidth = scrollEl.scrollWidth || scrollEl.clientWidth || 0;
+      const viewWidth = scrollEl.clientWidth || 0;
+      if (!Number.isFinite(totalWidth) || totalWidth <= 0) return;
+
+      // 如果处于边缘推挤锁定状态，直接使用锁定位置（消除相对抖动）
+      if (playheadLockLeftPx.value !== null) {
+        playheadLeftPx.value = playheadLockLeftPx.value;
+        return;
+      }
+
+      // 将播放头位置与 scrollLeft 同步量化为整数像素，避免亚像素累积导致的抖动
+      const x = Math.round((tSec / duration) * totalWidth);
+      const scrollLeftPx = Math.round(scrollEl.scrollLeft);
+      const left = Math.max(0, Math.min(viewWidth, x - scrollLeftPx));
+      playheadLeftPx.value = left;
+    };
+
+    // 执行单次滚动更新（每一帧调用）
+    const updateScrollPosition = () => {
+      if (!isReady.value || !ws.value) return;
+      if (isAnyDragging.value) return; // 拖拽选区时不要自动滚，避免干扰
+
+      const inst = ws.value;
+      const dur = inst.getDuration();
+      if (!Number.isFinite(dur) || dur <= 0) return;
+
+      // 直接获取当前播放时间（比 timeupdate 更准、更高频）
+      const tSecRaw = inst.getCurrentTime();
+      // 播放中强制时间单调递增：避免 getCurrentTime 的微小回跳造成播放头抖动
+      const tSec = Math.max(tSecRaw, lastPlayheadSec.value);
+      lastPlayheadSec.value = tSec;
+      if (typeof tSec !== 'number') return;
+
+      const scrollEl = resolveWaveformScrollElement(inst);
+      // scrollWidth 在某些极窄/初始化瞬间可能不准，用 wrapper 宽度做兜底
+      const wrapperEl = inst.getWrapper() as HTMLElement | null;
+      const wrapperWidth = (wrapperEl?.scrollWidth || 0) || Math.round(wrapperEl?.getBoundingClientRect?.().width || 0);
+      const totalWidth = Math.max(scrollEl.scrollWidth || 0, wrapperWidth);
+      const viewWidth = scrollEl.clientWidth || 0;
+
+      // 内容比容器窄，无需滚动
+      if (totalWidth <= viewWidth + 1) {
+        updatePlayheadVisual?.(tSec);
+        return;
+      }
+
+      const x = (tSec / dur) * totalWidth;
+      const currentScrollLeft = scrollEl.scrollLeft;
+      const currentScrollLeftPx = Math.round(currentScrollLeft);
+      const localX = x - currentScrollLeft;
+
+      let desiredLeft = currentScrollLeft;
+
+      // --------------------------------------------------------------------------
+      // 模式 A: 智能边缘推挤 (Smart Edge Push) - 默认
+      // - 播放头在 0%~85% 区域自由移动（保留运动感）。
+      // - 到达 >85% 时，视口开始平滑推挤。
+      //
+      // 【抖动最终修复：锁定相对位置】
+      // 问题根因：
+      // WaveSurfer 的 cursor 是基于时间的绝对平滑运动（浮点数），
+      // 而浏览器的 scrollLeft 只能以整数像素移动（在大多浏览器上）。
+      // 当我们在每一帧用 "x - threshold" 计算出一个浮点数 desiredLeft 并赋给 scrollLeft 时，
+      // 浏览器会对其取整。
+      // 结果：Cursor 在屏幕上的位置 = x - floor(scrollLeft)。
+      // 随着 x 平滑增加，floor(scrollLeft) 是阶梯式增加的。
+      // 两者相减的结果就会呈现出一个幅度为 1px 的锯齿波震荡。
+      // 这就是用户肉眼看到的 "播放头在抖动"（相对于屏幕像素网格）。
+      //
+      // 解决方案：
+      // 既然背景（scrollLeft）只能整数动，那我们就必须让 desiredLeft 也是整数，
+      // 并且让这个 "整数化过程" 稳定下来，不要每帧重新算。
+      //
+      // 但实际上，只要 WaveSurfer 的 cursor 是平滑的，而背景是阶梯的，这种相对抖动就是数学必然。
+      // 除非：我们不回读 scrollLeft，而是直接写入！
+      // 并且！不要使用 Math.round/ceil 这种不稳定的取整（它会随 x 的小数部分跳变）。
+      //
+      // 这里的策略改为：
+      // 只要计算出的 idealLeft 超过了当前视口位置（意味着播放头撞线了），
+      // 就强制 scrollLeft = idealLeft。
+      // 并且不去纠结取整（let browser handle it）。
+      // 更关键的是：移除 "if (ideal > current)" 这种基于回读值的判断，
+      // 因为回读值本身就是被浏览器取整过的烂数据。
+      // 我们相信 x 是单调递增的，那么 idealLeft 也是单调递增的。
+      // 直接写入即可保证最平滑的结果。
+      // --------------------------------------------------------------------------
+      if (scrollBehavior.value === 'edge-push') {
+        const thresholdRightRatio = 0.85;
+        const thresholdRight = viewWidth * thresholdRightRatio;
+        const thresholdRightPx = Math.round(thresholdRight);
+        const xPx = Math.round(x);
+
+        // idealLeft: 让播放头恰好位于视口 85% 处所需的 scrollLeft (浮点数)
+        const idealLeft = x - thresholdRight;
+
+        // 1. 判断是否需要推挤
+        // 条件：播放头已经到达或超过了推挤线（x > currentRightEdge * 0.85）
+        // 这里用 idealLeft > currentScrollLeft 来近似判断 "是否在右侧"
+        // 但为了避免回读噪声，我们放宽一点容差，或者乾脆只看 idealLeft > 0
+
+        // 只有当理想位置确实比当前位置靠右（需要向前推），或者两者非常接近（保持推挤态）
+        // 我们才更新。
+        // 使用一个极小的 epsilon 防止浮点抖动，但不使用整数比较。
+        if (idealLeft > currentScrollLeft - 1) {
+          desiredLeft = idealLeft;
+        }
+
+        // 2. 边界保护：播放头完全跑出视口（Seek/Loop 回跳）
+        // 此时必须瞬间归位。
+        // 使用 x (绝对位置) 和 currentScrollLeft (当前视口) 判断是否出界
+        const scrollRight = currentScrollLeft + viewWidth;
+        if (x < currentScrollLeft || x > scrollRight) {
+          // 归位到左侧 15%，留出 85% 的余量
+          desiredLeft = x - viewWidth * 0.15;
+        }
+
+        // 边缘推挤时锁定播放头位置，防止 scrollLeft 整数取整与 cursor 浮点位置产生相对抖动
+        // 逻辑：播放头达到推挤线后，直接把播放头固定在阈值线，背景负责移动。
+        const shouldLock = xPx >= currentScrollLeftPx + thresholdRightPx;
+        playheadLockLeftPx.value = shouldLock ? thresholdRightPx : null;
+      }
+      // --------------------------------------------------------------------------
+      // 模式 B: 分页式跳转 (Paged Jump) - 传统剪辑软件风格
+      // - 播放头一直走到屏幕最右侧边缘外。
+      // - 瞬间跳转到下一屏（翻页）。
+      // --------------------------------------------------------------------------
+      else {
+        // 当播放头完全离开视口右侧 (localX >= viewWidth)
+        // 或 完全离开视口左侧 (localX < 0) 时触发跳转
+        if (localX >= viewWidth || localX < 0) {
+           // 策略：新页面的起点 = 当前播放头位置（让播放头出现在屏幕最左侧）
+           // 或者：模仿 Audition，保留一点重叠 (e.g. 10%)。
+           // 这里采用纯粹的“下一页”感：让播放头出现在左侧 5% 处。
+           desiredLeft = x - viewWidth * 0.05;
+        }
+      }
+
+      // 边界保护与应用（去抖动核心）
+      const clampedScrollLeft = Math.max(0, Math.min(totalWidth - viewWidth, desiredLeft));
+
+      // 优化：只有当变更量 > 0.5px 时才写入 DOM，减少 Layout Thrashing
+      // 之前是 > 1px，推挤时可能导致 1px 的锯齿状颤动。改为 0.5 或直接应用（因为 RAF 本身已经限频了）。
+      // 实际上，Float -> Int 的滚动条行为差异在不同浏览器不同。
+      // 为了丝滑，这里不再做 threshold check，直接赋值（让浏览器处理 subpixel）。
+      if (Math.abs(currentScrollLeft - clampedScrollLeft) > 0.5) {
+        // 统一量化为整数像素，避免浏览器内部取整与视觉抖动
+        scrollEl.scrollLeft = Math.round(clampedScrollLeft);
+      }
+
+      // 更新自定义播放头（以滚动后的 scrollLeft 为准）
+      updatePlayheadVisual?.(tSec);
+    };
+
+    // 原有的 schedulePlayheadScroll 已废弃，仅保留 timeupdate 用于非播放状态下的 UI 更新
     instance.on('timeupdate', (t: number) => {
       currentTimeMs.value = Math.max(0, Math.round(t * 1000));
-      schedulePlayheadScroll(t);
+      // 注意：播放时的滚动交由 RAF loop 接管，这里不再调用 schedulePlayheadScroll
+      // 仅当用户手动拖动播放头（非播放状态）时，是否需要自动跟随？
+      // 原有逻辑是需要的。但 user 现在的诉求是“推挤/翻页”。
+      // 暂且保留：如果非播放状态下的拖动导致出界，也可以触发一次 updateScrollPosition
+      if (!isPlaying.value) {
+        updateScrollPosition();
+      }
     });
 
     instance.on('ready', () => {
@@ -2259,6 +2495,11 @@ onBeforeUnmount(() => {
     resetMacModifierState();
   }
 
+  // 停止播放跟随循环（关键：防止组件销毁后，循环仍尝试访问 DOM 导致报错或逻辑残留）
+  if (ws.value) {
+    stopPlayback();
+  }
+
   // 右键快捷选区的 live 可见性刷新：避免组件销毁后 RAF 回调仍运行。
   if (quickSelectLiveRafId !== null) cancelAnimationFrame(quickSelectLiveRafId);
   quickSelectLiveRafId = null;
@@ -2415,6 +2656,16 @@ watch(
   @apply [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50;
 }
 
+// 自定义播放头（覆盖在波形上方）
+.waveform-playhead {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  background: #0ea5e9;
+  pointer-events: none;
+  z-index: 5;
+}
+
 // wavesurfer 内部结构：确保其宽度可展开并计入 scrollWidth。
 :deep(.waveform .wavesurfer) {
   display: inline-block;
@@ -2429,6 +2680,14 @@ watch(
 
 :deep(.waveform canvas) {
   display: block;
+}
+
+// 隐藏 wavesurfer 内置 cursor，避免与自定义播放头重叠与抖动
+:deep(.waveform .wavesurfer-cursor) {
+  display: none !important;
+}
+:deep(.waveform .cursor) {
+  display: none !important;
 }
 
 // 视觉增强：音量变化时，让波形“高度”产生适度反馈。

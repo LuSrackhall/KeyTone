@@ -4,7 +4,17 @@
     "developer": "制作者",
     "setting": {
       "index": "设置",
-      "caption": ""
+      "caption": "",
+      "category": {
+        "keytoneAlbumPage": "键音专辑页相关",
+        "keytoneAlbumPageCaption": "对键音专辑页中的相关功能进行自定义配置",
+        "scrollBehavior": "波形滚动行为",
+        "scrollBehaviorCaption": "控制播放过程中波形跟随播放头的方式",
+        "scrollOptions": {
+          "edge-push": "智能边缘推挤",
+          "paged-jump": "分页式跳转"
+        }
+      }
     },
     "KeyToneAlbum": {
       "index": "键音专辑",

@@ -229,6 +229,10 @@ func settingDefaultConfig() {
 	// 默认 false：彻底分离，鼠标无专辑则无声；用户可在设置中开启回退。
 	viper.SetDefault("playback.routing.mouse_fallback_to_keyboard", false)
 
+	// 键音专辑页 - 波形滚动行为偏好
+	// 默认值：paged-jump（分页式跳转），符合传统剪辑软件习惯
+	viper.SetDefault("keytone_album_page.scroll_behavior", "paged-jump")
+
 	// 分离模式下键盘/鼠标音量默认设置
 	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.volume_normal", Main_home___split_audio_volume_processing___keyboard_volume_normal)
 	viper.SetDefault("main_home.split_audio_volume_processing.keyboard.volume_normal_reduce_scope", Main_home___split_audio_volume_processing___keyboard_volume_normal_reduce_scope)

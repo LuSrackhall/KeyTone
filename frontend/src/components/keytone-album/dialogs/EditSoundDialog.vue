@@ -67,6 +67,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
     v-model="ctx.showEditSoundDialog.value"
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
+    @before-hide="onDialogBeforeHide"
   >
     <!--
       重要：窗口宽度固定（约 379~389px）。
@@ -187,7 +188,8 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
 
             <!-- 波形裁剪（可视化选区） -->
             <WaveformTrimmer
-              v-if="ctx.showEditSoundDialog.value"
+              ref="waveformRef"
+              v-show="ctx.showEditSoundDialog.value"
               :sha256="ctx.selectedSound.value.soundValue.source_file_for_sound.sha256"
               :file-type="ctx.selectedSound.value.soundValue.source_file_for_sound.type"
                 v-model:volume="ctx.selectedSound.value.soundValue.cut.volume"
@@ -314,7 +316,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
  * 提示用户该声音是否被其他按键音引用。
  */
 
-import { inject, computed } from 'vue';
+import { inject, computed, ref, watch } from 'vue';
 import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
@@ -326,6 +328,24 @@ const q = useQuasar();
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+const waveformRef = ref<InstanceType<typeof WaveformTrimmer> | null>(null);
+
+/**
+ * 监听对话框关闭（before-hide）：
+ * - 关闭动画开始前立即停止音频，保证 UX 一致且不拖慢动画。
+ * - 配合 v-show 保持组件挂载，避免销毁开销导致动画卡顿。
+ */
+function onDialogBeforeHide() {
+  waveformRef.value?.stopPlayback?.();
+}
+
+// 兜底：当 dialog 通过任意方式关闭（包括外部强制设置 v-model=false）时，立即停止播放
+watch(
+  () => ctx.showEditSoundDialog.value,
+  (val) => {
+    if (!val) waveformRef.value?.stopPlayback?.();
+  }
+);
 
 // ============================================================================
 // dB <-> cut.volume 换算（Base=1.6）
