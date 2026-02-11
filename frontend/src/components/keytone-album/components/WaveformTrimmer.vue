@@ -139,8 +139,8 @@
         -->
         <div
           v-show="isReady"
-          class="waveform-playhead"
-          :style="{ left: `${playheadLeftPx}px`, height: `${height}px` }"
+          :class="['waveform-playhead', playheadOffscreenClass]"
+          :style="{ left: `${playheadDisplayLeftPx}px`, height: `${height}px` }"
           aria-hidden="true"
         />
 
@@ -313,8 +313,164 @@ const isPlaying = ref(false);
 const currentTimeMs = ref(0);
 // 自定义播放头位置（像素），用于抑制内置播放头的颤动
 const playheadLeftPx = ref(0);
+// 最近一次计算到的视口宽度（用于判断播放头是否移出可视区域）
+const playheadViewWidthPx = ref(0);
+// 播放头显示用的边缘指示（移出视野时固定到边缘并改变外观）
+const playheadDisplayLeftPx = computed(() => {
+  const viewWidth = playheadViewWidthPx.value || 0;
+  if (!Number.isFinite(viewWidth) || viewWidth <= 0) return 0;
+  if (playheadLeftPx.value < 0) return 0;
+  if (playheadLeftPx.value > viewWidth) return Math.max(0, viewWidth - 2);
+  return playheadLeftPx.value;
+});
+const playheadOffscreenClass = computed(() => {
+  const viewWidth = playheadViewWidthPx.value || 0;
+  if (!Number.isFinite(viewWidth) || viewWidth <= 0) return '';
+  if (playheadLeftPx.value < 0) return 'is-off-left';
+  if (playheadLeftPx.value > viewWidth) return 'is-off-right';
+  return '';
+});
 // 边缘推挤期间锁定播放头位置（避免与滚动的像素取整产生相对抖动）
 const playheadLockLeftPx = ref<number | null>(null);
+// 用户手动滚动时的播放头同步：避免播放头“固定在视野某个位置”的错觉
+let unbindScrollSync: (() => void) | null = null;
+// 用户是否正在手动滚动（滚动条拖动 / 触控板横向滚动）
+// - 当用户主动控制视区时，播放自动滚动（翻页/推挤）必须暂时让位。
+// - 但播放头 UI 必须继续更新（允许移出视野，并用边缘指示提示方向）。
+// - 这里用“短延迟释放”的方式判断用户是否还在滚动。
+const isUserScrolling = ref(false);
+let userScrollReleaseTimer: number | null = null;
+
+// 用户是否正在“拖拽滚动条”（比 isUserScrolling 更强的手动控制信号）
+// - 仅靠 scroll 事件推断用户意图在某些平台并不可靠（事件频率/合并策略不同），
+//   会导致自动跟随与手动拖拽互相竞争 -> 视区闪烁。
+// - 因此当检测到用户在滚动条区域按下时，显式进入该模式，直到 mouseup/pointerup 才退出。
+const isUserScrollDragging = ref(false);
+let userScrollDragPointerId: number | null = null;
+
+function beginUserScrollDrag(pointerId?: number) {
+  isUserScrollDragging.value = true;
+  isUserScrolling.value = true;
+  if (typeof pointerId === 'number') userScrollDragPointerId = pointerId;
+  if (userScrollReleaseTimer !== null) {
+    window.clearTimeout(userScrollReleaseTimer);
+    userScrollReleaseTimer = null;
+  }
+}
+
+function endUserScrollDrag() {
+  if (!isUserScrollDragging.value) return;
+  isUserScrollDragging.value = false;
+  userScrollDragPointerId = null;
+
+  // 松开滚动条后，不要立刻把视区“抢回”到自动跟随位置。
+  // 交给追帧动画平滑追上（更有惯性、更像剪辑软件）。
+  isUserScrolling.value = false;
+  activateAutoFollowCatchup(520);
+}
+
+// ---------------------------
+// Programmatic scroll guard
+// ---------------------------
+// 问题：我们通过 scroll 事件来判断“用户是否在手动滚动”，从而暂停自动滚动。
+// 但播放自动跟随（edge-push/paged-jump）同样会写入 scrollLeft，也会触发 scroll 事件。
+// 如果不区分来源，就会出现：
+// - 自动滚动 -> 触发 scroll -> 误判为用户滚动 -> 暂停自动滚动 -> 又恢复 -> 视觉跳动/不稳定
+// - 并且 scroll handler 里如果无条件解除 playheadLockLeftPx，会破坏 edge-push 的稳定性（抖动回归）
+//
+// 解决：对“我们自己写入 scrollLeft”的那一帧做标记；scroll handler 检测到该标记时：
+// - 不进入 isUserScrolling 状态
+// - 不解除 playheadLockLeftPx
+// - 只做播放头 UI 的刷新
+let isProgrammaticScrollWrite = false;
+let clearProgrammaticScrollWriteRaf: number | null = null;
+
+function markProgrammaticScrollWrite() {
+  isProgrammaticScrollWrite = true;
+  if (clearProgrammaticScrollWriteRaf !== null) return;
+  clearProgrammaticScrollWriteRaf = requestAnimationFrame(() => {
+    isProgrammaticScrollWrite = false;
+    clearProgrammaticScrollWriteRaf = null;
+  });
+}
+
+// 手动交互结束后的“追帧”窗口：
+// - 用户松开滚动条/结束拖拽后，直接瞬间跳回实时播放位置会很突兀。
+// - 这里用一个短暂窗口，在恢复自动跟随时用平滑滚动追上目标位置。
+let autoFollowCatchupUntilTs: number | null = null;
+let autoFollowLastTs: number | null = null;
+// 追帧的“惯性”速度状态（px/s）：用于弹簧阻尼模型
+let autoFollowVelocityPxPerSec = 0;
+
+function activateAutoFollowCatchup(durationMs = 650) {
+  // 只有在播放中才需要追帧；暂停状态下直接保持当前视区即可。
+  if (!isPlaying.value) return;
+  autoFollowCatchupUntilTs = performance.now() + durationMs;
+  autoFollowLastTs = null;
+  // 每次进入追帧时重置速度，避免上一次追帧残留的速度造成“突然加速”。
+  autoFollowVelocityPxPerSec = 0;
+}
+
+/**
+ * 判断指针是否落在滚动条 gutter 上（水平/垂直）。
+ *
+ * 目标：
+ * - 用户点击/拖拽滚动条的意图是“滚动视区”，不应该触发波形内容区的 seek/拖拽逻辑。
+ * - 在 Electron/部分浏览器组合下，滚动条点击会被同一个元素的 pointerdown 捕获到，
+ *   如果继续向下传递，会触发 wavesurfer 的 dragToSeek，把播放头跳到点击位置。
+ */
+function isPointerOnScrollbarGutter(ev: PointerEvent, scrollEl: HTMLElement): boolean {
+  const rect = scrollEl.getBoundingClientRect();
+  const verticalScrollbarW = Math.max(0, scrollEl.offsetWidth - scrollEl.clientWidth);
+  const horizontalScrollbarH = Math.max(0, scrollEl.offsetHeight - scrollEl.clientHeight);
+
+  // overlay scrollbar（macOS 常见）会返回 0，此时无法/也无需做 gutter 命中判断。
+  if (verticalScrollbarW <= 0 && horizontalScrollbarH <= 0) return false;
+
+  const x = ev.clientX;
+  const y = ev.clientY;
+
+  const onVertical = verticalScrollbarW > 0 && x >= rect.right - verticalScrollbarW;
+  const onHorizontal = horizontalScrollbarH > 0 && y >= rect.bottom - horizontalScrollbarH;
+  return onVertical || onHorizontal;
+}
+
+/**
+ * 更鲁棒的“滚动条区域命中判断”（支持 overlay scrollbar）。
+ *
+ * 为什么需要它：
+ * - macOS 常见的 overlay scrollbar 会让 offsetWidth-clientWidth 变为 0。
+ * - 但用户确实可能在底部/右侧滚动条区域点击/拖拽。
+ * - 如果我们只靠 gutter 尺寸判断，会漏判，从而仍把事件透传到 wavesurfer 的 dragToSeek。
+ *
+ * 策略：
+ * - 若能测出真实 scrollbar 尺寸，则用真实尺寸。
+ * - 否则使用一个小的“安全带宽”（slop），仅在确实存在可滚动内容时启用：
+ *   - 水平：仅当 scrollWidth>clientWidth 时，认为底部 slopPx 区域可能是滚动条命中区
+ *   - 垂直：仅当 scrollHeight>clientHeight 时，认为右侧 slopPx 区域可能是滚动条命中区
+ *
+ * 注意：这是 UX 导向的命中保护，不追求 100% 像素级精确。
+ * 目标是确保“点击滚动条不会触发 seek”，且不影响内容区正常点击。
+ */
+function isPointInScrollbarZone(clientX: number, clientY: number, scrollEl: HTMLElement): boolean {
+  const rect = scrollEl.getBoundingClientRect();
+
+  const verticalScrollbarW = Math.max(0, scrollEl.offsetWidth - scrollEl.clientWidth);
+  const horizontalScrollbarH = Math.max(0, scrollEl.offsetHeight - scrollEl.clientHeight);
+
+  // overlay scrollbar 兜底命中带宽（不宜过大，避免误伤底部内容区点击）
+  const slopPx = 12;
+
+  const hasHScroll = scrollEl.scrollWidth > scrollEl.clientWidth + 1;
+  const hasVScroll = scrollEl.scrollHeight > scrollEl.clientHeight + 1;
+
+  const effectiveH = horizontalScrollbarH > 0 ? horizontalScrollbarH : hasHScroll ? slopPx : 0;
+  const effectiveW = verticalScrollbarW > 0 ? verticalScrollbarW : hasVScroll ? slopPx : 0;
+
+  const onVertical = effectiveW > 0 && clientX >= rect.right - effectiveW;
+  const onHorizontal = effectiveH > 0 && clientY >= rect.bottom - effectiveH;
+  return onVertical || onHorizontal;
+}
 // 播放中强制时间单调递增，避免 getCurrentTime 的微小回跳引发播放头抖动
 const lastPlayheadSec = ref(0);
 const playScope = ref<'all' | 'selection'>('all');
@@ -942,6 +1098,10 @@ function isTimeRangeVisible(instance: WaveSurfer, startSec: number, endSec: numb
 // =============================================================================
 let quickSelectLiveRafId: number | null = null;
 let pendingQuickSelectRange: { startSec: number; endSec: number } | null = null;
+// 右键选区启动后的一次性“轻量刷新”标记：
+// - 在暂停/停止后首次右键拖拽，Regions 的 DOM 更新可能延迟，导致拖拽中看不到选区。
+// - 这里仅在拖拽开始时触发一次 no-op zoom reRender，避免连续闪烁。
+let quickSelectNeedRenderRefresh = false;
 
 // 右键拖拽更新节流：每帧最多更新一次 region + emit
 let rightDragMoveRafId: number | null = null;
@@ -990,6 +1150,11 @@ function updateLeftDragTarget(instance: WaveSurfer, clientX: number, targetSecOv
   // 播放头拖拽：直接 setTime，保证跟手。
   if (leftDragMode.value === 'playhead') {
     instance.setTime(targetSec);
+    // 用户主动拖拽播放头时，解除推挤锁定，保证所见即所得
+    playheadLockLeftPx.value = null;
+    lastPlayheadSec.value = targetSec;
+    currentTimeMs.value = Math.max(0, Math.round(targetSec * 1000));
+    updatePlayheadVisual?.(targetSec);
     return;
   }
 
@@ -1056,9 +1221,17 @@ function scheduleQuickSelectLiveVisibility(instance: WaveSurfer, startSec: numbe
     pendingQuickSelectRange = null;
     if (!next) return;
 
-    // 这里不再做“no-op zoom 强制重绘”。
-    // 原因：在 q-dialog 等复杂 UI 中，该操作会导致明显闪烁/抖动（canvas 重绘 + filter）。
-    // 选区可见性由 finalize 时的 ensureQuickSelectRegionVisible 兜底。
+    // 轻量 reRender：仅在拖拽开始阶段执行一次。
+    // 目的：修复“暂停/停止后首次右键拖拽选区不显示”的问题。
+    // 注意：只执行一次，避免拖拽过程中的闪烁。
+    if (quickSelectNeedRenderRefresh) {
+      quickSelectNeedRenderRefresh = false;
+      try {
+        instance.zoom(zoomMinPxPerSec.value);
+      } catch {
+        // ignore
+      }
+    }
 
     // 这里不做“自动滚动到可见”。
     // 原因：
@@ -1370,6 +1543,35 @@ function ensureTrimRegion(regionsApi: RegionsApi, instance: WaveSurfer, startSec
 }
 
 function onWaveformPointerDown(ev: PointerEvent) {
+  // 滚动条 gutter 命中：吞掉事件，避免透传到 wavesurfer 的 dragToSeek。
+  // 说明：这里不 preventDefault，避免影响滚动条本身的拖拽行为。
+  if (ev.button === 0) {
+    const instance = ws.value;
+    if (instance) {
+      const scrollEl = resolveWaveformScrollElement(instance);
+      // 同时支持“真实 gutter”与 overlay scrollbar（用 slop 命中区兜底）
+      if (scrollEl && (isPointerOnScrollbarGutter(ev, scrollEl) || isPointInScrollbarZone(ev.clientX, ev.clientY, scrollEl))) {
+        // 显式进入“用户拖拽滚动条”模式：从按下瞬间开始，自动跟随必须让位。
+        // 这能彻底避免“用户拖滚动条 + 自动推挤/翻页”互相竞争导致的闪烁。
+        beginUserScrollDrag(ev.pointerId);
+
+        // 监听释放：滚动条拖拽属于原生行为，pointermove 不一定稳定；
+        // 但 pointerup/pointercancel 通常仍会到达 window。
+        const onUp = (e: PointerEvent) => {
+          if (userScrollDragPointerId !== null && e.pointerId !== userScrollDragPointerId) return;
+          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onUp);
+          endUserScrollDrag();
+        };
+        window.addEventListener('pointerup', onUp, { passive: true });
+        window.addEventListener('pointercancel', onUp, { passive: true });
+
+        ev.stopPropagation();
+        return;
+      }
+    }
+  }
+
   // 优先处理“右键语义”（含 ctrl+click）
   if (isSecondaryPointerDown(ev)) {
     // 防抖：在 pointerdown + mousedown 同时触发的环境里避免重复启动
@@ -1399,6 +1601,8 @@ function onWaveformPointerDown(ev: PointerEvent) {
     const startSec = pointerEventToTimeSec(instance, ev);
     rightDragStartSec.value = startSec;
     isRightDragSelecting.value = true;
+    // 标记需要一次性刷新，确保拖拽过程中选区可见
+    quickSelectNeedRenderRefresh = true;
     // 记录指针位置：用于边缘自动滚动（即使后续不再触发 pointermove）。
     quickSelectLastClientX = ev.clientX;
 
@@ -1547,6 +1751,9 @@ function onWaveformLeftPointerUp() {
   window.removeEventListener('pointermove', onWaveformLeftPointerMove);
   window.removeEventListener('pointerup', onWaveformLeftPointerUp);
   window.removeEventListener('pointercancel', onWaveformLeftPointerUp);
+
+  // 左键拖拽结束：若仍在播放，使用追帧动画平滑回到实时播放跟随位置
+  activateAutoFollowCatchup(260);
 }
 
 /**
@@ -1555,6 +1762,30 @@ function onWaveformLeftPointerUp() {
  * 注意：MouseEvent 没有 pointerId 等字段，但我们这里只需要 clientX / button / ctrlKey。
  */
 function onWaveformMouseDown(ev: MouseEvent) {
+  // 滚动条点击/拖拽保护（非常关键）：
+  // wavesurfer 的 dragToSeek 在部分实现里是基于 mousedown 的。
+  // 即使我们在 pointerdown 里 stopPropagation，如果不同时拦截 mousedown，
+  // 仍会出现“点击滚动条瞬间播放头跳到点击位置”的问题。
+  if (ev.button === 0) {
+    const instance = ws.value;
+    if (instance) {
+      const scrollEl = resolveWaveformScrollElement(instance);
+      if (scrollEl && isPointInScrollbarZone(ev.clientX, ev.clientY, scrollEl)) {
+        // 同 pointerdown：为 mousedown 路径显式进入用户滚动拖拽模式。
+        // （某些平台/实现里拖拽滚动条只会走 mouse 事件链路）
+        beginUserScrollDrag();
+        const onUp = () => {
+          window.removeEventListener('mouseup', onUp);
+          endUserScrollDrag();
+        };
+        window.addEventListener('mouseup', onUp, { passive: true });
+
+        ev.stopPropagation();
+        return;
+      }
+    }
+  }
+
   // mouse 事件的右键语义同上
   const isSecondary = ev.button === 2;
   if (!isSecondary) return;
@@ -1713,6 +1944,9 @@ function onWaveformPointerUp(ev: PointerEvent) {
   quickSelectAutoScrollRafId = null;
   quickSelectAutoScrollLastTs = null;
   quickSelectLastClientX = null;
+
+  // 右键选区结束：若仍在播放，使用追帧动画平滑回到实时播放跟随位置
+  activateAutoFollowCatchup(260);
 }
 
 function destroyWaveSurfer() {
@@ -1825,6 +2059,9 @@ function onVolumePointerUp(ev: PointerEvent) {
   window.removeEventListener('pointerup', onVolumePointerUp);
   window.removeEventListener('pointercancel', onVolumePointerCancel);
   window.removeEventListener('blur', onWindowBlurWhileDragging);
+
+  // 音量拖拽结束：若仍在播放，使用追帧动画平滑回到实时播放跟随位置
+  activateAutoFollowCatchup(260);
 }
 
 /**
@@ -1864,7 +2101,15 @@ function stop() {
   instance.pause();
   instance.setTime(0);
   isPlaying.value = false;
+  // 停止后立即把播放头锁定解除并重置到 0，保证 UI 立即回到起点
+  playheadLockLeftPx.value = null;
   lastPlayheadSec.value = 0;
+  currentTimeMs.value = 0;
+  // 同步滚动到最左侧起点：否则播放头虽为 0，但视口仍停留在原位置
+  const scrollEl = resolveWaveformScrollElement(instance);
+  markProgrammaticScrollWrite();
+  scrollEl.scrollLeft = 0;
+  updatePlayheadVisual?.(0);
   stopPlayheadLoop?.();
 }
 
@@ -2103,6 +2348,10 @@ async function initWaveSurfer() {
       isPlaying.value = false;
       stopPlayheadLoop?.(); // 播放结束，停止跟随
       lastPlayheadSec.value = instance.getCurrentTime();
+
+      // 播放结束时解除播放头锁定，让最终位置自然落在音频尾部
+      playheadLockLeftPx.value = null;
+      updatePlayheadVisual?.(instance.getCurrentTime());
     });
 
     // --------------------------------------------------------------------------------
@@ -2150,6 +2399,8 @@ async function initWaveSurfer() {
       const viewWidth = scrollEl.clientWidth || 0;
       if (!Number.isFinite(totalWidth) || totalWidth <= 0) return;
 
+      playheadViewWidthPx.value = viewWidth;
+
       // 如果处于边缘推挤锁定状态，直接使用锁定位置（消除相对抖动）
       if (playheadLockLeftPx.value !== null) {
         playheadLeftPx.value = playheadLockLeftPx.value;
@@ -2157,16 +2408,15 @@ async function initWaveSurfer() {
       }
 
       // 将播放头位置与 scrollLeft 同步量化为整数像素，避免亚像素累积导致的抖动
+      // 注意：这里不做可视范围 clamp，让播放头允许移出视野（由边缘指示体现）。
       const x = Math.round((tSec / duration) * totalWidth);
       const scrollLeftPx = Math.round(scrollEl.scrollLeft);
-      const left = Math.max(0, Math.min(viewWidth, x - scrollLeftPx));
-      playheadLeftPx.value = left;
+      playheadLeftPx.value = x - scrollLeftPx;
     };
 
     // 执行单次滚动更新（每一帧调用）
     const updateScrollPosition = () => {
       if (!isReady.value || !ws.value) return;
-      if (isAnyDragging.value) return; // 拖拽选区时不要自动滚，避免干扰
 
       const inst = ws.value;
       const dur = inst.getDuration();
@@ -2178,6 +2428,36 @@ async function initWaveSurfer() {
       const tSec = Math.max(tSecRaw, lastPlayheadSec.value);
       lastPlayheadSec.value = tSec;
       if (typeof tSec !== 'number') return;
+
+      // ----------------------------------------------------------------------
+      // 手动交互优先（极轻量路径）
+      //
+      // 目标：让“手动拖动滚动条”尽可能丝滑。
+      //
+      // 之前虽然我们在手动交互期间禁用了自动滚动，但 updateScrollPosition 仍会继续执行
+      // 大量 DOM 尺寸读取与 edge-push/paged-jump 计算。
+      // 这些操作会触发布局/样式计算（尤其是 scrollWidth/clientWidth 的读取），
+      // 在用户拖拽滚动条这种高频输入场景下，容易造成主线程繁忙 -> 滚动步进变大/不连贯。
+      //
+      // 因此这里把“手动交互期间”的处理提前：
+      // - 只更新播放头 UI（允许移出视野 + 边缘指示）
+      // - 不做任何 scrollLeft 的推挤/翻页
+      // - 不读取 wrapperWidth/scrollWidth 等昂贵指标
+      //
+      // 这能显著降低手动滚动时的每帧开销，让滚动更跟手。
+      // ----------------------------------------------------------------------
+      const isManualInteraction =
+        isRightDragSelecting.value ||
+        leftDragMode.value !== 'none' ||
+        isVolumeDragging.value ||
+        isUserScrolling.value ||
+        isUserScrollDragging.value;
+
+      if (isManualInteraction) {
+        playheadLockLeftPx.value = null;
+        updatePlayheadVisual?.(tSec);
+        return;
+      }
 
       const scrollEl = resolveWaveformScrollElement(inst);
       // scrollWidth 在某些极窄/初始化瞬间可能不准，用 wrapper 宽度做兜底
@@ -2191,6 +2471,7 @@ async function initWaveSurfer() {
         updatePlayheadVisual?.(tSec);
         return;
       }
+
 
       const x = (tSec / dur) * totalWidth;
       const currentScrollLeft = scrollEl.scrollLeft;
@@ -2237,6 +2518,8 @@ async function initWaveSurfer() {
         const thresholdRight = viewWidth * thresholdRightRatio;
         const thresholdRightPx = Math.round(thresholdRight);
         const xPx = Math.round(x);
+        const maxScrollLeft = Math.max(0, totalWidth - viewWidth);
+        const tailZonePx = viewWidth * 0.15;
 
         // idealLeft: 让播放头恰好位于视口 85% 处所需的 scrollLeft (浮点数)
         const idealLeft = x - thresholdRight;
@@ -2264,8 +2547,15 @@ async function initWaveSurfer() {
 
         // 边缘推挤时锁定播放头位置，防止 scrollLeft 整数取整与 cursor 浮点位置产生相对抖动
         // 逻辑：播放头达到推挤线后，直接把播放头固定在阈值线，背景负责移动。
-        const shouldLock = xPx >= currentScrollLeftPx + thresholdRightPx;
+        // 但接近尾部时需要解除锁定，让播放头自然移动到末尾，避免“播放完毕还停在阈值线”。
+        const nearTail = x >= totalWidth - tailZonePx;
+        const shouldLock = !nearTail && xPx >= currentScrollLeftPx + thresholdRightPx;
         playheadLockLeftPx.value = shouldLock ? thresholdRightPx : null;
+
+        // 尾部区域：不做强制跳转，改为根据播放位置平滑推进到最末尾
+        if (nearTail) {
+          desiredLeft = Math.min(maxScrollLeft, x - viewWidth * 0.5);
+        }
       }
       // --------------------------------------------------------------------------
       // 模式 B: 分页式跳转 (Paged Jump) - 传统剪辑软件风格
@@ -2284,15 +2574,66 @@ async function initWaveSurfer() {
       }
 
       // 边界保护与应用（去抖动核心）
-      const clampedScrollLeft = Math.max(0, Math.min(totalWidth - viewWidth, desiredLeft));
+      let clampedScrollLeft = Math.max(0, Math.min(totalWidth - viewWidth, desiredLeft));
+
+      // 追帧模式：在用户刚结束手动操作后，用平滑滚动追上目标位置，避免“瞬间跳回实时位置”的突兀。
+      // 注意：追帧只影响 scrollLeft 的写入方式，不改变目标计算（edge-push/paged-jump 的语义保持不变）。
+      const now = performance.now();
+      if (autoFollowCatchupUntilTs !== null) {
+        if (now >= autoFollowCatchupUntilTs) {
+          autoFollowCatchupUntilTs = null;
+          autoFollowLastTs = null;
+          autoFollowVelocityPxPerSec = 0;
+        } else {
+          const last = autoFollowLastTs ?? now;
+          autoFollowLastTs = now;
+          const dtSec = Math.max(0, Math.min(0.05, (now - last) / 1000));
+
+          // 弹簧阻尼（Spring-Damper）追帧：更“慢、更有惯性”。
+          //
+          // 直觉目标：
+          // - 用户松开手后，视区像带惯性一样“加速追上 -> 缓慢停住”，而不是吸附/瞬移。
+          //
+          // 模型：
+          //   x'' = k*(target - x) - c*x'
+          // 其中：
+          // - k: 刚度（越大越快追上）
+          // - c: 阻尼（越大越不容易振荡/过冲）
+          //
+          // 这里选一组偏“慢”的参数，且禁止明显过冲：
+          // 参数偏“慢 + 有惯性”：
+          // - stiffness 更低：追上更缓
+          // - damping 适中：避免明显振荡/过冲
+          const stiffness = 32; // px/s^2 per px
+          const damping = 14; // 1/s
+
+          const target = clampedScrollLeft;
+          const x0 = currentScrollLeft;
+          const v0 = autoFollowVelocityPxPerSec;
+
+          const a = stiffness * (target - x0) - damping * v0;
+          const v1 = v0 + a * dtSec;
+          const x1 = x0 + v1 * dtSec;
+
+          autoFollowVelocityPxPerSec = v1;
+          clampedScrollLeft = x1;
+        }
+      }
 
       // 优化：只有当变更量 > 0.5px 时才写入 DOM，减少 Layout Thrashing
       // 之前是 > 1px，推挤时可能导致 1px 的锯齿状颤动。改为 0.5 或直接应用（因为 RAF 本身已经限频了）。
       // 实际上，Float -> Int 的滚动条行为差异在不同浏览器不同。
       // 为了丝滑，这里不再做 threshold check，直接赋值（让浏览器处理 subpixel）。
       if (Math.abs(currentScrollLeft - clampedScrollLeft) > 0.5) {
-        // 统一量化为整数像素，避免浏览器内部取整与视觉抖动
-        scrollEl.scrollLeft = Math.round(clampedScrollLeft);
+        // 写入 scrollLeft：
+        // - 正常自动跟随：保持整数像素写入，避免 edge-push 的细微抖动回归
+        // - 追帧动画期间：允许 sub-pixel 写入，让惯性滚动更细腻
+        markProgrammaticScrollWrite();
+        if (autoFollowCatchupUntilTs !== null) {
+          scrollEl.scrollLeft = clampedScrollLeft;
+        } else {
+          scrollEl.scrollLeft = Math.round(clampedScrollLeft);
+        }
       }
 
       // 更新自定义播放头（以滚动后的 scrollLeft 为准）
@@ -2405,13 +2746,60 @@ async function initWaveSurfer() {
 
     // 初始绑定 Ctrl+滚轮缩放
     const unbindWheel = bindWheelZoom();
+    // 绑定滚动监听：用户手动滚动时同步播放头位置
+    unbindScrollSync = bindWaveformScrollSync(instance);
     // wavesurfer destroy 时，container 也会被重建，确保解绑
     instance.on('destroy', () => {
       unbindWheel?.();
+      unbindScrollSync?.();
+      unbindScrollSync = null;
     });
   } catch {
     hasError.value = true;
   }
+}
+
+/**
+ * 绑定滚动同步：当用户手动滚动波形时，播放头位置应随滚动更新。
+ * 目的：避免播放头“固定在视野某个位置不动”的错觉。
+ */
+function bindWaveformScrollSync(instance: WaveSurfer) {
+  const scrollEl = resolveWaveformScrollElement(instance);
+  if (!scrollEl) return () => undefined;
+
+  const onScroll = () => {
+    // 程序性滚动（播放自动跟随）也会触发 scroll。
+    // 这种情况下我们不应进入“用户滚动模式”，否则 edge-push/paged-jump 会变得不稳定。
+    // 但如果用户正在拖拽滚动条，则无论是否夹杂程序性写入，都应以用户视区为主。
+    if (isProgrammaticScrollWrite && !isUserScrollDragging.value) {
+      updatePlayheadVisual?.(instance.getCurrentTime());
+      return;
+    }
+
+    // 手动滚动：
+    // 1) 标记“用户正在控制视区”，让自动滚动（推挤/翻页）暂时让位
+    // 2) 解除推挤锁定（否则播放头可能被钉在阈值线，用户会误以为播放头不随滚动变化）
+    // 3) 立即刷新播放头 UI（允许其移出视野，并显示边缘指示）
+    // 若处于滚动条拖拽中，则保持强手动模式；否则使用短延迟释放窗口。
+    isUserScrolling.value = true;
+    if (userScrollReleaseTimer !== null) window.clearTimeout(userScrollReleaseTimer);
+    if (!isUserScrollDragging.value) {
+      userScrollReleaseTimer = window.setTimeout(() => {
+        isUserScrolling.value = false;
+        userScrollReleaseTimer = null;
+        // 用户松开滚动条后，平滑追帧回到实时播放跟随位置（避免瞬间跳回造成突兀）。
+        activateAutoFollowCatchup(520);
+      }, 220);
+    }
+
+    playheadLockLeftPx.value = null;
+    updatePlayheadVisual?.(instance.getCurrentTime());
+  };
+
+  scrollEl.addEventListener('scroll', onScroll, { passive: true });
+  return () => {
+    scrollEl.removeEventListener('scroll', onScroll);
+  };
 }
 
 function emitStartEndFromRegion(region: Region) {
@@ -2664,6 +3052,16 @@ watch(
   background: #0ea5e9;
   pointer-events: none;
   z-index: 5;
+}
+
+// 播放头移出视野时的指示：缩短并变浅，提示“在屏幕外继续播放”
+.waveform-playhead.is-off-left,
+.waveform-playhead.is-off-right {
+  // 注意：不改变颜色，仅通过“变短 + 变浅”提示播放头在视野外。
+  // 这样用户仍能保持对“播放头=同一种视觉元素”的一致认知。
+  transform: scaleY(0.6);
+  transform-origin: center;
+  opacity: 0.45;
 }
 
 // wavesurfer 内部结构：确保其宽度可展开并计入 scrollWidth。
