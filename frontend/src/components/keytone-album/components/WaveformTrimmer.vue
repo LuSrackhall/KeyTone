@@ -488,6 +488,241 @@ const zoomMax = 1000;
 // - 用户期望默认更“放得开”，先从整体观察，再按需放大。
 const zoomMinPxPerSec = ref(50);
 const isZoomingFromWheel = ref(false);
+// wheel 缩放锚定窗口：
+// - 在一次连续滚轮缩放（burst）期间，固定同一锚点（timeSec + clientX），
+//   避免每帧“重新取样锚点”导致微小误差累积成可见漂移。
+const isZoomAnchoringActive = ref(false);
+// 缩放锚点暂存：
+// - Ctrl+滚轮会先计算“光标锚点”，再触发 zoom 响应式更新。
+// - 为避免 wheel 回调和 watch 各自写 scrollLeft 造成竞争，
+//   这里把锚点意图交给 watch 统一消费。
+const pendingZoomAnchor = ref<{ timeSec: number; viewOffsetPx: number; clientX: number } | null>(null);
+// wheel burst 锚点：尽可能使用“采样索引锚定”来锁定同一波峰。
+// - timeSec 浮点在连续缩放 + 反复换算时仍可能出现极小误差。
+// - 采样索引（整数）是音频时间轴上最稳定的锚点。
+// - 进一步：锚点不是简单取 cursor time 对应的一个 sample，而是取“当前像素列”覆盖的时间窗里
+//   绝对振幅最大的那个 sample，这更符合用户“光标对准波峰”的直觉。
+let wheelBurstAnchor:
+  | {
+      sampleIndex: number;
+      sampleRate: number;
+      viewOffsetPx: number;
+      clientX: number;
+    }
+  | null = null;
+let wheelBurstResetTimer: number | null = null;
+
+// zoom 应用去抖：
+// - wheel 缩放会在短时间内触发大量 zoomMinPxPerSec 更新。
+// - 如果每次 watch 都立即执行 instance.zoom + applyWaveformWidth，会造成连续重绘与样式修复竞争，
+//   用户看到的就是波形闪烁/抖动。
+// - 这里合并为“每帧最多提交一次 zoom”。
+let zoomApplyRafId: number | null = null;
+let pendingZoomApplyValue: number | null = null;
+// 记录“最近一次真正提交给 wavesurfer 的 zoom”，用于构建旧坐标系。
+const lastAppliedZoom = ref(zoomMinPxPerSec.value);
+// 快捷缩放闪烁抑制：限制重绘频率。
+// - wavesurfer.zoom 会触发 renderer 级别重绘，某些环境下重绘会短暂清空/替换 canvas，表现为闪一下。
+// - 频率过高时（触控板滚轮 burst），即便每帧一次也可能出现“低频闪烁”。
+// - 这里在 wheel burst 窗口内将重绘限制到约 20fps（>=50ms 一次），进一步减少闪烁概率。
+let lastZoomHeavyApplyTs: number | null = null;
+let zoomFinalizePending = false;
+
+function scheduleZoomApply() {
+  if (zoomApplyRafId !== null) return;
+  zoomApplyRafId = requestAnimationFrame(applyPendingZoomFrame);
+}
+
+function applyPendingZoomFrame() {
+  zoomApplyRafId = null;
+
+  const zoomToApply = pendingZoomApplyValue;
+  if (zoomToApply === null) return;
+
+  // wheel burst 限频：在缩放锚定窗口内，把“重绘级 zoom”限制到约 30fps。
+  // 这样在某些渲染路径下能进一步减少 canvas 清空/替换导致的低频闪烁。
+  const now = performance.now();
+  if (isZoomAnchoringActive.value && !zoomFinalizePending) {
+    const last = lastZoomHeavyApplyTs ?? 0;
+    // 20fps：50ms
+    if (now - last < 50) {
+      // 保持 pendingZoomApplyValue 不变，下一帧再试。
+      scheduleZoomApply();
+      return;
+    }
+  }
+
+  // 真正开始提交：此时才消费 pending 值
+  pendingZoomApplyValue = null;
+  lastZoomHeavyApplyTs = now;
+  zoomFinalizePending = false;
+
+  const instance = ws.value;
+  if (!instance) return;
+  if (!isReady.value) return;
+
+  const scrollEl = resolveWaveformScrollElement(instance);
+  const clientWidth = scrollEl.clientWidth;
+  const scrollLeft = scrollEl.scrollLeft;
+  const duration = instance.getDuration();
+  if (!Number.isFinite(duration) || duration <= 0 || clientWidth <= 0) {
+    pendingZoomAnchor.value = null;
+    return;
+  }
+
+  // --------------------------------------------------------
+  // 统一锚点策略（单一管线，且每帧最多一次提交）
+  // --------------------------------------------------------
+  let anchorTimeSec: number;
+  let anchorViewOffsetPx: number;
+
+  if (pendingZoomAnchor.value) {
+    anchorTimeSec = pendingZoomAnchor.value.timeSec;
+    anchorViewOffsetPx = pendingZoomAnchor.value.viewOffsetPx;
+  } else {
+    const safeOldZoom =
+      Number.isFinite(lastAppliedZoom.value) && lastAppliedZoom.value > 0 ? lastAppliedZoom.value : zoomToApply;
+    const oldTotalWidth = Math.max(clientWidth, Math.round(duration * safeOldZoom));
+    const currentTime = instance.getCurrentTime();
+    const playheadX = (currentTime / duration) * oldTotalWidth;
+
+    if (playheadX >= scrollLeft - 2 && playheadX <= scrollLeft + clientWidth + 2) {
+      anchorTimeSec = currentTime;
+      anchorViewOffsetPx = playheadX - scrollLeft;
+    } else {
+      const centerX = scrollLeft + clientWidth / 2;
+      anchorTimeSec = Math.max(0, Math.min(duration, (centerX / oldTotalWidth) * duration));
+      anchorViewOffsetPx = clientWidth / 2;
+    }
+  }
+
+  // 执行缩放（一次）
+  instance.zoom(zoomToApply);
+  lastAppliedZoom.value = zoomToApply;
+
+  // 同步应用宽度约束（含 Shadow DOM fixer）
+  applyWaveformWidth(instance);
+  void scrollEl.scrollWidth;
+
+  // ----------------------------
+  // 滚动修正（抖动收敛版）
+  //
+  // 之前的实现会在一次 zoom 提交中多次写 scrollLeft（初次 + 迭代补偿），
+  // 在极少数环境下，这种“来回微调”会被用户感知为轻微抖动。
+  //
+  // 这里改为：
+  // 1) 使用【实际 scrollWidth】一次性解出 scrollLeft（与 pointerEventToTimeSec 同一坐标系）
+  // 2) 必要时最多补一次修正（避免无限迭代）
+  // 3) wheel 场景不再使用旧的 viewOffsetPx，而是在每次提交后用固定 clientX 重新计算 xInView
+  //    （缩放过程中 boundingClientRect 可能有极细微变化；复算能避免引入跳动）
+  // ----------------------------
+  const totalWidth = scrollEl.scrollWidth || Math.max(clientWidth, Math.round(duration * zoomToApply));
+  const maxScrollLeft = Math.max(0, totalWidth - clientWidth);
+
+  const wheelAnchorClientX = pendingZoomAnchor.value?.clientX ?? null;
+  let viewOffsetPxEffective = anchorViewOffsetPx;
+  if (wheelAnchorClientX !== null) {
+    const rect = scrollEl.getBoundingClientRect();
+    viewOffsetPxEffective = Math.max(0, Math.min(clientWidth, wheelAnchorClientX - rect.left));
+  }
+
+  // 直接解方程：t = (xInView + scrollLeft) / totalWidth * duration
+  // => scrollLeft = t/duration*totalWidth - xInView
+  let targetScrollLeft = (anchorTimeSec / duration) * totalWidth - viewOffsetPxEffective;
+  targetScrollLeft = Math.max(0, Math.min(maxScrollLeft, targetScrollLeft));
+
+  markProgrammaticScrollWrite();
+  scrollEl.scrollLeft = targetScrollLeft;
+
+  // wheel 场景：做一次最多补偿（用真实映射回读时间差）
+  if (wheelAnchorClientX !== null) {
+    const actualTimeAtCursor = pointerEventToTimeSec(
+      instance,
+      ({ clientX: wheelAnchorClientX, button: 0 } as unknown as PointerEvent)
+    );
+    const driftSec = actualTimeAtCursor - anchorTimeSec;
+    if (Math.abs(driftSec) > 0.0005) {
+      const correctionPx = (-driftSec / duration) * totalWidth;
+      const corrected = Math.max(0, Math.min(maxScrollLeft, scrollEl.scrollLeft + correctionPx));
+      markProgrammaticScrollWrite();
+      scrollEl.scrollLeft = corrected;
+    }
+  }
+
+  playheadLockLeftPx.value = null;
+  updatePlayheadVisual?.(instance.getCurrentTime());
+  pendingZoomAnchor.value = null;
+}
+
+function getDecodedAudioBuffer(instance: WaveSurfer): AudioBuffer | null {
+  // wavesurfer 不同版本/后端暴露 decoded buffer 的方式不完全一致。
+  // 这里使用一组“安全探测”并做形状校验，避免依赖私有字段导致崩溃。
+  const anyInst = instance as unknown as {
+    getDecodedData?: () => AudioBuffer | null | undefined;
+    decodedData?: AudioBuffer | null;
+    backend?: { buffer?: AudioBuffer | null; getAudioBuffer?: () => AudioBuffer | null | undefined };
+  };
+
+  const candidates: Array<AudioBuffer | null | undefined> = [];
+  try {
+    candidates.push(anyInst.getDecodedData?.());
+  } catch {
+    // ignore
+  }
+  candidates.push(anyInst.decodedData);
+  candidates.push(anyInst.backend?.buffer);
+  try {
+    candidates.push(anyInst.backend?.getAudioBuffer?.());
+  } catch {
+    // ignore
+  }
+
+  for (const c of candidates) {
+    if (!c) continue;
+    const sr = (c as AudioBuffer).sampleRate;
+    const len = (c as AudioBuffer).length;
+    if (Number.isFinite(sr) && sr > 0 && Number.isFinite(len) && len > 0) return c as AudioBuffer;
+  }
+  return null;
+}
+
+function findPeakSampleIndexInWindow(buffer: AudioBuffer, startIndex: number, endIndex: number): number {
+  // 在 [startIndex, endIndex) 窗口内找“绝对振幅最大的 sample”。
+  // - 为贴近用户视觉，我们用多声道绝对值的 max 作为强度。
+  // - 对应到波形显示，就是该窗口内“最高的波峰/波谷”。
+  const ch = buffer.numberOfChannels || 1;
+  const s0 = Math.max(0, Math.min(buffer.length - 1, Math.floor(startIndex)));
+  const s1 = Math.max(s0 + 1, Math.min(buffer.length, Math.ceil(endIndex)));
+
+  let bestIdx = s0;
+  let bestAmp = -1;
+
+  // 预取 channel data（避免每次循环调用 getChannelData）
+  const channels: Float32Array[] = [];
+  for (let c = 0; c < ch; c += 1) {
+    try {
+      channels.push(buffer.getChannelData(c));
+    } catch {
+      // ignore
+    }
+  }
+  if (channels.length === 0) return bestIdx;
+
+  for (let i = s0; i < s1; i += 1) {
+    let amp = 0;
+    for (let c = 0; c < channels.length; c += 1) {
+      const v = channels[c][i] ?? 0;
+      const a = Math.abs(v);
+      if (a > amp) amp = a;
+    }
+    if (amp > bestAmp) {
+      bestAmp = amp;
+      bestIdx = i;
+    }
+  }
+
+  return bestIdx;
+}
 
 const selectionDurationMs = computed(() => {
   if (!(props.endMs > props.startMs) || props.startMs < 0 || props.endMs < 0) return null;
@@ -553,10 +788,25 @@ const isAnyDragging = computed(() => isRightDragSelecting.value || leftDragMode.
 
 const waveformWidthPx = ref<number | null>(null);
 
+// 快捷缩放（Ctrl+滚轮）期间的宽度量化：
+// - 波形宽度变化会触发内部 canvas 尺寸/节点重建（依实现而定），这是低频闪烁的主要来源之一。
+// - 在 wheel burst 期间，我们把目标宽度量化到固定步长，显著降低“尺寸变化次数”。
+// - burst 结束后会进行一次最终精确提交（此时 isZoomAnchoringActive=false），宽度恢复为精确值。
+// 量化步长基准（会根据 zoom 自适应放大）：
+// - zoom 越大，duration*zoom 的宽度变化越快，越容易触发 canvas 尺寸频繁变化 -> 闪烁。
+// - 因此在高 zoom 下使用更大的步长，减少变化次数。
+const zoomBurstWidthQuantizeBaseStepPx = 12;
+let lastWaveformWidthAppliedPx: number | null = null;
+
 let shadowScrollFixObserver: MutationObserver | null = null;
 let shadowScrollFixTargetPx = 0;
 let shadowScrollFixHost: HTMLElement | null = null;
 let shadowScrollFixApplying = false;
+// MutationObserver 去抖：缩放/重绘期间可能产生大量 DOM 变更。
+// 如果每次 mutation 都立刻 applyShadowScrollFix，会造成频繁样式写入与 layout，视觉上表现为闪烁。
+// 这里合并为“每帧最多一次修复”。
+let shadowScrollFixRafId: number | null = null;
+let shadowScrollFixPending = false;
 
 function stopShadowScrollFixer() {
   try {
@@ -564,10 +814,14 @@ function stopShadowScrollFixer() {
   } catch {
     // ignore
   }
+  if (shadowScrollFixRafId !== null) cancelAnimationFrame(shadowScrollFixRafId);
+  shadowScrollFixRafId = null;
+  shadowScrollFixPending = false;
   shadowScrollFixObserver = null;
   shadowScrollFixHost = null;
   shadowScrollFixTargetPx = 0;
   shadowScrollFixApplying = false;
+  lastWaveformWidthAppliedPx = null;
 }
 
 function applyShadowScrollFix(host: HTMLElement) {
@@ -578,12 +832,19 @@ function applyShadowScrollFix(host: HTMLElement) {
   if (!sr) return;
 
   // 约束 shadow host 本身，避免内容宽度把外层布局撑开。
+  // 重要：这些是“恒定样式”，不应在每一帧重复写入。
+  // 否则会导致 style attribute 高频变化 -> MutationObserver 触发 -> 额外 layout，
+  // 在快捷缩放期间表现为低频闪烁。
   if (rootCandidate) {
-    rootCandidate.style.display = 'block';
-    rootCandidate.style.width = '100%';
-    rootCandidate.style.maxWidth = '100%';
-    rootCandidate.style.minWidth = '0px';
-    rootCandidate.style.boxSizing = 'border-box';
+    const el = rootCandidate as HTMLElement;
+    if (el.dataset.ktShadowConstrained !== '1') {
+      el.style.display = 'block';
+      el.style.width = '100%';
+      el.style.maxWidth = '100%';
+      el.style.minWidth = '0px';
+      el.style.boxSizing = 'border-box';
+      el.dataset.ktShadowConstrained = '1';
+    }
   }
 
   const target = shadowScrollFixTargetPx;
@@ -595,12 +856,17 @@ function applyShadowScrollFix(host: HTMLElement) {
   const progress = (sr.querySelector('.progress') as HTMLElement | null) || null;
 
   if (scroll) {
-    scroll.style.width = '100%';
-    scroll.style.maxWidth = '100%';
-    scroll.style.boxSizing = 'border-box';
-    scroll.style.overflowX = 'auto';
-    scroll.style.overflowY = 'hidden';
-    scroll.style.touchAction = 'pan-x';
+    // 同上：这些是“恒定样式”，只需写一次。
+    const el = scroll as HTMLElement;
+    if (el.dataset.ktShadowScrollStyled !== '1') {
+      el.style.width = '100%';
+      el.style.maxWidth = '100%';
+      el.style.boxSizing = 'border-box';
+      el.style.overflowX = 'auto';
+      el.style.overflowY = 'hidden';
+      el.style.touchAction = 'pan-x';
+      el.dataset.ktShadowScrollStyled = '1';
+    }
   }
 
   const setWidth = (el: HTMLElement | null) => {
@@ -625,16 +891,26 @@ function startShadowScrollFixer(host: HTMLElement) {
   if (!sr) return;
 
   shadowScrollFixObserver = new MutationObserver(() => {
-    if (shadowScrollFixApplying) return;
     if (!shadowScrollFixHost) return;
-    shadowScrollFixApplying = true;
-    try {
-      applyShadowScrollFix(shadowScrollFixHost);
-    } catch {
-      // ignore
-    } finally {
-      shadowScrollFixApplying = false;
-    }
+    if (shadowScrollFixApplying) return;
+    if (shadowScrollFixPending) return;
+
+    shadowScrollFixPending = true;
+    if (shadowScrollFixRafId !== null) return;
+    shadowScrollFixRafId = requestAnimationFrame(() => {
+      shadowScrollFixRafId = null;
+      shadowScrollFixPending = false;
+      if (!shadowScrollFixHost) return;
+      if (shadowScrollFixApplying) return;
+      shadowScrollFixApplying = true;
+      try {
+        applyShadowScrollFix(shadowScrollFixHost);
+      } catch {
+        // ignore
+      } finally {
+        shadowScrollFixApplying = false;
+      }
+    });
   });
 
   // 监听 reRender 导致的节点重建或 style 重置
@@ -652,12 +928,47 @@ function applyWaveformWidth(instance: WaveSurfer) {
   const dur = instance.getDuration();
   if (!Number.isFinite(dur) || dur <= 0) return;
 
-  const target = Math.max(host.clientWidth || 0, Math.round(dur * zoomMinPxPerSec.value));
+  const rawTarget = Math.max(host.clientWidth || 0, Math.round(dur * zoomMinPxPerSec.value));
+  // wheel burst 期间量化宽度，降低 canvas 频繁重建/清空导致的闪烁。
+  // 非 burst（或 burst 已结束的最终提交）则使用精确宽度。
+  let target = rawTarget;
+  if (isZoomAnchoringActive.value) {
+    // 自适应步长：越高倍越大。
+    const z = zoomMinPxPerSec.value;
+    const step = z > 600 ? zoomBurstWidthQuantizeBaseStepPx * 3 : z > 250 ? zoomBurstWidthQuantizeBaseStepPx * 2 : zoomBurstWidthQuantizeBaseStepPx;
+    target = Math.max(host.clientWidth || 0, Math.round(rawTarget / step) * step);
+  }
+
+  // 若目标宽度未变化，则不重复写样式（进一步减少无效 mutation）。
+  if (lastWaveformWidthAppliedPx !== null && lastWaveformWidthAppliedPx === target) {
+    waveformWidthPx.value = target;
+    shadowScrollFixTargetPx = target;
+    return;
+  }
+  lastWaveformWidthAppliedPx = target;
   waveformWidthPx.value = target;
 
   shadowScrollFixTargetPx = target;
   startShadowScrollFixer(host);
-  applyShadowScrollFix(host);
+  // 关键：避免 shadow fixer 反馈回路导致低频闪烁。
+  // - applyWaveformWidth 会在快捷缩放（RAF 合并）中高频调用。
+  // - 它内部会写入多处 style（包括 shadow DOM 内部）。这些写入会触发 MutationObserver。
+  // - 即便我们已把 observer callback 合并到 RAF，如果不额外处理，仍可能出现：
+  //   本帧 applyWaveformWidth 写 style -> observer 预约下一帧再写一次 -> 产生“低频二次改写” -> 闪烁。
+  // 因此这里在我们主动修复时：
+  // 1) 取消 observer 已挂起的 RAF（如果有）
+  // 2) 临时标记 applying，让 observer 不再重复预约
+  if (shadowScrollFixRafId !== null) {
+    cancelAnimationFrame(shadowScrollFixRafId);
+    shadowScrollFixRafId = null;
+  }
+  shadowScrollFixPending = false;
+  shadowScrollFixApplying = true;
+  try {
+    applyShadowScrollFix(host);
+  } finally {
+    shadowScrollFixApplying = false;
+  }
 
   // shadow DOM 相关的滚动/宽度由 fixer 统一处理（带 MutationObserver 兜底）。
 
@@ -2188,48 +2499,83 @@ function bindWheelZoom() {
       return;
     }
 
-    // 计算锚点时间（缩放前）：用当前 DOM 宽度/滚动来映射，确保与用户视觉一致。
     const scrollEl = resolveWaveformScrollElement(instance);
     const rect = scrollEl.getBoundingClientRect();
     const xInView = Math.max(0, Math.min(rect.width, lastClientX - rect.left));
-    const anchorTimeSec = pointerEventToTimeSec(
-      instance,
-      ({ clientX: lastClientX, button: 0 } as unknown as PointerEvent)
-    );
+
+    const currentZoom = zoomMinPxPerSec.value;
 
     // 指数缩放系数：deltaY>0(向下滚) => 缩小；deltaY<0(向上滚) => 放大
     // 系数选择：0.002 在触控板与鼠标滚轮上都相对平滑；可按体验继续微调。
     const factor = Math.exp(-accumulatedDeltaY * 0.002);
     accumulatedDeltaY = 0;
 
-    const currentZoom = zoomMinPxPerSec.value;
     const targetZoom = Math.max(zoomMin, Math.min(zoomMax, Math.round(currentZoom * factor)));
     if (targetZoom === currentZoom) return;
 
-    // 通过更新响应式 zoom 值触发后续的 instance.zoom(...)（见下方 watch）。
-    // 标记来自滚轮，从而抑制 watch 里的“默认锚定播放头”逻辑，避免与这里的“锚定鼠标”冲突。
+    // 锚点来源：
+    // - 连续滚轮缩放期间使用“固定 burst 锚点”。
+    // - burst 首帧尽可能使用“采样索引锚定”：
+    //   以当前像素列覆盖的时间窗为范围，找该窗内绝对振幅最大的 sample。
+    //   这样用户把光标对准某个波峰后放大，依然会围绕同一波峰收敛。
+    if (!wheelBurstAnchor) {
+      const buffer = getDecodedAudioBuffer(instance);
+
+      // 回退：若 buffer 不可用，仍使用 timeSec 锚定（不会崩）。
+      let sampleIndex: number | null = null;
+      let sampleRate: number | null = null;
+
+      if (buffer) {
+        sampleRate = buffer.sampleRate;
+
+        // 用当前 zoom 的理论宽度估计“一个像素列对应的时间窗”。
+        // 注：这里不依赖 scrollWidth（可能在缩放过渡态不稳定），但仅用于确定一个很小的窗口。
+        const dur = instance.getDuration();
+        const totalWidth = Math.max(rect.width, Math.round(dur * currentZoom));
+        const globalX = xInView + scrollEl.scrollLeft;
+        const t0 = Math.max(0, Math.min(dur, (globalX / totalWidth) * dur));
+        const t1 = Math.max(0, Math.min(dur, ((globalX + 1) / totalWidth) * dur));
+
+        const s0 = Math.floor(t0 * sampleRate);
+        const s1 = Math.ceil(t1 * sampleRate);
+        sampleIndex = findPeakSampleIndexInWindow(buffer, s0, s1);
+      }
+
+      // 最终锚定时间：优先 sampleIndex，否则退回 pointerEventToTimeSec。
+      const anchorTimeSec =
+        sampleIndex !== null && sampleRate !== null
+          ? Math.max(0, Math.min(instance.getDuration(), sampleIndex / sampleRate))
+          : pointerEventToTimeSec(instance, ({ clientX: lastClientX, button: 0 } as unknown as PointerEvent));
+
+      // 若有 sampleIndex，则固定为 burst anchor；否则只固定 timeSec 语义（sampleIndex 用 round 近似）。
+      if (sampleIndex === null || sampleRate === null) {
+        const buf = getDecodedAudioBuffer(instance);
+        if (buf) {
+          sampleRate = buf.sampleRate;
+          sampleIndex = Math.max(0, Math.min(buf.length - 1, Math.round(anchorTimeSec * sampleRate)));
+        }
+      }
+
+      wheelBurstAnchor = {
+        sampleIndex: sampleIndex ?? 0,
+        sampleRate: sampleRate ?? 44100,
+        viewOffsetPx: xInView,
+        clientX: lastClientX,
+      };
+    }
+
+    // 将锚点交给 watch 统一处理，保证“单管线写入 scrollLeft”。
+    pendingZoomAnchor.value = {
+      timeSec: wheelBurstAnchor.sampleIndex / wheelBurstAnchor.sampleRate,
+      viewOffsetPx: wheelBurstAnchor.viewOffsetPx,
+      clientX: wheelBurstAnchor.clientX,
+    };
+
+    // 标记来源：让 watch 知道当前是 wheel 缩放（优先消费 pendingZoomAnchor）。
     isZoomingFromWheel.value = true;
     zoomMinPxPerSec.value = targetZoom;
     nextTick(() => {
       isZoomingFromWheel.value = false;
-    });
-
-    // 锚点滚动校正：在 zoom 生效并重绘后，把 scrollLeft 调整到让锚点时间仍对应鼠标位置。
-    // 注意：重绘是异步的，scrollWidth 会在下一帧/下下帧才稳定。
-    requestAnimationFrame(() => {
-      // 显式调用样式强制逻辑，确保 measure 前样式正确
-      applyWaveformWidth(instance);
-
-      const dur = instance.getDuration();
-      if (!Number.isFinite(dur) || dur <= 0) return;
-
-      const newScrollEl = resolveWaveformScrollElement(instance);
-      const newTotalWidth = newScrollEl.scrollWidth || newScrollEl.clientWidth || 0;
-      if (!Number.isFinite(newTotalWidth) || newTotalWidth <= 0) return;
-
-      const desiredGlobalX = (anchorTimeSec / dur) * newTotalWidth;
-      const desiredScrollLeft = Math.max(0, desiredGlobalX - xInView);
-      newScrollEl.scrollLeft = desiredScrollLeft;
     });
   };
 
@@ -2261,6 +2607,25 @@ function bindWheelZoom() {
     // 聚合 delta，交给 RAF 一次性计算，减少“齿轮感/跳变”。
     accumulatedDeltaY += ev.deltaY;
     lastClientX = ev.clientX;
+
+    // 进入缩放锚定窗口：
+    // - 期间自动跟随滚动应让位，避免与缩放修正竞争。
+    // - 每次 wheel 事件都会延长窗口；停止滚轮一小段时间后再退出。
+    isZoomAnchoringActive.value = true;
+    if (wheelBurstResetTimer !== null) window.clearTimeout(wheelBurstResetTimer);
+    wheelBurstResetTimer = window.setTimeout(() => {
+      wheelBurstResetTimer = null;
+      wheelBurstAnchor = null;
+      isZoomAnchoringActive.value = false;
+
+      // burst 结束后补一次“最终提交”：
+      // - burst 内我们可能限频了重绘（30fps），最后一个 wheel 事件可能还没来得及触发真正 zoom。
+      // - 这里强制让下一帧应用当前 zoomMinPxPerSec.value，保证最终状态精确。
+      zoomFinalizePending = true;
+      pendingZoomApplyValue = zoomMinPxPerSec.value;
+      scheduleZoomApply();
+    }, 140);
+
     if (rafId === null) rafId = requestAnimationFrame(applyZoomFrame);
   };
 
@@ -2270,6 +2635,10 @@ function bindWheelZoom() {
   el.addEventListener('wheel', listener, { passive: false });
   return () => {
     if (rafId !== null) cancelAnimationFrame(rafId);
+    if (wheelBurstResetTimer !== null) window.clearTimeout(wheelBurstResetTimer);
+    wheelBurstResetTimer = null;
+    wheelBurstAnchor = null;
+    isZoomAnchoringActive.value = false;
     el.removeEventListener('wheel', listener);
   };
 }
@@ -2451,7 +2820,8 @@ async function initWaveSurfer() {
         leftDragMode.value !== 'none' ||
         isVolumeDragging.value ||
         isUserScrolling.value ||
-        isUserScrollDragging.value;
+        isUserScrollDragging.value ||
+        isZoomAnchoringActive.value;
 
       if (isManualInteraction) {
         playheadLockLeftPx.value = null;
@@ -2936,61 +3306,9 @@ watch(
 // zoom slider 改变时，调用 wavesurfer.zoom
 watch(
   () => zoomMinPxPerSec.value,
-  () => {
-    const instance = ws.value;
-    if (!instance) return;
-    if (!isReady.value) return;
-
-    // 滑块缩放逻辑（锚定播放头）：
-    // 若此次缩放不是由滚轮（已自带鼠标锚点逻辑）触发的，则执行“锚定播放头”逻辑。
-    let anchorTimeSec: number | null = null;
-    let anchorRatio = 0.5;
-
-    if (!isZoomingFromWheel.value) {
-      const scrollEl = resolveWaveformScrollElement(instance);
-      const clientWidth = scrollEl.clientWidth;
-      const scrollLeft = scrollEl.scrollLeft;
-      const scrollWidth = scrollEl.scrollWidth;
-      const duration = instance.getDuration();
-
-      if (duration > 0 && scrollWidth > 0 && clientWidth > 0) {
-        const currentTime = instance.getCurrentTime();
-        const playheadX = (currentTime / duration) * scrollWidth;
-
-        // 如果播放头在当前视口内（或非常接近边缘），则锚定播放头；否则锚定视口中心。
-        if (playheadX >= scrollLeft && playheadX <= scrollLeft + clientWidth) {
-          anchorTimeSec = currentTime;
-          anchorRatio = (playheadX - scrollLeft) / clientWidth;
-        } else {
-          // 播放头看不见时，锚定视口中心，防止迷路
-          const centerX = scrollLeft + clientWidth / 2;
-          anchorTimeSec = (centerX / scrollWidth) * duration;
-          anchorRatio = 0.5;
-        }
-      }
-    }
-
-    instance.zoom(zoomMinPxPerSec.value);
-
-    requestAnimationFrame(() => {
-      applyWaveformWidth(instance);
-
-      // 应用“锚定播放头”的滚动修正
-      if (anchorTimeSec !== null) {
-        const dur = instance.getDuration();
-        if (!Number.isFinite(dur) || dur <= 0) return;
-
-        const newScrollEl = resolveWaveformScrollElement(instance);
-        const newTotalWidth = newScrollEl.scrollWidth || newScrollEl.clientWidth || 0;
-        const newClientWidth = newScrollEl.clientWidth || 0;
-
-        if (newTotalWidth > 0 && newClientWidth > 0) {
-          const newAnchorPixel = (anchorTimeSec / dur) * newTotalWidth;
-          const targetScrollLeft = newAnchorPixel - (anchorRatio * newClientWidth);
-          newScrollEl.scrollLeft = Math.max(0, targetScrollLeft);
-        }
-      }
-    });
+  (newZoom) => {
+    pendingZoomApplyValue = newZoom;
+    scheduleZoomApply();
   }
 );
 
