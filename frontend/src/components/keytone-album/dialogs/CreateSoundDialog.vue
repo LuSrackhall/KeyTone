@@ -83,8 +83,8 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
         { 'mr-0': isMac } // Mac 平台下, 右侧不留额外空隙, 因为阴影用的是原生的
       ]"
     >
-      <!-- 对话框标题 -->
-      <q-card-section class="row items-center q-pb-none text-h6">
+      <!-- 对话框标题（sticky 置顶） -->
+      <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.defineSounds.createNewSound') }}
       </q-card-section>
 
@@ -205,8 +205,8 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
         </q-input>
       </q-card-section>
 
-      <!-- 操作按钮 -->
-      <q-card-actions align="right">
+      <!-- 操作按钮（sticky 置底） -->
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <!-- 预览按钮 -->
         <q-btn
           class="mt-2"
