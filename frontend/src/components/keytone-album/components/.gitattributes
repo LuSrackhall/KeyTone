@@ -1,0 +1,3 @@
+
+# 忽略 GitHub 语言统计中的 waveformtrimmer 组件
+waveformtrimmer.vue linguist-vendored=true
