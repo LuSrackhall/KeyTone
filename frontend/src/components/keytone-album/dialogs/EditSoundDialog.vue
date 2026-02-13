@@ -68,6 +68,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
     @before-hide="onDialogBeforeHide"
+    class="edit-sound-dialog-单独影响global"
   >
     <!--
       重要：窗口宽度固定（约 379~389px）。
@@ -520,5 +521,11 @@ function handleDelete() {
 :deep(.ellipsis) {
   @apply max-w-full overflow-auto whitespace-nowrap text-clip;
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+
+// TIPS: 虽然对于全局样式的覆盖, 只能通过 :global 实现, 想要进修改单个组件的样式(不影响其他用到此组件的业务)
+//       > 可以在 :global 内部继续使用组件作用域的类名选择器继承的方式, 以避免影响其他组件的同名类选择器
+:global(.edit-sound-dialog-单独影响global .q-dialog__inner--minimized) {
+  @apply p-x-2;
 }
 </style>
