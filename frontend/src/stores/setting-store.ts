@@ -22,6 +22,18 @@ export const useSettingStore = defineStore('setting', () => {
   //   console.log('settingItemsOpenedState.value', settingItemsOpenedState.value);
   // });
 
+  /**
+   * 键音专辑页 - 波形滚动行为偏好
+   * 'edge-push' | 'paged-jump'
+   */
+  /**
+   * 键音专辑页 - 波形播放跟随滚动行为偏好
+   * 'edge-push'   : 智能边缘推挤（播放头接近右边缘时平滑推挤背景）
+   * 'paged-jump'  : 分页式跳转（播放头出界时视口整体翻页，传统剪辑软件风格）
+   * 默认值：paged-jump（更贴合大多数剪辑软件的行为习惯）
+   */
+  const keytoneAlbumScrollBehavior = ref<'edge-push' | 'paged-jump'>('paged-jump');
+
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- 页面状态管理(无需持久化) end   -_-^_^-_- ^_^-_-^_^-_-
   // ...
   // ...
@@ -380,6 +392,16 @@ export const useSettingStore = defineStore('setting', () => {
         playbackRouting.value.mouseFallbackToKeyboard = false;
         StoreSet('playback.routing.mouse_fallback_to_keyboard', playbackRouting.value.mouseFallbackToKeyboard);
       }
+
+      // 键音专辑页 - 波形滚动行为偏好
+      // keytone_album_page.scroll_behavior
+      const keytoneAlbumPageStorage = settingStorage.keytone_album_page ?? {};
+      if (keytoneAlbumPageStorage.scroll_behavior !== undefined) {
+        keytoneAlbumScrollBehavior.value = keytoneAlbumPageStorage.scroll_behavior;
+      } else {
+        keytoneAlbumScrollBehavior.value = 'paged-jump'; // 确保默认值
+        StoreSet('keytone_album_page.scroll_behavior', keytoneAlbumScrollBehavior.value);
+      }
     });
   }
 
@@ -614,6 +636,12 @@ export const useSettingStore = defineStore('setting', () => {
         StoreSet('playback.routing.mouse_fallback_to_keyboard', playbackRouting.value.mouseFallbackToKeyboard);
       }
     );
+    watch(
+      () => keytoneAlbumScrollBehavior.value,
+      (val) => {
+        StoreSet('keytone_album_page.scroll_behavior', val);
+      }
+    );
   }
 
   //#endregion ----->>>>>>>>>>>>>>>>>>>> -- setting持久化 end   -_-^_^-_- ^_^-_-^_^-_-
@@ -628,6 +656,7 @@ export const useSettingStore = defineStore('setting', () => {
   return {
     languageDefault,
     settingItemsOpenedState,
+    keytoneAlbumScrollBehavior,
     startup,
     autoStartup,
     audioVolumeProcessing,

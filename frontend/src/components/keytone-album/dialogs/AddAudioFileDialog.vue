@@ -73,7 +73,7 @@
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card class="dialog-card">
+    <q-card :class="['dialog-card', { 'mr-0': isMac }]">
       <!-- 可滚动的内容区域（包含粘滞按钮） -->
       <div class="dialog-scroll-area">
         <q-card-section class="row items-center q-pb-none text-h6">
@@ -117,8 +117,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject, nextTick } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, nextTick, computed } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { SendFileToServer } from 'src/boot/query/keytonePkg-query';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 
@@ -126,6 +126,9 @@ const q = useQuasar();
 
 // 注入父组件提供的上下文
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+// 使用 Quasar 提供的前端平台检测，仅依赖客户端环境
+const isMac = computed(() => Platform.is.mac === true);
 
 // 确认添加文件
 async function handleConfirmAdd() {

@@ -37,6 +37,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -1041,6 +1042,23 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
+		// ============================================================================
+		// 体验策略：SDK 预览播放严格限制 <= 5000ms
+		//
+		// 背景：SDK 侧目前缺少“暂停”能力；如果允许长片段预览，将造成体验不可控。
+		// 处理：当 isPreviewMode=true 时，严格拒绝超过 5 秒的预览请求。
+		// 注意：这里既做服务端兜底（权威限制），前端也会做一次提前校验以给更友好的提示。
+		// ============================================================================
+		if arg.IsPreviewMode {
+			const maxPreviewMs = 5000.0
+			if (arg.EndTime - arg.StartTime) > maxPreviewMs {
+				ctx.JSON(http.StatusNotAcceptable, gin.H{
+					"message": "error: SDK预览播放仅支持<=5000ms的片段，请使用前端试听播放条",
+				})
+				return
+			}
+		}
+
 		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
 		if !ok {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -1058,6 +1076,83 @@ func keytonePkgRouters(r *gin.Engine) {
 		ctx.JSON(200, gin.H{
 			"message": "ok",
 		})
+	})
+
+	// ============================================================================
+	// GET /get_audio_stream - 读取当前编辑专辑下的音频源文件（用于前端波形渲染）
+	//
+	// 说明：
+	// - 前端通过 sha256 + type（扩展名，如 ".wav"）定位 audioFiles/<sha256><type>
+	// - 该接口返回音频文件内容，支持 Range（由 http.ServeContent 处理）
+	// - 仅用于编辑器场景（依赖 audio_pkg_uuid 已加载）
+	// ============================================================================
+	keytonePkgRouters.GET("/get_audio_stream", func(ctx *gin.Context) {
+		type Arg struct {
+			Sha256 string `form:"sha256"`
+			Type   string `form:"type"`
+		}
+
+		var arg Arg
+		if err := ctx.ShouldBindQuery(&arg); err != nil || arg.Sha256 == "" || arg.Type == "" {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "error: 参数接收失败",
+			})
+			return
+		}
+
+		// 基础校验：防止路径穿越/非法扩展名
+		if len(arg.Sha256) != 64 {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: sha256 格式不正确"})
+			return
+		}
+		if _, err := hex.DecodeString(arg.Sha256); err != nil {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: sha256 格式不正确"})
+			return
+		}
+		if !strings.HasPrefix(arg.Type, ".") {
+			ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: type 格式不正确"})
+			return
+		}
+		for _, r := range arg.Type[1:] {
+			if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+				ctx.JSON(http.StatusNotAcceptable, gin.H{"message": "error: type 格式不正确"})
+				return
+			}
+		}
+
+		audioPkgUUID, ok := audioPackageConfig.GetValue("audio_pkg_uuid").(string)
+		if !ok || audioPkgUUID == "" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 获取音频包UUID失败",
+			})
+			return
+		}
+
+		fileName := arg.Sha256 + arg.Type
+		filePath := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", fileName)
+
+		f, err := os.Open(filePath)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "error: 音频文件不存在"})
+			return
+		}
+		defer f.Close()
+
+		info, err := f.Stat()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "error: 读取音频文件失败"})
+			return
+		}
+
+		// content-type：根据扩展名推断
+		contentType := mime.TypeByExtension(arg.Type)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+		ctx.Header("Content-Type", contentType)
+		ctx.Header("Content-Disposition", "inline; filename=\""+fileName+"\"")
+
+		http.ServeContent(ctx.Writer, ctx.Request, fileName, info.ModTime(), f)
 	})
 
 	// ============================================================================

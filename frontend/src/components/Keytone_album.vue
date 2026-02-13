@@ -312,6 +312,15 @@ function previewSound(params: {
   };
 }) {
   console.debug('预览声音');
+
+  // ============================================================================
+  // 体验策略：SDK 预览播放严格限制 <= 5000ms
+  //
+  // 为什么前端也要校验？
+  // - 服务端已做“权威拒绝”兜底，但前端提前拦截能给更即时、可读的提示；
+  // - 同时能在 UI 层引导用户使用“前端试听播放条”（可暂停/可拖动播放头）。
+  // ============================================================================
+  const maxSdkPreviewMs = 5000;
   if (
     params.source_file_for_sound.sha256 === '' &&
     params.source_file_for_sound.type === '' &&
@@ -335,6 +344,17 @@ function previewSound(params: {
     });
     return;
   }
+
+	// SDK 预览播放仅用于“短片段验真”，长片段请使用前端试听播放条。
+	if (params.cut.end_time - params.cut.start_time > maxSdkPreviewMs) {
+		q.notify({
+			type: 'warning',
+			position: 'top',
+			message: `SDK预览仅支持<=${maxSdkPreviewMs}ms，请使用波形下方的前端试听播放条`,
+			timeout: 5000,
+		});
+		return;
+	}
   // 时间值不能为负数
   if (params.cut.start_time < 0 || params.cut.end_time < 0) {
     q.notify({
@@ -343,6 +363,7 @@ function previewSound(params: {
       message: $t('KeyToneAlbum.notify.timeValueCannotBeNegative'),
       timeout: 5,
     });
+		return;
   }
 
   PlaySound(
@@ -351,7 +372,7 @@ function previewSound(params: {
     params.cut.start_time,
     params.cut.end_time,
     params.cut.volume,
-    true // 设置 skipGlobalVolume 为 true，使预览不受全局音量影响
+    true // isPreviewMode=true：SDK 预览播放使用“原始音量”，不叠加全局音量链路
   ).then((result) => {
     if (!result) {
       q.notify({

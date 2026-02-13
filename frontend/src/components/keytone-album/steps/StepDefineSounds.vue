@@ -142,6 +142,11 @@ import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import CreateSoundDialog from '../dialogs/CreateSoundDialog.vue';
 import EditSoundDialog from '../dialogs/EditSoundDialog.vue';
 
+// 移除 defineAsyncComponent，直接引用以确保组件与 step 生命周期绑定，
+// 或者保持现状，但确保 dialog 销毁机制正确。
+// 鉴于用户反馈 Dialog 关闭后声音未停，我们需要确保 Dialog 组件能正确捕获关闭事件。
+// 这里直接使用导入的组件即可。
+
 const q = useQuasar();
 
 // ============================================================================

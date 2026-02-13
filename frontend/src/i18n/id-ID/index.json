@@ -4,7 +4,17 @@
     "developer": "Pengembang",
     "setting": {
       "index": "Pengaturan",
-      "caption": ""
+      "caption": "",
+      "category": {
+        "keytoneAlbumPage": "KeyTone Album Page",
+        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
+        "scrollBehavior": "Waveform Scrolling",
+        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "scrollOptions": {
+          "edge-push": "Smart Edge Push",
+          "paged-jump": "Paged Jump"
+        }
+      }
     },
     "KeyToneAlbum": {
       "index": "Album KeyTone",

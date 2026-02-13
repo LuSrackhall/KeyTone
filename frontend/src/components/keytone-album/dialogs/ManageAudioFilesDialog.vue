@@ -68,7 +68,7 @@
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
   >
-    <q-card :class="['p-x-3 w-[96%]']">
+    <q-card :class="['p-x-3 w-[96%]', { 'mr-0': isMac }]">
       <q-card-section class="row items-center q-pb-none text-h6">
         {{ ctx.$t('KeyToneAlbum.loadAudioFile.manageExistingFiles') }}
       </q-card-section>
@@ -103,7 +103,7 @@
         v-if="ctx.selectedSoundFile.value.sha256 !== '' && ctx.selectedSoundFile.value.name_id !== ''"
         :class="['flex flex-col m-t-3']"
       >
-        <q-card :class="['flex flex-col']">
+        <q-card :class="['flex flex-col', { 'mr-0': isMac }]">
           <q-badge
             transparent
             color="orange"
@@ -150,8 +150,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, computed } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { SoundFileDelete } from 'src/boot/query/keytonePkg-query';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 
@@ -159,6 +159,8 @@ const q = useQuasar();
 
 // 注入父组件提供的上下文
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // 清除选择
 function clearSelection() {

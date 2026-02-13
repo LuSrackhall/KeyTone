@@ -61,10 +61,30 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
     v-model="ctx.createNewSound.value"
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
+    class="create-sound-dialog-单独影响global"
+    @before-hide="onDialogBeforeHide"
   >
-    <q-card>
-      <!-- 对话框标题 -->
-      <q-card-section class="row items-center q-pb-none text-h6">
+    <!--
+      重要：KeyTone 窗口有固定宽度（约 379~389px）。
+      - 对话框不能超出窗口宽度，但需要尽可能利用可视空间。
+      - 这里直接使用视口宽度减去极小边距（8px），避免“看起来还能更宽”但被人为留白。
+    -->
+    <q-card
+      style="
+        /*
+          目标：
+          - 在固定窗口宽度下，尽可能放大对话框宽度（不超出窗口）。
+          - 为波形外侧刻度留空间，但不压缩波形本体宽度。
+        */
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+      "
+      :class="['p-l-2 p-r-5',
+        { 'mr-0': isMac } // Mac 平台下, 右侧不留额外空隙, 因为阴影用的是原生的
+      ]"
+    >
+      <!-- 对话框标题（sticky 置顶） -->
+      <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.defineSounds.createNewSound') }}
       </q-card-section>
 
@@ -119,6 +139,18 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
             </q-tooltip>
           </q-icon>
         </div>
+
+        <!-- 波形裁剪（可视化选区） -->
+        <WaveformTrimmer
+          ref="waveformRef"
+          v-show="ctx.createNewSound.value"
+          :sha256="ctx.sourceFileForSound.value.sha256"
+          :file-type="ctx.sourceFileForSound.value.type"
+          v-model:volume="ctx.soundVolume.value"
+          v-model:startMs="ctx.soundStartTime.value"
+          v-model:endMs="ctx.soundEndTime.value"
+        />
+
         <!--
           TIPS: 注意 number 类型使用时需要使用 v-model.number
           这样可以自动处理 01、00.55 这种输入，将其自动变更为 1、0.55
@@ -155,10 +187,12 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
           outlined
           stack-label
           dense
-          v-model.number="ctx.soundVolume.value"
-          :label="ctx.$t('KeyToneAlbum.defineSounds.volume')"
+          v-model.number="soundVolumeDb"
+          :label="ctx.$t('KeyToneAlbum.defineSounds.volumeDb')"
           type="number"
           :step="0.1"
+          :hint="isSoundVolumeDbOutOfRange ? ctx.$t('KeyToneAlbum.defineSounds.volumeOutOfRange') : ''"
+          :hide-bottom-space="!isSoundVolumeDbOutOfRange"
         >
           <template v-slot:append>
             <q-icon name="info" color="primary">
@@ -171,8 +205,8 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
         </q-input>
       </q-card-section>
 
-      <!-- 操作按钮 -->
-      <q-card-actions align="right">
+      <!-- 操作按钮（sticky 置底） -->
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <!-- 预览按钮 -->
         <q-btn
           class="mt-2"
@@ -182,7 +216,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
           color="secondary"
         >
           <q-tooltip
-            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+            :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
             :delay="600"
           >
             {{ ctx.$t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
@@ -222,13 +256,56 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
  * 这是因为 JS/TS 中对象是引用传递，解构也会复制所有属性。
  */
 
-import { inject, computed } from 'vue';
+import { inject, computed, ref, watch } from 'vue';
+import { Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
+import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 
 // ============================================================================
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+
+const waveformRef = ref<InstanceType<typeof WaveformTrimmer> | null>(null);
+
+/**
+ * 监听对话框关闭（before-hide）：
+ * - 在动画开始前立即停止音频播放，避免“关闭后仍有声音”的不符合直觉现象。
+ * - 使用 v-show 保持组件存在，避免销毁重计算导致关闭动画丢失。
+ */
+function onDialogBeforeHide() {
+  waveformRef.value?.stopPlayback?.();
+}
+
+// 兜底：当 dialog 通过任意方式关闭（包括外部强制设置 v-model=false）时，立即停止播放
+watch(
+  () => ctx.createNewSound.value,
+  (val) => {
+    if (!val) waveformRef.value?.stopPlayback?.();
+  }
+);
+
+// 使用 Quasar 提供的前端平台检测，仅依赖前端环境
+const isMac = computed(() => Platform.is.mac === true);
+
+// ============================================================================
+// dB <-> cut.volume 换算（Base=1.6）
+// - SDK：gain = 1.6 ^ volume
+// - dB = 20 * log10(gain) = 20 * volume * log10(1.6)
+// - UI 以 dB 显示，内部仍使用 cut.volume
+// ==========================================================================
+const dbPerVolume = 20 * Math.log10(1.6);
+const volumeToDb = (volume: number) => volume * dbPerVolume;
+const dbToVolume = (db: number) => db / dbPerVolume;
+
+const soundVolumeDb = computed({
+  get: () => Number(volumeToDb(ctx.soundVolume.value || 0).toFixed(1)),
+  set: (db: number) => {
+    ctx.soundVolume.value = dbToVolume(Number(db));
+  },
+});
+
+const isSoundVolumeDbOutOfRange = computed(() => Math.abs(soundVolumeDb.value) > 18);
 
 // ============================================================================
 // 计算属性
@@ -311,8 +388,7 @@ function handleSave() {
   @apply text-xs;
   font-size: var(--i18n_fontSize);
   @apply p-1.5;
-  @apply transition-transform hover:scale-105;
-  @apply scale-103;
+  // 恢复默认大小：避免“按钮被放大”的非预期视觉变化。
 }
 
 // 选择器样式 - 处理溢出
@@ -329,5 +405,16 @@ function handleSave() {
 // 输入框 placeholder 高度修复
 :deep(.q-placeholder) {
   @apply h-auto;
+}
+
+// TIPS: 对话框实际宽度调整, 只能通过覆盖全局样式实现(因为 q-dialog 实际是基于当前组件外部的全局组件实现的)
+// :global(.q-dialog__inner--minimized){ // TIPS: 我们可以通过添加类名的方式, 只修改特定对话框的样式, 具体见下方的操作。
+//   @apply p-4;
+// }
+
+// TIPS: 虽然对于全局样式的覆盖, 只能通过 :global 实现, 想要进修改单个组件的样式(不影响其他用到此组件的业务)
+//       > 可以在 :global 内部继续使用组件作用域的类名选择器继承的方式, 以避免影响其他组件的同名类选择器
+:global(.create-sound-dialog-单独影响global .q-dialog__inner--minimized) {
+  @apply p-x-2;
 }
 </style>

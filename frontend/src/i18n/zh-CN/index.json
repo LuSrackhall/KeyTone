@@ -4,7 +4,17 @@
     "developer": "制作者",
     "setting": {
       "index": "设置",
-      "caption": ""
+      "caption": "",
+      "category": {
+        "keytoneAlbumPage": "键音专辑页相关",
+        "keytoneAlbumPageCaption": "对键音专辑页中的相关功能进行自定义配置",
+        "scrollBehavior": "波形滚动行为",
+        "scrollBehaviorCaption": "控制播放过程中波形跟随播放头的方式",
+        "scrollOptions": {
+          "edge-push": "智能边缘推挤",
+          "paged-jump": "分页式跳转"
+        }
+      }
     },
     "KeyToneAlbum": {
       "index": "键音专辑",
@@ -169,6 +179,8 @@
       "startTime": "开始时间(毫秒)",
       "endTime": "结束时间(毫秒)",
       "volume": "声音音量",
+      "volumeDb": "声音音量（dB）",
+      "volumeOutOfRange": "超出可视范围（±18 dB）",
       "error": {
         "negativeTime": "时间不能为负数"
       },
@@ -181,9 +193,29 @@
         "multipleSoundsFromSameSource": "用户可针对同一声音源文件裁剪定义出多个独立的声音",
         "soundName": "声音的名称",
         "soundDuration": "声音的开始时间和结束时间，以毫秒为单位。由于是按键使用，所以时间不宜过长。",
-        "volume": "0为原始音量，大于0为提升音量，小于0为降低音量。常用步进为0.1",
-        "volume_1": "当然您也可以手动输入以做更细腻的调整, 如0.0001等。请在每次音量调整后重新预览以查看效果, 防止音量过小或过大。",
+        "volume": "音量以 dB 显示，0 dB 为原始音量，大于 0 为提升，小于 0 为降低。",
+        "volume_1": "可输入超过 ±18 dB 的值，设置仍会生效，但波形仅显示到边界；请每次调整后预览以确认效果。",
         "previewSound": "按键用的声音通常很短, 因此连续预览的声音会并发播放, 且不提供进度条和停止按钮(必要时候可通过重启本应用来停止)。因此请遵循声音定义的原则。"
+      },
+      "waveformTrimmer": {
+        "play": "播放",
+        "pause": "暂停",
+        "stop": "停止",
+        "zoom": "缩放",
+
+        "playScopeAll": "播放全部",
+        "playScopeSelection": "播放选区",
+
+        "noSource": "请选择音频源文件以显示波形。",
+        "loading": "正在加载波形...",
+        "unavailableFallback": "波形不可用，已降级为手动裁剪。",
+
+        "current": "当前：",
+        "total": "总长：",
+        "selection": "选区：",
+        "hint": "（支持点击/拖动播放头；Ctrl+滚轮可缩放；右键拖拽可快速选区；拖动中线可调音量（0在中位））",
+        "hintMac": "（支持点击/拖动播放头；⌃Control/⌘Command+滚轮或触控板捏合可缩放；右键拖拽可快速选区；拖动中线可调音量（0在中位））",
+        "volumeOutOfRange": "已超出可视范围（±18 dB）"
       }
     },
     "craftKeySounds": {

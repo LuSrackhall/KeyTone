@@ -67,8 +67,26 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
     v-model="ctx.showEditSoundDialog.value"
     backdrop-filter="invert(70%)"
     @mouseup="ctx.preventDefaultMouseWhenRecording"
+    @before-hide="onDialogBeforeHide"
+    class="edit-sound-dialog-单独影响global"
   >
-    <q-card class="min-w-[106%]">
+    <!--
+      重要：窗口宽度固定（约 379~389px）。
+      - 对话框不可超出窗口，但应尽可能利用可视空间。
+      - 使用视口宽度减去极小边距（8px），避免无意义留白。
+    -->
+    <q-card
+      style="
+        /*
+          同 CreateSoundDialog：
+          - 在固定窗口宽度内最大化对话框宽度。
+          - 不超出视口，避免窗口裁切。
+        */
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+      "
+      :class="[{ 'mr-0': isMac }]"
+    >
       <!-- 对话框标题（sticky 置顶） -->
       <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.defineSounds.editExistingSound') }}
@@ -113,7 +131,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
         :class="['flex flex-col m-t-3']"
         v-if="ctx.selectedSound.value?.soundKey !== '' && ctx.selectedSound.value !== undefined"
       >
-        <q-card :class="['flex flex-col pb-3 w-[100%]']" v-if="ctx.selectedSound.value">
+        <q-card :class="['flex flex-col pb-3 w-[100%]', { 'mr-0': isMac }]" v-if="ctx.selectedSound.value">
           <!-- 声音名称输入 -->
           <q-card-section :class="['p-b-1 mt-3']">
             <q-input
@@ -159,7 +177,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
           </q-card-section>
 
           <!-- 裁剪时间设置 -->
-          <q-card-section :class="['p-b-1']">
+          <q-card-section :class="['p-b-1', 'min-w-0', 'w-full']">
             <div class="text-[13.5px] text-gray-600 p-b-2">
               {{ ctx.$t('KeyToneAlbum.defineSounds.cropSound') }}
               <q-icon name="info" color="primary">
@@ -168,6 +186,18 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
                 </q-tooltip>
               </q-icon>
             </div>
+
+            <!-- 波形裁剪（可视化选区） -->
+            <WaveformTrimmer
+              ref="waveformRef"
+              v-show="ctx.showEditSoundDialog.value"
+              :sha256="ctx.selectedSound.value.soundValue.source_file_for_sound.sha256"
+              :file-type="ctx.selectedSound.value.soundValue.source_file_for_sound.type"
+                v-model:volume="ctx.selectedSound.value.soundValue.cut.volume"
+              v-model:startMs="ctx.selectedSound.value.soundValue.cut.start_time"
+              v-model:endMs="ctx.selectedSound.value.soundValue.cut.end_time"
+            />
+
             <!--
               TIPS: 注意 number 类型使用时需要使用 v-model.number
               这样可以自动处理 01、00.55 这种输入
@@ -204,10 +234,12 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               outlined
               stack-label
               dense
-              v-model.number="ctx.selectedSound.value.soundValue.cut.volume"
-              :label="ctx.$t('KeyToneAlbum.defineSounds.volume')"
+              v-model.number="selectedSoundVolumeDb"
+              :label="ctx.$t('KeyToneAlbum.defineSounds.volumeDb')"
               type="number"
               :step="0.1"
+              :hint="isSelectedSoundVolumeDbOutOfRange ? ctx.$t('KeyToneAlbum.defineSounds.volumeOutOfRange') : ''"
+              :hide-bottom-space="!isSelectedSoundVolumeDbOutOfRange"
             >
               <template v-slot:append>
                 <q-icon name="info" color="primary">
@@ -232,7 +264,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               @click="handlePreview"
             >
               <q-tooltip
-                :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words text-xs']"
+                :class="['text-xs bg-opacity-80 bg-gray-700 whitespace-pre-wrap break-words']"
                 :delay="600"
               >
                 {{ ctx.$t('KeyToneAlbum.defineSounds.tooltip.previewSound') }}
@@ -285,10 +317,11 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
  * 提示用户该声音是否被其他按键音引用。
  */
 
-import { inject, computed } from 'vue';
-import { useQuasar } from 'quasar';
+import { inject, computed, ref, watch } from 'vue';
+import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
+import WaveformTrimmer from '../components/WaveformTrimmer.vue';
 
 const q = useQuasar();
 
@@ -296,6 +329,49 @@ const q = useQuasar();
 // 注入父组件提供的上下文
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+const waveformRef = ref<InstanceType<typeof WaveformTrimmer> | null>(null);
+
+/**
+ * 监听对话框关闭（before-hide）：
+ * - 关闭动画开始前立即停止音频，保证 UX 一致且不拖慢动画。
+ * - 配合 v-show 保持组件挂载，避免销毁开销导致动画卡顿。
+ */
+function onDialogBeforeHide() {
+  waveformRef.value?.stopPlayback?.();
+}
+
+// 兜底：当 dialog 通过任意方式关闭（包括外部强制设置 v-model=false）时，立即停止播放
+watch(
+  () => ctx.showEditSoundDialog.value,
+  (val) => {
+    if (!val) waveformRef.value?.stopPlayback?.();
+  }
+);
+
+// ============================================================================
+// dB <-> cut.volume 换算（Base=1.6）
+// - SDK：gain = 1.6 ^ volume
+// - dB = 20 * log10(gain) = 20 * volume * log10(1.6)
+// - UI 以 dB 显示，内部仍使用 cut.volume
+// ==========================================================================
+const dbPerVolume = 20 * Math.log10(1.6);
+const volumeToDb = (volume: number) => volume * dbPerVolume;
+const dbToVolume = (db: number) => db / dbPerVolume;
+
+const selectedSoundVolumeDb = computed({
+  get: () => {
+    const volume = ctx.selectedSound.value?.soundValue.cut.volume ?? 0;
+    return Number(volumeToDb(volume).toFixed(1));
+  },
+  set: (db: number) => {
+    if (!ctx.selectedSound.value) return;
+    ctx.selectedSound.value.soundValue.cut.volume = dbToVolume(Number(db));
+  },
+});
+
+const isSelectedSoundVolumeDbOutOfRange = computed(() => Math.abs(selectedSoundVolumeDb.value) > 18);
+
+const isMac = computed(() => Platform.is.mac === true);
 
 // ============================================================================
 // 辅助函数
@@ -416,8 +492,7 @@ function handleDelete() {
   @apply text-xs;
   font-size: var(--i18n_fontSize);
   @apply p-1.5;
-  @apply transition-transform hover:scale-105;
-  @apply scale-103;
+  // 恢复默认大小：避免“按钮被放大”的非预期视觉变化。
 }
 
 // 选择器样式 - 处理溢出
@@ -446,5 +521,11 @@ function handleDelete() {
 :deep(.ellipsis) {
   @apply max-w-full overflow-auto whitespace-nowrap text-clip;
   @apply [&::-webkit-scrollbar]:h-0.5 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-blue-500/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-600/50;
+}
+
+// TIPS: 虽然对于全局样式的覆盖, 只能通过 :global 实现, 想要进修改单个组件的样式(不影响其他用到此组件的业务)
+//       > 可以在 :global 内部继续使用组件作用域的类名选择器继承的方式, 以避免影响其他组件的同名类选择器
+:global(.edit-sound-dialog-单独影响global .q-dialog__inner--minimized) {
+  @apply p-x-2;
 }
 </style>
