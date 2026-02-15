@@ -76,7 +76,7 @@
     <q-card :class="['dialog-card', { 'mr-0': isMac }]">
       <!-- 可滚动的内容区域（包含粘滞按钮） -->
       <div class="dialog-scroll-area">
-        <q-card-section class="row items-center q-pb-none text-h6">
+        <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
           {{ ctx.$t('KeyToneAlbum.loadAudioFile.addNewFile_1') }}
         </q-card-section>
 
@@ -216,22 +216,22 @@ async function handleConfirmAdd() {
   }
 }
 
-// 底部按钮粘滞区域 - 毛玻璃效果
+// 底部按钮粘滞区域 - 毛玻璃效果（统一为 4px 模糊，半透明度约 0.3）
 .dialog-actions-sticky {
   @apply sticky bottom-0;
-  @apply bg-white/70 dark:bg-gray-900/70;
-  backdrop-filter: blur(5px) saturate(1.2);
-  -webkit-backdrop-filter: blur(5px) saturate(1.2);
+  @apply bg-white/30 dark:bg-gray-900/30;
+  backdrop-filter: blur(4px) saturate(1.2);
+  -webkit-backdrop-filter: blur(4px) saturate(1.2);
   @apply border-t border-gray-200/50 dark:border-gray-700/50;
   @apply z-10;
-  // 增加顶部渐变，增强毛玻璃层次
+  // 增加顶部渐变，增强毛玻璃层次（弱化数值以保持一致性）
   background-image: linear-gradient(
     to top,
-    rgba(255, 255, 255, 0.75),
-    rgba(255, 255, 255, 0.55)
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.35)
   );
-  @apply dark:bg-gray-900/70;
-  @apply dark:[background-image:linear-gradient(to_top,rgba(17,24,39,0.75),rgba(17,24,39,0.55))];
+  @apply dark:bg-gray-900/30;
+  @apply dark:[background-image:linear-gradient(to_top,rgba(17,24,39,0.55),rgba(17,24,39,0.35))];
 }
 
 // 按钮样式 - 统一按钮外观

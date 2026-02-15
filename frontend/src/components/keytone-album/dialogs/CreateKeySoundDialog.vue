@@ -62,7 +62,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
   >
     <q-card :class="['min-w-[90%]', { 'mr-0': isMac }]">
       <!-- 对话框标题 -->
-      <q-card-section class="row items-center q-pb-none text-h6">
+      <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ ctx.$t('KeyToneAlbum.craftKeySounds.newKeySound') }}
       </q-card-section>
 
@@ -94,7 +94,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
             @mouseup="ctx.preventDefaultMouseWhenRecording"
           >
             <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
-              <q-card-section class="row items-center q-pb-none text-h6">
+              <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
                 {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
               </q-card-section>
               <q-card-section>
@@ -111,7 +111,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   dense
                 />
               </q-card-section>
-              <q-card-section>
+              <q-card-section class="pb-8">
                 <!-- 选择声音的选项，支持多选 -->
                 <q-select
                   outlined
@@ -202,7 +202,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   </q-option-group>
                 </div>
               </q-card-section>
-              <q-card-actions align="right">
+              <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                 <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
               </q-card-actions>
             </q-card>
@@ -223,7 +223,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
             @mouseup="ctx.preventDefaultMouseWhenRecording"
           >
             <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
-              <q-card-section class="row items-center q-pb-none text-h6">
+              <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
                 {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
               </q-card-section>
               <q-card-section>
@@ -240,7 +240,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   dense
                 />
               </q-card-section>
-              <q-card-section>
+              <q-card-section class="pb-8">
                 <!-- 选择声音的选项，支持多选 -->
                 <q-select
                   outlined
@@ -331,7 +331,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   </q-option-group>
                 </div>
               </q-card-section>
-              <q-card-actions align="right">
+              <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                 <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
               </q-card-actions>
             </q-card>
@@ -340,7 +340,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
       </q-card-section>
 
       <!-- 操作按钮 -->
-      <q-card-actions align="right">
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn color="primary" :label="ctx.$t('KeyToneAlbum.craftKeySounds.confirmAdd')" @click="handleSave" />
         <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
       </q-card-actions>

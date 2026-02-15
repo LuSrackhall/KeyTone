@@ -1,7 +1,7 @@
 <template>
   <q-dialog v-model="dialogVisible" persistent>
     <q-card style="min-width: 700px; max-width: 900px">
-      <q-card-section class="row items-center q-pb-none">
+      <q-card-section class="row items-center q-pb-none sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         <div class="text-h6">选择签名</div>
         <q-space />
         <q-btn icon="close" flat round dense @click="cancel" />
@@ -111,7 +111,7 @@
         </q-banner>
       </q-card-section>
 
-      <q-card-actions align="right">
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat label="取消" color="grey-7" @click="cancel" />
         <q-btn unelevated label="确认选择" color="primary" :disable="!selectedSignature" @click="confirm" />
       </q-card-actions>

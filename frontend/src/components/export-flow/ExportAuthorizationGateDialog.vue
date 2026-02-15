@@ -1,8 +1,8 @@
 <template>
   <q-dialog v-model="isVisible" persistent>
     <q-card class="auth-gate-dialog" style="width: 90%; max-width: 360px">
-      <!-- Header -->
-      <q-card-section class="bg-warning text-white q-pa-sm">
+      <!-- Header (sticky glass) -->
+      <q-card-section class="bg-warning bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
         <div class="text-subtitle1">{{ t('exportFlow.authGateDialog.title') }}</div>
       </q-card-section>
 
@@ -121,8 +121,8 @@
         </div>
       </q-card-section>
 
-      <!-- Actions -->
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <!-- Actions (sticky glass) -->
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="t('exportFlow.authGateDialog.cancel')" color="primary" size="sm" @click="onCancel" />
         <q-btn
           unelevated

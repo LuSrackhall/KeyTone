@@ -1,7 +1,7 @@
 <template>
   <q-dialog v-model="isVisible" persistent>
     <q-card style="width: 90%; max-width: 340px">
-      <q-card-section class="bg-primary text-white q-pa-sm">
+      <q-card-section class="bg-primary bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
         <div class="text-subtitle1">{{ $t('exportFlow.confirmSignature.title') }}</div>
       </q-card-section>
 
@@ -12,7 +12,7 @@
         <q-option-group v-model="needSignatureLocal" :options="options" color="primary" />
       </q-card-section>
 
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat color="primary" size="sm" :label="$t('exportFlow.common.cancel')" @click="onCancel" />
         <q-btn unelevated color="primary" size="sm" :label="$t('exportFlow.common.continue')" @click="onSubmit" />
       </q-card-actions>

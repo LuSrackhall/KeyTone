@@ -156,9 +156,9 @@
                 @mouseup="ctx.preventDefaultMouseWhenRecording"
               >
                 <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
-                  <q-card-section class="row items-center q-pb-none text-h6">
-                    {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
-                  </q-card-section>
+                    <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
+                      {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureDownSound') }}
+                    </q-card-section>
                   <q-card-section>
                     <q-select
                       outlined
@@ -172,7 +172,7 @@
                       dense
                     />
                   </q-card-section>
-                  <q-card-section>
+                  <q-card-section class="pb-8">
                     <q-select
                       outlined
                       stack-label
@@ -276,7 +276,7 @@
                       </q-option-group>
                     </div>
                   </q-card-section>
-                  <q-card-actions align="right">
+                  <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                     <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                   </q-card-actions>
                 </q-card>
@@ -297,7 +297,7 @@
                 @mouseup="ctx.preventDefaultMouseWhenRecording"
               >
                 <q-card :class="['min-w-[80%]', { 'mr-0': isMac }]">
-                  <q-card-section class="row items-center q-pb-none text-h6">
+                  <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
                     {{ ctx.$t('KeyToneAlbum.craftKeySounds.configureUpSound') }}
                   </q-card-section>
                   <q-card-section>
@@ -313,7 +313,7 @@
                       dense
                     />
                   </q-card-section>
-                  <q-card-section>
+                  <q-card-section class="pb-8">
                     <q-select
                       outlined
                       stack-label
@@ -417,7 +417,7 @@
                       </q-option-group>
                     </div>
                   </q-card-section>
-                  <q-card-actions align="right">
+                  <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
                     <q-btn flat :label="ctx.$t('KeyToneAlbum.close')" color="primary" v-close-popup />
                   </q-card-actions>
                 </q-card>

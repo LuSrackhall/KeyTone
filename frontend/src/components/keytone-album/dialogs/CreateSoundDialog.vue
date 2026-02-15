@@ -206,7 +206,7 @@ ctx.saveSoundConfig() -> 保存声音 ctx.previewSound() -> 预览声音 【关�
       </q-card-section>
 
       <!-- 操作按钮（sticky 置底） -->
-      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm', { 'mr-0': isMac }]">
         <!-- 预览按钮 -->
         <q-btn
           class="mt-2"

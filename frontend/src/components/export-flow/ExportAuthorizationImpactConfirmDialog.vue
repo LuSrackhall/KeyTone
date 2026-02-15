@@ -11,7 +11,7 @@
         </div>
       </q-card-section>
 
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat size="sm" color="primary" :label="$t('exportFlow.common.back')" @click="onBack" />
         <q-btn unelevated size="sm" color="primary" :label="$t('exportFlow.authImpact.confirm')" @click="onConfirm" />
       </q-card-actions>

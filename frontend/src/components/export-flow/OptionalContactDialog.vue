@@ -2,7 +2,7 @@
   <q-dialog v-model="isVisible" persistent>
     <q-card style="width: 90%; max-width: 360px">
       <!-- Header -->
-      <q-card-section class="bg-teal text-white q-pa-sm">
+      <q-card-section class="bg-teal bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
         <div class="text-subtitle1">{{ t('exportFlow.optionalContact.title') }}</div>
       </q-card-section>
 
@@ -48,7 +48,7 @@
       </q-card-section>
 
       <!-- Actions -->
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="t('exportFlow.optionalContact.skip')" color="grey" size="sm" @click="onSkip" />
         <q-btn
           unelevated

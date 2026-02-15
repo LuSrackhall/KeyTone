@@ -207,7 +207,7 @@
     <!-- 导入对话框 -->
     <q-dialog v-model="showImportDialogVisible" backdrop-filter="blur(4px)">
       <q-card style="width: 95%; max-width: 480px">
-        <q-card-section class="row items-center q-pb-none">
+        <q-card-section class="row items-center q-pb-none sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
           <div class="text-h6">{{ $t('signature.import.title') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
@@ -225,7 +225,7 @@
           <div class="text-caption text-grey-7 q-mt-md">{{ $t('signature.import.fileHint') }}</div>
         </q-card-section>
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
           <q-btn flat :label="$t('signature.form.cancel')" color="primary" v-close-popup />
           <q-btn
             flat
@@ -263,7 +263,7 @@
     <q-dialog v-model="showExportConfirmDialog" backdrop-filter="blur(4px)">
       <q-card style="width: 95%; max-width: 360px; max-height: 85vh">
         <!-- 对话框标题 -->
-        <q-card-section class="row items-center q-pb-sm q-px-md q-pt-md">
+        <q-card-section class="row items-center q-pb-sm q-px-md q-pt-md sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
           <div class="text-h6 q-my-none" style="font-size: 1rem">{{ $t('signature.export.confirmTitle') }}</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup size="sm" />
@@ -305,7 +305,7 @@
         </q-scroll-area>
 
         <!-- 按钮区域 -->
-        <q-card-actions align="right" class="q-px-md q-py-sm" style="gap: 8px">
+        <q-card-actions align="right" class="q-px-md q-py-sm" style="gap: 8px" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
           <q-btn
             flat
             :label="$t('signature.export.cancelButton')"
@@ -384,7 +384,7 @@
     <!-- 资格码指纹对话框 -->
     <q-dialog v-model="showFingerprintDialog" backdrop-filter="blur(4px)">
       <q-card style="width: 90%; max-width: 400px">
-        <q-card-section class="row items-center q-pb-none">
+        <q-card-section class="row items-center q-pb-none sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
           <div class="text-h6 flex items-center gap-2">
             <q-icon name="fingerprint" color="primary" />
             {{ $t('signature.contextMenu.fingerprintTitle') }}
@@ -402,7 +402,7 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
           <q-btn
             flat
             :label="$t('exportFlow.authRequestDialog.copy')"

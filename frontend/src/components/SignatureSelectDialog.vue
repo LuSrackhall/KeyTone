@@ -20,7 +20,7 @@
 <template>
   <q-dialog v-model="dialogVisible" backdrop-filter="invert(70%)" @hide="handleClose">
     <q-card class="w-[500px]">
-      <q-card-section class="row items-center q-pb-none text-h6">
+      <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         {{ $t('signature.select.title') }}
       </q-card-section>
 
@@ -89,7 +89,7 @@
         </div>
       </q-card-section>
 
-      <q-card-actions align="right">
+      <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="$t('signature.form.cancel')" color="primary" @click="handleClose" />
         <q-btn
           flat

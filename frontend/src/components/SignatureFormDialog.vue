@@ -20,20 +20,21 @@
 <template>
   <q-dialog v-model="dialogVisible" backdrop-filter="invert(70%)" @hide="handleClose">
     <q-card class="w-96">
-      <!-- 标题 -->
-      <q-card-section class="row items-center q-pb-none text-h6">
-        {{ isEditMode ? $t('signature.form.editTitle') : $t('signature.form.createTitle') }}
-      </q-card-section>
-
-      <!-- 编辑提示信息 -->
-      <q-card-section v-if="isEditMode" class="q-py-sm bg-blue-1">
-        <div class="text-caption text-blue-9">
-          {{ $t('signature.form.editWarning') }}
-        </div>
-      </q-card-section>
-
-      <!-- 可滚动内容区 -->
+      <!-- 把标题/编辑提示/内容/底部按钮放入同一滚动容器，保证 sticky 在容器内生效 -->
       <div class="form-content-scroll">
+        <!-- 标题 (sticky glass) -->
+        <q-card-section class="row items-center q-pb-none text-h6 sticky top-0 z-10 bg-white/30 backdrop-blur-sm border-b border-gray-200/50">
+          {{ isEditMode ? $t('signature.form.editTitle') : $t('signature.form.createTitle') }}
+        </q-card-section>
+
+        <!-- 编辑提示信息 -->
+        <q-card-section v-if="isEditMode" class="q-py-sm bg-blue-1 bg-opacity-90 backdrop-blur-sm">
+          <div class="text-caption text-blue-9">
+            {{ $t('signature.form.editWarning') }}
+          </div>
+        </q-card-section>
+
+        <!-- 可滚动内容区 -->
         <!-- 签名名称 -->
         <div class="q-px-md q-pt-md q-pb-sm">
           <div>
@@ -106,19 +107,19 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 固定底部按钮 -->
-      <q-card-actions align="right">
-        <q-btn flat :label="$t('signature.form.cancel')" color="primary" @click="handleClose" />
-        <q-btn
-          flat
-          :label="isEditMode ? $t('signature.form.update') : $t('signature.form.create')"
-          color="primary"
-          @click="handleSubmit"
-          :loading="loading"
-        />
-      </q-card-actions>
+        <!-- 固定底部按钮 (sticky glass) -->
+        <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm border-t border-gray-200/50']">
+          <q-btn flat :label="$t('signature.form.cancel')" color="primary" @click="handleClose" />
+          <q-btn
+            flat
+            :label="isEditMode ? $t('signature.form.update') : $t('signature.form.create')"
+            color="primary"
+            @click="handleSubmit"
+            :loading="loading"
+          />
+        </q-card-actions>
+      </div>
     </q-card>
 
     <!-- 图片大图预览对话框 -->
@@ -513,7 +514,7 @@ async function handleSubmit() {
 <style lang="scss" scoped>
 /* 可滚动的表单内容区 */
 .form-content-scroll {
-  max-height: calc(90vh - 180px);
+  max-height: calc(90vh - 50px);
   overflow-y: auto;
   overflow-x: hidden;
 }

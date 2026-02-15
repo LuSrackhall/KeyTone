@@ -7,7 +7,7 @@
       <!-- Header & Search (Sticky Top) -->
       <div class="sticky-top">
         <!-- Header -->
-        <q-card-section class="bg-primary text-white q-pa-sm">
+        <q-card-section class="bg-primary bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
           <div class="text-subtitle1">{{ t('exportFlow.pickerDialog.title') }}</div>
         </q-card-section>
 
@@ -195,7 +195,7 @@
       </q-card-section>
 
       <!-- Actions (Sticky Bottom) -->
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs sticky-bottom">
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs sticky-bottom" :class="['bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="t('exportFlow.pickerDialog.cancel')" color="primary" size="sm" @click="onCancel" />
         <q-btn
           unelevated
@@ -219,7 +219,7 @@
           {{ t('exportFlow.signatureUpdateConfirm.message') }}
         </q-card-section>
 
-        <q-card-actions align="right">
+        <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
           <q-btn flat :label="t('exportFlow.common.cancel')" color="primary" v-close-popup />
           <q-btn
             flat
@@ -749,7 +749,7 @@ const onCancel = () => {
     }
   }
 
-  // Sticky bottom action bar with frosted glass effect
+  // Sticky bottom action bar with frosted glass effect (统一为 4px 模糊，半透明 ~0.3)
   .sticky-bottom {
     position: sticky;
     bottom: 0;
@@ -757,8 +757,9 @@ const onCancel = () => {
     right: 0;
 
     // Frosted glass effect: blur background + semi-transparent overlay
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.3);
 
     // Visual separation from content
     border-top: 1px solid rgba(0, 0, 0, 0.08);

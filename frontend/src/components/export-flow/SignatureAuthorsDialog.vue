@@ -1,8 +1,8 @@
 <template>
   <q-dialog v-model="dialogVisible" persistent>
     <q-card style="width: 90vw; max-width: 520px; max-height: 85vh">
-      <!-- 头部 -->
-      <q-card-section class="row items-center q-pb-none bg-deep-purple-1">
+      <!-- 头部 (sticky) -->
+      <q-card-section class="row items-center q-pb-none bg-deep-purple-1 bg-opacity-90 sticky top-0 z-10 backdrop-blur-sm">
         <q-icon name="badge" size="24px" color="deep-purple" class="q-mr-sm" />
         <div class="text-h6">{{ t('exportFlow.signatureInfoDialog.title') }}</div>
         <q-space />
@@ -560,8 +560,8 @@
         />
       </q-card-section>
 
-      <!-- 底部操作 -->
-      <q-card-actions align="right" class="q-pa-sm">
+      <!-- 底部操作 (sticky glass) -->
+      <q-card-actions align="right" class="q-pa-sm" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="t('exportFlow.signatureInfoDialog.close')" color="primary" v-close-popup />
       </q-card-actions>
     </q-card>

@@ -2,7 +2,7 @@
   <q-dialog v-model="isVisible" persistent>
     <q-card class="auth-request-dialog" style="width: 90%; max-width: 400px">
       <!-- Header -->
-      <q-card-section class="bg-deep-purple text-white q-pa-sm">
+      <q-card-section class="bg-deep-purple bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
         <div class="text-subtitle1">{{ t('exportFlow.authRequestDialog.title') }}</div>
       </q-card-section>
 
@@ -294,7 +294,7 @@
       </q-card-section>
 
       <!-- Actions -->
-      <q-card-actions align="right" class="q-pa-sm q-gutter-xs">
+      <q-card-actions align="right" class="q-pa-sm q-gutter-xs" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
         <q-btn flat :label="t('exportFlow.authRequestDialog.cancel')" color="grey" size="sm" @click="onCancel" />
 
         <!-- Step 1 actions -->

@@ -51,7 +51,7 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
   >
     <q-card style="min-width: 350px" :class="[{ 'mr-0': isMac }]">
       <!-- 对话框标题 -->
-      <q-card-section>
+      <q-card-section class="sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
         <div class="text-base flex flex-row items-center">
           {{ ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey') }} -
           <div class="text-sm font-bold">[ {{ ctx.currentEditingKeyOfName.value }} ]</div>
