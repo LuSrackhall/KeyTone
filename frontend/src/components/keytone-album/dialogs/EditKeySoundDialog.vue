@@ -179,11 +179,12 @@
                       :virtual-scroll-slice-size="999999"
                       popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       v-model="ctx.selectedKeySound.value.keySoundValue.down.value"
-                      :options="ctx.edit_downSoundList.value"
+                      :options="filteredEditDownSoundOptions"
                       :option-label="ctx.album_options_select_label"
                       :option-value="getOptionValue"
                       :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                       multiple
+                      use-input
                       use-chips
                       :class="['zl-ll']"
                       dense
@@ -195,6 +196,7 @@
                         ctx.selectedKeySound.value.keySoundValue.down.value.length > 1
                       "
                       ref="edit_downSoundSelectDom"
+                      @filter="handleEditDownSoundFilter"
                       @update:model-value="edit_downSoundSelectDom?.hidePopup()"
                     >
                       <template v-slot:option="scope">
@@ -320,11 +322,12 @@
                       :virtual-scroll-slice-size="999999"
                       popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       v-model="ctx.selectedKeySound.value.keySoundValue.up.value"
-                      :options="ctx.edit_upSoundList.value"
+                      :options="filteredEditUpSoundOptions"
                       :option-label="ctx.album_options_select_label"
                       :option-value="getOptionValue"
                       :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                       multiple
+                      use-input
                       use-chips
                       :class="['zl-ll']"
                       dense
@@ -336,6 +339,7 @@
                         ctx.selectedKeySound.value.keySoundValue.up.value.length > 1
                       "
                       ref="edit_upSoundSelectDom"
+                      @filter="handleEditUpSoundFilter"
                       @update:model-value="edit_upSoundSelectDom?.hidePopup()"
                     >
                       <template v-slot:option="scope">
@@ -499,8 +503,26 @@ if (!ctx) {
 // ============================================================================
 const edit_downSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
 const edit_upSoundSelectDom = ref<{ hidePopup?: () => void } | null>(null);
+const editDownSoundSearchKeyword = ref('');
+const editUpSoundSearchKeyword = ref('');
 
 const isMac = computed(() => Platform.is.mac === true);
+
+const filteredEditDownSoundOptions = computed(() => {
+  const keyword = editDownSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.edit_downSoundList.value;
+  }
+  return ctx.edit_downSoundList.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredEditUpSoundOptions = computed(() => {
+  const keyword = editUpSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.edit_upSoundList.value;
+  }
+  return ctx.edit_upSoundList.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
 
 // ============================================================================
 // 工具函数
@@ -540,6 +562,22 @@ function getOptionValue(item: KeySoundOption) {
   if (item.type === 'key_sounds') {
     return item.value?.keySoundKey;
   }
+}
+
+function getOptionLabel(item: any): string {
+  return String(ctx.album_options_select_label(item) || '');
+}
+
+function handleEditDownSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    editDownSoundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleEditUpSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    editUpSoundSearchKeyword.value = inputValue;
+  });
 }
 
 /**

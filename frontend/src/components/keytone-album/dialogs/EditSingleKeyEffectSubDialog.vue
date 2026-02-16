@@ -72,15 +72,17 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
                   :virtual-scroll-slice-size="999999"
                   popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                   v-model="ctx.keyDownSingleKeySoundEffectSelect_edit.value"
-                  :options="ctx.keySingleKeySoundEffectOptions_edit.value"
+                  :options="filteredEditDownSingleKeySoundOptions"
                   :option-label="ctx.album_options_select_label"
                   :option-value="getOptionValue"
                   :label="`${ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${
                     ctx.currentEditingKeyOfName.value
                   } ]- ${ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-down')} `"
+                  use-input
                   use-chips
                   :class="['zl-ll']"
                   dense
+                  @filter="handleEditDownSingleKeySoundFilter"
                   @popup-hide="handleDownPopupHide"
                   class="max-w-full"
                 >
@@ -108,15 +110,17 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
                   :virtual-scroll-slice-size="999999"
                   popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                   v-model="ctx.keyUpSingleKeySoundEffectSelect_edit.value"
-                  :options="ctx.keySingleKeySoundEffectOptions_edit.value"
+                  :options="filteredEditUpSingleKeySoundOptions"
                   :option-label="ctx.album_options_select_label"
                   :option-value="getOptionValue"
                   :label="`${ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.editSingleKey')} -[ ${
                     ctx.currentEditingKeyOfName.value
                   } ]- ${ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.soundEffect-up')} `"
+                  use-input
                   use-chips
                   :class="['zl-ll']"
                   dense
+                  @filter="handleEditUpSingleKeySoundFilter"
                   @popup-hide="handleUpPopupHide"
                   class="max-w-full"
                 >
@@ -257,15 +261,33 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
  * - 支持保存修改和删除配置
  */
 
-import { inject, computed } from 'vue';
+import { inject, computed, ref } from 'vue';
 import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
 
 const q = useQuasar();
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
+const editDownSingleKeySoundSearchKeyword = ref('');
+const editUpSingleKeySoundSearchKeyword = ref('');
 
 const isMac = computed(() => Platform.is.mac === true);
+
+const filteredEditDownSingleKeySoundOptions = computed(() => {
+  const keyword = editDownSingleKeySoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keySingleKeySoundEffectOptions_edit.value;
+  }
+  return ctx.keySingleKeySoundEffectOptions_edit.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredEditUpSingleKeySoundOptions = computed(() => {
+  const keyword = editUpSingleKeySoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keySingleKeySoundEffectOptions_edit.value;
+  }
+  return ctx.keySingleKeySoundEffectOptions_edit.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
 
 // ============================================================================
 // 工具函数
@@ -281,6 +303,10 @@ function getOptionValue(item: any) {
   if (item.type === 'key_sounds') {
     return item.value?.keySoundKey;
   }
+}
+
+function getOptionLabel(item: any): string {
+  return String(ctx.album_options_select_label(item) || '');
 }
 
 function getItemId(opt: any) {
@@ -330,6 +356,18 @@ function handleUpPopupHide() {
   ) {
     ctx.keyDownSingleKeySoundEffectSelect_edit.value = ctx.keyUpSingleKeySoundEffectSelect_edit.value;
   }
+}
+
+function handleEditDownSingleKeySoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    editDownSingleKeySoundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleEditUpSingleKeySoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    editUpSingleKeySoundSearchKeyword.value = inputValue;
+  });
 }
 
 function handleSave() {

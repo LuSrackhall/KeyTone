@@ -101,11 +101,13 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
           clearable
           v-model="ctx.selectedSound.value"
           popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-          :options="ctx.soundList.value"
+          :options="filteredSoundOptions"
           :option-label="getSoundLabel"
           :option-value="(item: any) => item.soundKey"
           :label="ctx.$t('KeyToneAlbum.defineSounds.selectSoundToManage')"
           dense
+          use-input
+          @filter="handleSoundFilter"
         >
           <!-- 自定义选项渲染，包含依赖警告 -->
           <template v-slot:option="scope">
@@ -168,11 +170,13 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
               :virtual-scroll-slice-size="999999"
               popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
               v-model="ctx.selectedSound.value.soundValue.source_file_for_sound"
-              :options="ctx.soundFileList.value"
+              :options="filteredSourceFileOptions"
               :option-label="getSourceFileLabel"
               :option-value="(item: any) => item.sha256 + item.name_id"
               :label="ctx.$t('KeyToneAlbum.defineSounds.sourceFile')"
               dense
+              use-input
+              @filter="handleSourceFileFilter"
             />
           </q-card-section>
 
@@ -373,6 +377,25 @@ const isSelectedSoundVolumeDbOutOfRange = computed(() => Math.abs(selectedSoundV
 
 const isMac = computed(() => Platform.is.mac === true);
 
+const soundSearchKeyword = ref('');
+const sourceFileSearchKeyword = ref('');
+
+const filteredSoundOptions = computed(() => {
+  const keyword = soundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.soundList.value;
+  }
+  return ctx.soundList.value.filter((item) => getSoundLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredSourceFileOptions = computed(() => {
+  const keyword = sourceFileSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.soundFileList.value;
+  }
+  return ctx.soundFileList.value.filter((item) => getSourceFileLabel(item).toLowerCase().includes(keyword));
+});
+
 // ============================================================================
 // 辅助函数
 // ============================================================================
@@ -401,6 +424,18 @@ function getSoundLabel(item: any): string {
 function getSourceFileLabel(item: any): string {
   const soundFile = ctx.soundFileList.value.find((sf) => sf.sha256 === item.sha256 && sf.name_id === item.name_id);
   return soundFile ? soundFile.name + soundFile.type : '';
+}
+
+function handleSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    soundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleSourceFileFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    sourceFileSearchKeyword.value = inputValue;
+  });
 }
 
 // ============================================================================

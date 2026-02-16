@@ -91,13 +91,15 @@ ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedS
               :virtual-scroll-slice-size="999999"
               popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
               v-model="ctx.keyDownUnifiedSoundEffectSelect.value"
-              :options="ctx.keyUnifiedSoundEffectOptions.value"
+              :options="filteredDownUnifiedSoundOptions"
               :option-label="ctx.album_options_select_label"
               :option-value="getOptionValue"
               :label="ctx.$t('KeyToneAlbum.linkageEffects.global.setKeyDownSound')"
+              use-input
               use-chips
               :class="['zl-ll']"
               dense
+              @filter="handleDownUnifiedSoundFilter"
               @popup-hide="handleDownPopupHide"
               class="max-w-full"
             >
@@ -125,13 +127,15 @@ ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedS
               :virtual-scroll-slice-size="999999"
               popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
               v-model="ctx.keyUpUnifiedSoundEffectSelect.value"
-              :options="ctx.keyUnifiedSoundEffectOptions.value"
+              :options="filteredUpUnifiedSoundOptions"
               :option-label="ctx.album_options_select_label"
               :option-value="getOptionValue"
               :label="ctx.$t('KeyToneAlbum.linkageEffects.global.setKeyUpSound')"
+              use-input
               use-chips
               :class="['zl-ll']"
               dense
+              @filter="handleUpUnifiedSoundFilter"
               @popup-hide="handleUpPopupHide"
               class="max-w-full"
             >
@@ -251,7 +255,7 @@ ctx.isAnchoringUltimatePerfectionKeySound -> 锚定开关状态 ctx.saveUnifiedS
  * 3. 删除声效时的联动逻辑在父组件的 watch 中处理，避免循环依赖
  */
 
-import { inject, computed } from 'vue';
+import { inject, computed, ref } from 'vue';
 import { useQuasar, Platform } from 'quasar';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
 import DependencyWarning from '../../DependencyWarning.vue';
@@ -265,7 +269,26 @@ const setting_store = useSettingStore();
 // ============================================================================
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 
+const downUnifiedSoundSearchKeyword = ref('');
+const upUnifiedSoundSearchKeyword = ref('');
+
 const isMac = computed(() => Platform.is.mac === true);
+
+const filteredDownUnifiedSoundOptions = computed(() => {
+  const keyword = downUnifiedSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keyUnifiedSoundEffectOptions.value;
+  }
+  return ctx.keyUnifiedSoundEffectOptions.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredUpUnifiedSoundOptions = computed(() => {
+  const keyword = upUnifiedSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keyUnifiedSoundEffectOptions.value;
+  }
+  return ctx.keyUnifiedSoundEffectOptions.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
 
 // ============================================================================
 // 工具函数
@@ -285,6 +308,22 @@ function getOptionValue(item: any) {
   if (item.type === 'key_sounds') {
     return item.value?.keySoundKey;
   }
+}
+
+function getOptionLabel(item: any): string {
+  return String(ctx.album_options_select_label(item) || '');
+}
+
+function handleDownUnifiedSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    downUnifiedSoundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleUpUnifiedSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    upUnifiedSoundSearchKeyword.value = inputValue;
+  });
 }
 
 /**

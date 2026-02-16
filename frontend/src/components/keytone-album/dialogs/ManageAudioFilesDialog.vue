@@ -79,10 +79,12 @@
           :virtual-scroll-slice-size="999999"
           stack-label
           v-model="ctx.selectedSoundFile.value"
-          :options="ctx.soundFileList.value"
-          :option-label="(item: any) => item.name + item.type"
+          :options="filteredSoundFileOptions"
+          :option-label="getSoundFileLabel"
           :label="ctx.$t('KeyToneAlbum.loadAudioFile.selectFileToManage')"
           dense
+          use-input
+          @filter="handleSoundFileFilter"
           popup-content-class="w-[1%] whitespace-normal break-words [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
         >
           <!-- 清除按钮 -->
@@ -150,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, computed } from 'vue';
+import { inject, computed, ref } from 'vue';
 import { useQuasar, Platform } from 'quasar';
 import { SoundFileDelete } from 'src/boot/query/keytonePkg-query';
 import { KEYTONE_ALBUM_CONTEXT_KEY, type KeytoneAlbumContext } from '../types';
@@ -161,6 +163,25 @@ const q = useQuasar();
 const ctx = inject<KeytoneAlbumContext>(KEYTONE_ALBUM_CONTEXT_KEY)!;
 
 const isMac = computed(() => Platform.is.mac === true);
+
+const soundFileSearchKeyword = ref('');
+const filteredSoundFileOptions = computed(() => {
+  const keyword = soundFileSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.soundFileList.value;
+  }
+  return ctx.soundFileList.value.filter((item) => getSoundFileLabel(item).toLowerCase().includes(keyword));
+});
+
+function getSoundFileLabel(item: any): string {
+  return `${item?.name || ''}${item?.type || ''}`;
+}
+
+function handleSoundFileFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    soundFileSearchKeyword.value = inputValue;
+  });
+}
 
 // 清除选择
 function clearSelection() {

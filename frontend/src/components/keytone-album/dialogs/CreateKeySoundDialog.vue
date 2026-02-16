@@ -119,11 +119,12 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   :virtual-scroll-slice-size="999999"
                   v-model="ctx.selectedSoundsForDown.value"
                   popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                  :options="ctx.downSoundList.value"
+                  :options="filteredDownSoundOptions"
                   :option-label="ctx.album_options_select_label"
                   :option-value="getOptionValue"
                   :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                   multiple
+                  use-input
                   use-chips
                   :class="['zl-ll']"
                   dense
@@ -132,6 +133,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                   :error="ctx.playModeForDown.value === 'single' ? ctx.selectedSoundsForDown.value.length > 1 : false"
                   ref="downSoundSelectDom"
+                  @filter="handleDownSoundFilter"
                   @update:model-value="downSoundSelectDom?.hidePopup()"
                 >
                   <template v-slot:option="scope">
@@ -248,11 +250,12 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   :virtual-scroll-slice-size="999999"
                   v-model="ctx.selectedSoundsForUp.value"
                   popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
-                  :options="ctx.upSoundList.value"
+                  :options="filteredUpSoundOptions"
                   :option-label="ctx.album_options_select_label"
                   :option-value="getOptionValue"
                   :label="ctx.$t('KeyToneAlbum.craftKeySounds.selectSounds')"
                   multiple
+                  use-input
                   use-chips
                   :class="['zl-ll']"
                   dense
@@ -261,6 +264,7 @@ ctx.selectedSoundsForUp -> 抬起时选中的声音列表 ctx.playModeForDown/Up
                   :error-message="ctx.$t('KeyToneAlbum.craftKeySounds.error.singleMode')"
                   :error="ctx.playModeForUp.value === 'single' ? ctx.selectedSoundsForUp.value.length > 1 : false"
                   ref="upSoundSelectDom"
+                  @filter="handleUpSoundFilter"
                   @update:model-value="upSoundSelectDom?.hidePopup()"
                 >
                   <template v-slot:option="scope">
@@ -377,6 +381,24 @@ const isMac = computed(() => Platform.is.mac === true);
 // ============================================================================
 const downSoundSelectDom = ref<any>(null);
 const upSoundSelectDom = ref<any>(null);
+const downSoundSearchKeyword = ref('');
+const upSoundSearchKeyword = ref('');
+
+const filteredDownSoundOptions = computed(() => {
+  const keyword = downSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.downSoundList.value;
+  }
+  return ctx.downSoundList.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredUpSoundOptions = computed(() => {
+  const keyword = upSoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.upSoundList.value;
+  }
+  return ctx.upSoundList.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
 
 // ============================================================================
 // 工具函数
@@ -396,6 +418,22 @@ function getOptionValue(item: any) {
   if (item.type === 'key_sounds') {
     return item.value.keySoundKey;
   }
+}
+
+function getOptionLabel(item: any): string {
+  return String(ctx.album_options_select_label(item) || '');
+}
+
+function handleDownSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    downSoundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleUpSoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    upSoundSearchKeyword.value = inputValue;
+  });
 }
 
 // ============================================================================

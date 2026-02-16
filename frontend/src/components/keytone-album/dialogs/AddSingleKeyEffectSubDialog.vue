@@ -155,13 +155,15 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
                       :virtual-scroll-slice-size="999999"
                       popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       v-model="ctx.keyDownSingleKeySoundEffectSelect.value"
-                      :options="ctx.keySingleKeySoundEffectOptions.value"
+                      :options="filteredDownSingleKeySoundOptions"
                       :option-label="ctx.album_options_select_label"
                       :option-value="getOptionValue"
                       :label="ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.setDownSoundEffect')"
+                      use-input
                       use-chips
                       :class="['zl-ll']"
                       dense
+                      @filter="handleDownSingleKeySoundFilter"
                       @popup-hide="handleDownPopupHide"
                       class="max-w-full"
                     >
@@ -190,13 +192,15 @@ ctx.saveSingleKeySoundEffectConfig() -> 保存配置 【关联文件】 - ./Sing
                       :virtual-scroll-slice-size="999999"
                       popup-content-class="w-[50%] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-zinc-200/30 [&::-webkit-scrollbar-thumb]:bg-zinc-900/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-zinc-900/50"
                       v-model="ctx.keyUpSingleKeySoundEffectSelect.value"
-                      :options="ctx.keySingleKeySoundEffectOptions.value"
+                      :options="filteredUpSingleKeySoundOptions"
                       :option-label="ctx.album_options_select_label"
                       :option-value="getOptionValue"
                       :label="ctx.$t('KeyToneAlbum.linkageEffects.single.dialog.setUpSoundEffect')"
+                      use-input
                       use-chips
                       :class="['zl-ll']"
                       dense
+                      @filter="handleUpSingleKeySoundFilter"
                       @popup-hide="handleUpPopupHide"
                       class="max-w-full"
                     >
@@ -339,6 +343,24 @@ const isMac = computed(() => Platform.is.mac === true);
 
 // 选择器引用
 const singleKeysSelectRef = ref<QSelect>();
+const downSingleKeySoundSearchKeyword = ref('');
+const upSingleKeySoundSearchKeyword = ref('');
+
+const filteredDownSingleKeySoundOptions = computed(() => {
+  const keyword = downSingleKeySoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keySingleKeySoundEffectOptions.value;
+  }
+  return ctx.keySingleKeySoundEffectOptions.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
+
+const filteredUpSingleKeySoundOptions = computed(() => {
+  const keyword = upSingleKeySoundSearchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return ctx.keySingleKeySoundEffectOptions.value;
+  }
+  return ctx.keySingleKeySoundEffectOptions.value.filter((item) => getOptionLabel(item).toLowerCase().includes(keyword));
+});
 
 // ============================================================================
 // 工具函数
@@ -354,6 +376,10 @@ function getOptionValue(item: any) {
   if (item.type === 'key_sounds') {
     return item.value.keySoundKey;
   }
+}
+
+function getOptionLabel(item: any): string {
+  return String(ctx.album_options_select_label(item) || '');
 }
 
 function getItemId(opt: any) {
@@ -419,6 +445,18 @@ function handleDownPopupHide() {
   ) {
     ctx.keyUpSingleKeySoundEffectSelect.value = ctx.keyDownSingleKeySoundEffectSelect.value;
   }
+}
+
+function handleDownSingleKeySoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    downSingleKeySoundSearchKeyword.value = inputValue;
+  });
+}
+
+function handleUpSingleKeySoundFilter(inputValue: string, doneFn: (fn: () => void) => void) {
+  doneFn(() => {
+    upSingleKeySoundSearchKeyword.value = inputValue;
+  });
 }
 
 function handleUpPopupHide() {
