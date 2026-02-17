@@ -75,6 +75,7 @@
 
       <q-card-section>
         <q-select
+          class="fix-scrollbar-bug"
           outlined
           :virtual-scroll-slice-size="999999"
           stack-label
@@ -249,5 +250,19 @@ async function handleDelete() {
 // 输入框 placeholder 高度修复
 :deep(.q-placeholder) {
   @apply h-auto;
+}
+
+.fix-scrollbar-bug {
+  /* 解决 q-select 在某些平台上滚动条显示异常的问题 */
+  :deep(.q-field__native) {
+    @apply min-h-[28px!important]; // TIPS: 正确写法
+    // @apply '!min-h-[28px]'; // TIPS: 正确写法
+    // @apply 'min-h-[28px]!'; // TIPS: 正确写法
+    // @apply min-h-[28px]!; // TIPS: 正确写法
+    // @apply '!min-h-7'; // TIPS: 正确写法
+    // @apply 'min-h-7!'; // TIPS: 正确写法
+    // @apply !min-h-7 // TIPS: 这个写法会报错, 要想不报错需要像上面这样两边加上 ‘ 单引号
+    // @apply min-h-7! // TIPS:正确写法
+  }
 }
 </style>

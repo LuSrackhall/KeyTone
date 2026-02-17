@@ -95,6 +95,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
       <!-- 声音选择下拉框 -->
       <q-card-section>
         <q-select
+          class="fix-scrollbar-bug"
           outlined
           stack-label
           :virtual-scroll-slice-size="999999"
@@ -165,6 +166,7 @@ v-model 控制对话框显示 ctx.soundList -> 可选择的声音列表 ctx.sele
           <!-- 源文件选择 -->
           <q-card-section :class="['p-b-1 w-68']">
             <q-select
+              class="fix-scrollbar-bug"
               outlined
               stack-label
               :virtual-scroll-slice-size="999999"
@@ -562,5 +564,12 @@ function handleDelete() {
 //       > 可以在 :global 内部继续使用组件作用域的类名选择器继承的方式, 以避免影响其他组件的同名类选择器
 :global(.edit-sound-dialog-单独影响global .q-dialog__inner--minimized) {
   @apply p-x-2;
+}
+
+.fix-scrollbar-bug {
+  /* 解决 q-select 在某些平台上滚动条显示异常的问题 */
+  :deep(.q-field__native) {
+    @apply min-h-[28px!important]; /* 强制设置最小高度，解决滚动条显示问题 */
+  }
 }
 </style>
