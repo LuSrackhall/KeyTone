@@ -357,7 +357,7 @@
       },
       "pressReleaseControl": {
         "index": "Separate press/release volume",
-        "caption": "Enable to show and apply independent press/release volume settings"
+        "caption": "Enable showing and applying independent press/release volume settings (includes separate press/release volume controls for keyboard and mouse; takes effect without enabling split mode on the main page)"
       },
       "pressReleasePanel": {
         "title": "Press/Release independent volume settings",
