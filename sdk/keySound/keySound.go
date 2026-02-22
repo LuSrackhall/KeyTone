@@ -216,7 +216,7 @@ type Cut struct {
 //
 // Returns:
 //   - void
-func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, isPreviewMode ...bool) {
+func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, keyState string, isPreviewMode ...bool) {
 	// 保证在删除全部活动流期间, 不新增任何播放项
 	if activeStreamsAllDeleteFlag {
 		return
@@ -298,6 +298,8 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, isPrev
 		volume = globalAudioVolumeNormalProcessing(volume)
 		// 分离模式下的键盘/鼠标独立音量叠加（在全局音量基础上再次叠加）
 		volume = splitRouteAudioVolumeNormalProcessing(volume, keycode)
+		// 按下/抬起音量单独控制叠加（默认关闭）
+		volume = pressReleaseAudioVolumeNormalProcessing(volume, keycode, keyState)
 	}
 
 	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
@@ -471,6 +473,109 @@ func splitRouteAudioVolumeNormalProcessing(audioVolume *effects.Volume, keycode 
 		Volume:   volumeValue,
 		Silent:   silentValue,
 	}
+}
+
+// pressReleaseAudioVolumeNormalProcessing 在开启“按下/抬起音量单独控制”时，按事件态叠加独立音量。
+// 叠加顺序在调用链中固定为：全局 -> 分离设备 -> 按下/抬起。
+func pressReleaseAudioVolumeNormalProcessing(audioVolume *effects.Volume, keycode string, keyState string) *effects.Volume {
+	if audioVolume == nil {
+		return audioVolume
+	}
+
+	if keyState != KeyStateDown && keyState != KeyStateUp {
+		return audioVolume
+	}
+
+	isEnabled, ok := config.GetValue("main_home.press_release_audio_volume_processing.is_enabled").(bool)
+	if !ok {
+		isEnabled = config.Main_home___press_release_audio_volume_processing___is_enabled
+		go config.SetValue("main_home.press_release_audio_volume_processing.is_enabled", isEnabled)
+	}
+
+	if !isEnabled {
+		return audioVolume
+	}
+
+	buildLayer := func(streamer beep.Streamer, configKey string, silentKey string, defaultValue float64, defaultSilent bool) *effects.Volume {
+		volumeValue, ok := config.GetValue(configKey).(float64)
+		if !ok {
+			volumeValue = defaultValue
+			go config.SetValue(configKey, defaultValue)
+		}
+
+		if volumeValue > 0 {
+			volumeValue = 0.0
+			go config.SetValue(configKey, 0.0)
+		}
+
+		silentValue, ok := config.GetValue(silentKey).(bool)
+		if !ok {
+			silentValue = defaultSilent
+			go config.SetValue(silentKey, defaultSilent)
+		}
+
+		return &effects.Volume{
+			Streamer: streamer,
+			Base:     1.6,
+			Volume:   volumeValue,
+			Silent:   silentValue,
+		}
+	}
+
+	var globalConfigKey string
+	var globalSilentKey string
+	var globalDefaultValue float64
+	var globalDefaultSilent bool
+	if keyState == KeyStateDown {
+		globalConfigKey = "main_home.press_release_audio_volume_processing.global.down.volume_normal"
+		globalSilentKey = "main_home.press_release_audio_volume_processing.global.down.volume_silent"
+		globalDefaultValue = config.Main_home___press_release_audio_volume_processing___global_down_volume_normal
+		globalDefaultSilent = config.Main_home___press_release_audio_volume_processing___global_down_volume_silent
+	} else {
+		globalConfigKey = "main_home.press_release_audio_volume_processing.global.up.volume_normal"
+		globalSilentKey = "main_home.press_release_audio_volume_processing.global.up.volume_silent"
+		globalDefaultValue = config.Main_home___press_release_audio_volume_processing___global_up_volume_normal
+		globalDefaultSilent = config.Main_home___press_release_audio_volume_processing___global_up_volume_silent
+	}
+
+	layered := buildLayer(audioVolume, globalConfigKey, globalSilentKey, globalDefaultValue, globalDefaultSilent)
+
+	isMouse := strings.HasPrefix(keycode, "-")
+	if strings.TrimSpace(keycode) == "" {
+		return layered
+	}
+
+	var deviceConfigKey string
+	var deviceSilentKey string
+	var deviceDefaultValue float64
+	var deviceDefaultSilent bool
+	if isMouse {
+		if keyState == KeyStateDown {
+			deviceConfigKey = "main_home.press_release_audio_volume_processing.split.mouse.down.volume_normal"
+			deviceSilentKey = "main_home.press_release_audio_volume_processing.split.mouse.down.volume_silent"
+			deviceDefaultValue = config.Main_home___press_release_audio_volume_processing___split_mouse_down_volume_normal
+			deviceDefaultSilent = config.Main_home___press_release_audio_volume_processing___split_mouse_down_volume_silent
+		} else {
+			deviceConfigKey = "main_home.press_release_audio_volume_processing.split.mouse.up.volume_normal"
+			deviceSilentKey = "main_home.press_release_audio_volume_processing.split.mouse.up.volume_silent"
+			deviceDefaultValue = config.Main_home___press_release_audio_volume_processing___split_mouse_up_volume_normal
+			deviceDefaultSilent = config.Main_home___press_release_audio_volume_processing___split_mouse_up_volume_silent
+		}
+	} else {
+		if keyState == KeyStateDown {
+			deviceConfigKey = "main_home.press_release_audio_volume_processing.split.keyboard.down.volume_normal"
+			deviceSilentKey = "main_home.press_release_audio_volume_processing.split.keyboard.down.volume_silent"
+			deviceDefaultValue = config.Main_home___press_release_audio_volume_processing___split_keyboard_down_volume_normal
+			deviceDefaultSilent = config.Main_home___press_release_audio_volume_processing___split_keyboard_down_volume_silent
+		} else {
+			deviceConfigKey = "main_home.press_release_audio_volume_processing.split.keyboard.up.volume_normal"
+			deviceSilentKey = "main_home.press_release_audio_volume_processing.split.keyboard.up.volume_silent"
+			deviceDefaultValue = config.Main_home___press_release_audio_volume_processing___split_keyboard_up_volume_normal
+			deviceDefaultSilent = config.Main_home___press_release_audio_volume_processing___split_keyboard_up_volume_silent
+		}
+	}
+
+	return buildLayer(layered, deviceConfigKey, deviceSilentKey, deviceDefaultValue, deviceDefaultSilent)
 }
 
 func init() {
@@ -656,21 +761,21 @@ func KeySoundHandler(keyState string, keycode string) {
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_down.MP3",
-				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6}, keycode)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6}, keycode, keyState)
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_up.MP3",
-				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6}, keycode)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6}, keycode, keyState)
 			}
 		default:
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_down.MP3",
-				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0}, keycode)
+				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0}, keycode, keyState)
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_up.MP3",
-				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0}, keycode)
+				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0}, keycode, keyState)
 			}
 		}
 
@@ -706,7 +811,7 @@ func KeySoundHandler(keyState string, keycode string) {
 
 			PlayKeySound(&AudioFilePath{
 				Global: audio_file_path,
-			}, nil, keycode)
+			}, nil, keycode, keyState)
 			return
 		}
 
@@ -716,7 +821,7 @@ func KeySoundHandler(keyState string, keycode string) {
 				return
 			}
 
-			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID, keycode)
+			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID, keycode, keyState)
 
 			return
 		}
@@ -764,7 +869,7 @@ func KeySoundHandler(keyState string, keycode string) {
 
 			PlayKeySound(&AudioFilePath{
 				Global: audio_file_path,
-			}, nil, keycode)
+			}, nil, keycode, keyState)
 			return
 		}
 
@@ -774,7 +879,7 @@ func KeySoundHandler(keyState string, keycode string) {
 				return
 			}
 
-			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID, keycode)
+			soundParsePlayWith(configGetter, sound_UUID.(string), audioPkgUUID, keycode, keyState)
 
 			return
 		}
@@ -804,21 +909,21 @@ func KeySoundHandler(keyState string, keycode string) {
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_down.MP3",
-				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6}, keycode)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: 0.6}, keycode, keyState)
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "mouse_test_up.MP3",
-				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6}, keycode)
+				}, &Cut{StartMS: 42, EndMS: 60, Volume: -0.6}, keycode, keyState)
 			}
 		default:
 			if keyState == KeyStateDown {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_down.MP3",
-				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0}, keycode)
+				}, &Cut{StartMS: 32, EndMS: 100, Volume: 0}, keycode, keyState)
 			} else {
 				PlayKeySound(&AudioFilePath{
 					SS: "test_up.MP3",
-				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0}, keycode)
+				}, &Cut{StartMS: 28, EndMS: 100, Volume: 0}, keycode, keyState)
 			}
 		}
 		return
@@ -832,10 +937,10 @@ func KeySoundHandler(keyState string, keycode string) {
 //   - audioPkgUUID: 音频包的UUID
 func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 	// 兼容旧调用：默认不区分键盘/鼠标（仅用于非按键上下文）
-	soundParsePlayWith(audioPackageConfig.GetValue, sound_UUID, audioPkgUUID, "")
+	soundParsePlayWith(audioPackageConfig.GetValue, sound_UUID, audioPkgUUID, "", "")
 }
 
-func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string, keycode string) {
+func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string, keycode string, keyState string) {
 	sha256, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".sha256").(string)
 	if !ok {
 		logger.Error("message", "error: sha256 value is nil or not a string")
@@ -857,7 +962,7 @@ func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string
 	}
 	PlayKeySound(&AudioFilePath{
 		Global: audio_file_path,
-	}, cut, keycode)
+	}, cut, keycode, keyState)
 }
 
 // 键音解析, 获取 实际音频文件的路径 以及 播放参数
@@ -899,12 +1004,12 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 					audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 					PlayKeySound(&AudioFilePath{
 						Global: audio_file_path,
-					}, nil, keycode)
+					}, nil, keycode, keyState)
 					return
 				}
 						if vMap["type"] == "sounds" {
 							sound_UUID := vMap["value"].(string)
-							soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode)
+							soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode, keyState)
 					return
 				}
 						if vMap["type"] == "key_sounds" {
@@ -937,12 +1042,12 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 				PlayKeySound(&AudioFilePath{
 					Global: audio_file_path,
-				}, nil, keycode)
+				}, nil, keycode, keyState)
 				return
 			}
 			if vMap["type"] == "sounds" {
 				sound_UUID := vMap["value"].(string)
-				soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode)
+				soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode, keyState)
 				return
 			}
 			if vMap["type"] == "key_sounds" {
@@ -998,12 +1103,12 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 				PlayKeySound(&AudioFilePath{
 					Global: audio_file_path,
-				}, nil, keycode)
+				}, nil, keycode, keyState)
 				return
 			}
 			if vMap["type"] == "sounds" {
 				sound_UUID := vMap["value"].(string)
-				soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode)
+				soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode, keyState)
 				return
 			}
 			if vMap["type"] == "key_sounds" {

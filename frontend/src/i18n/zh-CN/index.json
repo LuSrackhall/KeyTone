@@ -349,6 +349,30 @@
       },
       "重置": "重置",
       "音量调试滑块": { "index": "音量调试滑块", "caption": "打开后, 会在主页的音量进度条下方, 额外显示音量调试滑块" },
+      "pressReleaseControl": {
+        "index": "按下/抬起音量单独控制",
+        "caption": "开启后展示并启用按下/抬起独立音量设置"
+      },
+      "pressReleasePanel": {
+        "title": "按下/抬起独立音量设置",
+        "caption": "展开后按 全局 → 键盘 → 鼠标 顺序配置按下/抬起音量"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "全局按下/抬起音量",
+        "caption": "统一模式与分离模式均生效，按触发状态叠加"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "全局按下",
+          "reduceScope": "全局按下音量降幅",
+          "debugSlider": "全局按下音量调试滑块"
+        },
+        "up": {
+          "shortLabel": "全局抬起",
+          "reduceScope": "全局抬起音量降幅",
+          "debugSlider": "全局抬起音量调试滑块"
+        }
+      },
       "routingSplit": {
         "index": "键盘/鼠标分离",
         "caption": "开启后可分别为键盘与鼠标设置播放专辑与独立音量"
@@ -371,6 +395,34 @@
           "shortLabel": "鼠标",
           "reduceScope": "鼠标音量降幅",
           "debugSlider": "鼠标音量调试滑块"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "键盘按下/抬起音量",
+          "down": {
+            "shortLabel": "键盘按下",
+            "reduceScope": "键盘按下音量降幅",
+            "debugSlider": "键盘按下音量调试滑块"
+          },
+          "up": {
+            "shortLabel": "键盘抬起",
+            "reduceScope": "键盘抬起音量降幅",
+            "debugSlider": "键盘抬起音量调试滑块"
+          }
+        },
+        "mouse": {
+          "title": "鼠标按下/抬起音量",
+          "down": {
+            "shortLabel": "鼠标按下",
+            "reduceScope": "鼠标按下音量降幅",
+            "debugSlider": "鼠标按下音量调试滑块"
+          },
+          "up": {
+            "shortLabel": "鼠标抬起",
+            "reduceScope": "鼠标抬起音量降幅",
+            "debugSlider": "鼠标抬起音量调试滑块"
+          }
         }
       },
       "mouseFallback": {

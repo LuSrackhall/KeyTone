@@ -355,6 +355,30 @@
         "index": "Volume Debug slider",
         "caption": "Once enabled, an additional volume Debug slider will appear below the volume progress bar on the homepage"
       },
+      "pressReleaseControl": {
+        "index": "Separate press/release volume",
+        "caption": "Enable to show and apply independent press/release volume settings"
+      },
+      "pressReleasePanel": {
+        "title": "Press/Release independent volume settings",
+        "caption": "Expand to configure in order: Global → Keyboard → Mouse"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Global press/release volume",
+        "caption": "Effective in both unified and split routing, layered by event state"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Global Press",
+          "reduceScope": "Global press volume decrease range",
+          "debugSlider": "Global press volume debug slider"
+        },
+        "up": {
+          "shortLabel": "Global Release",
+          "reduceScope": "Global release volume decrease range",
+          "debugSlider": "Global release volume debug slider"
+        }
+      },
       "routingSplit": {
         "index": "Keyboard/Mouse Split",
         "caption": "Enable to configure separate albums and per-device volume"
@@ -377,6 +401,34 @@
           "shortLabel": "Mouse",
           "reduceScope": "Mouse volume decrease range",
           "debugSlider": "Mouse volume debug slider"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Keyboard press/release volume",
+          "down": {
+            "shortLabel": "Keyboard Press",
+            "reduceScope": "Keyboard press volume decrease range",
+            "debugSlider": "Keyboard press volume debug slider"
+          },
+          "up": {
+            "shortLabel": "Keyboard Release",
+            "reduceScope": "Keyboard release volume decrease range",
+            "debugSlider": "Keyboard release volume debug slider"
+          }
+        },
+        "mouse": {
+          "title": "Mouse press/release volume",
+          "down": {
+            "shortLabel": "Mouse Press",
+            "reduceScope": "Mouse press volume decrease range",
+            "debugSlider": "Mouse press volume debug slider"
+          },
+          "up": {
+            "shortLabel": "Mouse Release",
+            "reduceScope": "Mouse release volume decrease range",
+            "debugSlider": "Mouse release volume debug slider"
+          }
         }
       },
       "mouseFallback": {

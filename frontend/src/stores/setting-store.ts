@@ -143,6 +143,53 @@ export const useSettingStore = defineStore('setting', () => {
       volumeSilent: false,
       isOpenVolumeDebugSlider: false,
     },
+    pressReleaseAudioVolumeProcessing: {
+      isEnabled: false,
+      global: {
+        down: {
+          volumeNormal: 0,
+          volumeNormalReduceScope: 5,
+          volumeSilent: false,
+          isOpenVolumeDebugSlider: false,
+        },
+        up: {
+          volumeNormal: 0,
+          volumeNormalReduceScope: 5,
+          volumeSilent: false,
+          isOpenVolumeDebugSlider: false,
+        },
+      },
+      split: {
+        keyboard: {
+          down: {
+            volumeNormal: 0,
+            volumeNormalReduceScope: 5,
+            volumeSilent: false,
+            isOpenVolumeDebugSlider: false,
+          },
+          up: {
+            volumeNormal: 0,
+            volumeNormalReduceScope: 5,
+            volumeSilent: false,
+            isOpenVolumeDebugSlider: false,
+          },
+        },
+        mouse: {
+          down: {
+            volumeNormal: 0,
+            volumeNormalReduceScope: 5,
+            volumeSilent: false,
+            isOpenVolumeDebugSlider: false,
+          },
+          up: {
+            volumeNormal: 0,
+            volumeNormalReduceScope: 5,
+            volumeSilent: false,
+            isOpenVolumeDebugSlider: false,
+          },
+        },
+      },
+    },
     // 分离模式下的键盘/鼠标独立音量设置（仅在 split 模式生效）
     // 说明：这些值会在全局音量处理的基础上叠加，默认值为 0（不增不减）。
     splitAudioVolumeProcessing: {
@@ -270,6 +317,93 @@ export const useSettingStore = defineStore('setting', () => {
         mainHome.value.audioVolumeProcessing.isOpenVolumeDebugSlider =
           settingStorage.main_home.audio_volume_processing.is_open_volume_debug_slider;
       }
+
+      // 按下/抬起音量单独控制设置（默认 false / 0 / 5 / false）
+      const pressReleaseVolumeStorage = settingStorage.main_home?.press_release_audio_volume_processing ?? {};
+
+      if (pressReleaseVolumeStorage.is_enabled !== undefined) {
+        mainHome.value.pressReleaseAudioVolumeProcessing.isEnabled = !!pressReleaseVolumeStorage.is_enabled;
+      } else {
+        mainHome.value.pressReleaseAudioVolumeProcessing.isEnabled = false;
+        StoreSet('main_home.press_release_audio_volume_processing.is_enabled', false);
+      }
+
+      const fillPressReleaseNode = (
+        target: {
+          volumeNormal: number;
+          volumeNormalReduceScope: number;
+          volumeSilent: boolean;
+          isOpenVolumeDebugSlider: boolean;
+        },
+        source:
+          | {
+              volume_normal?: number;
+              volume_normal_reduce_scope?: number;
+              volume_silent?: boolean;
+              is_open_volume_debug_slider?: boolean;
+            }
+          | undefined,
+        pathPrefix: string
+      ) => {
+        if (source?.volume_normal !== undefined) {
+          target.volumeNormal = source.volume_normal;
+        } else {
+          target.volumeNormal = 0;
+          StoreSet(`${pathPrefix}.volume_normal`, 0);
+        }
+
+        if (source?.volume_normal_reduce_scope !== undefined) {
+          target.volumeNormalReduceScope = source.volume_normal_reduce_scope;
+        } else {
+          target.volumeNormalReduceScope = 5;
+          StoreSet(`${pathPrefix}.volume_normal_reduce_scope`, 5);
+        }
+
+        if (source?.is_open_volume_debug_slider !== undefined) {
+          target.isOpenVolumeDebugSlider = source.is_open_volume_debug_slider;
+        } else {
+          target.isOpenVolumeDebugSlider = false;
+          StoreSet(`${pathPrefix}.is_open_volume_debug_slider`, false);
+        }
+
+        if (source?.volume_silent !== undefined) {
+          target.volumeSilent = source.volume_silent;
+        } else {
+          target.volumeSilent = false;
+          StoreSet(`${pathPrefix}.volume_silent`, false);
+        }
+      };
+
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.global.down,
+        pressReleaseVolumeStorage.global?.down,
+        'main_home.press_release_audio_volume_processing.global.down'
+      );
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.global.up,
+        pressReleaseVolumeStorage.global?.up,
+        'main_home.press_release_audio_volume_processing.global.up'
+      );
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.split.keyboard.down,
+        pressReleaseVolumeStorage.split?.keyboard?.down,
+        'main_home.press_release_audio_volume_processing.split.keyboard.down'
+      );
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.split.keyboard.up,
+        pressReleaseVolumeStorage.split?.keyboard?.up,
+        'main_home.press_release_audio_volume_processing.split.keyboard.up'
+      );
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.split.mouse.down,
+        pressReleaseVolumeStorage.split?.mouse?.down,
+        'main_home.press_release_audio_volume_processing.split.mouse.down'
+      );
+      fillPressReleaseNode(
+        mainHome.value.pressReleaseAudioVolumeProcessing.split.mouse.up,
+        pressReleaseVolumeStorage.split?.mouse?.up,
+        'main_home.press_release_audio_volume_processing.split.mouse.up'
+      );
 
       // 分离模式下的键盘/鼠标独立音量设置（默认值为 0 / 5 / false）
       const splitVolumeStorage = settingStorage.main_home?.split_audio_volume_processing ?? {};
@@ -516,6 +650,76 @@ export const useSettingStore = defineStore('setting', () => {
       () => {
         StoreSet('main_home.selected_key_tone_pkg', mainHome.value.selectedKeyTonePkg);
       }
+    );
+
+    watch(
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.isEnabled,
+      () => {
+        StoreSet(
+          'main_home.press_release_audio_volume_processing.is_enabled',
+          mainHome.value.pressReleaseAudioVolumeProcessing.isEnabled
+        );
+      }
+    );
+
+    const watchPressReleaseNode = (
+      nodePathPrefix: string,
+      nodeGetter: () => {
+        volumeNormal: number;
+        volumeNormalReduceScope: number;
+        volumeSilent: boolean;
+        isOpenVolumeDebugSlider: boolean;
+      }
+    ) => {
+      watch(
+        () => nodeGetter().volumeNormal,
+        () => {
+          StoreSet(`${nodePathPrefix}.volume_normal`, nodeGetter().volumeNormal);
+        }
+      );
+      watch(
+        () => nodeGetter().volumeNormalReduceScope,
+        () => {
+          StoreSet(`${nodePathPrefix}.volume_normal_reduce_scope`, nodeGetter().volumeNormalReduceScope);
+        }
+      );
+      watch(
+        () => nodeGetter().isOpenVolumeDebugSlider,
+        () => {
+          StoreSet(`${nodePathPrefix}.is_open_volume_debug_slider`, nodeGetter().isOpenVolumeDebugSlider);
+        }
+      );
+      watch(
+        () => nodeGetter().volumeSilent,
+        () => {
+          StoreSet(`${nodePathPrefix}.volume_silent`, nodeGetter().volumeSilent);
+        }
+      );
+    };
+
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.global.down',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.global.down
+    );
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.global.up',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.global.up
+    );
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.split.keyboard.down',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.split.keyboard.down
+    );
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.split.keyboard.up',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.split.keyboard.up
+    );
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.split.mouse.down',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.split.mouse.down
+    );
+    watchPressReleaseNode(
+      'main_home.press_release_audio_volume_processing.split.mouse.up',
+      () => mainHome.value.pressReleaseAudioVolumeProcessing.split.mouse.up
     );
 
     // 分离模式：键盘音量设置持久化

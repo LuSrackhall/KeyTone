@@ -57,6 +57,7 @@
     </q-item-section>
   </q-item>
 
+
   <!-- =============================
        分离模式音量设置（仅在主页面开启分离时生效）
        =============================
@@ -323,6 +324,124 @@
       <q-toggle v-model="setting_store.playbackRouting.mouseFallbackToKeyboard" />
     </q-item-section>
   </q-item>
+
+  <q-item>
+    <div :class="['ml-6 rounded-full  border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.pressReleaseControl.index') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.pressReleaseControl.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-toggle v-model="setting_store.mainHome.pressReleaseAudioVolumeProcessing.isEnabled" />
+    </q-item-section>
+  </q-item>
+
+  <q-item
+    v-if="setting_store.mainHome.pressReleaseAudioVolumeProcessing.isEnabled"
+    clickable
+    class="rounded-lg border border-zinc-200/60 shadow-sm transition-colors hover:bg-zinc-50/70 active:bg-zinc-50/70"
+    @click="pressReleaseOpen = !pressReleaseOpen"
+  >
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.pressReleasePanel.title') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.pressReleasePanel.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-btn dense round flat :icon="pressReleaseOpen ? 'expand_less' : 'expand_more'" />
+    </q-item-section>
+  </q-item>
+
+  <transition name="split-fade">
+    <div
+      v-if="setting_store.mainHome.pressReleaseAudioVolumeProcessing.isEnabled"
+      v-show="pressReleaseOpen"
+      class="split-volume-content ml-6 mr-4 mt-2 px-2 py-2 rounded-lg bg-zinc-50/70 border border-zinc-200/50 shadow-sm relative z-0"
+    >
+      <template v-for="item in pressReleaseAllItems" :key="`slider-${item.key}`">
+        <q-item>
+          <q-item-section>
+            <div :class="['flex items-center gap-3 pt-3 pb-1 min-h-[52px] relative z-10', 'overflow-visible']">
+              <div class="text-xs text-gray-600 min-w-20">{{ item.shortLabel }}</div>
+              <div :class="['w-56 flex justify-between items-center', 'overflow-visible']">
+                <q-btn dense round flat :icon="volumeIcon(item.node.volumeSilent)" @click="toggleNodeSilent(item.node, nodeLabelValue(item.node))" />
+                <q-slider
+                  :class="['w-[80%]']"
+                  v-model="item.node.volumeNormal"
+                  :max="0"
+                  :min="-nodeMin(item.node)"
+                  :step="0"
+                  label
+                  :label-value="nodeLabelValue(item.node)"
+                  color="light-green"
+                />
+              </div>
+            </div>
+
+            <div v-if="item.node.isOpenVolumeDebugSlider" :class="['flex items-center gap-3 mt-2 pt-4 pb-1 min-h-[56px] relative z-10', 'overflow-visible']">
+              <div class="min-w-20"></div>
+              <div :class="['w-56 flex justify-end items-center', 'overflow-visible']">
+                <q-slider
+                  :class="['w-[80%]']"
+                  v-model="item.node.volumeNormal"
+                  :max="0"
+                  :min="-nodeMin(item.node)"
+                  :step="0"
+                  :markers="nodeMarkersDebug(item.node)"
+                  marker-labels
+                  label
+                  label-always
+                  :label-value="nodeLabelValueDebug(item.node)"
+                  color="light-green"
+                />
+              </div>
+            </div>
+          </q-item-section>
+        </q-item>
+      </template>
+
+      <template v-for="item in pressReleaseAllItems" :key="`reduce-${item.key}`">
+        <q-item :class="['h-15 mb-2']">
+          <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
+          <div :class="['w-[100%] grid']">
+            <div :class="['w-[92%] flex justify-between items-center flex-nowrap gap-[12px]']">
+              <q-input
+                dense
+                hide-bottom-space
+                :class="['w-[66%] h-10.5 ']"
+                v-model.number="item.node.volumeNormalReduceScope"
+                type="number"
+                filled
+                :label="item.reduceScopeLabel"
+                stack-label
+                :rules="[(val: number) => { return val >= 5 && val<100000000 || $t('setting.mainHome.音量降幅.rulesErrorInfo'); }]"
+              />
+
+              <q-btn
+                :class="['min-w-15 min-h-5']"
+                color="primary"
+                size="10px"
+                :label="$t('setting.mainHome.重置')"
+                @click="item.node.volumeNormalReduceScope = 5.0"
+              />
+            </div>
+          </div>
+        </q-item>
+      </template>
+
+      <template v-for="item in pressReleaseAllItems" :key="`debug-${item.key}`">
+        <q-item>
+          <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+          <q-item-section>
+            <q-item-label>{{ item.debugLabel }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle v-model="item.node.isOpenVolumeDebugSlider" />
+          </q-item-section>
+        </q-item>
+      </template>
+    </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -335,8 +454,136 @@ const q = useQuasar();
 const { t } = useI18n();
 const setting_store = useSettingStore();
 
+type VolumeNode = {
+  volumeNormal: number;
+  volumeNormalReduceScope: number;
+  volumeSilent: boolean;
+  isOpenVolumeDebugSlider: boolean;
+};
+
 // 自定义展开状态（替代 q-expansion-item 的内置状态）
 const splitVolumeOpen = ref(false);
+const pressReleaseOpen = ref(false);
+
+const pressReleaseGlobalItems = computed(() => {
+  return [
+    {
+      key: 'global-down',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.global.down,
+      shortLabel: t('setting.mainHome.pressReleaseGlobal.down.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseGlobal.down.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseGlobal.down.debugSlider'),
+    },
+    {
+      key: 'global-up',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.global.up,
+      shortLabel: t('setting.mainHome.pressReleaseGlobal.up.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseGlobal.up.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseGlobal.up.debugSlider'),
+    },
+  ];
+});
+
+const pressReleaseSplitKeyboardItems = computed(() => {
+  return [
+    {
+      key: 'keyboard-down',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.keyboard.down,
+      shortLabel: t('setting.mainHome.pressReleaseSplit.keyboard.down.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseSplit.keyboard.down.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseSplit.keyboard.down.debugSlider'),
+    },
+    {
+      key: 'keyboard-up',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.keyboard.up,
+      shortLabel: t('setting.mainHome.pressReleaseSplit.keyboard.up.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseSplit.keyboard.up.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseSplit.keyboard.up.debugSlider'),
+    },
+  ];
+});
+
+const pressReleaseSplitMouseItems = computed(() => {
+  return [
+    {
+      key: 'mouse-down',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.down,
+      shortLabel: t('setting.mainHome.pressReleaseSplit.mouse.down.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseSplit.mouse.down.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseSplit.mouse.down.debugSlider'),
+    },
+    {
+      key: 'mouse-up',
+      node: setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.up,
+      shortLabel: t('setting.mainHome.pressReleaseSplit.mouse.up.shortLabel'),
+      reduceScopeLabel: t('setting.mainHome.pressReleaseSplit.mouse.up.reduceScope'),
+      debugLabel: t('setting.mainHome.pressReleaseSplit.mouse.up.debugSlider'),
+    },
+  ];
+});
+
+const pressReleaseAllItems = computed(() => {
+  return [
+    ...pressReleaseGlobalItems.value,
+    ...pressReleaseSplitKeyboardItems.value,
+    ...pressReleaseSplitMouseItems.value,
+  ];
+});
+
+const nodeMin = (node: VolumeNode) => {
+  if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {
+    return setting_store.audioVolumeProcessing.volumeAmplify + node.volumeNormalReduceScope;
+  }
+  return node.volumeNormalReduceScope;
+};
+
+const nodeLabelValue = (node: VolumeNode) => {
+  const percentage = ((1 - -node.volumeNormal / nodeMin(node)) * 100)
+    .toFixed(2)
+    .split('.');
+  return percentage[1] === '00' ? percentage[0] + '%' : percentage[0] + '.' + percentage[1] + '%';
+};
+
+const nodeLabelValueDebug = (node: VolumeNode) => {
+  return node.volumeNormal.toFixed(2);
+};
+
+const nodeMarkersDebug = (node: VolumeNode) => {
+  if (setting_store.audioVolumeProcessing.volumeAmplify > 0) {
+    return (setting_store.audioVolumeProcessing.volumeAmplify + node.volumeNormalReduceScope) / 1;
+  }
+  return node.volumeNormalReduceScope / 1;
+};
+
+const volumeIcon = (isSilent: boolean) => {
+  return isSilent ? 'volume_off' : 'volume_up';
+};
+
+const toggleNodeSilent = (node: VolumeNode, labelValue: string) => {
+  if (labelValue === '0%') {
+    q.notify({
+      message: t('Notify.音量0%时无法打开声音'),
+      color: 'warning',
+      position: 'top',
+      timeout: 1200,
+    });
+    return;
+  }
+  node.volumeSilent = !node.volumeSilent;
+};
+
+const keepNodeInMinRange = (node: VolumeNode) => {
+  const min = nodeMin(node);
+  if (-node.volumeNormal > min) {
+    node.volumeNormal = -min;
+  }
+};
+
+const syncNodeSilentFromLabel = (node: VolumeNode) => {
+  setTimeout(() => {
+    node.volumeSilent = nodeLabelValue(node) === '0%';
+  }, 60);
+};
 
 const returnToNormalReduceScope = () => {
   setting_store.mainHome.audioVolumeProcessing.volumeNormalReduceScope = 5.0;
@@ -508,6 +755,30 @@ const toggleMouseSilent = () => {
   setting_store.mainHome.splitAudioVolumeProcessing.mouse.volumeSilent =
     !setting_store.mainHome.splitAudioVolumeProcessing.mouse.volumeSilent;
 };
+
+const watchPressReleaseNode = (nodeGetter: () => VolumeNode) => {
+  watch(
+    () => nodeGetter().volumeNormalReduceScope,
+    () => {
+      keepNodeInMinRange(nodeGetter());
+    },
+    { immediate: true }
+  );
+
+  watch(
+    () => nodeGetter().volumeNormal,
+    () => {
+      syncNodeSilentFromLabel(nodeGetter());
+    }
+  );
+};
+
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.global.down);
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.global.up);
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.keyboard.down);
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.keyboard.up);
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.down);
+watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.up);
 </script>
 
 <style lang="scss" scoped>
