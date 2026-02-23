@@ -428,6 +428,52 @@
       "mouseFallback": {
         "index": "鼠标回退到键盘",
         "caption": "分离模式下，若鼠标专辑缺失则使用键盘专辑。默认关闭：彻底分离"
+      },
+      "randomVolumeControl": {
+        "index": "随机音量(全局)",
+        "caption": "开启后每次播放会在当前实际音量基础上随机衰减（不会放大）",
+        "maxReduceRatio": "随机降幅上限(全局)",
+        "maxReduceRatioRule": "输入值需大于等于0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "随机音量(按下/抬起单独控制)",
+        "caption": "开启后可对按下/抬起及键盘/鼠标场景单独设置随机降幅（若开启全局随机音量设置，生效过程将会与全局随机音量设置叠加）"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "按下/抬起随机音量设置",
+        "caption": "展开后按 全局 → 键盘 → 鼠标 顺序配置；每项开启后才会生效"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "全局按下随机",
+          "maxReduceRatio": "随机降幅上限(全局按下)"
+        },
+        "up": {
+          "shortLabel": "全局抬起随机",
+          "maxReduceRatio": "随机降幅上限(全局抬起)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "键盘按下随机",
+            "maxReduceRatio": "随机降幅上限(键盘按下)"
+          },
+          "up": {
+            "shortLabel": "键盘抬起随机",
+            "maxReduceRatio": "随机降幅上限(键盘抬起)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "鼠标按下随机",
+            "maxReduceRatio": "随机降幅上限(鼠标按下)"
+          },
+          "up": {
+            "shortLabel": "鼠标抬起随机",
+            "maxReduceRatio": "随机降幅上限(鼠标抬起)"
+          }
+        }
       }
     }
   },

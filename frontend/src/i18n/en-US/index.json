@@ -434,6 +434,52 @@
       "mouseFallback": {
         "index": "Mouse fallback to keyboard",
         "caption": "In split mode, use keyboard album when mouse album is missing. Default off: fully separated"
+      },
+      "randomVolumeControl": {
+        "index": "Random Volume (Global)",
+        "caption": "When enabled, each playback applies random attenuation on current effective volume (never amplifies)",
+        "maxReduceRatio": "Max Random Reduction (Global)",
+        "maxReduceRatioRule": "Value must be greater than or equal to 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Random Volume (Press/Release Separate)",
+        "caption": "Enable independent random reduction for press/release and keyboard/mouse scenarios (if global random volume is also enabled, its settings stack during runtime)"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Press/Release random volume settings",
+        "caption": "Expand to configure in order: Global → Keyboard → Mouse; each item takes effect only when enabled"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Global Press Random",
+          "maxReduceRatio": "Max Random Reduction (Global Press)"
+        },
+        "up": {
+          "shortLabel": "Global Release Random",
+          "maxReduceRatio": "Max Random Reduction (Global Release)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Keyboard Press Random",
+            "maxReduceRatio": "Max Random Reduction (Keyboard Press)"
+          },
+          "up": {
+            "shortLabel": "Keyboard Release Random",
+            "maxReduceRatio": "Max Random Reduction (Keyboard Release)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Mouse Press Random",
+            "maxReduceRatio": "Max Random Reduction (Mouse Press)"
+          },
+          "up": {
+            "shortLabel": "Mouse Release Random",
+            "maxReduceRatio": "Max Random Reduction (Mouse Release)"
+          }
+        }
       }
     }
   },

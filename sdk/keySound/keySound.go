@@ -300,6 +300,10 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, keySta
 		volume = splitRouteAudioVolumeNormalProcessing(volume, keycode)
 		// 按下/抬起音量单独控制叠加（默认关闭）
 		volume = pressReleaseAudioVolumeNormalProcessing(volume, keycode, keyState)
+		// 随机音量叠加（默认关闭，且仅做衰减）
+		volume = randomAudioVolumeProcessing(volume)
+		// 按下/抬起随机音量单独控制叠加（默认关闭，可与全局随机音量叠加）
+		volume = pressReleaseRandomAudioVolumeProcessing(volume, keycode, keyState)
 	}
 
 	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
@@ -576,6 +580,157 @@ func pressReleaseAudioVolumeNormalProcessing(audioVolume *effects.Volume, keycod
 	}
 
 	return buildLayer(layered, deviceConfigKey, deviceSilentKey, deviceDefaultValue, deviceDefaultSilent)
+}
+
+// randomAudioVolumeProcessing 在开启“随机音量”时追加随机衰减层。
+// 衰减模型：在当前 volume 体系上减去随机值，deltaVolume = -random(0, maxReduceRatio)。
+// 该模型不限制 maxReduceRatio 上限，但始终只会衰减（不放大）。
+func randomAudioVolumeProcessing(audioVolume *effects.Volume) *effects.Volume {
+	if audioVolume == nil {
+		return audioVolume
+	}
+
+	isEnabled, ok := config.GetValue("main_home.random_volume_processing.is_enabled").(bool)
+	if !ok {
+		isEnabled = config.Main_home___random_volume_processing___is_enabled
+		go config.SetValue("main_home.random_volume_processing.is_enabled", isEnabled)
+	}
+
+	if !isEnabled {
+		return audioVolume
+	}
+
+	maxReduceRatio, ok := config.GetValue("main_home.random_volume_processing.max_reduce_ratio").(float64)
+	if !ok {
+		maxReduceRatio = config.Main_home___random_volume_processing___max_reduce_ratio
+		go config.SetValue("main_home.random_volume_processing.max_reduce_ratio", maxReduceRatio)
+	}
+
+	if maxReduceRatio < 0 {
+		maxReduceRatio = 0
+		go config.SetValue("main_home.random_volume_processing.max_reduce_ratio", 0.0)
+	}
+
+	if maxReduceRatio <= 0 {
+		return audioVolume
+	}
+
+	randomReduce := rand.New(rand.NewSource(time.Now().UnixNano())).Float64() * maxReduceRatio
+	deltaVolume := -randomReduce
+
+	return &effects.Volume{
+		Streamer: audioVolume,
+		Base:     1.6,
+		Volume:   deltaVolume,
+		Silent:   false,
+	}
+}
+
+// pressReleaseRandomAudioVolumeProcessing 在开启“按下/抬起随机音量单独控制”时叠加事件态随机层。
+// 叠加顺序（调用链）为：全局随机层 -> 按下/抬起随机层（若开启）。
+func pressReleaseRandomAudioVolumeProcessing(audioVolume *effects.Volume, keycode string, keyState string) *effects.Volume {
+	if audioVolume == nil {
+		return audioVolume
+	}
+
+	if keyState != KeyStateDown && keyState != KeyStateUp {
+		return audioVolume
+	}
+
+	isEnabled, ok := config.GetValue("main_home.press_release_random_volume_processing.is_enabled").(bool)
+	if !ok {
+		isEnabled = config.Main_home___press_release_random_volume_processing___is_enabled
+		go config.SetValue("main_home.press_release_random_volume_processing.is_enabled", isEnabled)
+	}
+
+	if !isEnabled {
+		return audioVolume
+	}
+
+	buildRandomLayer := func(streamer beep.Streamer, enabledKey string, ratioKey string, defaultEnabled bool, defaultRatio float64) *effects.Volume {
+		nodeEnabled, ok := config.GetValue(enabledKey).(bool)
+		if !ok {
+			nodeEnabled = defaultEnabled
+			go config.SetValue(enabledKey, defaultEnabled)
+		}
+		if !nodeEnabled {
+			return &effects.Volume{Streamer: streamer, Base: 1.6, Volume: 0, Silent: false}
+		}
+
+		maxReduceRatio, ok := config.GetValue(ratioKey).(float64)
+		if !ok {
+			maxReduceRatio = defaultRatio
+			go config.SetValue(ratioKey, defaultRatio)
+		}
+		if maxReduceRatio < 0 {
+			maxReduceRatio = 0
+			go config.SetValue(ratioKey, 0.0)
+		}
+		if maxReduceRatio <= 0 {
+			return &effects.Volume{Streamer: streamer, Base: 1.6, Volume: 0, Silent: false}
+		}
+
+		randomReduce := rand.New(rand.NewSource(time.Now().UnixNano())).Float64() * maxReduceRatio
+		deltaVolume := -randomReduce
+
+		return &effects.Volume{Streamer: streamer, Base: 1.6, Volume: deltaVolume, Silent: false}
+	}
+
+	var globalEnabledKey string
+	var globalRatioKey string
+	var globalDefaultEnabled bool
+	var globalDefaultRatio float64
+	if keyState == KeyStateDown {
+		globalEnabledKey = "main_home.press_release_random_volume_processing.global.down.is_enabled"
+		globalRatioKey = "main_home.press_release_random_volume_processing.global.down.max_reduce_ratio"
+		globalDefaultEnabled = config.Main_home___press_release_random_volume_processing___global_down_is_enabled
+		globalDefaultRatio = config.Main_home___press_release_random_volume_processing___global_down_max_reduce_ratio
+	} else {
+		globalEnabledKey = "main_home.press_release_random_volume_processing.global.up.is_enabled"
+		globalRatioKey = "main_home.press_release_random_volume_processing.global.up.max_reduce_ratio"
+		globalDefaultEnabled = config.Main_home___press_release_random_volume_processing___global_up_is_enabled
+		globalDefaultRatio = config.Main_home___press_release_random_volume_processing___global_up_max_reduce_ratio
+	}
+
+	layered := buildRandomLayer(audioVolume, globalEnabledKey, globalRatioKey, globalDefaultEnabled, globalDefaultRatio)
+
+	if strings.TrimSpace(keycode) == "" {
+		return layered
+	}
+
+	isMouse := strings.HasPrefix(keycode, "-")
+	var deviceEnabledKey string
+	var deviceRatioKey string
+	var deviceDefaultEnabled bool
+	var deviceDefaultRatio float64
+
+	if isMouse {
+		if keyState == KeyStateDown {
+			deviceEnabledKey = "main_home.press_release_random_volume_processing.split.mouse.down.is_enabled"
+			deviceRatioKey = "main_home.press_release_random_volume_processing.split.mouse.down.max_reduce_ratio"
+			deviceDefaultEnabled = config.Main_home___press_release_random_volume_processing___split_mouse_down_is_enabled
+			deviceDefaultRatio = config.Main_home___press_release_random_volume_processing___split_mouse_down_max_reduce_ratio
+		} else {
+			deviceEnabledKey = "main_home.press_release_random_volume_processing.split.mouse.up.is_enabled"
+			deviceRatioKey = "main_home.press_release_random_volume_processing.split.mouse.up.max_reduce_ratio"
+			deviceDefaultEnabled = config.Main_home___press_release_random_volume_processing___split_mouse_up_is_enabled
+			deviceDefaultRatio = config.Main_home___press_release_random_volume_processing___split_mouse_up_max_reduce_ratio
+		}
+	} else {
+		if keyState == KeyStateDown {
+			deviceEnabledKey = "main_home.press_release_random_volume_processing.split.keyboard.down.is_enabled"
+			deviceRatioKey = "main_home.press_release_random_volume_processing.split.keyboard.down.max_reduce_ratio"
+			deviceDefaultEnabled = config.Main_home___press_release_random_volume_processing___split_keyboard_down_is_enabled
+			deviceDefaultRatio = config.Main_home___press_release_random_volume_processing___split_keyboard_down_max_reduce_ratio
+		} else {
+			deviceEnabledKey = "main_home.press_release_random_volume_processing.split.keyboard.up.is_enabled"
+			deviceRatioKey = "main_home.press_release_random_volume_processing.split.keyboard.up.max_reduce_ratio"
+			deviceDefaultEnabled = config.Main_home___press_release_random_volume_processing___split_keyboard_up_is_enabled
+			deviceDefaultRatio = config.Main_home___press_release_random_volume_processing___split_keyboard_up_max_reduce_ratio
+		}
+	}
+
+	return buildRandomLayer(layered, deviceEnabledKey, deviceRatioKey, deviceDefaultEnabled, deviceDefaultRatio)
 }
 
 func init() {

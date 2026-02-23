@@ -190,6 +190,45 @@ export const useSettingStore = defineStore('setting', () => {
         },
       },
     },
+    randomVolumeProcessing: {
+      isEnabled: false,
+      maxReduceRatio: 3,
+    },
+    pressReleaseRandomVolumeProcessing: {
+      isEnabled: false,
+      global: {
+        down: {
+          isEnabled: false,
+          maxReduceRatio: 3,
+        },
+        up: {
+          isEnabled: false,
+          maxReduceRatio: 3,
+        },
+      },
+      split: {
+        keyboard: {
+          down: {
+            isEnabled: false,
+            maxReduceRatio: 3,
+          },
+          up: {
+            isEnabled: false,
+            maxReduceRatio: 3,
+          },
+        },
+        mouse: {
+          down: {
+            isEnabled: false,
+            maxReduceRatio: 3,
+          },
+          up: {
+            isEnabled: false,
+            maxReduceRatio: 3,
+          },
+        },
+      },
+    },
     // 分离模式下的键盘/鼠标独立音量设置（仅在 split 模式生效）
     // 说明：这些值会在全局音量处理的基础上叠加，默认值为 0（不增不减）。
     splitAudioVolumeProcessing: {
@@ -403,6 +442,102 @@ export const useSettingStore = defineStore('setting', () => {
         mainHome.value.pressReleaseAudioVolumeProcessing.split.mouse.up,
         pressReleaseVolumeStorage.split?.mouse?.up,
         'main_home.press_release_audio_volume_processing.split.mouse.up'
+      );
+
+      // 随机音量处理（默认 false / 3）
+      const randomVolumeStorage = settingStorage.main_home?.random_volume_processing ?? {};
+
+      if (randomVolumeStorage.is_enabled !== undefined) {
+        mainHome.value.randomVolumeProcessing.isEnabled = !!randomVolumeStorage.is_enabled;
+      } else {
+        mainHome.value.randomVolumeProcessing.isEnabled = false;
+        StoreSet('main_home.random_volume_processing.is_enabled', false);
+      }
+
+      if (randomVolumeStorage.max_reduce_ratio !== undefined) {
+        const parsedMaxReduceRatio = Number(randomVolumeStorage.max_reduce_ratio);
+        const clampedMaxReduceRatio = Number.isFinite(parsedMaxReduceRatio) ? Math.max(0, parsedMaxReduceRatio) : 3;
+        mainHome.value.randomVolumeProcessing.maxReduceRatio = clampedMaxReduceRatio;
+        if (clampedMaxReduceRatio !== parsedMaxReduceRatio) {
+          StoreSet('main_home.random_volume_processing.max_reduce_ratio', clampedMaxReduceRatio);
+        }
+      } else {
+        mainHome.value.randomVolumeProcessing.maxReduceRatio = 3;
+        StoreSet('main_home.random_volume_processing.max_reduce_ratio', 3);
+      }
+
+      // 按下/抬起随机音量单独控制（默认 false / 每项 false + 3）
+      const pressReleaseRandomVolumeStorage = settingStorage.main_home?.press_release_random_volume_processing ?? {};
+
+      if (pressReleaseRandomVolumeStorage.is_enabled !== undefined) {
+        mainHome.value.pressReleaseRandomVolumeProcessing.isEnabled = !!pressReleaseRandomVolumeStorage.is_enabled;
+      } else {
+        mainHome.value.pressReleaseRandomVolumeProcessing.isEnabled = false;
+        StoreSet('main_home.press_release_random_volume_processing.is_enabled', false);
+      }
+
+      const fillPressReleaseRandomNode = (
+        target: {
+          isEnabled: boolean;
+          maxReduceRatio: number;
+        },
+        source:
+          | {
+              is_enabled?: boolean;
+              max_reduce_ratio?: number;
+            }
+          | undefined,
+        pathPrefix: string
+      ) => {
+        if (source?.is_enabled !== undefined) {
+          target.isEnabled = !!source.is_enabled;
+        } else {
+          target.isEnabled = false;
+          StoreSet(`${pathPrefix}.is_enabled`, false);
+        }
+
+        if (source?.max_reduce_ratio !== undefined) {
+          const parsedMaxReduceRatio = Number(source.max_reduce_ratio);
+          const clampedMaxReduceRatio = Number.isFinite(parsedMaxReduceRatio) ? Math.max(0, parsedMaxReduceRatio) : 3;
+          target.maxReduceRatio = clampedMaxReduceRatio;
+          if (clampedMaxReduceRatio !== parsedMaxReduceRatio) {
+            StoreSet(`${pathPrefix}.max_reduce_ratio`, clampedMaxReduceRatio);
+          }
+        } else {
+          target.maxReduceRatio = 3;
+          StoreSet(`${pathPrefix}.max_reduce_ratio`, 3);
+        }
+      };
+
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.global.down,
+        pressReleaseRandomVolumeStorage.global?.down,
+        'main_home.press_release_random_volume_processing.global.down'
+      );
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.global.up,
+        pressReleaseRandomVolumeStorage.global?.up,
+        'main_home.press_release_random_volume_processing.global.up'
+      );
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.split.keyboard.down,
+        pressReleaseRandomVolumeStorage.split?.keyboard?.down,
+        'main_home.press_release_random_volume_processing.split.keyboard.down'
+      );
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.split.keyboard.up,
+        pressReleaseRandomVolumeStorage.split?.keyboard?.up,
+        'main_home.press_release_random_volume_processing.split.keyboard.up'
+      );
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.split.mouse.down,
+        pressReleaseRandomVolumeStorage.split?.mouse?.down,
+        'main_home.press_release_random_volume_processing.split.mouse.down'
+      );
+      fillPressReleaseRandomNode(
+        mainHome.value.pressReleaseRandomVolumeProcessing.split.mouse.up,
+        pressReleaseRandomVolumeStorage.split?.mouse?.up,
+        'main_home.press_release_random_volume_processing.split.mouse.up'
       );
 
       // 分离模式下的键盘/鼠标独立音量设置（默认值为 0 / 5 / false）
@@ -660,6 +795,88 @@ export const useSettingStore = defineStore('setting', () => {
           mainHome.value.pressReleaseAudioVolumeProcessing.isEnabled
         );
       }
+    );
+
+    watch(
+      () => mainHome.value.randomVolumeProcessing.isEnabled,
+      () => {
+        StoreSet('main_home.random_volume_processing.is_enabled', mainHome.value.randomVolumeProcessing.isEnabled);
+      }
+    );
+
+    watch(
+      () => mainHome.value.randomVolumeProcessing.maxReduceRatio,
+      () => {
+        const parsedValue = Number(mainHome.value.randomVolumeProcessing.maxReduceRatio);
+        const clampedValue = Number.isFinite(parsedValue) ? Math.max(0, parsedValue) : 3;
+        if (clampedValue !== mainHome.value.randomVolumeProcessing.maxReduceRatio) {
+          mainHome.value.randomVolumeProcessing.maxReduceRatio = clampedValue;
+          return;
+        }
+        StoreSet('main_home.random_volume_processing.max_reduce_ratio', clampedValue);
+      }
+    );
+
+    watch(
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.isEnabled,
+      () => {
+        StoreSet(
+          'main_home.press_release_random_volume_processing.is_enabled',
+          mainHome.value.pressReleaseRandomVolumeProcessing.isEnabled
+        );
+      }
+    );
+
+    const watchPressReleaseRandomNode = (
+      nodePathPrefix: string,
+      nodeGetter: () => {
+        isEnabled: boolean;
+        maxReduceRatio: number;
+      }
+    ) => {
+      watch(
+        () => nodeGetter().isEnabled,
+        () => {
+          StoreSet(`${nodePathPrefix}.is_enabled`, nodeGetter().isEnabled);
+        }
+      );
+      watch(
+        () => nodeGetter().maxReduceRatio,
+        () => {
+          const parsedValue = Number(nodeGetter().maxReduceRatio);
+          const clampedValue = Number.isFinite(parsedValue) ? Math.max(0, parsedValue) : 3;
+          if (clampedValue !== nodeGetter().maxReduceRatio) {
+            nodeGetter().maxReduceRatio = clampedValue;
+            return;
+          }
+          StoreSet(`${nodePathPrefix}.max_reduce_ratio`, clampedValue);
+        }
+      );
+    };
+
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.global.down',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.global.down
+    );
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.global.up',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.global.up
+    );
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.split.keyboard.down',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.split.keyboard.down
+    );
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.split.keyboard.up',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.split.keyboard.up
+    );
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.split.mouse.down',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.split.mouse.down
+    );
+    watchPressReleaseRandomNode(
+      'main_home.press_release_random_volume_processing.split.mouse.up',
+      () => mainHome.value.pressReleaseRandomVolumeProcessing.split.mouse.up
     );
 
     const watchPressReleaseNode = (

@@ -442,6 +442,120 @@
       </template>
     </div>
   </transition>
+
+  <q-item>
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.randomVolumeControl.index') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.randomVolumeControl.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-toggle v-model="setting_store.mainHome.randomVolumeProcessing.isEnabled" />
+    </q-item-section>
+  </q-item>
+
+  <q-item v-if="setting_store.mainHome.randomVolumeProcessing.isEnabled" :class="['h-15 mb-2']">
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
+    <div :class="['w-[100%] grid']">
+      <div :class="['w-[92%] flex justify-between items-center flex-nowrap gap-[12px]']">
+        <q-input
+          dense
+          hide-bottom-space
+          :class="['w-[66%] h-10.5 ']"
+          v-model.number="setting_store.mainHome.randomVolumeProcessing.maxReduceRatio"
+          type="number"
+          filled
+          step="0.01"
+          :label="$t('setting.mainHome.randomVolumeControl.maxReduceRatio')"
+          stack-label
+          :rules="[(val: number) => { return val >= 0 || $t('setting.mainHome.randomVolumeControl.maxReduceRatioRule'); }]"
+        />
+
+        <q-btn
+          :class="['min-w-15 min-h-5']"
+          color="primary"
+          size="10px"
+          :label="$t('setting.mainHome.重置')"
+          @click="resetRandomVolumeMaxReduceRatio()"
+        />
+      </div>
+    </div>
+  </q-item>
+
+  <q-item>
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.pressReleaseRandomControl.index') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.pressReleaseRandomControl.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-toggle v-model="setting_store.mainHome.pressReleaseRandomVolumeProcessing.isEnabled" />
+    </q-item-section>
+  </q-item>
+
+  <q-item
+    v-if="setting_store.mainHome.pressReleaseRandomVolumeProcessing.isEnabled"
+    clickable
+    class="rounded-lg border border-zinc-200/60 shadow-sm transition-colors hover:bg-zinc-50/70 active:bg-zinc-50/70"
+    @click="pressReleaseRandomOpen = !pressReleaseRandomOpen"
+  >
+    <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+    <q-item-section>
+      <q-item-label>{{ $t('setting.mainHome.pressReleaseRandomPanel.title') }}</q-item-label>
+      <q-item-label caption>{{ $t('setting.mainHome.pressReleaseRandomPanel.caption') }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-btn dense round flat :icon="pressReleaseRandomOpen ? 'expand_less' : 'expand_more'" />
+    </q-item-section>
+  </q-item>
+
+  <transition name="split-fade">
+    <div
+      v-if="setting_store.mainHome.pressReleaseRandomVolumeProcessing.isEnabled"
+      v-show="pressReleaseRandomOpen"
+      class="split-volume-content ml-6 mr-4 mt-2 px-2 py-2 rounded-lg bg-zinc-50/70 border border-zinc-200/50 shadow-sm relative z-0"
+    >
+      <template v-for="item in pressReleaseRandomAllItems" :key="`random-toggle-${item.key}`">
+        <q-item>
+          <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-6 self-center']"></div>
+          <q-item-section>
+            <q-item-label>{{ item.shortLabel }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle v-model="item.node.isEnabled" />
+          </q-item-section>
+        </q-item>
+
+        <q-item v-if="item.node.isEnabled" :class="['h-15 mb-2']">
+          <div :class="['ml-6 rounded-full border-l-solid border-l-5 mr-6 h-[80%] self-center']"></div>
+          <div :class="['w-[100%] grid']">
+            <div :class="['w-[92%] flex justify-between items-center flex-nowrap gap-[12px]']">
+              <q-input
+                dense
+                hide-bottom-space
+                :class="['w-[66%] h-10.5 ']"
+                v-model.number="item.node.maxReduceRatio"
+                type="number"
+                filled
+                step="0.01"
+                :label="item.maxReduceLabel"
+                stack-label
+                :rules="[(val: number) => { return val >= 0 || $t('setting.mainHome.randomVolumeControl.maxReduceRatioRule'); }]"
+              />
+
+              <q-btn
+                :class="['min-w-15 min-h-5']"
+                color="primary"
+                size="10px"
+                :label="$t('setting.mainHome.重置')"
+                @click="item.node.maxReduceRatio = 3"
+              />
+            </div>
+          </div>
+        </q-item>
+      </template>
+    </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -461,9 +575,15 @@ type VolumeNode = {
   isOpenVolumeDebugSlider: boolean;
 };
 
+type RandomVolumeNode = {
+  isEnabled: boolean;
+  maxReduceRatio: number;
+};
+
 // 自定义展开状态（替代 q-expansion-item 的内置状态）
 const splitVolumeOpen = ref(false);
 const pressReleaseOpen = ref(false);
+const pressReleaseRandomOpen = ref(false);
 
 const pressReleaseGlobalItems = computed(() => {
   return [
@@ -527,6 +647,65 @@ const pressReleaseAllItems = computed(() => {
     ...pressReleaseGlobalItems.value,
     ...pressReleaseSplitKeyboardItems.value,
     ...pressReleaseSplitMouseItems.value,
+  ];
+});
+
+const pressReleaseRandomGlobalItems = computed(() => {
+  return [
+    {
+      key: 'random-global-down',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.global.down,
+      shortLabel: t('setting.mainHome.pressReleaseRandomGlobal.down.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomGlobal.down.maxReduceRatio'),
+    },
+    {
+      key: 'random-global-up',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.global.up,
+      shortLabel: t('setting.mainHome.pressReleaseRandomGlobal.up.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomGlobal.up.maxReduceRatio'),
+    },
+  ];
+});
+
+const pressReleaseRandomSplitKeyboardItems = computed(() => {
+  return [
+    {
+      key: 'random-keyboard-down',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.split.keyboard.down,
+      shortLabel: t('setting.mainHome.pressReleaseRandomSplit.keyboard.down.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomSplit.keyboard.down.maxReduceRatio'),
+    },
+    {
+      key: 'random-keyboard-up',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.split.keyboard.up,
+      shortLabel: t('setting.mainHome.pressReleaseRandomSplit.keyboard.up.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomSplit.keyboard.up.maxReduceRatio'),
+    },
+  ];
+});
+
+const pressReleaseRandomSplitMouseItems = computed(() => {
+  return [
+    {
+      key: 'random-mouse-down',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.split.mouse.down,
+      shortLabel: t('setting.mainHome.pressReleaseRandomSplit.mouse.down.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomSplit.mouse.down.maxReduceRatio'),
+    },
+    {
+      key: 'random-mouse-up',
+      node: setting_store.mainHome.pressReleaseRandomVolumeProcessing.split.mouse.up,
+      shortLabel: t('setting.mainHome.pressReleaseRandomSplit.mouse.up.shortLabel'),
+      maxReduceLabel: t('setting.mainHome.pressReleaseRandomSplit.mouse.up.maxReduceRatio'),
+    },
+  ];
+});
+
+const pressReleaseRandomAllItems = computed(() => {
+  return [
+    ...pressReleaseRandomGlobalItems.value,
+    ...pressReleaseRandomSplitKeyboardItems.value,
+    ...pressReleaseRandomSplitMouseItems.value,
   ];
 });
 
@@ -779,6 +958,10 @@ watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProces
 watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.keyboard.up);
 watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.down);
 watchPressReleaseNode(() => setting_store.mainHome.pressReleaseAudioVolumeProcessing.split.mouse.up);
+
+const resetRandomVolumeMaxReduceRatio = () => {
+  setting_store.mainHome.randomVolumeProcessing.maxReduceRatio = 3;
+};
 </script>
 
 <style lang="scss" scoped>
