@@ -119,7 +119,7 @@ You can obtain **KeyTone** through the following methods:
 The project requires the following development environment:
 
 * Go 1.24.5
-* Node.js 18.x
+* Node.js 20.x
 * Quasar CLI
 
 ### Setup Steps on Windows
