@@ -20,6 +20,34 @@ Click on a question to view the solution.
 > >
 > > If this solution does not work for you, consider submitting an issue on [GitHub Issues](https://github.com/LuSrackhall/KeyTone/issues).
 > :::
+> ::: details Why are the configurations not synced between the Microsoft Store version and the Standard version?
+> > **This behavior is caused by the "File System Virtualization (MSIX Container)" mechanism used by Windows for Store apps. Detailed explanation and solutions are as follows:**
+> >
+> > #### 1. Storage Path Differences
+> > * **Standard Version (Win32):** Reads/Writes directly to the physical path:  
+> >   `C:\Users\<Username>\AppData\Roaming\<Your_Config_Folder>`
+> > * **Microsoft Store Version:** Windows automatically redirects operations to a private container path:  
+> >   `C:\Users\<Username>\AppData\Local\Packages\<Package_Family_Name>\LocalCache\Roaming\<Your_Config_Folder>`
+> >   *(Note: `<Package_Family_Name>` usually consists of the app name and a random string, e.g., `KeyTone_8wekyb3d8bbwe`)*
+> >
+> > #### 2. Why do configs sometimes sync, but other times stay independent?
+> > This depends on your installation sequence (due to the Windows **"Merged View"** mechanism):
+> > * **Standard First:** If you installed the Standard version first, the Store version will "see through" the container and read the existing physical configuration if its own container is empty.
+> > * **Store First:** The Store version creates a new config folder inside its private container. Since the Standard version lacks container access permissions, it cannot "see" these files, resulting in independent configurations.
+> >
+> > #### 3. Uninstallation & Data Retention (Important)
+> > * **Standard Version:** Uninstalling will **NOT** delete the configuration folder in `AppData\Roaming`. Your data remains safe.
+> > * **Microsoft Store Version:** Follows the "Clean Uninstall" principle. Uninstalling the Store app will **permanently destroy** all private data within the `Packages` folder. **Please back up manually before uninstalling, or your data will be lost.**
+> >   *(Note: If the Store version is "seeing through" and using the Standard version's config, uninstalling the Store version will not touch the external physical data.)*
+> >
+> > #### Solution: How to manually migrate configurations?
+> > 1. Ensure the application is completely closed.
+> > 2. Locate the source folder and copy its contents to the target folder:
+> >    * **Standard ➔ Store:** Copy contents from `AppData\Roaming\<Your_Config_Folder>` to the Store version's `LocalCache\Roaming\<Your_Config_Folder>`.
+> >    * **Store ➔ Standard:** Perform the reverse.
+> >
+> > If this solution does not work for you, feel free to submit an issue on [GitHub Issues](https://github.com/LuSrackhall/KeyTone/issues).
+> :::
 > ::: details In macOS, every time the software is opened, an "Accessibility Access" request pop-up appears, and the software functions do not work properly.
 >
 > > **This may be caused by an update to the Apple system, though the exact reason is unclear. The detailed solution is as follows:**
