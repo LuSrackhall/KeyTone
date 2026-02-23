@@ -268,7 +268,6 @@ module.exports = configure(function (/* ctx */) {
             'nsis', // 普通安装包
             {
               target: 'appx',
-              arch: ['x64'],
             },
           ],
         },
