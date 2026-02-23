@@ -139,11 +139,22 @@ jobs:
 
       # ------------------------------------------------------/////////////////////
 
+      - name: Install cgo toolchain (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: bash
+        run: |
+          choco install zig -y
+
       - name: Build Application (Windows arm64)
         if: matrix.os == 'windows-11-arm'
         shell: bash
         run: |
           cd sdk
+          export GOOS=windows
+          export GOARCH=arm64
+          export CGO_ENABLED=1
+          export CC="zig cc -target aarch64-windows-gnu"
+          export CXX="zig c++ -target aarch64-windows-gnu"
           make win
 
       - name: Find the generated installer (Windows arm64)
