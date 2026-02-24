@@ -77,6 +77,14 @@ import type { DependencyIssue } from 'src/utils/dependencyValidator';
 /** 音频源文件信息 */
 export interface SoundFileInfo {
   sha256: string;
+  /**
+   * 音频源别名ID（逻辑引用ID）。
+   *
+   * 兼容说明：
+   * - 历史配置可能是数字字符串（如 "0"、"1"）；
+   * - 新配置将使用 UUID 字符串；
+   * - 前端只按“字符串等值”比较，严禁假设其为数值类型。
+   */
   name_id: string;
   name: string;
   type: string;
@@ -92,6 +100,9 @@ export interface SoundCutParams {
 /** 声音源文件引用 */
 export interface SoundSourceFileRef {
   sha256: string;
+  /**
+   * 见 SoundFileInfo.name_id 注释：该字段可能是历史数字字符串或新的 UUID 字符串。
+   */
   name_id: string;
   type: string;
 }

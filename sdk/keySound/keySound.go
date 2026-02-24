@@ -1095,6 +1095,38 @@ func soundParsePlay(sound_UUID string, audioPkgUUID string) {
 	soundParsePlayWith(audioPackageConfig.GetValue, sound_UUID, audioPkgUUID, "", "")
 }
 
+// audioFileAliasExists 严格校验音频源别名是否存在。
+//
+// 校验维度：
+// 1) `audio_files.<sha256>` 节点存在；
+// 2) 节点内 `type` 与引用的 `fileType` 一致；
+// 3) 节点内 `name.<nameID>` 真实存在。
+//
+// 设计目的：
+// - 彻底避免“只按 sha256+type 就能播放”的隐式回连；
+// - 让运行时播放语义与前端依赖检测语义保持一致（都基于 sha256 + name_id + type 三元组）。
+func audioFileAliasExists(get ConfigGetter, sha256 string, nameID string, fileType string) bool {
+	if strings.TrimSpace(sha256) == "" || strings.TrimSpace(nameID) == "" || strings.TrimSpace(fileType) == "" {
+		return false
+	}
+
+	storedType, ok := getValue(get, "audio_files."+sha256+".type").(string)
+	if !ok || strings.TrimSpace(storedType) == "" || storedType != fileType {
+		return false
+	}
+
+	alias := getValue(get, "audio_files."+sha256+".name."+nameID)
+	if alias == nil {
+		return false
+	}
+
+	if aliasText, ok := alias.(string); ok {
+		return strings.TrimSpace(aliasText) != ""
+	}
+
+	return true
+}
+
 func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string, keycode string, keyState string) {
 	sha256, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".sha256").(string)
 	if !ok {
@@ -1102,9 +1134,26 @@ func soundParsePlayWith(get ConfigGetter, sound_UUID string, audioPkgUUID string
 		return
 	}
 
+	nameID, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".name_id").(string)
+	if !ok {
+		logger.Error("message", "error: name_id value is nil or not a string")
+		return
+	}
+
 	fileType, ok := getValue(get, "sounds."+sound_UUID+".source_file_for_sound"+".type").(string)
 	if !ok {
 		logger.Error("message", "error: file type value is nil or not a string")
+		return
+	}
+
+	// 关键行为：仅当三元引用（sha256 + name_id + type）真实存在时才允许播放。
+	// 这样可确保“删除后重导入同文件”不会自动恢复历史裁剪声音的依赖。
+	if !audioFileAliasExists(get, sha256, nameID, fileType) {
+		logger.Error("message", "error: source_file_for_sound alias missing",
+			"sha256", sha256,
+			"name_id", nameID,
+			"type", fileType,
+		)
 		return
 	}
 
@@ -1155,7 +1204,19 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 				vMap := v.(map[string]interface{})
 				if vMap["type"] == "audio_files" {
 					valueMap := vMap["value"].(map[string]interface{})
-					audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+					sha256, shaOK := valueMap["sha256"].(string)
+					nameID, idOK := valueMap["name_id"].(string)
+					fileType, typeOK := valueMap["type"].(string)
+					if !shaOK || !idOK || !typeOK || !audioFileAliasExists(get, sha256, nameID, fileType) {
+						logger.Error("message", "error: key_sound single audio_files alias missing",
+							"key_sound_uuid", key_sound_UUID,
+							"sha256", valueMap["sha256"],
+							"name_id", valueMap["name_id"],
+							"type", valueMap["type"],
+						)
+						return
+					}
+					audio_file_name := sha256 + fileType
 					audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 					PlayKeySound(&AudioFilePath{
 						Global: audio_file_path,
@@ -1193,7 +1254,19 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 
 			if vMap["type"] == "audio_files" {
 				valueMap := vMap["value"].(map[string]interface{})
-				audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+				sha256, shaOK := valueMap["sha256"].(string)
+				nameID, idOK := valueMap["name_id"].(string)
+				fileType, typeOK := valueMap["type"].(string)
+				if !shaOK || !idOK || !typeOK || !audioFileAliasExists(get, sha256, nameID, fileType) {
+					logger.Error("message", "error: key_sound random audio_files alias missing",
+						"key_sound_uuid", key_sound_UUID,
+						"sha256", valueMap["sha256"],
+						"name_id", valueMap["name_id"],
+						"type", valueMap["type"],
+					)
+					return
+				}
+				audio_file_name := sha256 + fileType
 				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 				PlayKeySound(&AudioFilePath{
 					Global: audio_file_path,
@@ -1254,7 +1327,19 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 			// 根据类型播放音频
 			if vMap["type"] == "audio_files" {
 				valueMap := vMap["value"].(map[string]interface{})
-				audio_file_name := valueMap["sha256"].(string) + valueMap["type"].(string)
+				sha256, shaOK := valueMap["sha256"].(string)
+				nameID, idOK := valueMap["name_id"].(string)
+				fileType, typeOK := valueMap["type"].(string)
+				if !shaOK || !idOK || !typeOK || !audioFileAliasExists(get, sha256, nameID, fileType) {
+					logger.Error("message", "error: key_sound loop audio_files alias missing",
+						"key_sound_uuid", key_sound_UUID,
+						"sha256", valueMap["sha256"],
+						"name_id", valueMap["name_id"],
+						"type", valueMap["type"],
+					)
+					return
+				}
+				audio_file_name := sha256 + fileType
 				audio_file_path := filepath.Join(audioPackageConfig.AudioPackagePath, audioPkgUUID, "audioFiles", audio_file_name)
 				PlayKeySound(&AudioFilePath{
 					Global: audio_file_path,

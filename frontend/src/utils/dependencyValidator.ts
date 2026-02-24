@@ -1,9 +1,9 @@
 /**
  * Dependency validation utility for KeyTone album creation
- * 
+ *
  * This module provides functions to validate dependencies between different components:
  * - Audio source files (音频源文件)
- * - Trimmed/defined sounds (裁剪定义的声音) 
+ * - Trimmed/defined sounds (裁剪定义的声音)
  * - Key sounds (键音/至臻键音/高级键音)
  * - Global bindings (全局绑定)
  * - Single key bindings (单键绑定)
@@ -11,6 +11,7 @@
 
 export interface AudioFile {
   sha256: string;
+  // 兼容历史数字字符串与新UUID字符串，校验逻辑必须保持字符串等值比较。
   name_id: string;
   name: string;
   type: string;
@@ -106,9 +107,7 @@ export class DependencyValidator {
    * Check if an audio file exists by sha256 and name_id
    */
   private audioFileExists(sha256: string, name_id: string): boolean {
-    return this.audioFiles.some(file => 
-      file.sha256 === sha256 && file.name_id === name_id
-    );
+    return this.audioFiles.some((file) => file.sha256 === sha256 && file.name_id === name_id);
   }
 
   /**
@@ -141,7 +140,7 @@ export class DependencyValidator {
     if (typeof soundKey !== 'string') {
       return 'Unknown';
     }
-    
+
     const sound = this.sounds.find(s => s.soundKey === soundKey);
     if (sound && sound.soundValue.name) {
       return sound.soundValue.name;
@@ -162,7 +161,7 @@ export class DependencyValidator {
     if (typeof keySoundKey !== 'string') {
       return 'Unknown';
     }
-    
+
     const keySound = this.keySounds.find(ks => ks.keySoundKey === keySoundKey);
     return keySound ? keySound.keySoundValue.name : keySoundKey.substring(0, 8) + '...';
   }
@@ -175,7 +174,7 @@ export class DependencyValidator {
 
     for (const sound of this.sounds) {
       const sourceFile = sound.soundValue.source_file_for_sound;
-      
+
       if (!this.audioFileExists(sourceFile.sha256, sourceFile.name_id)) {
         issues.push({
           type: 'direct',
@@ -383,7 +382,7 @@ export class DependencyValidator {
   private soundHasIndirectIssues(soundKey: string): boolean {
     const sound = this.sounds.find(s => s.soundKey === soundKey);
     if (!sound) return false;
-    
+
     const sourceFile = sound.soundValue.source_file_for_sound;
     return !this.audioFileExists(sourceFile.sha256, sourceFile.name_id);
   }
@@ -403,7 +402,7 @@ export class DependencyValidator {
 
     // Check all dependencies for indirect issues
     const allDeps = [...keySound.keySoundValue.down.value, ...keySound.keySoundValue.up.value];
-    
+
     for (const dep of allDeps) {
       if (dep.type === 'sounds' && dep.value) {
         // Handle both string and object formats (UI may transform strings to objects)
@@ -424,7 +423,7 @@ export class DependencyValidator {
         }
       }
     }
-    
+
     visited.delete(keySoundKey);
     return { hasIssues, maxDepth };
   }
@@ -445,7 +444,7 @@ export class DependencyValidator {
       if (indirectResult.hasIssues) {
         // Determine severity based on dependency depth
         const severity = indirectResult.maxDepth === 1 ? 'info' : 'low';
-        
+
         issues.push({
           type: 'indirect',
           severity: severity,
@@ -454,9 +453,10 @@ export class DependencyValidator {
           itemName: keySound.keySoundValue.name,
           indirectDepth: indirectResult.maxDepth,
           missingDependencies: [], // Could be expanded to list specific indirect issues
-          message: indirectResult.maxDepth === 1 
-            ? '键音的依赖链路中存在一层间接删除的情况'
-            : '键音的依赖链路中存在多层间接删除的情况'
+          message:
+            indirectResult.maxDepth === 1
+              ? '键音的依赖链路中存在一层间接删除的情况'
+              : '键音的依赖链路中存在多层间接删除的情况',
         });
       }
     }
@@ -524,7 +524,7 @@ export class DependencyValidator {
     if (hasIndirectIssues) {
       // Determine severity based on dependency depth
       const severity = maxDepth === 1 ? 'info' : 'low';
-      
+
       issues.push({
         type: 'indirect',
         severity: severity,
@@ -533,9 +533,14 @@ export class DependencyValidator {
         itemName: bindingType === 'global_binding' ? '全局绑定' : `单键绑定(${bindingId})`,
         indirectDepth: maxDepth,
         missingDependencies: [], // Could be expanded to list specific indirect issues
-        message: bindingType === 'global_binding' 
-          ? (maxDepth === 1 ? '全局绑定的依赖链路中存在一层间接删除的情况' : '全局绑定的依赖链路中存在多层间接删除的情况')
-          : (maxDepth === 1 ? '单键绑定的依赖链路中存在一层间接删除的情况' : '单键绑定的依赖链路中存在多层间接删除的情况')
+        message:
+          bindingType === 'global_binding'
+            ? maxDepth === 1
+              ? '全局绑定的依赖链路中存在一层间接删除的情况'
+              : '全局绑定的依赖链路中存在多层间接删除的情况'
+            : maxDepth === 1
+            ? '单键绑定的依赖链路中存在一层间接删除的情况'
+            : '单键绑定的依赖链路中存在多层间接删除的情况',
       });
     }
 
@@ -598,9 +603,7 @@ export function hasItemDependencyIssues(
   itemId: string,
   issues: DependencyIssue[]
 ): { hasIssues: boolean; criticalCount: number; infoCount: number; lowCount: number } {
-  const itemIssues = issues.filter(issue => 
-    issue.itemType === itemType && issue.itemId === itemId
-  );
+  const itemIssues = issues.filter((issue) => issue.itemType === itemType && issue.itemId === itemId);
 
   const criticalCount = itemIssues.filter(issue => issue.severity === 'critical').length;
   const infoCount = itemIssues.filter(issue => issue.severity === 'info').length;

@@ -31,6 +31,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -42,7 +43,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -139,6 +139,33 @@ func isValidNanoID(id string) bool {
 		}
 	}
 	return true
+}
+
+// generateAudioSourceNameID 生成音频源别名的唯一标识。
+//
+// 设计说明：
+// 1. 我们保留现有字段名 `name_id`（避免前后端接口变更），但将其值从“可复用递增编号”改为“不可复用 UUID 字符串”。
+// 2. 这样可以在“删除后重导入同文件”的场景下，天然避免历史引用被动命中新别名，从根因上消除自动复联。
+// 3. 使用标准库 crypto/rand 生成随机字节，按 UUID v4 规则设置版本/变体位，保证唯一性与可读性。
+func generateAudioSourceNameID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	// UUID v4: 0100
+	b[6] = (b[6] & 0x0f) | 0x40
+	// RFC 4122 variant: 10xx
+	b[8] = (b[8] & 0x3f) | 0x80
+
+	return fmt.Sprintf(
+		"%08x-%04x-%04x-%04x-%012x",
+		b[0:4],
+		b[4:6],
+		b[6:8],
+		b[8:10],
+		b[10:16],
+	), nil
 }
 
 // 验证专辑结构的辅助函数
@@ -779,27 +806,18 @@ func keytonePkgRouters(r *gin.Engine) {
 		// 测试此文件是否已经存在(有些相同的文件, 可能文件名称不同。) 若不存在则获取结果为nil, 可以正常往下走。 若存在则获取结果不为nil, 仅需向后添加文件名即可返回给前端, 无需后续步骤中重复保存相同的文件。(但对于前端用户, 不影响其认为这是两个不同的文件, 因为我们对于名称单独进行了保存)
 		// * 至于文件名称重复的问题, 此处不作处理, 皆由用户自行管理名称, 不只是同一sha256uuid的名字可可重复, 甚至允许用户对不同sha256uuid的音频文件起相同的名字, 皆由用户自由发挥即可。
 		if audioPackageConfig.GetValue("audio_files."+hashString) != nil {
-			count := 0
-			for audioPackageConfig.GetValue("audio_files."+hashString+".name."+strconv.Itoa(count)) != nil {
-				count++
+			// 关键变更：同一 sha256 的重复导入，不再“扫描空位 + 复用旧编号”，而是始终分配新的 UUID name_id。
+			// 这样可确保历史被删除引用不会因重导入而自动复联。
+			nameID, err := generateAudioSourceNameID()
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"message": "error: 生成音频源别名ID失败:" + err.Error(),
+				})
+				return
 			}
-			audioPackageConfig.SetValue("audio_files."+hashString, map[string]any{
-				/**
-				 * filepath.Base(file.Filename)：
-				 *	- 这个函数返回路径中的最后一个元素（文件名）。
-				 *	- 例如，如果 file.Filename 是 "/path/to/myFile.txt"，这个函数会返回 "myFile.txt"。
-				 *	filepath.Ext(file.Filename)：
-				 *	- 这个函数返回文件名的扩展名，包括点号。
-				 *	- 对于 "myFile.txt"，它会返回 ".txt"。
-				 *	strings.TrimSuffix(base, ext)：
-				 *	- 这个函数从第一个参数（base）的末尾移除第二个参数（ext）指定的后缀。
-				 *	- 如果 base 是 "myFile.txt"，ext 是 ".txt"，结果就是 "myFile"。
-				 */
-				"name": map[string]any{
-					strconv.Itoa(count): strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
-				},
-				"type": ext,
-			})
+
+			audioPackageConfig.SetValue("audio_files."+hashString+".name."+nameID, strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)))
+			audioPackageConfig.SetValue("audio_files."+hashString+".type", ext)
 
 			// 因文件已存在与文件系统中, 故无需继续进行真实的文件保存。 这里直接将正确完成的消息返回给前端, 并退出此次请求的处理即可。
 			ctx.JSON(200, gin.H{
@@ -828,29 +846,23 @@ func keytonePkgRouters(r *gin.Engine) {
 			return
 		}
 
-		// 文件如果可以成功保存, 证明这是首次未重复过的文件, 因此 使用"0"作为名字的key值。(这是为了应对用户上传相同音频文件时但不想无辜增大键音包的策略)
+		// 文件如果可以成功保存，说明这是首次导入该 sha256。
+		// 关键变更：首次导入也不再使用 "0"，统一使用 UUID name_id，以彻底消除可复用编号语义。
 		// 文件保存成功后, 将原文件名作为value值(裁掉扩展名,只要文件名字), sha256哈希值文件名作为key值(裁掉扩展名), 存入键音包配置文件中的audioFiles对象中。
 		// 源文件名作为value值, 是因为key值中不允许大写字符出现, 因此不能应对用户对音频名称的复杂设置需求。而且, 它本身也应该是作为value值存储的。
 		// 哈希值作为key值, 也刚好符合sha256哈希值通常用纯小写表示的惯例。至于真实文件后缀或者说文件类型, 则也存储至value中去。
 		// audioPackageConfig.SetValue("audio_files."+hashString+".name", strings.Split(file.Filename, ".")[0])
 		// audioPackageConfig.SetValue("audio_files."+hashString+".type", ext)
-		audioPackageConfig.SetValue("audio_files."+hashString, map[string]any{
-			/**
-			 * filepath.Base(file.Filename)：
-			 *	- 这个函数返回路径中的最后一个元素（文件名）。
-			 *	- 例如，如果 file.Filename 是 "/path/to/myFile.txt"，这个函数会返回 "myFile.txt"。
-			 *	filepath.Ext(file.Filename)：
-			 *	- 这个函数返回文件名的扩展名，包括点号。
-			 *	- 对于 "myFile.txt"，它会返回 ".txt"。
-			 *	strings.TrimSuffix(base, ext)：
-			 *	- 这个函数从第一个参数（base）的末尾移除第二个参数（ext）指定的后缀。
-			 *	- 如果 base 是 "myFile.txt"，ext 是 ".txt"，结果就是 "myFile"。
-			 */
-			"name": map[string]any{
-				"0": strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)), // strings.Split(file.Filename, ".")[0]
-			},
-			"type": ext,
-		})
+		nameID, err := generateAudioSourceNameID()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"message": "error: 生成音频源别名ID失败:" + err.Error(),
+			})
+			return
+		}
+
+		audioPackageConfig.SetValue("audio_files."+hashString+".name."+nameID, strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename)))
+		audioPackageConfig.SetValue("audio_files."+hashString+".type", ext)
 
 		// 全部处理完毕后, 将正确完成的消息返回给前端
 		ctx.JSON(200, gin.H{
