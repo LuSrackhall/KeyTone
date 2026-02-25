@@ -2682,8 +2682,13 @@ async function initWaveSurfer() {
       // 统一由本组件在 timeupdate 中做“轻量跟随滚动”。
       autoScroll: false,
       autoCenter: false,
-      // 关键：不 fillParent，让宽度由 duration*minPxPerSec 决定，确保产生横向溢出。
-      fillParent: false,
+      // 修复：改为 fillParent: true
+      // - 之前设为 false 是为了确保长音频能横向溢出。
+      // - 但短音频（如 0.5s）在低 zoom 下会导致波形宽度 < 容器宽度，出现大量留白，右键选区失效。
+      // - WaveSurfer v7+ 下，fillParent: true 配合 minPxPerSec 能同时满足：
+      //   1. 短音频撑满容器（minPxPerSec < 容器宽/时长）。
+      //   2. 长音频/高 zoom 保持横向溢出（minPxPerSec > 容器宽/时长）。
+      fillParent: true,
       // 外层容器负责滚动，避免嵌套 scrollParent 导致滚动条不出现。
       scrollParent: false,
       minPxPerSec: zoomMinPxPerSec.value,
