@@ -975,18 +975,14 @@ function applyWaveformWidth(instance: WaveSurfer) {
   const hasShadowRenderer = Array.from(host.children).some((el) => (el as HTMLElement).shadowRoot);
   const wrapper = instance.getWrapper() as HTMLElement | null;
 
-  if (hasShadowRenderer) {
-    // 关键：shadow DOM 模式下，getWrapper() 往往对应“shadow host”。
-    // 若设为 target 宽度，会把外层容器也拉长 => 没有 overflow => 无法滚动。
-    if (wrapper) {
-      wrapper.style.width = '100%';
-      wrapper.style.maxWidth = '100%';
-      wrapper.style.minWidth = '0px';
-      wrapper.style.boxSizing = 'border-box';
-    }
-  } else {
-    if (wrapper) wrapper.style.width = `${target}px`;
+  // 修复：在 WaveSurfer v7 中，getWrapper() 返回的是 shadow DOM 内部的 .wrapper，而不是 shadow host。
+  // 我们应该直接同步设置它的宽度为 target，避免异步 fixer 导致的 1 帧延迟（这会导致 regions 插件计算错误并消失）。
+  if (wrapper) {
+    wrapper.style.width = `${target}px`;
+    wrapper.style.minWidth = `${target}px`;
+  }
 
+  if (!hasShadowRenderer) {
     const innerWrapper = (host.querySelector('.wavesurfer-wrapper') as HTMLElement | null) || null;
     if (innerWrapper) innerWrapper.style.width = `${target}px`;
 
