@@ -6,13 +6,13 @@
       "index": "Cài đặt",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Trang album",
+        "keytoneAlbumPageCaption": "Tùy chỉnh cài đặt trang album âm thanh phím",
+        "scrollBehavior": "Cuộn dạng sóng",
+        "scrollBehaviorCaption": "Kiểm soát cách dạng sóng theo đầu phát khi phát",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Dọi thông minh",
+          "paged-jump": "Nhảy trang"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone được phát hành theo giấy phép {license}",
     "privacyPolicy": "Chính sách bảo mật",
     "userAgreement": "Thỏa thuận người dùng",
+    "routing": {
+      "splitLabel": "Phân tách bàn phím/chuột",
+      "keyboardLabel": "Album phát bàn phím",
+      "mouseLabel": "Album phát chuột"
+    },
     "emptyState": {
       "noAlbum": "Chưa có album âm thanh phím",
       "goToAlbumPage": "Đi đến trang album âm thanh phím",
@@ -65,6 +70,10 @@
       "saveAsNew": "Lưu dưới dạng album mới",
       "cancel": "Hủy nhập",
       "confirm": "Xác nhận"
+    },
+    "editorNotice": {
+      "message": "Trang này dành để tạo và chỉnh sửa album. Để không ảnh hưởng đến việc sử dụng bình thường, ứng dụng đã chuyển sang chế độ 'lắng nghe chỉnh sửa'. Tạo album mới hoặc chọn album để chỉnh sửa.",
+      "dismiss": "Không hiển thị lại"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "Thời gian bắt đầu (mili giây)",
       "endTime": "Thời gian kết thúc (mili giây)",
       "volume": "Âm lượng",
+      "volumeDb": "Âm lượng (dB)",
+      "volumeOutOfRange": "Ngoài phạm vi hiển thị (±18 dB)",
       "error": {
         "negativeTime": "Thời gian không thể âm"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "Người dùng có thể cắt và định nghĩa nhiều âm thanh độc lập từ cùng một file nguồn",
         "soundName": "Tên của âm thanh",
         "soundDuration": "Thời gian bắt đầu và kết thúc của âm thanh, tính bằng mili giây. Vì dùng cho phím nên thời gian không nên quá dài.",
-        "volume": "0 là âm lượng gốc, lớn hơn 0 là tăng âm lượng, nhỏ hơn 0 là giảm âm lượng. Bước nhảy thường là 0.1",
-        "volume_1": "Bạn cũng có thể nhập thủ công để điều chỉnh chi tiết hơn, như 0.0001. Vui lòng xem trước sau mỗi lần điều chỉnh âm lượng để tránh âm lượng quá nhỏ hoặc quá lớn.",
-        "previewSound": "Âm thanh dùng cho phím thường rất ngắn, nên âm thanh xem trước sẽ phát đồng thời và không có thanh tiến trình và nút dừng (có thể khởi động lại ứng dụng để dừng nếu cần). Vì vậy hãy tuân theo nguyên tắc định nghĩa âm thanh."
+        "volume": "Âm lượng được hiển thị bằng dB. 0 dB = gốc; lớn hơn 0 tăng, nhỏ hơn 0 giảm.",
+        "volume_1": "Các giá trị ngoài ±18 dB hợp lệ nhưng dạng sóng chỉ hiển thị trong giới hạn. Xem trước sau mỗi thay đổi.",
+        "previewSound": "Âm thanh phím ngắn nên các lần xem trước liên tiếp phát đồng thời không có thanh tiến trình (khởi động lại ứng dụng để dừng nếu cần). Tuân thủ nguyên tắc định nghĩa âm thanh."
+      },
+      "waveformTrimmer": {
+        "play": "Phát",
+        "pause": "Tạm dừng",
+        "stop": "Dừng",
+        "zoom": "Thu phóng",
+        "playScopeAll": "Phát tất cả",
+        "playScopeSelection": "Phát vùng chọn",
+        "noSource": "Chọn file âm thanh để hiển thị dạng sóng.",
+        "loading": "Đang tải dạng sóng...",
+        "unavailableFallback": "Dạng sóng không khả dụng. Đã bật chế độ cắt thủ công.",
+        "current": "Hiện tại: ",
+        "total": "Tổng: ",
+        "selection": "Vùng chọn: ",
+        "hint": "(Nhấp/kéo đầu phát; Ctrl+cuộn để thu phóng; kéo phải để chọn nhanh; kéo đường giữa để điều chỉnh âm lượng (0=giữa))",
+        "hintMac": "(Nhấp/kéo đầu phát; ⌃Control/⌘Command+cuộn hoặc cử chỉ véo trên trackpad để thu phóng; kéo phải để chọn nhanh; kéo đường giữa để điều chỉnh âm lượng (0=giữa))",
+        "volumeOutOfRange": "Ngoài phạm vi hiển thị (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "Thanh trượt điều chỉnh âm lượng",
         "caption": "Khi bật, sẽ hiển thị thêm thanh trượt điều chỉnh âm lượng dưới thanh tiến trình âm lượng trên trang chủ"
+      },
+      "pressReleaseControl": {
+        "index": "Âm lượng nhấn/thả riêng biệt",
+        "caption": "Bật cài đặt âm lượng độc lập cho nhấn/thả (bao gồm bàn phím và chuột)"
+      },
+      "pressReleasePanel": {
+        "title": "Cài đặt âm lượng nhấn/thả",
+        "caption": "Cấu hình theo thứ tự: Toàn cục → Bàn phím → Chuột"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Âm lượng nhấn/thả toàn cục",
+        "caption": "Hoạt động ở cả chế độ hợp nhất và phân tách, áp đặt theo trạng thái sự kiện"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Nhấn toàn cục",
+          "reduceScope": "Giảm âm lượng nhấn toàn cục",
+          "debugSlider": "Thanh trượt âm lượng nhấn toàn cục"
+        },
+        "up": {
+          "shortLabel": "Thả toàn cục",
+          "reduceScope": "Giảm âm lượng thả toàn cục",
+          "debugSlider": "Thanh trượt âm lượng thả toàn cục"
+        }
+      },
+      "routingSplit": {
+        "index": "Phân tách bàn phím/chuột",
+        "caption": "Cho phép cấu hình album và âm lượng riêng biệt cho bàn phím và chuột"
+      },
+      "splitVolumePanel": {
+        "title": "Âm lượng chế độ phân tách",
+        "caption": "Chỉ hoạt động khi chế độ phân tách được bật trên trang chủ (áp đặt lên âm lượng toàn cục)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Âm lượng bàn phím",
+          "caption": "Chỉ ở chế độ phân tách; áp đặt lên âm lượng toàn cục",
+          "shortLabel": "Bàn phím",
+          "reduceScope": "Giảm âm lượng bàn phím",
+          "debugSlider": "Thanh trượt âm lượng bàn phím"
+        },
+        "mouse": {
+          "title": "Âm lượng chuột",
+          "caption": "Chỉ ở chế độ phân tách; áp đặt lên âm lượng toàn cục",
+          "shortLabel": "Chuột",
+          "reduceScope": "Giảm âm lượng chuột",
+          "debugSlider": "Thanh trượt âm lượng chuột"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Âm lượng nhấn/thả bàn phím",
+          "down": {
+            "shortLabel": "Bàn phím nhấn",
+            "reduceScope": "Giảm âm lượng nhấn bàn phím",
+            "debugSlider": "Thanh trượt âm lượng nhấn bàn phím"
+          },
+          "up": {
+            "shortLabel": "Bàn phím thả",
+            "reduceScope": "Giảm âm lượng thả bàn phím",
+            "debugSlider": "Thanh trượt âm lượng thả bàn phím"
+          }
+        },
+        "mouse": {
+          "title": "Âm lượng nhấn/thả chuột",
+          "down": {
+            "shortLabel": "Chuột nhấn",
+            "reduceScope": "Giảm âm lượng nhấn chuột",
+            "debugSlider": "Thanh trượt âm lượng nhấn chuột"
+          },
+          "up": {
+            "shortLabel": "Chuột thả",
+            "reduceScope": "Giảm âm lượng thả chuột",
+            "debugSlider": "Thanh trượt âm lượng thả chuột"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Dự phòng chuột sang bàn phím",
+        "caption": "Chế độ phân tách: dùng album bàn phím khi không có album chuột. Mặc định tắt: phân tách hoàn toàn"
+      },
+      "randomVolumeControl": {
+        "index": "Âm lượng ngẫu nhiên (toàn cục)",
+        "caption": "Mỗi lác phát áp dụng giảm âm lượng ngẫu nhiên (không tăng)",
+        "maxReduceRatio": "Giảm tối đa ngẫu nhiên (toàn cục)",
+        "maxReduceRatioRule": "Giá trị phải >= 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Âm lượng ngẫu nhiên (nhấn/thả riêng biệt)",
+        "caption": "Cho phép cấu hình giảm ngẫu nhiên riêng cho từng tình huống"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Âm lượng ngẫu nhiên nhấn/thả",
+        "caption": "Cấu hình theo thứ tự: Toàn cục → Bàn phím → Chuột; mỗi phần tử chỉ áp dụng khi được bật"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Nhấn toàn cục ngẫu nhiên",
+          "maxReduceRatio": "Giảm tối đa (nhấn toàn cục)"
+        },
+        "up": {
+          "shortLabel": "Thả toàn cục ngẫu nhiên",
+          "maxReduceRatio": "Giảm tối đa (thả toàn cục)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Bàn phím nhấn ngẫu nhiên",
+            "maxReduceRatio": "Giảm tối đa (bàn phím nhấn)"
+          },
+          "up": {
+            "shortLabel": "Bàn phím thả ngẫu nhiên",
+            "maxReduceRatio": "Giảm tối đa (bàn phím thả)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Chuột nhấn ngẫu nhiên",
+            "maxReduceRatio": "Giảm tối đa (chuột nhấn)"
+          },
+          "up": {
+            "shortLabel": "Chuột thả ngẫu nhiên",
+            "maxReduceRatio": "Giảm tối đa (chuột thả)"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "Thoát",
       "mute": "Tắt tiếng",
       "unmute": "Bật tiếng"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "Hủy",
+      "continue": "Tiếp tục",
+      "back": "Quay lại"
+    },
+    "confirmSignature": {
+      "title": "Cần chữ ký?",
+      "description": "Album này chưa có chữ ký. Thêm vào khi xuất này?",
+      "needSignature": "Thêm chữ ký",
+      "noSignature": "Không có chữ ký"
+    },
+    "authRequire": {
+      "title": "Cần ủy quyền cho tác phẩm phái sinh?",
+      "description": "Bạn có muốn người khác phải xin ủy quyền trước khi tạo tác phẩm phái sinh không?",
+      "recommend": "Không ủy quyền (phân phối rộng hơn)",
+      "yes": "Yêu cầu ủy quyền",
+      "no": "Không yêu cầu ủy quyền"
+    },
+    "authImpact": {
+      "title": "Tác động của ủy quyền",
+      "message": "Khi bật ủy quyền, người khác không thể xuất không có phép, nhưng dùng cục bộ thì tự do. Thông tin tác giả luôn được bao gồm. Tiếp tục?",
+      "confirm": "Hiểu rồi, tiếp tục"
+    },
+    "contact": {
+      "title": "Thông tin liên lạc cho ủy quyền",
+      "description": "Nhập email hợp lệ và tùy chọn liên lạc khác.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Nhập email",
+      "emailRequired": "Vui lòng nhập email hợp lệ",
+      "emailInvalid": "Xuất hiện có vẻ không hợp lệ",
+      "additionalLabel": "Liên lạc khác (tùy chọn)",
+      "additionalPlaceholder": "Mạng xã hội, website...",
+      "hint": "Thông tin liên lạc sẽ được lưu cùng chữ ký"
+    },
+    "optionalContact": {
+      "title": "Để lại liên lạc (tùy chọn)",
+      "description": "Bạn có thể để lại thông tin liên lạc. Bước này là tùy chọn.",
+      "hint": "Thông tin liên lạc sẽ được lưu cùng chữ ký",
+      "skip": "Bỏ qua",
+      "continue": "Lưu và tiếp tục"
+    },
+    "policyDialog": {
+      "title": "Chính sách chữ ký",
+      "noSignatureTitle": "Thiết lập chính sách chữ ký",
+      "description": "Xác nhận cài đặt chữ ký và ủy quyền cho album này",
+      "requireSignature": "Yêu cầu chữ ký",
+      "noSignature": "Không chữ ký",
+      "requireSignatureHint": "Thêm chữ ký để xác nhận tác giả (chỉ có thể khi xuất lần đầu)",
+      "noSignatureHint": "Xuất không có chữ ký (chỉ lần đầu; các thay đổi sau sẽ cần chữ ký)",
+      "authRequired": "Tác phẩm phái sinh cần ủy quyền từ tác giả ký",
+      "authRequiredHint": "Sau khi bật, người khác phải xin ủy quyền trước khi xuất lại. Không thể hoàn tác.",
+      "tipsTitle": "Gợi ý",
+      "tips": "• Album chưa có chữ ký có thể được ký khi xuất lần đầu\n• Sau khi ký tất cả thay đổi đều cần chữ ký\n• Với ủy quyền, người khác không thể xuất không có phép",
+      "cancel": "Hủy",
+      "continue": "Tiếp tục"
+    },
+    "test": {
+      "title": "🧪 Môi trường kiểm thử luồng xuất",
+      "description": "Cấu hình kịch bản kiểm thử giao diện và logic luồng xuất.",
+      "albumState": "Cấu hình trạng thái album",
+      "hasSignature": "Album hiện tại có chữ ký",
+      "hasSignatureHint": "Chỉ ra album có chữ ký. Nếu không hộp thoại xác nhận sẽ xuất hiện.",
+      "requireAuth": "Tác giả gốc yêu cầu ủy quyền cho tác phẩm phái sinh",
+      "requireAuthHint": "Chỉ hợp lệ khi album có chữ ký. Hiển thị hộp thoại kiểm soát ủy quyền.",
+      "currentState": "Trạng thái cấu hình hiện tại",
+      "flowExplain": "📋 Giải thích luồng và các hộp thoại",
+      "openDialog": "Mở cài đặt kiểm thử",
+      "apply": "Áp dụng cấu hình",
+      "close": "Đóng"
+    },
+    "authGateDialog": {
+      "title": "Cần ủy quyền",
+      "description": "Bạn cần ủy quyền từ tác giả để xuất album này",
+      "authorContact": "Liên lạc tác giả",
+      "email": "Email",
+      "additionalContact": "Liên lạc khác",
+      "noContact": "Không có thông tin liên lạc",
+      "contactHint": "Liên hệ tác giả qua các kênh sau",
+      "copy": "Sao chép",
+      "importAuthFile": "Nhập file ủy quyền",
+      "importHint": "Nhập file ủy quyền của tác giả để tiếp tục",
+      "selectFile": "Chọn file ủy quyền",
+      "fileSelected": "Đã chọn",
+      "importButton": "Nhập",
+      "help": "Cách lấy ủy quyền?",
+      "continue": "Tiếp tục",
+      "cancel": "Hủy",
+      "importSuccess": "Ủy quyền thành công",
+      "importSuccessMessage": "File ủy quyền đã nhập. Bây giờ bạn có thể xuất với chữ ký này.",
+      "importFailed": "Xác minh file ủy quyền thất bại. Kiểm tra lại file."
+    },
+    "pickerDialog": {
+      "title": "Chọn chữ ký",
+      "description": "Chọn chữ ký cho lần xuất này",
+      "search": "Tìm chữ ký...",
+      "noResults": "Không tìm thấy chữ ký",
+      "emptyState": "Không có chữ ký",
+      "createSignature": "Tạo chữ ký",
+      "importAuth": "Nhập ủy quyền",
+      "authRequest": "Yêu cầu ủy quyền",
+      "createHint": "Tạo chữ ký mới",
+      "selectHint": "Chọn chữ ký",
+      "noImage": "Không có ảnh",
+      "noIntro": "Không có giới thiệu",
+      "originalAuthor": "Tác giả gốc",
+      "contributor": "Người đóng góp",
+      "unauthorized": "Chưa ủy quyền",
+      "confirm": "Xác nhận",
+      "cancel": "Hủy"
+    },
+    "authRequestDialog": {
+      "title": "Yêu cầu ủy quyền",
+      "step1Title": "Chọn chữ ký",
+      "step1Description": "Chọn chữ ký chưa ủy quyền để yêu cầu ủy quyền xuất",
+      "step2Title": "Xuất yêu cầu",
+      "step2Description": "Xem liên lạc tác giả gốc và xuất file yêu cầu",
+      "step3Title": "Hoàn tất",
+      "selectedSignature": "Chữ ký đã chọn",
+      "qualificationFingerprint": "Dấu vân tư cách",
+      "copySuccess": "Sao chép {label} vào clipboard",
+      "copyFailed": "Sao chép thất bại",
+      "authorContact": "Liên lạc tác giả gốc",
+      "email": "Email",
+      "additionalContact": "Liên lạc khác",
+      "noContact": "Không có liên lạc",
+      "copy": "Sao chép",
+      "instructions": "Hướng dẫn",
+      "instructionTip": "Khuyến nghị liên hệ tác giả gốc trước để xác nhận.",
+      "instruction1": "Nhấn 'Xuất yêu cầu' để tải file (.ktauthreq)",
+      "instruction2": "Gửi file cho tác giả gốc qua liên lạc ở trên",
+      "instruction3": "Sau khi nhận file ủy quyền (.ktauth), nhập vào luồng xuất",
+      "noSignatures": "Không có chữ ký. Tạo chữ ký trước.",
+      "noUnauthorizedSignatures": "Tất cả chữ ký đều được ủy quyền. Dùng cái hiện có hoặc tạo mới.",
+      "createSignature": "Tạo chữ ký",
+      "noIntro": "Không có giới thiệu",
+      "next": "Tiếp theo",
+      "back": "Quay lại",
+      "exportRequest": "Xuất yêu cầu",
+      "cancel": "Hủy",
+      "done": "Hoàn tất",
+      "exportSuccess": "File yêu cầu đã xuất",
+      "exportSuccessHint": "Gửi file cho tác giả gốc và chờ file ủy quyền",
+      "exportFailed": "Xuất yêu cầu thất bại",
+      "missingParams": "Thiếu các tham số cần thiết"
+    },
+    "signatureInfoDialog": {
+      "title": "Thông tin chữ ký album",
+      "noSignature": "Album này chưa có chữ ký",
+      "noSignatureHint": "Thêm chữ ký khi xuất để xác nhận tác giả",
+      "originalAuthor": "Tác giả gốc",
+      "requireAuth": "Yêu cầu ủy quyền khi xuất",
+      "noAuthRequired": "Không yêu cầu ủy quyền",
+      "noName": "(Không tên)",
+      "noIntro": "(Không giới thiệu)",
+      "qualificationFingerprint": "Dấu vân tư cách",
+      "contactSection": "Liên lạc",
+      "email": "Email",
+      "noEmail": "(Chưa thiết lập)",
+      "additionalContact": "Liên lạc bổ sung",
+      "authStatus": "Trạng thái ủy quyền",
+      "requireAuthorization": "Yêu cầu ủy quyền",
+      "noAuthorization": "Không yêu cầu",
+      "authorizedCount": "{count} chữ ký được ủy quyền",
+      "authUUID": "UUID ủy quyền",
+      "noAuthUUID": "(Chưa thiết lập)",
+      "latestExporterFingerprint": "Dấu vân người xuất gần nhất",
+      "noLatestExporter": "(Chưa thiết lập)",
+      "authorizedList": "Chữ ký được ủy quyền",
+      "directExportAuthor": "Tác giả xuất trực tiếp",
+      "latestExporter": "Người xuất gần nhất",
+      "contributorAuthors": "Tác giả đóng góp",
+      "signatureStats": "Thống kê chữ ký",
+      "totalSignatures": "{count} chữ ký tổng cộng",
+      "originalAuthorCount": "1 tác giả gốc",
+      "contributorCount": "{count} người đóng góp",
+      "close": "Đóng",
+      "retry": "Thử lại",
+      "copySuccess": "Sao chép {label} vào clipboard",
+      "copyFailed": "Sao chép thất bại"
+    },
+    "signatureUpdateConfirm": {
+      "title": "Xác nhận cập nhật chữ ký",
+      "message": "Chữ ký được chọn khác với album. Cập nhật chi tiết (mô tả, ảnh)?",
+      "update": "Cập nhật",
+      "noUpdate": "Không cập nhật"
+    },
+    "notify": {
+      "contactCopied": "Liên lạc đã sao chép",
+      "authFileImported": "File ủy quyền đã nhập"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "Quản lý chữ ký",
+      "create": "Tạo chữ ký",
+      "import": "Nhập chữ ký",
+      "authGrant": "Xử lý ủy quyền",
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "export": "Xuất",
+      "loadError": "Tải chữ ký thất bại",
+      "retry": "Thử lại",
+      "emptyState": "Không có chữ ký",
+      "createFirst": "Tạo chữ ký đầu tiên",
+      "noImage": "Không có ảnh danh thiếp",
+      "noImageHint": "Chữ ký này không có ảnh danh thiếp",
+      "noImagePreviewTip": "Chữ ký này không có ảnh danh thiếp"
+    },
+    "authGrant": {
+      "title": "Xử lý ủy quyền",
+      "step1Description": "Nhập file yêu cầu ủy quyền (.ktauthreq)",
+      "step2Description": "Xem xét yêu cầu và quyết định",
+      "selectFile": "Chọn file yêu cầu",
+      "fileImported": "Nhập file thành công",
+      "importButton": "Nhập",
+      "parseError": "Không thể phân tích file yêu cầu",
+      "noPermission": "Không có quyền xử lý yêu cầu này. Kiểm tra xem bạn có chữ ký tương ứng không.",
+      "albumId": "ID album (hash)",
+      "requester": "Người yêu cầu",
+      "requesterFingerprint": "Dấu vân người yêu cầu",
+      "yourSignature": "Chữ ký của bạn",
+      "noMatchingSignature": "Không tìm thấy chữ ký phù hợp",
+      "selectSignature": "Chọn chữ ký để ủy quyền",
+      "qualificationFingerprint": "Dấu vân tư cách",
+      "copySuccess": "Sao chép {label} vào clipboard",
+      "copyFailed": "Sao chép thất bại",
+      "warning": "Sau khi ủy quyền, người yêu cầu có thể xuất album với chữ ký của họ. Bạn tin tưởng họ không?",
+      "approve": "Ủy quyền và xuất",
+      "cancel": "Hủy",
+      "back": "Quay lại",
+      "next": "Tiếp theo",
+      "done": "Hoàn tất",
+      "exportSuccess": "Xuất file ủy quyền thành công",
+      "exportSuccessHint": "Gửi file (.ktauth) cho người yêu cầu",
+      "exportFailed": "Xuất file ủy quyền thất bại"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Dấu vân",
+      "fingerprintTitle": "Dấu vân tư cách",
+      "fingerprintCopied": "Dấu vân tư cách đã sao chép"
+    },
+    "form": {
+      "createTitle": "Tạo chữ ký",
+      "editTitle": "Chỉnh sửa chữ ký",
+      "editWarning": "Sau khi chỉnh sửa, các album có chữ ký này phải xuất lại để cập nhật.",
+      "name": "Tên chữ ký",
+      "nameHint": "1-50 ký tự",
+      "nameRequired": "Vui lòng nhập tên chữ ký",
+      "nameTooLong": "Tên không quá 50 ký tự",
+      "intro": "Giới thiệu bản thân",
+      "introHint": "Tối đa 500 ký tự (tùy chọn)",
+      "introTooLong": "Giới thiệu không quá 500 ký tự",
+      "cardImage": "Ảnh danh thiếp",
+      "cardImageFileName": "Danh thiếp chữ ký",
+      "selectImage": "Chọn ảnh",
+      "imageHint": "Hỗ trợ PNG, JPEG, WebP, GIF và các định dạng khác",
+      "clickToPreview": "Nhấp để xem trước",
+      "cancel": "Hủy",
+      "create": "Tạo",
+      "update": "Cập nhật",
+      "close": "Đóng"
+    },
+    "delete": {
+      "confirmTitle": "Xác nhận xóa",
+      "confirm": "Xóa chữ ký này"
+    },
+    "export": {
+      "comingSoon": "Chức năng xuất sắp ra mắt",
+      "confirmTitle": "Xác nhận xuất chữ ký",
+      "confirmMessage": "⚠️ Cảnh báo bảo mật",
+      "confirmWarning": "Lưu file chữ ký an toàn và không chia sẻ!",
+      "confirmDetail": "Ai có file có thể nhập và dùng chữ ký của bạn. Lưu ở chỗ an toàn.",
+      "confirmRisks": "Rủi ro:",
+      "riskItem1": "• Không chia sẻ file chữ ký",
+      "riskItem2": "• Không tải lên mạng công khai",
+      "riskItem3": "• Sao lưu để tránh mất",
+      "confirmButton": "Hiểu rủi ro, tiếp tục xuất",
+      "cancelButton": "Hủy"
+    },
+    "import": {
+      "title": "Nhập chữ ký",
+      "selectFile": "Chọn file .ktsign",
+      "fileHint": "Chọn file chữ ký KeyTone (.ktsign)",
+      "import": "Nhập",
+      "conflictTitle": "Chữ ký đã tồn tại",
+      "conflictMessage": "Chữ ký \"{name}\" đã tồn tại. Ghi đè lên?"
+    },
+    "select": {
+      "title": "Chọn chữ ký",
+      "description": "Chọn chữ ký để xác nhận tác giả album",
+      "emptyState": "Không có chữ ký khả dụng",
+      "createSignature": "Đi tạo chữ ký",
+      "noIntro": "Không giới thiệu",
+      "noSignature": "Không chữ ký",
+      "confirm": "Xác nhận"
+    },
+    "notify": {
+      "createSuccess": "Tạo chữ ký thành công",
+      "createFailed": "Tạo chữ ký thất bại",
+      "updateSuccess": "Cập nhật chữ ký thành công",
+      "updateFailed": "Cập nhật chữ ký thất bại",
+      "deleteSuccess": "Xóa chữ ký thành công",
+      "deleteFailed": "Xóa chữ ký thất bại",
+      "exportSuccess": "Xuất chữ ký thành công",
+      "exportFailed": "Xuất chữ ký thất bại",
+      "importSuccess": "Nhập chữ ký thành công",
+      "importFailed": "Nhập chữ ký thất bại",
+      "loadFailed": "Tải chữ ký thất bại",
+      "imageReadFailed": "Đọc ảnh thất bại",
+      "invalidFileFormat": "Định dạng file không hợp lệ",
+      "unexpectedError": "Xảy ra lỗi không mong muốn",
+      "noChanges": "Không phát hiện thay đổi"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Tác giả gốc",
+      "directExportAuthor": "Tác giả xuất trực tiếp",
+      "sameAuthor": "Tác giả gốc / Xuất trực tiếp",
+      "viewDetails": "Nhấp để xem chi tiết"
     }
   }
 }

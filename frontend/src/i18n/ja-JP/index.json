@@ -6,13 +6,13 @@
       "index": "設定",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "アルバムページ関連",
+        "keytoneAlbumPageCaption": "キーサウンドアルバムページの機能をカスタマイズ",
+        "scrollBehavior": "波形スクロール動作",
+        "scrollBehaviorCaption": "再生中に波形が再生ヘッドに追随する方法を制御",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "スマートエッジプッシュ",
+          "paged-jump": "ページジャンプ"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyToneは{license}のもとで公開されています",
     "privacyPolicy": "プライバシーポリシー",
     "userAgreement": "利用規約",
+    "routing": {
+      "splitLabel": "キーボード/マウス分離",
+      "keyboardLabel": "キーボード再生アルバム",
+      "mouseLabel": "マウス再生アルバム"
+    },
     "emptyState": {
       "noAlbum": "キーサウンドアルバムがありません",
       "goToAlbumPage": "キーサウンドアルバムページへ",
@@ -65,6 +70,10 @@
       "saveAsNew": "新しいアルバムとして保存",
       "cancel": "インポートをキャンセル",
       "confirm": "確認"
+    },
+    "editorNotice": {
+      "message": "このページは制作・編集用です。メインページの通常使用に影響しないよう、一時的に「編集試聴モード」に切り替えました。新しいアルバムを作成するか、編集するアルバムを選択してください。",
+      "dismiss": "次回から表示しない"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "開始時間（ミリ秒）",
       "endTime": "終了時間（ミリ秒）",
       "volume": "音量",
+      "volumeDb": "音量（dB）",
+      "volumeOutOfRange": "表示範囲外（±18 dB）",
       "error": {
         "negativeTime": "時間は負の値にできません"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "同じソースファイルから複数の独立したサウンドを切り取って定義できます",
         "soundName": "サウンドの名前",
         "soundDuration": "サウンドの開始時間と終了時間（ミリ秒単位）。キーボード用なので、長すぎないようにしてください。",
-        "volume": "0は元の音量、0より大きい値は音量を上げ、0より小さい値は音量を下げます。一般的なステップは0.1です",
-        "volume_1": "もちろん、手動で入力して0.0001などのより細かい調整も可能です。音量調整後は必ずプレビューして効果を確認し、音量が小さすぎたり大きすぎたりしないようにしてください。",
-        "previewSound": "キー用のサウンドは通常短いため、連続プレビューのサウンドは同時に再生され、プログレスバーや停止ボタンは提供されません（必要な場合はアプリを再起動して停止できます）。したがって、サウンド定義の原則に従ってください。"
+        "volume": "音量はdBで表示されます。0 dBが元の音量、し0超えで増加、0未満で低下します。",
+        "volume_1": "±18 dBを超える値を入力しても設定は有効ですが、波形は境界までしか表示されません。変更のたびにプレビューで確認してください。",
+        "previewSound": "キー用のサウンドは通常非常に短く、連続プレビューは同時再生され、進行バーや停止ボタンは小備されません（必要な場合はアプリを再起動して停止してください）。サウンド定義の原則に従ってください。"
+      },
+      "waveformTrimmer": {
+        "play": "再生",
+        "pause": "一時停止",
+        "stop": "停止",
+        "zoom": "ズーム",
+        "playScopeAll": "全体再生",
+        "playScopeSelection": "選択範囲再生",
+        "noSource": "波形を表示するにはオーディオソースファイルを選択してください。",
+        "loading": "波形読み込み中...",
+        "unavailableFallback": "波形が利用できません。手動トリミングに切り替えました。",
+        "current": "現在：",
+        "total": "合計：",
+        "selection": "選択：",
+        "hint": "（再生ヘッドをクリック/ドラッグ可；Ctrl+ホイールでズーム；右ドラッグでクイック選択；中央線をドラッグで音量調整（0が中央））",
+        "hintMac": "（再生ヘッドをクリック/ドラッグ可；⌃Control/⌘Command+ホイールまたはトラックパッドピンチでズーム；右ドラッグでクイック選択；中央線をドラッグで音量調整（0が中央））",
+        "volumeOutOfRange": "表示範囲外（±18 dB）"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "音量デバッグスライダー",
         "caption": "有効にすると、メインページの音量プログレスバーの下に音量デバッグスライダーが追加表示されます"
+      },
+      "pressReleaseControl": {
+        "index": "キー押下/離し音量の個別制御",
+        "caption": "有効にすると押下/離しの独立した音量設定が表示・有効化されます（キーボードとマウスの個別設定を含む、分離モード不要）"
+      },
+      "pressReleasePanel": {
+        "title": "押下/離し独立音量設定",
+        "caption": "展開後は 全体 → キーボード → マウス の順に押下/離し音量を設定"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "全体の押下/離し音量",
+        "caption": "統一モードと分離モードの両方で有効、イベント状態を重ねて適用"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "全体押下",
+          "reduceScope": "全体押下音量減衰",
+          "debugSlider": "全体押下音量デバッグスライダー"
+        },
+        "up": {
+          "shortLabel": "全体離し",
+          "reduceScope": "全体離し音量減衰",
+          "debugSlider": "全体離し音量デバッグスライダー"
+        }
+      },
+      "routingSplit": {
+        "index": "キーボード/マウス分離",
+        "caption": "有効にするとキーボードとマウスで別々のアルバムと個別音量を設定できます"
+      },
+      "splitVolumePanel": {
+        "title": "分離モード音量",
+        "caption": "メインページで分離が有効な場合のみ有効（全体音量と重ねて適用）"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "キーボード音量",
+          "caption": "分離モード時のみ有効、全体音量に重ねて適用",
+          "shortLabel": "キーボード",
+          "reduceScope": "キーボード音量減衰",
+          "debugSlider": "キーボード音量デバッグスライダー"
+        },
+        "mouse": {
+          "title": "マウス音量",
+          "caption": "分離モード時のみ有効、全体音量に重ねて適用",
+          "shortLabel": "マウス",
+          "reduceScope": "マウス音量減衰",
+          "debugSlider": "マウス音量デバッグスライダー"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "キーボード押下/離し音量",
+          "down": {
+            "shortLabel": "キーボード押下",
+            "reduceScope": "キーボード押下音量減衰",
+            "debugSlider": "キーボード押下音量デバッグスライダー"
+          },
+          "up": {
+            "shortLabel": "キーボード離し",
+            "reduceScope": "キーボード離し音量減衰",
+            "debugSlider": "キーボード離し音量デバッグスライダー"
+          }
+        },
+        "mouse": {
+          "title": "マウス押下/離し音量",
+          "down": {
+            "shortLabel": "マウス押下",
+            "reduceScope": "マウス押下音量減衰",
+            "debugSlider": "マウス押下音量デバッグスライダー"
+          },
+          "up": {
+            "shortLabel": "マウス離し",
+            "reduceScope": "マウス離し音量減衰",
+            "debugSlider": "マウス離し音量デバッグスライダー"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "マウスをキーボードへフォールバック",
+        "caption": "分離モードでマウスアルバムがない場合はキーボードアルバムを使用。デフォルト無効：完全分離"
+      },
+      "randomVolumeControl": {
+        "index": "ランダム音量（全体）",
+        "caption": "有効にすると再生ごとに実効音量に対してランダムな減衰が適用されます（増幅なし）",
+        "maxReduceRatio": "最大ランダム減衰（全体）",
+        "maxReduceRatioRule": "値は0以上である必要があります"
+      },
+      "pressReleaseRandomControl": {
+        "index": "ランダム音量（押下/離し個別制御）",
+        "caption": "押下/離しおよびキーボード/マウスのシナリオごとに個別のランダム減衰を設定できます（全体ランダム音量が有効な場合は重ねて適用）"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "押下/離しランダム音量設定",
+        "caption": "展開後は 全体 → キーボード → マウス の順に設定；各項目は有効にした場合のみ適用"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "全体押下ランダム",
+          "maxReduceRatio": "最大ランダム減衰（全体押下）"
+        },
+        "up": {
+          "shortLabel": "全体離しランダム",
+          "maxReduceRatio": "最大ランダム減衰（全体離し）"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "キーボード押下ランダム",
+            "maxReduceRatio": "最大ランダム減衰（キーボード押下）"
+          },
+          "up": {
+            "shortLabel": "キーボード離しランダム",
+            "maxReduceRatio": "最大ランダム減衰（キーボード離し）"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "マウス押下ランダム",
+            "maxReduceRatio": "最大ランダム減衰（マウス押下）"
+          },
+          "up": {
+            "shortLabel": "マウス離しランダム",
+            "maxReduceRatio": "最大ランダム減衰（マウス離し）"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "終了",
       "mute": "ミュート",
       "unmute": "ミュート解除"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "キャンセル",
+      "continue": "続ける",
+      "back": "戻る"
+    },
+    "confirmSignature": {
+      "title": "署名が必要ですか",
+      "description": "このアルバムにはまだ署名の痕跡がありません。今回のエクスポートに署名を追加するか選択してください。",
+      "needSignature": "署名が必要",
+      "noSignature": "署名不要"
+    },
+    "authRequire": {
+      "title": "二次創作に承認が必要ですか",
+      "description": "他の人が二次創作を行う際に、事前に作者の承認を取得することを要求しますか？",
+      "recommend": "推奨：承認不要（共有に有利）",
+      "yes": "承認が必要",
+      "no": "承認不要"
+    },
+    "authImpact": {
+      "title": "承認有効化の影響",
+      "message": "「二次創作に承認が必要」を有効にすると、未承認ではエクスポートできませんが、ローカル使用や個人編集は制限されません。無効でも作者情報はエクスポートされます。続けますか？",
+      "confirm": "了解して続ける"
+    },
+    "contact": {
+      "title": "承認連絡先の入力",
+      "description": "有効なメールアドレスを入力し、必要に応じて他の連絡先を追加してください。",
+      "emailLabel": "メール",
+      "emailPlaceholder": "メールアドレスを入力",
+      "emailRequired": "有効なメールアドレスを入力してください",
+      "emailInvalid": "メールアドレスの形式が正しくありません",
+      "additionalLabel": "その他の連絡先（任意）",
+      "additionalPlaceholder": "SNS、公式サイトなどを追加できます",
+      "hint": "これらの連絡先は署名と共に保存され、承認申請者が参照できます"
+    },
+    "optionalContact": {
+      "title": "連絡先を残す（任意）",
+      "description": "連絡先を残すことで他の人から連絡を受けられます。このステップは任意でスキップできます。",
+      "hint": "連絡先は署名と共に保存されます",
+      "skip": "スキップ",
+      "continue": "保存して続ける"
+    },
+    "policyDialog": {
+      "title": "署名ポリシーと要件",
+      "noSignatureTitle": "署名ポリシーの設定",
+      "description": "このアルバムの署名および承認要件の処理方法を確認してください",
+      "requireSignature": "署名が必要",
+      "noSignature": "署名不要",
+      "requireSignatureHint": "作者を識別するために署名を追加（初回エクスポートのみ選択可）",
+      "noSignatureHint": "署名なしでエクスポート（初回のみ選択可、以降の変更は署名が必要）",
+      "authRequired": "二次創作には現在の署名作者の承認が必要",
+      "authRequiredHint": "有効にすると、他の人はこのアルバムを再エクスポートする前に承認が必要です。この選択は変更できません。",
+      "tipsTitle": "ヒント",
+      "tips": "• 署名のないアルバムの初回エクスポートでは署名を追加するか選択できます\n• 署名を追加すると、以降の変更にはすべて署名が必要になります\n• 承認を有効にすると、承認なしでは他の人がエクスポートできません",
+      "cancel": "キャンセル",
+      "continue": "続ける"
+    },
+    "test": {
+      "title": "🧪 エクスポートフローテスト環境",
+      "description": "テストシナリオを設定してエクスポートフローのUIとインタラクションロジックを検証します。",
+      "albumState": "アルバム状態設定",
+      "hasSignature": "現在のアルバムは署名済み",
+      "hasSignatureHint": "このアルバムに署名の痕跡があることを示します。ない場合は署名確認ダイアログが表示されます。",
+      "requireAuth": "元作者が二次創作に承認を要求",
+      "requireAuthHint": "署名済みの場合のみ有効。承認ゲートダイアログが表示されます。",
+      "currentState": "現在の設定状態",
+      "flowExplain": "📋 フロー説明と対応ダイアログ",
+      "openDialog": "テスト環境設定を開く",
+      "apply": "設定を適用",
+      "close": "閉じる"
+    },
+    "authGateDialog": {
+      "title": "承認が必要です",
+      "description": "このアルバムをエクスポートする前に作者の承認が必要です",
+      "authorContact": "作者の連絡先",
+      "email": "メール",
+      "additionalContact": "代替連絡先",
+      "noContact": "連絡先が提供されていません",
+      "contactHint": "以下の方法で作者に連絡して承認を取得してください",
+      "copy": "コピー",
+      "importAuthFile": "承認ファイルのインポート",
+      "importHint": "続行するには作者の承認ファイルをインポートしてください",
+      "selectFile": "承認ファイルを選択",
+      "fileSelected": "選択済み",
+      "importButton": "インポート",
+      "help": "承認の取得方法は？",
+      "continue": "続ける",
+      "cancel": "キャンセル",
+      "importSuccess": "承認成功",
+      "importSuccessMessage": "承認ファイルのインポートに成功しました。この署名でアルバムをエクスポートできます。",
+      "importFailed": "承認ファイルの検証に失敗しました。ファイルが正しいか確認してください"
+    },
+    "pickerDialog": {
+      "title": "署名を選択",
+      "description": "今回のエクスポートに使用する署名を選択してください",
+      "search": "署名を検索...",
+      "noResults": "一致する署名が見つかりません",
+      "emptyState": "署名がありません",
+      "createSignature": "署名を作成",
+      "importAuth": "承認をインポート",
+      "authRequest": "承認を申請",
+      "createHint": "クリックして新しい署名を作成",
+      "selectHint": "クリックして署名を選択",
+      "noImage": "画像なし",
+      "noIntro": "紹介なし",
+      "originalAuthor": "原作者",
+      "contributor": "貢献者",
+      "unauthorized": "未承認",
+      "confirm": "確認",
+      "cancel": "キャンセル"
+    },
+    "authRequestDialog": {
+      "title": "承認申請",
+      "step1Title": "署名を選択",
+      "step1Description": "未承認の署名を選択し、このアルバムのエクスポート承認を申請します",
+      "step2Title": "申請をエクスポート",
+      "step2Description": "元作者の連絡先を確認し、承認申請ファイルをエクスポートします",
+      "step3Title": "完了",
+      "selectedSignature": "選択済み署名",
+      "qualificationFingerprint": "資格指紋",
+      "copySuccess": "{label}をクリップボードにコピーしました",
+      "copyFailed": "コピーに失敗しました",
+      "authorContact": "元作者の連絡先",
+      "email": "メール",
+      "additionalContact": "代替連絡先",
+      "noContact": "連絡先が提供されていません",
+      "copy": "コピー",
+      "instructions": "操作手順",
+      "instructionTip": "先に元作者に連絡して意向を確認することをお勧めします。",
+      "instruction1": "「申請をエクスポート」をクリックして承認申請ファイル（.ktauthreq）をダウンロード",
+      "instruction2": "上記の連絡先から元作者に申請ファイルを送信",
+      "instruction3": "元作者から承認ファイル（.ktauth）を受け取ったら、エクスポートフローでインポートしてください",
+      "noSignatures": "利用可能な署名がありません。まず署名を作成してください",
+      "noUnauthorizedSignatures": "すべての署名は承認済みです。既存の署名を使用するか、新しい署名を作成して再申請してください",
+      "createSignature": "署名を作成",
+      "noIntro": "紹介なし",
+      "next": "次へ",
+      "back": "前へ",
+      "exportRequest": "申請をエクスポート",
+      "cancel": "キャンセル",
+      "done": "完了",
+      "exportSuccess": "承認申請ファイルをエクスポートしました",
+      "exportSuccessHint": "ファイルを元作者に送信し、承認ファイルをお待ちください",
+      "exportFailed": "承認申請のエクスポートに失敗しました",
+      "missingParams": "必要なパラメータが不足しています"
+    },
+    "signatureInfoDialog": {
+      "title": "アルバム署名情報",
+      "noSignature": "このアルバムにはまだ署名が含まれていません",
+      "noSignatureHint": "エクスポート時に署名を追加して作者を識別できます",
+      "originalAuthor": "原作者",
+      "requireAuth": "承認が必要",
+      "noAuthRequired": "承認不要",
+      "noName": "（名前なし）",
+      "noIntro": "（紹介なし）",
+      "qualificationFingerprint": "資格指紋",
+      "contactSection": "連絡先",
+      "email": "メール",
+      "noEmail": "（未設定）",
+      "additionalContact": "代替連絡先",
+      "authStatus": "承認状態",
+      "requireAuthorization": "承認が必要",
+      "noAuthorization": "承認不要",
+      "authorizedCount": "{count}件の署名を承認済み",
+      "authUUID": "承認UUID",
+      "noAuthUUID": "（未設定）",
+      "latestExporterFingerprint": "最近のエクスポーター資格指紋",
+      "noLatestExporter": "（未設定）",
+      "authorizedList": "承認済み署名リスト",
+      "directExportAuthor": "直接エクスポート作者",
+      "latestExporter": "最近のエクスポーター",
+      "contributorAuthors": "歴代貢献作者",
+      "signatureStats": "署名統計",
+      "totalSignatures": "合計 {count} 件の署名",
+      "originalAuthorCount": "原作者1名",
+      "contributorCount": "貢献者 {count} 名",
+      "close": "閉じる",
+      "retry": "再試行",
+      "copySuccess": "{label}をクリップボードにコピーしました",
+      "copyFailed": "コピーに失敗しました"
+    },
+    "signatureUpdateConfirm": {
+      "title": "署名更新の確認",
+      "message": "選択した署名はアルバム内の既存署名と変更があります。署名情報（紹介、画像）を更新しますか？",
+      "update": "更新",
+      "noUpdate": "更新しない"
+    },
+    "notify": {
+      "contactCopied": "連絡先をコピーしました",
+      "authFileImported": "承認ファイルをインポートしました"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "署名管理",
+      "create": "署名を作成",
+      "import": "署名をインポート",
+      "authGrant": "承認受理",
+      "edit": "編集",
+      "delete": "削除",
+      "export": "エクスポート",
+      "loadError": "署名の読み込みに失敗しました",
+      "retry": "再試行",
+      "emptyState": "署名がありません",
+      "createFirst": "最初の署名を作成",
+      "noImage": "名刺画像なし",
+      "noImageHint": "この署名には名刺が提供されていません",
+      "noImagePreviewTip": "この署名には名刺が提供されていません"
+    },
+    "authGrant": {
+      "title": "承認受理",
+      "step1Description": "他の人の承認申請ファイル（.ktauthreq）をインポート",
+      "step2Description": "申請を確認して承認するか決定",
+      "selectFile": "承認申請ファイルを選択",
+      "fileImported": "ファイルのインポートに成功しました",
+      "importButton": "インポート",
+      "parseError": "承認申請ファイルの解析に失敗しました",
+      "noPermission": "この申請を受理する権限がありません。署名リストに対応する署名があることを確認してください。",
+      "albumId": "アルバムID（ハッシュ）",
+      "requester": "申請者",
+      "requesterFingerprint": "申請者の資格指紋",
+      "yourSignature": "あなたの署名",
+      "noMatchingSignature": "署名リストに一致する署名が見つかりません",
+      "selectSignature": "承認に使用する署名を選択",
+      "qualificationFingerprint": "資格指紋",
+      "copySuccess": "{label}をクリップボードにコピーしました",
+      "copyFailed": "コピーに失敗しました",
+      "warning": "承認すると、申請者は自分の署名でアルバムをエクスポートできるようになります。申請者を信頼していることを確認してください。",
+      "approve": "承認してエクスポート",
+      "cancel": "キャンセル",
+      "back": "前へ",
+      "next": "次へ",
+      "done": "完了",
+      "exportSuccess": "承認ファイルのエクスポートに成功しました",
+      "exportSuccessHint": "承認ファイル（.ktauth）を申請者に送信してください",
+      "exportFailed": "承認ファイルのエクスポートに失敗しました"
+    },
+    "contextMenu": {
+      "viewFingerprint": "指紋",
+      "fingerprintTitle": "資格指紋",
+      "fingerprintCopied": "資格指紋をクリップボードにコピーしました"
+    },
+    "form": {
+      "createTitle": "署名を作成",
+      "editTitle": "署名を編集",
+      "editWarning": "署名を編集した後、既にこの署名が付いたアルバムの署名を更新する場合は、対象のアルバムを再エクスポートする必要があります。",
+      "name": "署名名",
+      "nameHint": "1〜50文字",
+      "nameRequired": "署名名を入力してください",
+      "nameTooLong": "署名名は50文字以内で入力してください",
+      "intro": "自己紹介",
+      "introHint": "最大500文字（任意）",
+      "introTooLong": "自己紹介は500文字以内で入力してください",
+      "cardImage": "名刺画像",
+      "cardImageFileName": "署名カード",
+      "selectImage": "画像を選択",
+      "imageHint": "PNG、JPEG、WebP、GIFなどの画像形式をサポート",
+      "clickToPreview": "クリックしてプレビュー",
+      "cancel": "キャンセル",
+      "create": "作成",
+      "update": "更新",
+      "close": "閉じる"
+    },
+    "delete": {
+      "confirmTitle": "削除の確認",
+      "confirm": "この署名を削除"
+    },
+    "export": {
+      "comingSoon": "エクスポート機能は近日公開",
+      "confirmTitle": "署名エクスポートの確認",
+      "confirmMessage": "⚠️ セキュリティ警告",
+      "confirmWarning": "署名ファイルを安全に保管し、他の人に送らないでください！",
+      "confirmDetail": "署名ファイルを持つ人は誰でもインポートしてあなたの署名を使用できます。安全な場所に保管してください。",
+      "confirmRisks": "リスク：",
+      "riskItem1": "• 署名ファイルを他の人と共有しないでください",
+      "riskItem2": "• 署名ファイルを公開ネットワークにアップロードしないでください",
+      "riskItem3": "• 紛失を防ぐために署名ファイルをバックアップしてください",
+      "confirmButton": "リスクを了解してエクスポートを続ける",
+      "cancelButton": "キャンセル"
+    },
+    "import": {
+      "title": "署名をインポート",
+      "selectFile": ".ktsignファイルを選択",
+      "fileHint": "KeyTone署名ファイル（.ktsign）を選択してください",
+      "import": "インポート",
+      "conflictTitle": "署名がすでに存在します",
+      "conflictMessage": "署名「{name}」がすでに存在します。上書きしますか？"
+    },
+    "select": {
+      "title": "署名を選択",
+      "description": "アルバムの作者を識別するための署名を選択してください",
+      "emptyState": "署名がありません",
+      "createSignature": "署名を作成する",
+      "noIntro": "紹介なし",
+      "noSignature": "署名を追加しない",
+      "confirm": "確認"
+    },
+    "notify": {
+      "createSuccess": "署名の作成に成功しました",
+      "createFailed": "署名の作成に失敗しました",
+      "updateSuccess": "署名の更新に成功しました",
+      "updateFailed": "署名の更新に失敗しました",
+      "deleteSuccess": "署名の削除に成功しました",
+      "deleteFailed": "署名の削除に失敗しました",
+      "exportSuccess": "署名のエクスポートに成功しました",
+      "exportFailed": "署名のエクスポートに失敗しました",
+      "importSuccess": "署名のインポートに成功しました",
+      "importFailed": "署名のインポートに失敗しました",
+      "loadFailed": "署名の読み込みに失敗しました",
+      "imageReadFailed": "画像の読み込みに失敗しました",
+      "invalidFileFormat": "無効なファイル形式です",
+      "unexpectedError": "予期しないエラーが発生しました",
+      "noChanges": "変更が検出されませんでした"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "原作者",
+      "directExportAuthor": "直接エクスポート作者",
+      "sameAuthor": "原作者 / 直接エクスポート作者",
+      "viewDetails": "クリックして詳細を表示"
     }
   }
 }

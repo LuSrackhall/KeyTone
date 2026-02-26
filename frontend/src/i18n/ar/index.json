@@ -6,13 +6,13 @@
       "index": "الإعدادات",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "صفحة الألبوم",
+        "keytoneAlbumPageCaption": "تخصيص إعدادات صفحة ألبوم KeyTone",
+        "scrollBehavior": "تمرير شكل الموجة",
+        "scrollBehaviorCaption": "يتحكم في كيفية متابعة شكل الموجة لرأس التشغيل أثناء التشغيل",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "دفع ذكي للحواف",
+          "paged-jump": "قفز بالصفحات"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "تم إصدار KeyTone بموجب ترخيص {license}",
     "privacyPolicy": "سياسة الخصوصية",
     "userAgreement": "اتفاقية المستخدم",
+    "routing": {
+      "splitLabel": "فصل لوحة المفاتيح/الفأرة",
+      "keyboardLabel": "ألبوم تشغيل لوحة المفاتيح",
+      "mouseLabel": "ألبوم تشغيل الفأرة"
+    },
     "emptyState": {
       "noAlbum": "لا توجد ألبومات نغمات مفاتيح",
       "goToAlbumPage": "الذهاب إلى صفحة الألبومات",
@@ -65,6 +70,10 @@
       "saveAsNew": "الحفظ كألبوم جديد",
       "cancel": "إلغاء الاستيراد",
       "confirm": "تأكيد"
+    },
+    "editorNotice": {
+      "message": "هذه الصفحة مخصصة لإنشاء الألبومات وتحريرها. لتجنب التأثير على الاستخدام العادي، انتقل التطبيق إلى وضع 'استماع المحرر'. أنشئ ألبومًا جديدًا أو اختر ألبومًا لتحريره.",
+      "dismiss": "لا تعرض مرة أخرى"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "وقت البداية (مللي ثانية)",
       "endTime": "وقت النهاية (مللي ثانية)",
       "volume": "مستوى الصوت",
+      "volumeDb": "مستوى الصوت (dB)",
+      "volumeOutOfRange": "خارج نطاق العرض (±18 dB)",
       "error": {
         "negativeTime": "لا يمكن أن يكون الوقت سالبًا"
       },
@@ -185,6 +196,23 @@
         "volume": "0 للصوت الأصلي، أكبر من 0 لزيادة الصوت، أقل من 0 لخفض الصوت. الزيادة المعتادة هي 0.1",
         "volume_1": "يمكنك أيضًا إدخال قيم يدويًا لضبط أدق، مثل 0.0001. يرجى معاينة الصوت بعد كل تعديل للتحقق من مستوى الصوت، لتجنب أن يكون مرتفعًا أو منخفضًا جدًا.",
         "previewSound": "الأصوات المستخدمة للمفاتيح عادة ما تكون قصيرة، لذا ستشغل المعاينات المتتالية بالتوازي، ولن يتوفر شريط تقدم أو زر إيقاف (يمكن إعادة تشغيل التطبيق للتوقف إذا لزم الأمر). لذا يرجى اتباع مبادئ تعريف الصوت."
+      },
+      "waveformTrimmer": {
+        "play": "تشغيل",
+        "pause": "إيقاف مؤقت",
+        "stop": "إيقاف",
+        "zoom": "تكبير",
+        "playScopeAll": "تشغيل الكل",
+        "playScopeSelection": "تشغيل التحديد",
+        "noSource": "اختر ملفًا صوتيًا لعرض شكل الموجة.",
+        "loading": "جاري تحميل شكل الموجة...",
+        "unavailableFallback": "شكل الموجة غير متاح. تم تفعيل وضع القص اليدوي.",
+        "current": "الحالي: ",
+        "total": "الإجمالي: ",
+        "selection": "التحديد: ",
+        "hint": "(انقر/اسحب رأس التشغيل؛ Ctrl+التمرير للتكبير؛ اسحب يمينًا للتحديد السريع؛ اسحب الخط الوسطي لضبط الصوت (0=وسط))",
+        "hintMac": "(انقر/اسحب رأس التشغيل؛ ⌃Control/⌘Command+التمرير أو قرصالتجاه على اللوحة للتكبير؛ اسحب يمينًا للتحديد السريع؛ اسحب الخط الوسطي لضبط الصوت (0=وسط))",
+        "volumeOutOfRange": "خارج نطاق العرض (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -311,7 +339,10 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "الصفحة الرئيسية", "caption": "تخصيص الوظائف المتعلقة بالصفحة الرئيسية" },
+      "mainHome": {
+        "index": "الصفحة الرئيسية",
+        "caption": "تخصيص الوظائف المتعلقة بالصفحة الرئيسية"
+      },
       "音量降幅": {
         "index": "تخفيض مستوى الصوت",
         "rulesErrorInfo": "يجب أن تكون القيمة المدخلة أكبر من أو تساوي 5 وأقل من 100,000,000"
@@ -320,6 +351,132 @@
       "音量调试滑块": {
         "index": "شريط ضبط مستوى الصوت",
         "caption": "عند التفعيل، سيظهر شريط إضافي لضبط مستوى الصوت أسفل شريط التقدم في الصفحة الرئيسية"
+      },
+      "pressReleaseControl": {
+        "index": "مستوى صوت الضغط/الرفع المنفصل",
+        "caption": "تفعيل إعدادات صوت مستقلة للضغط/الرفع (تشمل لوحة المفاتيح والفأرة)"
+      },
+      "pressReleasePanel": {
+        "title": "إعدادات مستوى صوت الضغط/الرفع",
+        "caption": "قم بالإعداد بالترتيب: عام ← لوحة مفاتيح ← فأرة"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "مستوى صوت الضغط/الرفع العام",
+        "caption": "نشط في وضع الدمج والفصل، يُطبق بحسب حالة الحدث"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "ضغط عام",
+          "reduceScope": "تخفيض صوت الضغط العام",
+          "debugSlider": "شريط صوت الضغط العام"
+        },
+        "up": {
+          "shortLabel": "رفع عام",
+          "reduceScope": "تخفيض صوت الرفع العام",
+          "debugSlider": "شريط صوت الرفع العام"
+        }
+      },
+      "routingSplit": {
+        "index": "فصل لوحة المفاتيح/الفأرة",
+        "caption": "يسمح بضبط ألبوم ومستوى صوت مستقل للوحة المفاتيح والفأرة"
+      },
+      "splitVolumePanel": {
+        "title": "مستوى صوت وضع الفصل",
+        "caption": "نشط فقط عند تفعيل وضع الفصل بالصفحة الرئيسية (يُضاف فوق الصوت العام)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "صوت لوحة المفاتيح",
+          "caption": "في وضع الفصل فقط؛ يُضاف فوق الصوت العام",
+          "shortLabel": "لوحة مفاتيح",
+          "reduceScope": "تخفيض صوت لوحة المفاتيح",
+          "debugSlider": "شريط صوت لوحة المفاتيح"
+        },
+        "mouse": {
+          "title": "صوت الفأرة",
+          "caption": "في وضع الفصل فقط؛ يُضاف فوق الصوت العام",
+          "shortLabel": "فأرة",
+          "reduceScope": "تخفيض صوت الفأرة",
+          "debugSlider": "شريط صوت الفأرة"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "صوت ضغط/رفع لوحة المفاتيح",
+          "down": {
+            "shortLabel": "ضغط لوحة المفاتيح",
+            "reduceScope": "تخفيض صوت ضغط لوحة المفاتيح",
+            "debugSlider": "شريط صوت ضغط لوحة المفاتيح"
+          },
+          "up": {
+            "shortLabel": "رفع لوحة المفاتيح",
+            "reduceScope": "تخفيض صوت رفع لوحة المفاتيح",
+            "debugSlider": "شريط صوت رفع لوحة المفاتيح"
+          }
+        },
+        "mouse": {
+          "title": "صوت ضغط/رفع الفأرة",
+          "down": {
+            "shortLabel": "ضغط الفأرة",
+            "reduceScope": "تخفيض صوت ضغط الفأرة",
+            "debugSlider": "شريط صوت ضغط الفأرة"
+          },
+          "up": {
+            "shortLabel": "رفع الفأرة",
+            "reduceScope": "تخفيض صوت رفع الفأرة",
+            "debugSlider": "شريط صوت رفع الفأرة"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "احتياطي الفأرة إلى لوحة المفاتيح",
+        "caption": "وضع الفصل: استخدم ألبوم لوحة المفاتيح إذا لم يكن هناك ألبوم فأرة. الافتراضي: إيقاف (فصل كامل)"
+      },
+      "randomVolumeControl": {
+        "index": "مستوى صوت عشوائي (عام)",
+        "caption": "يُطبق تخفيضًا عشوائيًا في كل تشغيل (دون رفع)",
+        "maxReduceRatio": "أقصى تخفيض عشوائي (عام)",
+        "maxReduceRatioRule": "يجب أن تكون القيمة >= 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "صوت عشوائي (ضغط/رفع منفصل)",
+        "caption": "يسمح بضبط تخفيض عشوائي مستقل لكل سيناريو"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "مستوى صوت عشوائي للضغط/الرفع",
+        "caption": "اضبط بالترتيب: عام ← لوحة مفاتيح ← فأرة؛ كل عنصر يُطبق فقط عند تفعيله"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "ضغط عام عشوائي",
+          "maxReduceRatio": "أقصى تخفيض (ضغط عام)"
+        },
+        "up": {
+          "shortLabel": "رفع عام عشوائي",
+          "maxReduceRatio": "أقصى تخفيض (رفع عام)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "ضغط لوحة مفاتيح عشوائي",
+            "maxReduceRatio": "أقصى تخفيض (ضغط لوحة مفاتيح)"
+          },
+          "up": {
+            "shortLabel": "رفع لوحة مفاتيح عشوائي",
+            "maxReduceRatio": "أقصى تخفيض (رفع لوحة مفاتيح)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "ضغط فأرة عشوائي",
+            "maxReduceRatio": "أقصى تخفيض (ضغط فأرة)"
+          },
+          "up": {
+            "shortLabel": "رفع فأرة عشوائي",
+            "maxReduceRatio": "أقصى تخفيض (رفع فأرة)"
+          }
+        }
       }
     }
   },
@@ -341,6 +498,329 @@
       "quit": "خروج",
       "mute": "كتم الصوت",
       "unmute": "إلغاء كتم الصوت"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "إلغاء",
+      "continue": "متابعة",
+      "back": "رجوع"
+    },
+    "confirmSignature": {
+      "title": "هل تحتاج إلى توقيع؟",
+      "description": "هذا الألبوم لا يحتوي على توقيع بعد. هل تريد إضافة توقيع في هذا التصدير؟",
+      "needSignature": "إضافة توقيع",
+      "noSignature": "بدون توقيع"
+    },
+    "authRequire": {
+      "title": "هل تريد تفويضًا للأعمال المشتقة؟",
+      "description": "هل تريد أن يطلب الآخرون إذنًا منك قبل إنشاء أعمال مشتقة؟",
+      "recommend": "موصى به: بدون تفويض (انتشار أوسع)",
+      "yes": "مطلوب تفويض",
+      "no": "لا يلزم تفويض"
+    },
+    "authImpact": {
+      "title": "تأثير التفويض",
+      "message": "عند تفعيل التفويض، لا يمكن للآخرين التصدير دون إذن، لكن الاستخدام المحلي مسموح. معلومات المؤلف تُضمَّن دائمًا. متابعة؟",
+      "confirm": "فهمت، متابعة"
+    },
+    "contact": {
+      "title": "معلومات الاتصال للتفويض",
+      "description": "أدخل بريدًا إلكترونيًا صالحًا ومعلومات اتصال اختيارية أخرى.",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل البريد الإلكتروني",
+      "emailRequired": "يرجى إدخال بريد إلكتروني صالح",
+      "emailInvalid": "يبدو أن تنسيق البريد الإلكتروني غير صالح",
+      "additionalLabel": "اتصال آخر (اختياري)",
+      "additionalPlaceholder": "وسائل التواصل الاجتماعي، موقع ويب، إلخ.",
+      "hint": "معلومات الاتصال ستُحفظ مع التوقيع"
+    },
+    "optionalContact": {
+      "title": "ترك معلومات الاتصال (اختياري)",
+      "description": "يمكنك ترك معلومات الاتصال. هذه الخطوة اختيارية.",
+      "hint": "معلومات الاتصال ستُحفظ مع التوقيع",
+      "skip": "تخطي",
+      "continue": "حفظ ومتابعة"
+    },
+    "policyDialog": {
+      "title": "سياسة التوقيع",
+      "noSignatureTitle": "ضبط سياسة التوقيع",
+      "description": "تأكيد إعدادات التوقيع والتفويض لهذا الألبوم",
+      "requireSignature": "مطلوب توقيع",
+      "noSignature": "بدون توقيع",
+      "requireSignatureHint": "إضافة توقيع لتحديد المؤلف (ممكن فقط في أول تصدير)",
+      "noSignatureHint": "تصدير بدون توقيع (مرة واحدة فقط؛ التغييرات اللاحقة ستتطلب توقيعًا)",
+      "authRequired": "الأعمال المشتقة تتطلب تفويضًا من الموقِّع",
+      "authRequiredHint": "بعد التفعيل يجب على الآخرين الحصول على تفويض قبل إعادة التصدير. لا يمكن التراجع.",
+      "tipsTitle": "تلميحات",
+      "tips": "• يمكن لألبومات بدون توقيع الحصول عليه في أول تصدير\n• بعد التوقيع كل التغييرات تتطلب توقيعًا\n• مع التفويض لا يمكن للآخرين التصدير دون إذن",
+      "cancel": "إلغاء",
+      "continue": "متابعة"
+    },
+    "test": {
+      "title": "🧪 بيئة اختبار تدفق التصدير",
+      "description": "قم بضبط السيناريوهات لاختبار واجهة ومنطق تدفق التصدير.",
+      "albumState": "ضبط حالة الألبوم",
+      "hasSignature": "الألبوم الحالي يحتوي على توقيع",
+      "hasSignatureHint": "يشير إلى أن الألبوم موقَّع. إذا لم يكن كذلك ستظهر نافذة التأكيد.",
+      "requireAuth": "المؤلف الأصلي يشترط تفويضًا للأعمال المشتقة",
+      "requireAuthHint": "صالح فقط إذا كان الألبوم موقَّعًا. يعرض نافذة التحكم في التفويض.",
+      "currentState": "حالة الضبط الحالية",
+      "flowExplain": "📋 شرح التدفق والنوافذ",
+      "openDialog": "فتح إعدادات الاختبار",
+      "apply": "تطبيق الضبط",
+      "close": "إغلاق"
+    },
+    "authGateDialog": {
+      "title": "مطلوب تفويض",
+      "description": "تحتاج إلى تفويض من المؤلف لتصدير هذا الألبوم",
+      "authorContact": "معلومات اتصال المؤلف",
+      "email": "البريد الإلكتروني",
+      "additionalContact": "اتصال بديل",
+      "noContact": "لا توجد معلومات اتصال",
+      "contactHint": "تواصل مع المؤلف عبر القنوات التالية",
+      "copy": "نسخ",
+      "importAuthFile": "استيراد ملف التفويض",
+      "importHint": "استورد ملف التفويض من المؤلف للمتابعة",
+      "selectFile": "اختيار ملف التفويض",
+      "fileSelected": "تم الاختيار",
+      "importButton": "استيراد",
+      "help": "كيف تحصل على التفويض؟",
+      "continue": "متابعة",
+      "cancel": "إلغاء",
+      "importSuccess": "التفويض ناجح",
+      "importSuccessMessage": "تم استيراد ملف التفويض. يمكنك الآن التصدير بهذا التوقيع.",
+      "importFailed": "فشل التحقق من ملف التفويض. تحقق من الملف."
+    },
+    "pickerDialog": {
+      "title": "اختيار توقيع",
+      "description": "اختر التوقيع لهذا التصدير",
+      "search": "البحث عن توقيع...",
+      "noResults": "لم يُعثر على توقيع",
+      "emptyState": "لا توجد توقيعات",
+      "createSignature": "إنشاء توقيع",
+      "importAuth": "استيراد تفويض",
+      "authRequest": "طلب تفويض",
+      "createHint": "إنشاء توقيع جديد",
+      "selectHint": "اختيار توقيع",
+      "noImage": "لا توجد صورة",
+      "noIntro": "لا يوجد وصف",
+      "originalAuthor": "المؤلف الأصلي",
+      "contributor": "مساهم",
+      "unauthorized": "غير مُفوَّض",
+      "confirm": "تأكيد",
+      "cancel": "إلغاء"
+    },
+    "authRequestDialog": {
+      "title": "طلب تفويض",
+      "step1Title": "اختيار توقيع",
+      "step1Description": "اختر توقيعًا غير مُفوَّض لطلب تفويض التصدير",
+      "step2Title": "تصدير الطلب",
+      "step2Description": "اعرض معلومات اتصال المؤلف الأصلي وصدِّر ملف الطلب",
+      "step3Title": "اكتمل",
+      "selectedSignature": "التوقيع المحدد",
+      "qualificationFingerprint": "بصمة الأهلية",
+      "copySuccess": "تم نسخ {label} إلى الحافظة",
+      "copyFailed": "فشل النسخ",
+      "authorContact": "معلومات اتصال المؤلف الأصلي",
+      "email": "البريد الإلكتروني",
+      "additionalContact": "اتصال بديل",
+      "noContact": "لا توجد معلومات اتصال",
+      "copy": "نسخ",
+      "instructions": "التعليمات",
+      "instructionTip": "يُنصح بالتواصل مع المؤلف الأصلي أولاً للتأكيد.",
+      "instruction1": "انقر 'تصدير الطلب' لتنزيل الملف (.ktauthreq)",
+      "instruction2": "أرسل الملف إلى المؤلف الأصلي عبر معلومات الاتصال أعلاه",
+      "instruction3": "بعد استلام ملف التفويض (.ktauth)، استورده في تدفق التصدير",
+      "noSignatures": "لا توجد توقيعات متاحة. أنشئ توقيعًا أولاً.",
+      "noUnauthorizedSignatures": "جميع التوقيعات مُفوَّضة. استخدم واحدًا موجودًا أو أنشئ جديدًا.",
+      "createSignature": "إنشاء توقيع",
+      "noIntro": "لا يوجد وصف",
+      "next": "التالي",
+      "back": "رجوع",
+      "exportRequest": "تصدير الطلب",
+      "cancel": "إلغاء",
+      "done": "اكتمل",
+      "exportSuccess": "تم تصدير ملف الطلب",
+      "exportSuccessHint": "أرسل الملف إلى المؤلف الأصلي وانتظر ملف التفويض",
+      "exportFailed": "فشل تصدير الطلب",
+      "missingParams": "معاملات مطلوبة مفقودة"
+    },
+    "signatureInfoDialog": {
+      "title": "معلومات توقيع الألبوم",
+      "noSignature": "لا يوجد توقيع لهذا الألبوم بعد",
+      "noSignatureHint": "أضف توقيعًا عند التصدير لتحديد المؤلف",
+      "originalAuthor": "المؤلف الأصلي",
+      "requireAuth": "مطلوب تفويض للتصدير",
+      "noAuthRequired": "لا يلزم تفويض",
+      "noName": "(لا يوجد اسم)",
+      "noIntro": "(لا يوجد وصف)",
+      "qualificationFingerprint": "بصمة الأهلية",
+      "contactSection": "الاتصال",
+      "email": "البريد الإلكتروني",
+      "noEmail": "(غير مضبوط)",
+      "additionalContact": "اتصال إضافي",
+      "authStatus": "حالة التفويض",
+      "requireAuthorization": "تفويض مطلوب",
+      "noAuthorization": "لا يلزم تفويض",
+      "authorizedCount": "{count} توقيع مُفوَّض",
+      "authUUID": "UUID التفويض",
+      "noAuthUUID": "(غير مضبوط)",
+      "latestExporterFingerprint": "بصمة آخر مُصدِّر",
+      "noLatestExporter": "(غير مضبوط)",
+      "authorizedList": "التوقيعات المُفوَّضة",
+      "directExportAuthor": "مؤلف التصدير المباشر",
+      "latestExporter": "آخر مُصدِّر",
+      "contributorAuthors": "المؤلفون المساهمون",
+      "signatureStats": "إحصاءات التوقيع",
+      "totalSignatures": "إجمالي {count} توقيع",
+      "originalAuthorCount": "مؤلف أصلي واحد",
+      "contributorCount": "{count} مساهم",
+      "close": "إغلاق",
+      "retry": "إعادة المحاولة",
+      "copySuccess": "تم نسخ {label} إلى الحافظة",
+      "copyFailed": "فشل النسخ"
+    },
+    "signatureUpdateConfirm": {
+      "title": "تأكيد تحديث التوقيع",
+      "message": "التوقيع المحدد مختلف عما هو في الألبوم. هل تريد تحديث التفاصيل (الوصف، الصورة)؟",
+      "update": "تحديث",
+      "noUpdate": "عدم التحديث"
+    },
+    "notify": {
+      "contactCopied": "تم نسخ معلومات الاتصال",
+      "authFileImported": "تم استيراد ملف التفويض"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "إدارة التوقيعات",
+      "create": "إنشاء توقيع",
+      "import": "استيراد توقيع",
+      "authGrant": "معالجة التفويض",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "export": "تصدير",
+      "loadError": "فشل تحميل التوقيعات",
+      "retry": "إعادة المحاولة",
+      "emptyState": "لا توجد توقيعات",
+      "createFirst": "إنشاء أول توقيع",
+      "noImage": "لا توجد صورة بطاقة",
+      "noImageHint": "هذا التوقيع لا يحتوي على صورة بطاقة",
+      "noImagePreviewTip": "هذا التوقيع لا يحتوي على صورة بطاقة"
+    },
+    "authGrant": {
+      "title": "معالجة التفويض",
+      "step1Description": "استيراد ملف طلب التفويض (.ktauthreq)",
+      "step2Description": "مراجعة الطلب واتخاذ القرار",
+      "selectFile": "اختيار ملف الطلب",
+      "fileImported": "تم استيراد الملف بنجاح",
+      "importButton": "استيراد",
+      "parseError": "تعذّر تحليل ملف الطلب",
+      "noPermission": "لا يوجد إذن لمعالجة هذا الطلب. تحقق من امتلاكك التوقيع المطابق.",
+      "albumId": "معرف الألبوم (hash)",
+      "requester": "مقدِّم الطلب",
+      "requesterFingerprint": "بصمة مقدِّم الطلب",
+      "yourSignature": "توقيعك",
+      "noMatchingSignature": "لم يُعثر على توقيع مطابق",
+      "selectSignature": "اختيار توقيع للتفويض",
+      "qualificationFingerprint": "بصمة الأهلية",
+      "copySuccess": "تم نسخ {label} إلى الحافظة",
+      "copyFailed": "فشل النسخ",
+      "warning": "بعد التفويض، يمكن لمقدِّم الطلب تصدير الألبوم بتوقيعه. هل تثق بمقدِّم الطلب؟",
+      "approve": "تفويض وتصدير",
+      "cancel": "إلغاء",
+      "back": "رجوع",
+      "next": "التالي",
+      "done": "اكتمل",
+      "exportSuccess": "تم تصدير ملف التفويض بنجاح",
+      "exportSuccessHint": "أرسل الملف (.ktauth) إلى مقدِّم الطلب",
+      "exportFailed": "فشل تصدير ملف التفويض"
+    },
+    "contextMenu": {
+      "viewFingerprint": "البصمة",
+      "fingerprintTitle": "بصمة الأهلية",
+      "fingerprintCopied": "تم نسخ بصمة الأهلية إلى الحافظة"
+    },
+    "form": {
+      "createTitle": "إنشاء توقيع",
+      "editTitle": "تعديل التوقيع",
+      "editWarning": "بعد التعديل، الألبومات التي تحمل هذا التوقيع تحتاج إلى إعادة التصدير لتحديثه.",
+      "name": "اسم التوقيع",
+      "nameHint": "1-50 حرفًا",
+      "nameRequired": "يرجى إدخال اسم التوقيع",
+      "nameTooLong": "لا يجوز أن يتجاوز الاسم 50 حرفًا",
+      "intro": "التعريف الشخصي",
+      "introHint": "حد أقصى 500 حرف (اختياري)",
+      "introTooLong": "لا يجوز أن يتجاوز التعريف 500 حرف",
+      "cardImage": "صورة البطاقة",
+      "cardImageFileName": "بطاقة التوقيع",
+      "selectImage": "اختيار صورة",
+      "imageHint": "يدعم PNG وJPEG وWebP وGIF وتنسيقات صور أخرى",
+      "clickToPreview": "انقر للمعاينة",
+      "cancel": "إلغاء",
+      "create": "إنشاء",
+      "update": "تحديث",
+      "close": "إغلاق"
+    },
+    "delete": {
+      "confirmTitle": "تأكيد الحذف",
+      "confirm": "حذف هذا التوقيع"
+    },
+    "export": {
+      "comingSoon": "ميزة التصدير قريبًا",
+      "confirmTitle": "تأكيد تصدير التوقيع",
+      "confirmMessage": "⚠️ تحذير أماني",
+      "confirmWarning": "احفظ ملف التوقيع بأمان ولا تشاركه!",
+      "confirmDetail": "أي شخص يملك الملف يمكنه استيراده واستخدام توقيعك. احفظه في مكان آمن.",
+      "confirmRisks": "المخاطر:",
+      "riskItem1": "• لا تشارك ملف التوقيع مع الآخرين",
+      "riskItem2": "• لا ترفع الملف على شبكات عامة",
+      "riskItem3": "• قم بعمل نسخة احتياطية لمنع الضياع",
+      "confirmButton": "أفهم المخاطر، متابعة التصدير",
+      "cancelButton": "إلغاء"
+    },
+    "import": {
+      "title": "استيراد توقيع",
+      "selectFile": "اختيار ملف .ktsign",
+      "fileHint": "اختر ملف توقيع KeyTone (.ktsign)",
+      "import": "استيراد",
+      "conflictTitle": "التوقيع موجود بالفعل",
+      "conflictMessage": "التوقيع \"{name}\" موجود بالفعل. هل تريد الكتابة فوقه؟"
+    },
+    "select": {
+      "title": "اختيار توقيع",
+      "description": "اختر توقيعًا لتحديد مؤلف الألبوم",
+      "emptyState": "لا توجد توقيعات متاحة",
+      "createSignature": "الذهاب لإنشاء توقيع",
+      "noIntro": "لا يوجد وصف",
+      "noSignature": "بدون توقيع",
+      "confirm": "تأكيد"
+    },
+    "notify": {
+      "createSuccess": "تم إنشاء التوقيع بنجاح",
+      "createFailed": "فشل إنشاء التوقيع",
+      "updateSuccess": "تم تحديث التوقيع بنجاح",
+      "updateFailed": "فشل تحديث التوقيع",
+      "deleteSuccess": "تم حذف التوقيع بنجاح",
+      "deleteFailed": "فشل حذف التوقيع",
+      "exportSuccess": "تم تصدير التوقيع بنجاح",
+      "exportFailed": "فشل تصدير التوقيع",
+      "importSuccess": "تم استيراد التوقيع بنجاح",
+      "importFailed": "فشل استيراد التوقيع",
+      "loadFailed": "فشل تحميل التوقيعات",
+      "imageReadFailed": "فشل قراءة الصورة",
+      "invalidFileFormat": "تنسيق الملف غير صالح",
+      "unexpectedError": "حدث خطأ غير متوقع",
+      "noChanges": "لم يُكتشف أي تغيير"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "المؤلف الأصلي",
+      "directExportAuthor": "مؤلف التصدير المباشر",
+      "sameAuthor": "المؤلف الأصلي / التصدير المباشر",
+      "viewDetails": "انقر لعرض التفاصيل"
     }
   }
 }

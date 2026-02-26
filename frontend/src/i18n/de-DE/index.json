@@ -6,13 +6,13 @@
       "index": "Einstellung",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Album-Seite",
+        "keytoneAlbumPageCaption": "Einstellungen der Tastensound-Album-Seite anpassen",
+        "scrollBehavior": "Wellenform-Scrollen",
+        "scrollBehaviorCaption": "Steuert, wie die Wellenform dem Abspielkopf während der Wiedergabe folgt",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Intelligentes Edge-Pushing",
+          "paged-jump": "Seitensprung"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone wird unter der {license} veröffentlicht",
     "privacyPolicy": "Datenschutz",
     "userAgreement": "Nutzungsvereinbarung",
+    "routing": {
+      "splitLabel": "Tastatur/Maus trennen",
+      "keyboardLabel": "Tastatur-Wiedergabe-Album",
+      "mouseLabel": "Maus-Wiedergabe-Album"
+    },
     "emptyState": {
       "noAlbum": "Keine Tastensound-Alben",
       "goToAlbumPage": "Zur Album-Seite",
@@ -65,6 +70,10 @@
       "saveAsNew": "Als neu speichern",
       "cancel": "Abbrechen",
       "confirm": "OK"
+    },
+    "editorNotice": {
+      "message": "Diese Seite dient der Erstellung und Bearbeitung von Alben. Um den normalen Betrieb nicht zu beeinträchtigen, wurde auf den Editor-Vorschaumodus umgeschaltet. Bitte ein neues Album erstellen oder ein vorhandenes zum Bearbeiten auswählen.",
+      "dismiss": "Nicht mehr anzeigen"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "Startzeit (ms)",
       "endTime": "Endzeit (ms)",
       "volume": "Lautstärke",
+      "volumeDb": "Lautstärke (dB)",
+      "volumeOutOfRange": "Außerhalb des Anzeigebereichs (±18 dB)",
       "error": {
         "negativeTime": "Zeit darf nicht negativ sein"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "Mehrere eigenständige Sounds aus derselben Quelldatei möglich",
         "soundName": "Sound-Name",
         "soundDuration": "Start- und Endzeit in Millisekunden. Für Tastendruck sollte die Dauer nicht zu lang sein",
-        "volume": "0=Original, >0=verstärken, <0=abschwächen. 0,1-Schritte verwenden",
-        "volume_1": "Manuelle Eingabe für feinere Anpassungen möglich (z.B. 0,0001). Nach jeder Anpassung Vorschau anhören",
-        "previewSound": "Tastatur-Sounds sind kurz, Vorschauen werden gleichzeitig abgespielt ohne Fortschrittsanzeige oder Stopp-Taste"
+        "volume": "Lautstärke in dB. 0 dB = Original; über 0 verstärkt, unter 0 schwächt ab.",
+        "volume_1": "Werte über ±18 dB sind wirksam, aber die Wellenform zeigt nur bis zur Grenze. Nach jeder Änderung Vorschau anhören.",
+        "previewSound": "Tastatur-Sounds sind kurz, daher werden aufeinanderfolgende Vorschauen gleichzeitig abgespielt ohne Fortschrittsanzeige oder Stopp-Taste (App neu starten falls nötig). Bitte Prinzipien der Sound-Definition befolgen."
+      },
+      "waveformTrimmer": {
+        "play": "Wiedergabe",
+        "pause": "Pause",
+        "stop": "Stopp",
+        "zoom": "Zoom",
+        "playScopeAll": "Alles wiedergeben",
+        "playScopeSelection": "Auswahl wiedergeben",
+        "noSource": "Bitte eine Audio-Quelldatei auswählen, um die Wellenform anzuzeigen.",
+        "loading": "Wellenform wird geladen...",
+        "unavailableFallback": "Wellenform nicht verfügbar. Manuelles Zuschneiden aktiviert.",
+        "current": "Aktuell: ",
+        "total": "Gesamt: ",
+        "selection": "Auswahl: ",
+        "hint": "(Abspielkopf klicken/ziehen; Strg+Rad zum Zoomen; Rechts-Drag für schnelle Auswahl; Mittellinie ziehen für Lautstärke (0=Mitte))",
+        "hintMac": "(Abspielkopf klicken/ziehen; ⌃Control/⌘Command+Rad oder Trackpad-Pinch für Zoom; Rechts-Drag für schnelle Auswahl; Mittellinie ziehen für Lautstärke (0=Mitte))",
+        "volumeOutOfRange": "Außerhalb des Anzeigebereichs (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "Lautstärke-Schieberegler",
         "caption": "Bei Aktivierung wird zusätzlicher Lautstärke-Schieberegler auf der Startseite angezeigt"
+      },
+      "pressReleaseControl": {
+        "index": "Drücken/Loslassen Lautstärke einzeln",
+        "caption": "Aktiviert unabhängige Lautstärkeeinstellungen für Drücken/Loslassen (inkl. Tastatur und Maus; ohne Trenn-Modus auf Startseite wirksam)"
+      },
+      "pressReleasePanel": {
+        "title": "Drücken/Loslassen Lautstärke-Einstellungen",
+        "caption": "Nach Aufklappen in Reihenfolge konfigurieren: Global → Tastatur → Maus"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Globale Drücken/Loslassen-Lautstärke",
+        "caption": "Gilt in Einheitsmodus und Trennmodus, überlagert nach Ereigniszustand"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Global Drücken",
+          "reduceScope": "Globale Drücken-Lautstärke Verringerung",
+          "debugSlider": "Globaler Drücken-Lautstärke-Schieberegler"
+        },
+        "up": {
+          "shortLabel": "Global Loslassen",
+          "reduceScope": "Globale Loslassen-Lautstärke Verringerung",
+          "debugSlider": "Globaler Loslassen-Lautstärke-Schieberegler"
+        }
+      },
+      "routingSplit": {
+        "index": "Tastatur/Maus trennen",
+        "caption": "Ermöglicht separate Alben und individuelle Lautstärke für Tastatur und Maus"
+      },
+      "splitVolumePanel": {
+        "title": "Trennmodus-Lautstärke",
+        "caption": "Nur wirksam wenn Trennmodus auf Startseite aktiv (überlagert globale Lautstärke)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Tastatur-Lautstärke",
+          "caption": "Nur im Trennmodus; überlagert globale Lautstärke",
+          "shortLabel": "Tastatur",
+          "reduceScope": "Tastatur-Lautstärke Verringerung",
+          "debugSlider": "Tastatur-Lautstärke-Schieberegler"
+        },
+        "mouse": {
+          "title": "Maus-Lautstärke",
+          "caption": "Nur im Trennmodus; überlagert globale Lautstärke",
+          "shortLabel": "Maus",
+          "reduceScope": "Maus-Lautstärke Verringerung",
+          "debugSlider": "Maus-Lautstärke-Schieberegler"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Tastatur Drücken/Loslassen-Lautstärke",
+          "down": {
+            "shortLabel": "Tastatur Drücken",
+            "reduceScope": "Tastatur-Drücken-Lautstärke Verringerung",
+            "debugSlider": "Tastatur-Drücken-Lautstärke-Schieberegler"
+          },
+          "up": {
+            "shortLabel": "Tastatur Loslassen",
+            "reduceScope": "Tastatur-Loslassen-Lautstärke Verringerung",
+            "debugSlider": "Tastatur-Loslassen-Lautstärke-Schieberegler"
+          }
+        },
+        "mouse": {
+          "title": "Maus Drücken/Loslassen-Lautstärke",
+          "down": {
+            "shortLabel": "Maus Drücken",
+            "reduceScope": "Maus-Drücken-Lautstärke Verringerung",
+            "debugSlider": "Maus-Drücken-Lautstärke-Schieberegler"
+          },
+          "up": {
+            "shortLabel": "Maus Loslassen",
+            "reduceScope": "Maus-Loslassen-Lautstärke Verringerung",
+            "debugSlider": "Maus-Loslassen-Lautstärke-Schieberegler"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Maus fällt auf Tastatur zurück",
+        "caption": "Im Trennmodus: Tastatur-Album verwenden wenn kein Maus-Album. Standard deaktiviert: vollständige Trennung"
+      },
+      "randomVolumeControl": {
+        "index": "Zufällige Lautstärke (Global)",
+        "caption": "Bei Aktivierung wird bei jeder Wiedergabe eine zufällige Dämpfung angewendet (keine Verstärkung)",
+        "maxReduceRatio": "Max. Zufälliger Rückgang (Global)",
+        "maxReduceRatioRule": "Wert muss größer oder gleich 0 sein"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Zufällige Lautstärke (Drücken/Loslassen einzeln)",
+        "caption": "Erlaubt individuelle Zufallsdämpfung für Drücken/Loslassen und Tastatur/Maus (überlagert mit globaler Zufallslautstärke)"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Drücken/Loslassen Zufalls-Lautstärke",
+        "caption": "Konfigurieren in Reihenfolge: Global → Tastatur → Maus; jedes Element nur wenn aktiviert wirksam"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Global Drücken Zufall",
+          "maxReduceRatio": "Max. Zufälliger Rückgang (Global Drücken)"
+        },
+        "up": {
+          "shortLabel": "Global Loslassen Zufall",
+          "maxReduceRatio": "Max. Zufälliger Rückgang (Global Loslassen)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Tastatur Drücken Zufall",
+            "maxReduceRatio": "Max. Zufälliger Rückgang (Tastatur Drücken)"
+          },
+          "up": {
+            "shortLabel": "Tastatur Loslassen Zufall",
+            "maxReduceRatio": "Max. Zufälliger Rückgang (Tastatur Loslassen)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Maus Drücken Zufall",
+            "maxReduceRatio": "Max. Zufälliger Rückgang (Maus Drücken)"
+          },
+          "up": {
+            "shortLabel": "Maus Loslassen Zufall",
+            "maxReduceRatio": "Max. Zufälliger Rückgang (Maus Loslassen)"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "Beenden",
       "mute": "Stummschalten",
       "unmute": "Stummschaltung aufheben"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "Abbrechen",
+      "continue": "Weiter",
+      "back": "Zurück"
+    },
+    "confirmSignature": {
+      "title": "Signatur erforderlich?",
+      "description": "Dieses Album hat noch keine Signatur. Möchten Sie beim Export eine Signatur hinzufügen?",
+      "needSignature": "Signatur hinzufügen",
+      "noSignature": "Ohne Signatur"
+    },
+    "authRequire": {
+      "title": "Genehmigung für Sekundärwerke?",
+      "description": "Sollen andere vor der Bearbeitung Ihre Genehmigung einholen müssen?",
+      "recommend": "Empfohlen: Keine Genehmigung (besser für die Verbreitung)",
+      "yes": "Genehmigung erforderlich",
+      "no": "Keine Genehmigung"
+    },
+    "authImpact": {
+      "title": "Auswirkungen der Genehmigungspflicht",
+      "message": "Mit aktivierter Genehmigungspflicht können andere dieses Album ohne Erlaubnis nicht exportieren, aber lokale Nutzung und Bearbeitung sind weiterhin möglich. Autoreninfos bleiben auch ohne Genehmigungspflicht erhalten. Fortfahren?",
+      "confirm": "Verstanden, weiter"
+    },
+    "contact": {
+      "title": "Kontaktdaten für Genehmigungen",
+      "description": "Bitte eine gültige E-Mail eingeben und optional weitere Kontaktmöglichkeiten hinzufügen.",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "E-Mail-Adresse eingeben",
+      "emailRequired": "Bitte gültige E-Mail-Adresse eingeben",
+      "emailInvalid": "E-Mail-Format scheint ungültig",
+      "additionalLabel": "Weitere Kontaktmöglichkeiten (optional)",
+      "additionalPlaceholder": "Social Media, Website usw. hinzufügen",
+      "hint": "Diese Kontaktdaten werden mit der Signatur gespeichert"
+    },
+    "optionalContact": {
+      "title": "Kontaktdaten hinterlassen (optional)",
+      "description": "Sie können optional Kontaktdaten hinterlassen. Dieser Schritt kann übersprungen werden.",
+      "hint": "Kontaktdaten werden mit der Signatur gespeichert",
+      "skip": "Überspringen",
+      "continue": "Speichern und weiter"
+    },
+    "policyDialog": {
+      "title": "Signaturrichtlinie",
+      "noSignatureTitle": "Signaturrichtlinie festlegen",
+      "description": "Bestätigen Sie die Signatur- und Genehmigungsanforderungen für dieses Album",
+      "requireSignature": "Signatur erforderlich",
+      "noSignature": "Keine Signatur",
+      "requireSignatureHint": "Signatur zur Autorenidentifikation hinzufügen (nur beim ersten Export wählbar)",
+      "noSignatureHint": "Album ohne Signatur exportieren (nur beim ersten Export; nachfolgende Änderungen benötigen Signatur)",
+      "authRequired": "Sekundärwerke benötigen Genehmigung des Signaturautors",
+      "authRequiredHint": "Nach Aktivierung müssen andere vor dem Re-Export eine Genehmigung einholen. Nicht rückgängig machbar.",
+      "tipsTitle": "Hinweise",
+      "tips": "• Alben ohne Signatur können beim ersten Export eine Signatur erhalten\n• Mit Signatur benötigen alle weiteren Änderungen ebenfalls eine Signatur\n• Mit Genehmigungspflicht können andere ohne Erlaubnis nicht exportieren",
+      "cancel": "Abbrechen",
+      "continue": "Weiter"
+    },
+    "test": {
+      "title": "🧪 Export-Flow Testumgebung",
+      "description": "Testszenarios konfigurieren, um UI und Interaktionslogik des Export-Flows zu überprüfen.",
+      "albumState": "Album-Status-Konfiguration",
+      "hasSignature": "Aktuelles Album hat Signatur",
+      "hasSignatureHint": "Markiert, dass dieses Album bereits eine Signatur hat. Andernfalls erscheint der Signaturbestätigungsdialog.",
+      "requireAuth": "Originalautor erfordert Genehmigung für Sekundärwerke",
+      "requireAuthHint": "Nur gültig wenn Album Signatur hat. Zeigt den Genehmigungsdialog an.",
+      "currentState": "Aktueller Konfigurationsstatus",
+      "flowExplain": "📋 Flow-Erläuterung und Dialoge",
+      "openDialog": "Testumgebung öffnen",
+      "apply": "Konfiguration anwenden",
+      "close": "Schließen"
+    },
+    "authGateDialog": {
+      "title": "Genehmigung erforderlich",
+      "description": "Dieses Album erfordert eine Genehmigung vor dem Export",
+      "authorContact": "Autorkontakt",
+      "email": "E-Mail",
+      "additionalContact": "Weiterer Kontakt",
+      "noContact": "Keine Kontaktdaten vorhanden",
+      "contactHint": "Kontaktieren Sie den Autor über folgende Wege",
+      "copy": "Kopieren",
+      "importAuthFile": "Genehmigungsdatei importieren",
+      "importHint": "Bitte Genehmigungsdatei des Autors importieren um fortzufahren",
+      "selectFile": "Genehmigungsdatei auswählen",
+      "fileSelected": "Ausgewählt",
+      "importButton": "Importieren",
+      "help": "Wie Genehmigung erhalten?",
+      "continue": "Weiter",
+      "cancel": "Abbrechen",
+      "importSuccess": "Genehmigung erfolgreich",
+      "importSuccessMessage": "Genehmigungsdatei erfolgreich importiert. Sie können das Album jetzt mit dieser Signatur exportieren.",
+      "importFailed": "Genehmigungsdatei-Überprüfung fehlgeschlagen. Bitte Datei überprüfen."
+    },
+    "pickerDialog": {
+      "title": "Signatur wählen",
+      "description": "Bitte Signatur für diesen Export auswählen",
+      "search": "Signaturen suchen...",
+      "noResults": "Keine passenden Signaturen",
+      "emptyState": "Keine Signaturen",
+      "createSignature": "Signatur erstellen",
+      "importAuth": "Genehmigung importieren",
+      "authRequest": "Genehmigung anfragen",
+      "createHint": "Neue Signatur erstellen",
+      "selectHint": "Signatur auswählen",
+      "noImage": "Kein Bild",
+      "noIntro": "Keine Beschreibung",
+      "originalAuthor": "Originalautor",
+      "contributor": "Mitwirkender",
+      "unauthorized": "Nicht genehmigt",
+      "confirm": "Bestätigen",
+      "cancel": "Abbrechen"
+    },
+    "authRequestDialog": {
+      "title": "Genehmigungsanfrage",
+      "step1Title": "Signatur wählen",
+      "step1Description": "Nicht genehmigte Signatur wählen, um Export-Genehmigung zu beantragen",
+      "step2Title": "Anfrage exportieren",
+      "step2Description": "Autorkontakt einsehen und Genehmigungsanfrage-Datei exportieren",
+      "step3Title": "Abgeschlossen",
+      "selectedSignature": "Gewählte Signatur",
+      "qualificationFingerprint": "Qualifikations-Fingerabdruck",
+      "copySuccess": "{label} in Zwischenablage kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen",
+      "authorContact": "Originalautor-Kontakt",
+      "email": "E-Mail",
+      "additionalContact": "Weiterer Kontakt",
+      "noContact": "Keine Kontaktdaten",
+      "copy": "Kopieren",
+      "instructions": "Schritt-für-Schritt",
+      "instructionTip": "Es wird empfohlen, zuerst Kontakt aufzunehmen, um eine Absicht zu bestätigen.",
+      "instruction1": "'Anfrage exportieren' klicken um Genehmigungsanfrage-Datei (.ktauthreq) herunterzuladen",
+      "instruction2": "Anfrage-Datei über obige Kontaktdaten an Originalautor senden",
+      "instruction3": "Nach Erhalt der Genehmigungsdatei (.ktauth) im Export-Flow importieren",
+      "noSignatures": "Keine Signaturen verfügbar. Bitte zuerst eine Signatur erstellen.",
+      "noUnauthorizedSignatures": "Alle Signaturen sind bereits genehmigt. Bestehende Signatur verwenden oder neue erstellen.",
+      "createSignature": "Signatur erstellen",
+      "noIntro": "Keine Beschreibung",
+      "next": "Weiter",
+      "back": "Zurück",
+      "exportRequest": "Anfrage exportieren",
+      "cancel": "Abbrechen",
+      "done": "Fertig",
+      "exportSuccess": "Genehmigungsanfrage-Datei exportiert",
+      "exportSuccessHint": "Bitte Datei an Originalautor senden und auf Genehmigungsdatei warten",
+      "exportFailed": "Genehmigungsanfrage-Export fehlgeschlagen",
+      "missingParams": "Erforderliche Parameter fehlen"
+    },
+    "signatureInfoDialog": {
+      "title": "Album-Signaturinfo",
+      "noSignature": "Dieses Album enthält noch keine Signatur",
+      "noSignatureHint": "Beim Export eine Signatur hinzufügen, um den Autor zu kennzeichnen",
+      "originalAuthor": "Originalautor",
+      "requireAuth": "Genehmigung erforderlich",
+      "noAuthRequired": "Keine Genehmigung",
+      "noName": "(Kein Name)",
+      "noIntro": "(Keine Beschreibung)",
+      "qualificationFingerprint": "Qualifikations-Fingerabdruck",
+      "contactSection": "Kontakt",
+      "email": "E-Mail",
+      "noEmail": "(Nicht gesetzt)",
+      "additionalContact": "Weiterer Kontakt",
+      "authStatus": "Genehmigungsstatus",
+      "requireAuthorization": "Genehmigung erforderlich",
+      "noAuthorization": "Keine Genehmigung",
+      "authorizedCount": "{count} Signaturen genehmigt",
+      "authUUID": "Genehmigungs-UUID",
+      "noAuthUUID": "(Nicht gesetzt)",
+      "latestExporterFingerprint": "Letzter Exporteur Fingerabdruck",
+      "noLatestExporter": "(Nicht gesetzt)",
+      "authorizedList": "Genehmigte Signaturen",
+      "directExportAuthor": "Direkter Export-Autor",
+      "latestExporter": "Letzter Exporteur",
+      "contributorAuthors": "Mitwirkende Autoren",
+      "signatureStats": "Signatur-Statistik",
+      "totalSignatures": "{count} Signaturen gesamt",
+      "originalAuthorCount": "1 Originalautor",
+      "contributorCount": "{count} Mitwirkende",
+      "close": "Schließen",
+      "retry": "Wiederholen",
+      "copySuccess": "{label} in Zwischenablage kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen"
+    },
+    "signatureUpdateConfirm": {
+      "title": "Signatur-Aktualisierung bestätigen",
+      "message": "Die gewählte Signatur weicht von der im Album gespeicherten ab. Signaturdetails (Beschreibung, Bild) aktualisieren?",
+      "update": "Aktualisieren",
+      "noUpdate": "Nicht aktualisieren"
+    },
+    "notify": {
+      "contactCopied": "Kontakt kopiert",
+      "authFileImported": "Genehmigungsdatei importiert"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "Signaturverwaltung",
+      "create": "Signatur erstellen",
+      "import": "Signatur importieren",
+      "authGrant": "Genehmigung bearbeiten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "export": "Exportieren",
+      "loadError": "Signaturen laden fehlgeschlagen",
+      "retry": "Wiederholen",
+      "emptyState": "Noch keine Signaturen",
+      "createFirst": "Erste Signatur erstellen",
+      "noImage": "Kein Visitenkartenbild",
+      "noImageHint": "Diese Signatur hat kein Visitenkartenbild",
+      "noImagePreviewTip": "Diese Signatur hat kein Visitenkartenbild"
+    },
+    "authGrant": {
+      "title": "Genehmigung bearbeiten",
+      "step1Description": "Genehmigungsanfrage-Datei (.ktauthreq) importieren",
+      "step2Description": "Anfrage überprüfen und entscheiden",
+      "selectFile": "Genehmigungsanfrage-Datei auswählen",
+      "fileImported": "Datei erfolgreich importiert",
+      "importButton": "Importieren",
+      "parseError": "Genehmigungsanfrage-Datei konnte nicht geparst werden",
+      "noPermission": "Keine Berechtigung. Stellen Sie sicher, dass die entsprechende Signatur vorhanden ist.",
+      "albumId": "Album-ID (Hash)",
+      "requester": "Antragsteller",
+      "requesterFingerprint": "Antragsteller Fingerabdruck",
+      "yourSignature": "Ihre Signatur",
+      "noMatchingSignature": "Keine passende Signatur gefunden",
+      "selectSignature": "Signatur für Genehmigung auswählen",
+      "qualificationFingerprint": "Qualifikations-Fingerabdruck",
+      "copySuccess": "{label} in Zwischenablage kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen",
+      "warning": "Nach Genehmigung kann der Antragsteller das Album mit seiner Signatur exportieren. Vertrauen Sie dem Antragsteller?",
+      "approve": "Genehmigen & exportieren",
+      "cancel": "Abbrechen",
+      "back": "Zurück",
+      "next": "Weiter",
+      "done": "Fertig",
+      "exportSuccess": "Genehmigungsdatei erfolgreich exportiert",
+      "exportSuccessHint": "Bitte Genehmigungsdatei (.ktauth) an Antragsteller senden",
+      "exportFailed": "Genehmigungsdatei-Export fehlgeschlagen"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Fingerabdruck",
+      "fingerprintTitle": "Qualifikations-Fingerabdruck",
+      "fingerprintCopied": "Qualifikations-Fingerabdruck in Zwischenablage kopiert"
+    },
+    "form": {
+      "createTitle": "Signatur erstellen",
+      "editTitle": "Signatur bearbeiten",
+      "editWarning": "Nach dem Bearbeiten müssen Albums mit dieser Signatur erneut exportiert werden, um die Signatur zu aktualisieren.",
+      "name": "Signaturname",
+      "nameHint": "1-50 Zeichen",
+      "nameRequired": "Bitte Signaturname eingeben",
+      "nameTooLong": "Signaturname darf max. 50 Zeichen haben",
+      "intro": "Beschreibung",
+      "introHint": "Max. 500 Zeichen (optional)",
+      "introTooLong": "Beschreibung darf max. 500 Zeichen haben",
+      "cardImage": "Visitenkartenbild",
+      "cardImageFileName": "Signaturkarte",
+      "selectImage": "Bild auswählen",
+      "imageHint": "Unterstützt PNG, JPEG, WebP, GIF und andere Bildformate",
+      "clickToPreview": "Klicken zum Vorschau",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "update": "Aktualisieren",
+      "close": "Schließen"
+    },
+    "delete": {
+      "confirmTitle": "Löschen bestätigen",
+      "confirm": "Diese Signatur löschen"
+    },
+    "export": {
+      "comingSoon": "Export-Funktion demnächst verfügbar",
+      "confirmTitle": "Signatur-Export bestätigen",
+      "confirmMessage": "⚠️ Sicherheitswarnung",
+      "confirmWarning": "Bitte Signaturdatei sicher aufbewahren und nicht weitergeben!",
+      "confirmDetail": "Jeder mit der Signaturdatei kann sie importieren und verwenden. Datei sicher aufbewahren.",
+      "confirmRisks": "Risiken:",
+      "riskItem1": "• Signaturdatei nicht mit anderen teilen",
+      "riskItem2": "• Signaturdatei nicht ins öffentliche Netz hochladen",
+      "riskItem3": "• Signaturdatei sichern, um Verlust zu vermeiden",
+      "confirmButton": "Risiken verstanden, weiter exportieren",
+      "cancelButton": "Abbrechen"
+    },
+    "import": {
+      "title": "Signatur importieren",
+      "selectFile": ".ktsign-Datei auswählen",
+      "fileHint": "Bitte KeyTone Signaturdatei (.ktsign) auswählen",
+      "import": "Importieren",
+      "conflictTitle": "Signatur existiert bereits",
+      "conflictMessage": "Signatur \"{name}\" existiert bereits. Überschreiben?"
+    },
+    "select": {
+      "title": "Signatur auswählen",
+      "description": "Eine Signatur für das Album zur Autorenidentifikation auswählen",
+      "emptyState": "Keine Signaturen verfügbar",
+      "createSignature": "Zur Signaturerstellung",
+      "noIntro": "Keine Beschreibung",
+      "noSignature": "Keine Signatur",
+      "confirm": "Bestätigen"
+    },
+    "notify": {
+      "createSuccess": "Signatur erfolgreich erstellt",
+      "createFailed": "Signatur erstellen fehlgeschlagen",
+      "updateSuccess": "Signatur erfolgreich aktualisiert",
+      "updateFailed": "Signatur aktualisieren fehlgeschlagen",
+      "deleteSuccess": "Signatur erfolgreich gelöscht",
+      "deleteFailed": "Signatur löschen fehlgeschlagen",
+      "exportSuccess": "Signatur erfolgreich exportiert",
+      "exportFailed": "Signatur exportieren fehlgeschlagen",
+      "importSuccess": "Signatur erfolgreich importiert",
+      "importFailed": "Signatur importieren fehlgeschlagen",
+      "loadFailed": "Signaturen laden fehlgeschlagen",
+      "imageReadFailed": "Bild lesen fehlgeschlagen",
+      "invalidFileFormat": "Ungültiges Dateiformat",
+      "unexpectedError": "Unerwarteter Fehler aufgetreten",
+      "noChanges": "Keine Änderungen erkannt"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Originalautor",
+      "directExportAuthor": "Direkter Export-Autor",
+      "sameAuthor": "Originalautor / Direkter Exporteur",
+      "viewDetails": "Klicken für Details"
     }
   }
 }

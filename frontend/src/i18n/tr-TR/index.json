@@ -6,13 +6,13 @@
       "index": "Ayarlar",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Albüm sayfası",
+        "keytoneAlbumPageCaption": "Tuş sesi albümü sayfası ayarlarını özelleştirin",
+        "scrollBehavior": "Dalga formu kaydrma",
+        "scrollBehaviorCaption": "Dalga formunun oynatma kafaşını nasıl takip ettiğini kontrol eder",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Akıllı kenar itme",
+          "paged-jump": "Sayfa atlama"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone {license} lisansı altında yayınlanmıştır",
     "privacyPolicy": "Gizlilik Politikası",
     "userAgreement": "Kullanıcı Sözleşmesi",
+    "routing": {
+      "splitLabel": "Klavye/fare ayırma",
+      "keyboardLabel": "Klavye oynatma albümü",
+      "mouseLabel": "Fare oynatma albümü"
+    },
     "emptyState": {
       "noAlbum": "Henüz tuş sesi albümü yok",
       "goToAlbumPage": "Tuş sesi albümü sayfasına git",
@@ -65,6 +70,10 @@
       "saveAsNew": "Yeni albüm olarak kaydet",
       "cancel": "İçe aktarmayı iptal et",
       "confirm": "Onayla"
+    },
+    "editorNotice": {
+      "message": "Bu sayfa albüm oluşturma ve düzenleme içindir. Normal kullanımı etkilememek için geçici olarak 'editör dinleme' moduna alındı. Yeni albüm oluşturun veya düzenlenmek üzere bir albüm seçin.",
+      "dismiss": "Tekrar gösterme"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "Başlangıç zamanı (milisaniye)",
       "endTime": "Bitiş zamanı (milisaniye)",
       "volume": "Ses seviyesi",
+      "volumeDb": "Ses seviyesi (dB)",
+      "volumeOutOfRange": "Görüntüleme aralığı dışında (±18 dB)",
       "error": {
         "negativeTime": "Zaman negatif olamaz"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "Kullanıcı aynı kaynak dosyadan birden fazla bağımsız ses oluşturabilir",
         "soundName": "Sesin adı",
         "soundDuration": "Sesin başlangıç ve bitiş zamanı, milisaniye cinsinden. Tuş kullanımı için olduğundan süre çok uzun olmamalıdır.",
-        "volume": "0 orijinal ses seviyesidir, 0'dan büyük değerler sesi artırır, 0'dan küçük değerler sesi azaltır. Genellikle 0.1 adımlarla ayarlanır",
-        "volume_1": "Daha hassas ayarlar için manuel olarak 0.0001 gibi değerler girebilirsiniz. Her ses seviyesi değişikliğinden sonra etkiyi görmek için önizleme yapın, sesin çok düşük veya yüksek olmamasına dikkat edin.",
-        "previewSound": "Tuş sesleri genellikle çok kısadır, bu nedenle sürekli önizleme sesleri eşzamanlı olarak çalınır ve ilerleme çubuğu veya durdurma düğmesi yoktur (gerekirse uygulamayı yeniden başlatarak durdurabilirsiniz). Bu nedenle lütfen ses tanımlama prensiplerine uyun."
+        "volume": "Ses seviyesi dB cinsinden gösterilir. 0 dB = orijinal; 0'ın üstü artırır, altı azaltır.",
+        "volume_1": "±18 dB'nin ötesindeki değerler geçerlidir; dalga formu işaret kadar gösterilir. Her değişiklikten sonra önizleme yapın.",
+        "previewSound": "Tuş sesleri kısadır, bu yüzden arka arkaya önizlemeler aynı anda çalınır, ilerleme çubuğu veya durdurma düğmesi yoktur (gerekirse uygulamayı yeniden başlatın). Ses tanımlama prensiplerine uyun."
+      },
+      "waveformTrimmer": {
+        "play": "Oynat",
+        "pause": "Duraklat",
+        "stop": "Durdur",
+        "zoom": "Zoom",
+        "playScopeAll": "Tümünü oynat",
+        "playScopeSelection": "Seçimi oynat",
+        "noSource": "Dalga formunu görüntülemek için bir ses kaynağı seçin.",
+        "loading": "Dalga formu yükleniyor...",
+        "unavailableFallback": "Dalga formu kullanılamıyor. Manuel kırpma modu etkinleştirildi.",
+        "current": "Mevcut: ",
+        "total": "Toplam: ",
+        "selection": "Seçim: ",
+        "hint": "(Başlığı tıkla/sürükle; Ctrl+tekerlek zoom için; hızlı seçim için sağa sürükle; orta çizgiyi ses için sürükle (0=merkez))",
+        "hintMac": "(Başlığı tıkla/sürükle; ⌃Control/⌘Command+tekerlek veya trackpad kışımı zoom için; hızlı seçim için sağa sürükle; orta çizgiyi ses için sürükle (0=merkez))",
+        "volumeOutOfRange": "Görüntüleme aralığı dışında (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -311,7 +339,10 @@
       }
     },
     "mainHome": {
-      "mainHome": { "index": "Ana Sayfa Ayarları", "caption": "Ana sayfadaki ilgili işlevleri özelleştirin" },
+      "mainHome": {
+        "index": "Ana Sayfa Ayarları",
+        "caption": "Ana sayfadaki ilgili işlevleri özelleştirin"
+      },
       "音量降幅": {
         "index": "Ses Azaltma Oranı",
         "rulesErrorInfo": "Girilen değer 5'ten büyük veya eşit ve 100,000,000'dan küçük olmalıdır"
@@ -320,6 +351,132 @@
       "音量调试滑块": {
         "index": "Ses Ayar Kaydırıcısı",
         "caption": "Açıldığında, ana sayfadaki ses seviyesi çubuğunun altında ek bir ses ayar kaydırıcısı gösterilir"
+      },
+      "pressReleaseControl": {
+        "index": "Ayrı basış/bırakma ses seviyesi",
+        "caption": "Basış/bırakma için bağımsız ses ayarlarını etkinleştirir (klavye ve fare dahil)"
+      },
+      "pressReleasePanel": {
+        "title": "Basış/bırakma ses seviyesi ayarları",
+        "caption": "Sırayla yapılandırın: Genel → Klavye → Fare"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Genel basış/bırakma ses seviyesi",
+        "caption": "Birleşik ve ayrı modda etkin, olay durumuna göre üst üste eklenir"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Genel basış",
+          "reduceScope": "Genel basış ses azaltma",
+          "debugSlider": "Genel basış ses kaydırıcısı"
+        },
+        "up": {
+          "shortLabel": "Genel bırakma",
+          "reduceScope": "Genel bırakma ses azaltma",
+          "debugSlider": "Genel bırakma ses kaydırıcısı"
+        }
+      },
+      "routingSplit": {
+        "index": "Klavye/fare ayırma",
+        "caption": "Klavye ve fare için ayrı albüm ve ses seviyesi yapılandırmasına izin verir"
+      },
+      "splitVolumePanel": {
+        "title": "Ayrı mod ses seviyesi",
+        "caption": "Yalnızca ana sayfada ayırma etkinken aktif (genel sesin üzerine eklenir)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Klavye ses seviyesi",
+          "caption": "Yalnızca ayrı modda; genel sesin üzerine eklenir",
+          "shortLabel": "Klavye",
+          "reduceScope": "Klavye ses azaltma",
+          "debugSlider": "Klavye ses kaydırıcısı"
+        },
+        "mouse": {
+          "title": "Fare ses seviyesi",
+          "caption": "Yalnızca ayrı modda; genel sesin üzerine eklenir",
+          "shortLabel": "Fare",
+          "reduceScope": "Fare ses azaltma",
+          "debugSlider": "Fare ses kaydırıcısı"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Klavye basış/bırakma ses seviyesi",
+          "down": {
+            "shortLabel": "Klavye basış",
+            "reduceScope": "Klavye basış ses azaltma",
+            "debugSlider": "Klavye basış ses kaydırıcısı"
+          },
+          "up": {
+            "shortLabel": "Klavye bırakma",
+            "reduceScope": "Klavye bırakma ses azaltma",
+            "debugSlider": "Klavye bırakma ses kaydırıcısı"
+          }
+        },
+        "mouse": {
+          "title": "Fare basış/bırakma ses seviyesi",
+          "down": {
+            "shortLabel": "Fare basış",
+            "reduceScope": "Fare basış ses azaltma",
+            "debugSlider": "Fare basış ses kaydırıcısı"
+          },
+          "up": {
+            "shortLabel": "Fare bırakma",
+            "reduceScope": "Fare bırakma ses azaltma",
+            "debugSlider": "Fare bırakma ses kaydırıcısı"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Fare klavye yedeği",
+        "caption": "Ayrı modda fare albümü yoksa klavye albümünü kullan. Varsayılan kapalı: tam ayırma"
+      },
+      "randomVolumeControl": {
+        "index": "Rastgele ses seviyesi (genel)",
+        "caption": "Her oynatmada rastgele zayıflatma uygular (yükseltme olmadan)",
+        "maxReduceRatio": "Maks. rastgele azaltma (genel)",
+        "maxReduceRatioRule": "Değer >= 0 olmalıdır"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Rastgele ses (ayrı basış/bırakma)",
+        "caption": "Her senaryo için bireysel rastgele zayıflatma yapılandırmasına izin verir"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Basış/bırakma rastgele ses seviyesi",
+        "caption": "Sırayla yapılandırın: Genel → Klavye → Fare; her öğe yalnızca etkinleştirildiğinde uygulanır"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Genel basış rastgele",
+          "maxReduceRatio": "Maks. azaltma (genel basış)"
+        },
+        "up": {
+          "shortLabel": "Genel bırakma rastgele",
+          "maxReduceRatio": "Maks. azaltma (genel bırakma)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Klavye basış rastgele",
+            "maxReduceRatio": "Maks. azaltma (klavye basış)"
+          },
+          "up": {
+            "shortLabel": "Klavye bırakma rastgele",
+            "maxReduceRatio": "Maks. azaltma (klavye bırakma)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Fare basış rastgele",
+            "maxReduceRatio": "Maks. azaltma (fare basış)"
+          },
+          "up": {
+            "shortLabel": "Fare bırakma rastgele",
+            "maxReduceRatio": "Maks. azaltma (fare bırakma)"
+          }
+        }
       }
     }
   },
@@ -341,6 +498,329 @@
       "quit": "Çıkış",
       "mute": "Sessiz",
       "unmute": "Sesi Aç"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "İptal",
+      "continue": "Devam",
+      "back": "Geri"
+    },
+    "confirmSignature": {
+      "title": "İmza gerekli mi?",
+      "description": "Bu albümde henüz imza yok. Bu dışa aktarmada eklensin mi?",
+      "needSignature": "İmza ekle",
+      "noSignature": "İmzasız"
+    },
+    "authRequire": {
+      "title": "Türev eserler için yetki?",
+      "description": "Başkalarının türev eser oluşturmadan önce sizden yetki almasını ister misiniz?",
+      "recommend": "Önerilen: Yetki olmadan (daha iyi yayılım)",
+      "yes": "Yetki gerekli",
+      "no": "Yetki gerektirme"
+    },
+    "authImpact": {
+      "title": "Yetki etkisi",
+      "message": "Yetki etkin olduğunda başkaları izinsiz dışa aktaramaz, ancak yerel kullanım serbesttir. Yazar bilgileri her zaman eklenir. Devam edilsin mi?",
+      "confirm": "Anladım, devam"
+    },
+    "contact": {
+      "title": "Yetki için iletişim bilgileri",
+      "description": "Geçerli bir e-posta ve isteğe bağlı diğer iletişim bilgilerini girin.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "E-posta girin",
+      "emailRequired": "Lütfen geçerli bir e-posta girin",
+      "emailInvalid": "E-posta formatı geçersiz görünüyor",
+      "additionalLabel": "Diğer iletişim (isteğe bağlı)",
+      "additionalPlaceholder": "Sosyal medya, web sitesi vb.",
+      "hint": "İletişim bilgileri imzayla birlikte kaydedilecek"
+    },
+    "optionalContact": {
+      "title": "İletişim bırak (isteğe bağlı)",
+      "description": "İletişim bilgilerinizi bırakabilirsiniz. Bu adım isteğe bağlıdır.",
+      "hint": "İletişim bilgileri imzayla birlikte kaydedilecek",
+      "skip": "Atla",
+      "continue": "Kaydet ve devam"
+    },
+    "policyDialog": {
+      "title": "İmza politikası",
+      "noSignatureTitle": "İmza politikasını ayarla",
+      "description": "Bu albüm için imza ve yetki ayarlarını onaylayın",
+      "requireSignature": "İmza gerekli",
+      "noSignature": "İmzasız",
+      "requireSignatureHint": "Yazarı tanımlamak için imza ekle (yalnızca ilk dışa aktarmada mümkün)",
+      "noSignatureHint": "İmzasız dışa aktar (yalnızca ilk dışa aktarmada; sonraki değişiklikler imza gerektirecek)",
+      "authRequired": "Türev eserler imza sahibinin yetkisini gerektiriyor",
+      "authRequiredHint": "Etkinleştirildikten sonra başkaları tekrar dışa aktarmadan önce yetki almalıdır. Geri alınamaz.",
+      "tipsTitle": "İpuçları",
+      "tips": "• İmzasız albümler ilk dışa aktarmada imza alabilir\n• İmzalandıktan sonra tüm değişiklikler imza gerektirecek\n• Yetki ile başkaları izinsiz dışa aktaramaz",
+      "cancel": "İptal",
+      "continue": "Devam"
+    },
+    "test": {
+      "title": "🧪 Dışa aktarma akışı test ortamı",
+      "description": "Dışa aktarma akışı arayüzünü ve mantığını test etmek için senaryolar yapılandırın.",
+      "albumState": "Albüm durum yapılandırması",
+      "hasSignature": "Mevcut albümün imzası var",
+      "hasSignatureHint": "Albümde imza olduğunu belirtir. Aksi takdirde onay iletişim kutusu görünür.",
+      "requireAuth": "Orijinal yazar türev eserler için yetki gerektiriyor",
+      "requireAuthHint": "Yalnızca albümde imza varsa geçerli. Yetki kontrol iletişim kutusunu gösterir.",
+      "currentState": "Mevcut yapılandırma durumu",
+      "flowExplain": "📋 Akış ve iletişim kutuları açıklaması",
+      "openDialog": "Test ayarlarını aç",
+      "apply": "Yapılandırmayı uygula",
+      "close": "Kapat"
+    },
+    "authGateDialog": {
+      "title": "Yetki gerekli",
+      "description": "Bu albümü dışa aktarmak için yazardan yetki almanız gerekiyor",
+      "authorContact": "Yazar iletişim bilgileri",
+      "email": "E-posta",
+      "additionalContact": "Alternatif iletişim",
+      "noContact": "İletişim bilgisi sağlanmadı",
+      "contactHint": "Yazarı aşağıdaki yollarla iletşim kurun",
+      "copy": "Kopyala",
+      "importAuthFile": "Yetki dosyasını içe aktar",
+      "importHint": "Devam etmek için yazarın yetki dosyasını içe aktarın",
+      "selectFile": "Yetki dosyasını seç",
+      "fileSelected": "Seçildi",
+      "importButton": "İçe aktar",
+      "help": "Yetki nasıl alınır?",
+      "continue": "Devam",
+      "cancel": "İptal",
+      "importSuccess": "Yetki başarılı",
+      "importSuccessMessage": "Yetki dosyası içe aktarıldı. Artık bu imzayla dışa aktarabilirsiniz.",
+      "importFailed": "Yetki dosyası doğrulaması başarısız. Dosyayı kontrol edin."
+    },
+    "pickerDialog": {
+      "title": "İmza seç",
+      "description": "Bu dışa aktarma için imzayı seçin",
+      "search": "İmza ara...",
+      "noResults": "İmza bulunamadı",
+      "emptyState": "İmza yok",
+      "createSignature": "İmza oluştur",
+      "importAuth": "Yetki içe aktar",
+      "authRequest": "Yetki talep et",
+      "createHint": "Yeni imza oluştur",
+      "selectHint": "İmza seç",
+      "noImage": "Görsel yok",
+      "noIntro": "Açıklama yok",
+      "originalAuthor": "Orijinal yazar",
+      "contributor": "Katkıda bulunan",
+      "unauthorized": "Yetkisiz",
+      "confirm": "Onayla",
+      "cancel": "İptal"
+    },
+    "authRequestDialog": {
+      "title": "Yetki talebi",
+      "step1Title": "İmza seç",
+      "step1Description": "Dışa aktarma yetkisi talep etmek için yetkisiz imzayı seçin",
+      "step2Title": "Talebi dışa aktar",
+      "step2Description": "Orijinal yazarın iletişim bilgilerini görüntüleyin ve talep dosyasını dışa aktarın",
+      "step3Title": "Tamamlandı",
+      "selectedSignature": "Seçili imza",
+      "qualificationFingerprint": "Nitelik parmak izi",
+      "copySuccess": "{label} panoya kopyalandı",
+      "copyFailed": "Kopyalama başarısız",
+      "authorContact": "Orijinal yazar iletişim bilgileri",
+      "email": "E-posta",
+      "additionalContact": "Alternatif iletişim",
+      "noContact": "İletişim bilgisi yok",
+      "copy": "Kopyala",
+      "instructions": "Talimatlar",
+      "instructionTip": "Önce orijinal yazarla irtibata geçilerek niyet doğrulanması önerilir.",
+      "instruction1": "Dosyayı (.ktauthreq) indirmek için 'Talebi dışa aktar' düğmesine tıklayın",
+      "instruction2": "Dosyayı yukarıdaki iletişim bilgileriyle orijinal yazara gönderin",
+      "instruction3": "Yetki dosyasını (.ktauth) aldıktan sonra dışa aktarma akışında içe aktarın",
+      "noSignatures": "Kullanılabilir imza yok. Önce bir imza oluşturun.",
+      "noUnauthorizedSignatures": "Tüm imzalar yetkili. Mevcut birini kullanın veya yenisini oluşturun.",
+      "createSignature": "İmza oluştur",
+      "noIntro": "Açıklama yok",
+      "next": "Sonraki",
+      "back": "Geri",
+      "exportRequest": "Talebi dışa aktar",
+      "cancel": "İptal",
+      "done": "Tamamlandı",
+      "exportSuccess": "Talep dosyası dışa aktarıldı",
+      "exportSuccessHint": "Dosyayı orijinal yazara gönderin ve yetki dosyasını bekleyin",
+      "exportFailed": "Talep dışa aktarma başarısız",
+      "missingParams": "Gerekli parametreler eksik"
+    },
+    "signatureInfoDialog": {
+      "title": "Albüm imzası bilgileri",
+      "noSignature": "Bu albümde henüz imza yok",
+      "noSignatureHint": "Yazarı tanımlamak için dışa aktarma sırasında imza ekleyin",
+      "originalAuthor": "Orijinal yazar",
+      "requireAuth": "Dışa aktarma için yetki gerekli",
+      "noAuthRequired": "Yetki gerekmez",
+      "noName": "(İsim yok)",
+      "noIntro": "(Açıklama yok)",
+      "qualificationFingerprint": "Nitelik parmak izi",
+      "contactSection": "İletişim",
+      "email": "E-posta",
+      "noEmail": "(Ayarlanmadı)",
+      "additionalContact": "Ek iletişim",
+      "authStatus": "Yetki durumu",
+      "requireAuthorization": "Yetki gerekli",
+      "noAuthorization": "Yetki gerekmez",
+      "authorizedCount": "{count} imza yetkili",
+      "authUUID": "Yetki UUID",
+      "noAuthUUID": "(Ayarlanmadı)",
+      "latestExporterFingerprint": "Son dışa aktarıcı parmak izi",
+      "noLatestExporter": "(Ayarlanmadı)",
+      "authorizedList": "Yetkili imzalar",
+      "directExportAuthor": "Doğrudan dışa aktarma yazarı",
+      "latestExporter": "Son dışa aktarıcı",
+      "contributorAuthors": "Katkıda bulunan yazarlar",
+      "signatureStats": "İmza istatistikleri",
+      "totalSignatures": "Toplam {count} imza",
+      "originalAuthorCount": "1 orijinal yazar",
+      "contributorCount": "{count} katkıda bulunan",
+      "close": "Kapat",
+      "retry": "Tekrar dene",
+      "copySuccess": "{label} panoya kopyalandı",
+      "copyFailed": "Kopyalama başarısız"
+    },
+    "signatureUpdateConfirm": {
+      "title": "İmza güncellemeyi onayla",
+      "message": "Seçilen imza albümdekinden farklı. Ayrıntılar (açıklama, görsel) güncellensin mi?",
+      "update": "Güncelle",
+      "noUpdate": "Güncelleme"
+    },
+    "notify": {
+      "contactCopied": "İletişim kopyalandı",
+      "authFileImported": "Yetki dosyası içe aktarıldı"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "İmza yönetimi",
+      "create": "İmza oluştur",
+      "import": "İmza içe aktar",
+      "authGrant": "Yetki işle",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "export": "Dışa aktar",
+      "loadError": "İmzalar yüklenemedi",
+      "retry": "Tekrar dene",
+      "emptyState": "İmza yok",
+      "createFirst": "İlk imzayı oluştur",
+      "noImage": "Kartvizit görseli yok",
+      "noImageHint": "Bu imzanın kartvizit görseli yok",
+      "noImagePreviewTip": "Bu imzanın kartvizit görseli yok"
+    },
+    "authGrant": {
+      "title": "Yetki işle",
+      "step1Description": "Yetki talep dosyasını içe aktar (.ktauthreq)",
+      "step2Description": "Talebi incele ve karar ver",
+      "selectFile": "Talep dosyasını seç",
+      "fileImported": "Dosya başarıyla içe aktarıldı",
+      "importButton": "İçe aktar",
+      "parseError": "Talep dosyası ayrıştırılamadı",
+      "noPermission": "Bu talebi işlemek için yetki yok. Karşılıklı imzaya sahip olduğunuzu kontrol edin.",
+      "albumId": "Albüm ID (hash)",
+      "requester": "Talep eden",
+      "requesterFingerprint": "Talep eden parmak izi",
+      "yourSignature": "Sizin imzanız",
+      "noMatchingSignature": "Eşleşen imza bulunamadı",
+      "selectSignature": "Yetki için imza seç",
+      "qualificationFingerprint": "Nitelik parmak izi",
+      "copySuccess": "{label} panoya kopyalandı",
+      "copyFailed": "Kopyalama başarısız",
+      "warning": "Yetkilendirmeden sonra talep eden imzasıyla albümü dışa aktarabilir. Talep edene güveniyor musunuz?",
+      "approve": "Yetkilendir ve dışa aktar",
+      "cancel": "İptal",
+      "back": "Geri",
+      "next": "Sonraki",
+      "done": "Tamamlandı",
+      "exportSuccess": "Yetki dosyası başarıyla dışa aktarıldı",
+      "exportSuccessHint": "Dosyayı (.ktauth) talep edene gönderin",
+      "exportFailed": "Yetki dosyası dışa aktarma başarısız"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Parmak izi",
+      "fingerprintTitle": "Nitelik parmak izi",
+      "fingerprintCopied": "Nitelik parmak izi panoya kopyalandı"
+    },
+    "form": {
+      "createTitle": "İmza oluştur",
+      "editTitle": "İmzayı düzenle",
+      "editWarning": "Düzenleme sonrasında bu imzalı albümlerin imzayı güncellemek için yeniden dışa aktarılması gerekecek.",
+      "name": "İmza adı",
+      "nameHint": "1-50 karakter",
+      "nameRequired": "İmza adını girin",
+      "nameTooLong": "Ad 50 karakteri geçemez",
+      "intro": "Kişisel tanıtım",
+      "introHint": "Maks. 500 karakter (isteğe bağlı)",
+      "introTooLong": "Tanıtım 500 karakteri geçemez",
+      "cardImage": "Kartvizit görseli",
+      "cardImageFileName": "İmza kartviçti",
+      "selectImage": "Görsel seç",
+      "imageHint": "PNG, JPEG, WebP, GIF ve diğer görsel formatlarını destekler",
+      "clickToPreview": "Önizlemek için tıklayın",
+      "cancel": "İptal",
+      "create": "Oluştur",
+      "update": "Güncelle",
+      "close": "Kapat"
+    },
+    "delete": {
+      "confirmTitle": "Silmeyi onayla",
+      "confirm": "Bu imzayı sil"
+    },
+    "export": {
+      "comingSoon": "Dışa aktarma özelliği yakında",
+      "confirmTitle": "İmza dışa aktarmayı onayla",
+      "confirmMessage": "⚠️ Güvenlik uyarısı",
+      "confirmWarning": "İmza dosyasını güvenli saklayın ve paylaşmayın!",
+      "confirmDetail": "Dosyaya sahip olan herkes içe aktarabilir ve imzanızı kullanabilir. Güvenli bir yerde saklayın.",
+      "confirmRisks": "Riskler:",
+      "riskItem1": "• İmza dosyasını başkalarıyla paylaşmayın",
+      "riskItem2": "• Dosyayı genel ağlara yüklemeyin",
+      "riskItem3": "• Kayıp önlemek için yedek alın",
+      "confirmButton": "Riskleri anladım, dışa aktarmaya devam",
+      "cancelButton": "İptal"
+    },
+    "import": {
+      "title": "İmza içe aktar",
+      "selectFile": ".ktsign dosyasını seç",
+      "fileHint": "KeyTone imza dosyası seçin (.ktsign)",
+      "import": "İçe aktar",
+      "conflictTitle": "İmza zaten mevcut",
+      "conflictMessage": "\"{name}\" imzası zaten mevcut. Üzerine yazılsın mı?"
+    },
+    "select": {
+      "title": "İmza seç",
+      "description": "Albüm yazarını tanımlamak için bir imza seçin",
+      "emptyState": "Kullanılabilir imza yok",
+      "createSignature": "İmza oluşturmaya git",
+      "noIntro": "Açıklama yok",
+      "noSignature": "İmzasız",
+      "confirm": "Onayla"
+    },
+    "notify": {
+      "createSuccess": "İmza başarıyla oluşturuldu",
+      "createFailed": "İmza oluşturulamadı",
+      "updateSuccess": "İmza başarıyla güncellendi",
+      "updateFailed": "İmza güncellenemedi",
+      "deleteSuccess": "İmza başarıyla silindi",
+      "deleteFailed": "İmza silinemedi",
+      "exportSuccess": "İmza başarıyla dışa aktarıldı",
+      "exportFailed": "İmza dışa aktarılamadı",
+      "importSuccess": "İmza başarıyla içe aktarıldı",
+      "importFailed": "İmza içe aktarılamadı",
+      "loadFailed": "İmzalar yüklenemedi",
+      "imageReadFailed": "Görsel okunamadı",
+      "invalidFileFormat": "Geçersiz dosya formatı",
+      "unexpectedError": "Beklenmeyen bir hata oluştu",
+      "noChanges": "Değişiklik algılanmadı"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Orijinal yazar",
+      "directExportAuthor": "Doğrudan dışa aktarma yazarı",
+      "sameAuthor": "Orijinal yazar / Doğrudan dışa aktarma",
+      "viewDetails": "Ayrıntıları görmek için tıklayın"
     }
   }
 }

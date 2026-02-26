@@ -6,13 +6,13 @@
       "index": "Pengaturan",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Halaman album",
+        "keytoneAlbumPageCaption": "Sesuaikan pengaturan halaman album KeyTone",
+        "scrollBehavior": "Gulir bentuk gelombang",
+        "scrollBehaviorCaption": "Mengontrol cara bentuk gelombang mengikuti kepala putar saat diputar",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Dorong tepi cerdas",
+          "paged-jump": "Lompat halaman"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone dirilis di bawah lisensi {license}",
     "privacyPolicy": "Kebijakan Privasi",
     "userAgreement": "Perjanjian Pengguna",
+    "routing": {
+      "splitLabel": "Pisah keyboard/mouse",
+      "keyboardLabel": "Album putar keyboard",
+      "mouseLabel": "Album putar mouse"
+    },
     "emptyState": {
       "noAlbum": "Belum ada album KeyTone",
       "goToAlbumPage": "Pergi ke halaman album KeyTone",
@@ -65,6 +70,10 @@
       "saveAsNew": "Simpan sebagai album baru",
       "cancel": "Batalkan impor",
       "confirm": "Konfirmasi"
+    },
+    "editorNotice": {
+      "message": "Halaman ini untuk membuat dan mengedit album. Untuk tidak mengganggu penggunaan normal, aplikasi telah beralih ke mode 'mendengarkan editor'. Buat album baru atau pilih album untuk diedit.",
+      "dismiss": "Jangan tampilkan lagi"
     }
   },
   "KeyToneAlbum": {
@@ -169,7 +178,9 @@
       "cropSound": "Potong dan definisikan suara yang kita butuhkan dari file audio sumber",
       "startTime": "Waktu Mulai (milidetik)",
       "endTime": "Waktu Akhir (milidetik)",
-      "volume": "Volume Suara",
+      "volume": "Volume",
+      "volumeDb": "Volume (dB)",
+      "volumeOutOfRange": "Di luar rentang tampilan (±18 dB)",
       "error": {
         "negativeTime": "Waktu tidak boleh negatif"
       },
@@ -185,6 +196,23 @@
         "volume": "0 adalah volume asli, lebih dari 0 untuk meningkatkan volume, kurang dari 0 untuk menurunkan volume. Langkah umum adalah 0.1",
         "volume_1": "Anda juga dapat memasukkan secara manual untuk penyesuaian yang lebih halus, seperti 0.0001. Silakan pratinjau ulang setelah setiap penyesuaian volume untuk memeriksa efeknya, hindari volume terlalu kecil atau terlalu besar.",
         "previewSound": "Suara untuk tombol biasanya sangat pendek, sehingga suara pratinjau akan diputar secara bersamaan, dan tidak menyediakan bilah kemajuan dan tombol berhenti (jika perlu, Anda dapat menghentikannya dengan me-restart aplikasi). Oleh karena itu, ikuti prinsip definisi suara."
+      },
+      "waveformTrimmer": {
+        "play": "Putar",
+        "pause": "Jeda",
+        "stop": "Berhenti",
+        "zoom": "Zoom",
+        "playScopeAll": "Putar semua",
+        "playScopeSelection": "Putar seleksi",
+        "noSource": "Pilih file audio untuk menampilkan bentuk gelombang.",
+        "loading": "Memuat bentuk gelombang...",
+        "unavailableFallback": "Bentuk gelombang tidak tersedia. Mode pemangkasan manual diaktifkan.",
+        "current": "Saat ini: ",
+        "total": "Total: ",
+        "selection": "Seleksi: ",
+        "hint": "(Klik/seret kepala putar; Ctrl+gulir untuk zoom; seret kanan untuk seleksi cepat; seret garis tengah untuk volume (0=tengah))",
+        "hintMac": "(Klik/seret kepala putar; ⌃Control/⌘Command+gulir atau cubit trackpad untuk zoom; seret kanan untuk seleksi cepat; seret garis tengah untuk volume (0=tengah))",
+        "volumeOutOfRange": "Di luar rentang tampilan (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "Slider Debug Volume",
         "caption": "Jika diaktifkan, slider debug volume tambahan akan ditampilkan di bawah bilah kemajuan volume di halaman utama"
+      },
+      "pressReleaseControl": {
+        "index": "Volume tekan/lepas terpisah",
+        "caption": "Mengaktifkan pengaturan volume independen untuk tekan/lepas (termasuk keyboard dan mouse)"
+      },
+      "pressReleasePanel": {
+        "title": "Pengaturan volume tekan/lepas",
+        "caption": "Konfigurasikan secara berurutan: Global → Keyboard → Mouse"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Volume tekan/lepas global",
+        "caption": "Aktif di mode gabungan dan terpisah, diterapkan sesuai status kejadian"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Tekan global",
+          "reduceScope": "Reduksi volume tekan global",
+          "debugSlider": "Slider volume tekan global"
+        },
+        "up": {
+          "shortLabel": "Lepas global",
+          "reduceScope": "Reduksi volume lepas global",
+          "debugSlider": "Slider volume lepas global"
+        }
+      },
+      "routingSplit": {
+        "index": "Pisah keyboard/mouse",
+        "caption": "Memungkinkan konfigurasi album dan volume terpisah untuk keyboard dan mouse"
+      },
+      "splitVolumePanel": {
+        "title": "Volume mode terpisah",
+        "caption": "Hanya aktif saat mode terpisah diaktifkan di halaman utama (diterapkan di atas volume global)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Volume keyboard",
+          "caption": "Hanya di mode terpisah; diterapkan di atas volume global",
+          "shortLabel": "Keyboard",
+          "reduceScope": "Reduksi volume keyboard",
+          "debugSlider": "Slider volume keyboard"
+        },
+        "mouse": {
+          "title": "Volume mouse",
+          "caption": "Hanya di mode terpisah; diterapkan di atas volume global",
+          "shortLabel": "Mouse",
+          "reduceScope": "Reduksi volume mouse",
+          "debugSlider": "Slider volume mouse"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Volume tekan/lepas keyboard",
+          "down": {
+            "shortLabel": "Keyboard tekan",
+            "reduceScope": "Reduksi volume tekan keyboard",
+            "debugSlider": "Slider volume tekan keyboard"
+          },
+          "up": {
+            "shortLabel": "Keyboard lepas",
+            "reduceScope": "Reduksi volume lepas keyboard",
+            "debugSlider": "Slider volume lepas keyboard"
+          }
+        },
+        "mouse": {
+          "title": "Volume tekan/lepas mouse",
+          "down": {
+            "shortLabel": "Mouse tekan",
+            "reduceScope": "Reduksi volume tekan mouse",
+            "debugSlider": "Slider volume tekan mouse"
+          },
+          "up": {
+            "shortLabel": "Mouse lepas",
+            "reduceScope": "Reduksi volume lepas mouse",
+            "debugSlider": "Slider volume lepas mouse"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Fallback mouse ke keyboard",
+        "caption": "Mode terpisah: gunakan album keyboard bila tidak ada album mouse. Default off: pemisahan penuh"
+      },
+      "randomVolumeControl": {
+        "index": "Volume acak (global)",
+        "caption": "Setiap pemutaran menerapkan redaman acak (tanpa peningkatan)",
+        "maxReduceRatio": "Reduksi acak maks (global)",
+        "maxReduceRatioRule": "Nilai harus >= 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Volume acak (tekan/lepas terpisah)",
+        "caption": "Memungkinkan konfigurasi redaman acak individual untuk setiap skenario"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Volume acak tekan/lepas",
+        "caption": "Konfigurasikan secara berurutan: Global → Keyboard → Mouse; setiap item hanya berlaku bila diaktifkan"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Tekan global acak",
+          "maxReduceRatio": "Reduksi maks (tekan global)"
+        },
+        "up": {
+          "shortLabel": "Lepas global acak",
+          "maxReduceRatio": "Reduksi maks (lepas global)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Keyboard tekan acak",
+            "maxReduceRatio": "Reduksi maks (keyboard tekan)"
+          },
+          "up": {
+            "shortLabel": "Keyboard lepas acak",
+            "maxReduceRatio": "Reduksi maks (keyboard lepas)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Mouse tekan acak",
+            "maxReduceRatio": "Reduksi maks (mouse tekan)"
+          },
+          "up": {
+            "shortLabel": "Mouse lepas acak",
+            "maxReduceRatio": "Reduksi maks (mouse lepas)"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "Keluar",
       "mute": "Bisukan",
       "unmute": "Aktifkan Suara"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "Batal",
+      "continue": "Lanjutkan",
+      "back": "Kembali"
+    },
+    "confirmSignature": {
+      "title": "Perlu tanda tangan?",
+      "description": "Album ini belum memiliki tanda tangan. Tambahkan saat ekspor ini?",
+      "needSignature": "Tambah tanda tangan",
+      "noSignature": "Tanpa tanda tangan"
+    },
+    "authRequire": {
+      "title": "Otorisasi untuk karya turunan?",
+      "description": "Apakah Anda ingin orang lain meminta otorisasi sebelum membuat karya turunan?",
+      "recommend": "Direkomendasikan: Tanpa otorisasi (distribusi lebih luas)",
+      "yes": "Wajib otorisasi",
+      "no": "Tidak perlu otorisasi"
+    },
+    "authImpact": {
+      "title": "Dampak otorisasi",
+      "message": "Dengan otorisasi aktif, orang lain tidak dapat mengekspor tanpa izin, namun penggunaan lokal bebas. Info penulis selalu disertakan. Lanjutkan?",
+      "confirm": "Mengerti, lanjutkan"
+    },
+    "contact": {
+      "title": "Info kontak untuk otorisasi",
+      "description": "Masukkan email yang valid dan kontak opsional lainnya.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Masukkan email",
+      "emailRequired": "Masukkan email yang valid",
+      "emailInvalid": "Format email tampaknya tidak valid",
+      "additionalLabel": "Kontak lain (opsional)",
+      "additionalPlaceholder": "Media sosial, website, dll.",
+      "hint": "Info kontak akan disimpan bersama tanda tangan"
+    },
+    "optionalContact": {
+      "title": "Tinggalkan kontak (opsional)",
+      "description": "Anda dapat meninggalkan info kontak. Langkah ini opsional.",
+      "hint": "Info kontak akan disimpan bersama tanda tangan",
+      "skip": "Lewati",
+      "continue": "Simpan dan lanjutkan"
+    },
+    "policyDialog": {
+      "title": "Kebijakan tanda tangan",
+      "noSignatureTitle": "Atur kebijakan tanda tangan",
+      "description": "Konfirmasi pengaturan tanda tangan dan otorisasi untuk album ini",
+      "requireSignature": "Wajib tanda tangan",
+      "noSignature": "Tanpa tanda tangan",
+      "requireSignatureHint": "Tambah tanda tangan untuk identifikasi penulis (hanya bisa saat ekspor pertama)",
+      "noSignatureHint": "Ekspor tanpa tanda tangan (hanya pertama kali; perubahan berikutnya membutuhkan tanda tangan)",
+      "authRequired": "Karya turunan memerlukan otorisasi dari penanda tangan",
+      "authRequiredHint": "Setelah diaktifkan, orang lain harus mendapat otorisasi sebelum mengekspor ulang. Tidak dapat dibatalkan.",
+      "tipsTitle": "Tips",
+      "tips": "• Album tanpa tanda tangan bisa mendapatkannya saat ekspor pertama\n• Setelah ditandatangani semua perubahan memerlukan tanda tangan\n• Dengan otorisasi orang lain tidak dapat mengekspor tanpa izin",
+      "cancel": "Batal",
+      "continue": "Lanjutkan"
+    },
+    "test": {
+      "title": "🧪 Lingkungan pengujian alur ekspor",
+      "description": "Konfigurasikan skenario pengujian untuk memverifikasi antarmuka dan logika alur ekspor.",
+      "albumState": "Konfigurasi status album",
+      "hasSignature": "Album saat ini memiliki tanda tangan",
+      "hasSignatureHint": "Menunjukkan album memiliki tanda tangan. Jika tidak, dialog konfirmasi akan muncul.",
+      "requireAuth": "Penulis asli memerlukan otorisasi untuk karya turunan",
+      "requireAuthHint": "Hanya berlaku bila album memiliki tanda tangan. Menampilkan dialog kontrol otorisasi.",
+      "currentState": "Status konfigurasi saat ini",
+      "flowExplain": "📋 Penjelasan alur dan dialog",
+      "openDialog": "Buka pengaturan pengujian",
+      "apply": "Terapkan konfigurasi",
+      "close": "Tutup"
+    },
+    "authGateDialog": {
+      "title": "Otorisasi diperlukan",
+      "description": "Anda perlu otorisasi dari penulis untuk mengekspor album ini",
+      "authorContact": "Kontak penulis",
+      "email": "Email",
+      "additionalContact": "Kontak alternatif",
+      "noContact": "Tidak ada info kontak",
+      "contactHint": "Hubungi penulis melalui cara berikut",
+      "copy": "Salin",
+      "importAuthFile": "Impor file otorisasi",
+      "importHint": "Impor file otorisasi dari penulis untuk melanjutkan",
+      "selectFile": "Pilih file otorisasi",
+      "fileSelected": "Dipilih",
+      "importButton": "Impor",
+      "help": "Bagaimana cara mendapatkan otorisasi?",
+      "continue": "Lanjutkan",
+      "cancel": "Batal",
+      "importSuccess": "Otorisasi berhasil",
+      "importSuccessMessage": "File otorisasi telah diimpor. Sekarang Anda dapat mengekspor dengan tanda tangan ini.",
+      "importFailed": "Verifikasi file otorisasi gagal. Periksa file Anda."
+    },
+    "pickerDialog": {
+      "title": "Pilih tanda tangan",
+      "description": "Pilih tanda tangan untuk ekspor ini",
+      "search": "Cari tanda tangan...",
+      "noResults": "Tidak ada tanda tangan ditemukan",
+      "emptyState": "Tidak ada tanda tangan",
+      "createSignature": "Buat tanda tangan",
+      "importAuth": "Impor otorisasi",
+      "authRequest": "Minta otorisasi",
+      "createHint": "Buat tanda tangan baru",
+      "selectHint": "Pilih tanda tangan",
+      "noImage": "Tidak ada gambar",
+      "noIntro": "Tidak ada deskripsi",
+      "originalAuthor": "Penulis asli",
+      "contributor": "Kontributor",
+      "unauthorized": "Belum diotorisasi",
+      "confirm": "Konfirmasi",
+      "cancel": "Batal"
+    },
+    "authRequestDialog": {
+      "title": "Permintaan otorisasi",
+      "step1Title": "Pilih tanda tangan",
+      "step1Description": "Pilih tanda tangan yang belum diotorisasi untuk meminta otorisasi ekspor",
+      "step2Title": "Ekspor permintaan",
+      "step2Description": "Lihat kontak penulis asli dan ekspor file permintaan",
+      "step3Title": "Selesai",
+      "selectedSignature": "Tanda tangan dipilih",
+      "qualificationFingerprint": "Sidik jari kualifikasi",
+      "copySuccess": "{label} disalin ke clipboard",
+      "copyFailed": "Gagal menyalin",
+      "authorContact": "Kontak penulis asli",
+      "email": "Email",
+      "additionalContact": "Kontak alternatif",
+      "noContact": "Tidak ada kontak",
+      "copy": "Salin",
+      "instructions": "Petunjuk",
+      "instructionTip": "Disarankan untuk menghubungi penulis asli terlebih dahulu untuk mengkonfirmasi niat.",
+      "instruction1": "Klik 'Ekspor permintaan' untuk mengunduh file (.ktauthreq)",
+      "instruction2": "Kirim file ke penulis asli melalui kontak di atas",
+      "instruction3": "Setelah menerima file otorisasi (.ktauth), impor ke alur ekspor",
+      "noSignatures": "Tidak ada tanda tangan tersedia. Buat tanda tangan terlebih dahulu.",
+      "noUnauthorizedSignatures": "Semua tanda tangan telah diotorisasi. Gunakan yang ada atau buat baru.",
+      "createSignature": "Buat tanda tangan",
+      "noIntro": "Tidak ada deskripsi",
+      "next": "Berikutnya",
+      "back": "Kembali",
+      "exportRequest": "Ekspor permintaan",
+      "cancel": "Batal",
+      "done": "Selesai",
+      "exportSuccess": "File permintaan diekspor",
+      "exportSuccessHint": "Kirim file ke penulis asli dan tunggu file otorisasi",
+      "exportFailed": "Gagal mengekspor permintaan",
+      "missingParams": "Parameter yang diperlukan hilang"
+    },
+    "signatureInfoDialog": {
+      "title": "Info tanda tangan album",
+      "noSignature": "Album ini belum memiliki tanda tangan",
+      "noSignatureHint": "Tambah tanda tangan saat ekspor untuk mengidentifikasi penulis",
+      "originalAuthor": "Penulis asli",
+      "requireAuth": "Otorisasi diperlukan untuk ekspor",
+      "noAuthRequired": "Tidak perlu otorisasi",
+      "noName": "(Tidak ada nama)",
+      "noIntro": "(Tidak ada deskripsi)",
+      "qualificationFingerprint": "Sidik jari kualifikasi",
+      "contactSection": "Kontak",
+      "email": "Email",
+      "noEmail": "(Belum diatur)",
+      "additionalContact": "Kontak tambahan",
+      "authStatus": "Status otorisasi",
+      "requireAuthorization": "Wajib otorisasi",
+      "noAuthorization": "Tidak perlu otorisasi",
+      "authorizedCount": "{count} tanda tangan diotorisasi",
+      "authUUID": "UUID otorisasi",
+      "noAuthUUID": "(Belum diatur)",
+      "latestExporterFingerprint": "Sidik jari pengekspor terbaru",
+      "noLatestExporter": "(Belum diatur)",
+      "authorizedList": "Tanda tangan diotorisasi",
+      "directExportAuthor": "Penulis ekspor langsung",
+      "latestExporter": "Pengekspor terbaru",
+      "contributorAuthors": "Penulis kontributor",
+      "signatureStats": "Statistik tanda tangan",
+      "totalSignatures": "Total {count} tanda tangan",
+      "originalAuthorCount": "1 penulis asli",
+      "contributorCount": "{count} kontributor",
+      "close": "Tutup",
+      "retry": "Coba lagi",
+      "copySuccess": "{label} disalin ke clipboard",
+      "copyFailed": "Gagal menyalin"
+    },
+    "signatureUpdateConfirm": {
+      "title": "Konfirmasi pembaruan tanda tangan",
+      "message": "Tanda tangan yang dipilih berbeda dari yang ada di album. Perbarui detail (deskripsi, gambar)?",
+      "update": "Perbarui",
+      "noUpdate": "Jangan perbarui"
+    },
+    "notify": {
+      "contactCopied": "Kontak disalin",
+      "authFileImported": "File otorisasi diimpor"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "Manajemen tanda tangan",
+      "create": "Buat tanda tangan",
+      "import": "Impor tanda tangan",
+      "authGrant": "Proses otorisasi",
+      "edit": "Edit",
+      "delete": "Hapus",
+      "export": "Ekspor",
+      "loadError": "Gagal memuat tanda tangan",
+      "retry": "Coba lagi",
+      "emptyState": "Tidak ada tanda tangan",
+      "createFirst": "Buat tanda tangan pertama",
+      "noImage": "Tidak ada gambar kartu nama",
+      "noImageHint": "Tanda tangan ini tidak memiliki gambar kartu nama",
+      "noImagePreviewTip": "Tanda tangan ini tidak memiliki gambar kartu nama"
+    },
+    "authGrant": {
+      "title": "Proses otorisasi",
+      "step1Description": "Impor file permintaan otorisasi (.ktauthreq)",
+      "step2Description": "Tinjau permintaan dan buat keputusan",
+      "selectFile": "Pilih file permintaan",
+      "fileImported": "File berhasil diimpor",
+      "importButton": "Impor",
+      "parseError": "Tidak dapat mengurai file permintaan",
+      "noPermission": "Tidak ada izin untuk memproses permintaan ini. Periksa apakah Anda memiliki tanda tangan yang sesuai.",
+      "albumId": "ID album (hash)",
+      "requester": "Pemohon",
+      "requesterFingerprint": "Sidik jari pemohon",
+      "yourSignature": "Tanda tangan Anda",
+      "noMatchingSignature": "Tidak ada tanda tangan yang cocok",
+      "selectSignature": "Pilih tanda tangan untuk otorisasi",
+      "qualificationFingerprint": "Sidik jari kualifikasi",
+      "copySuccess": "{label} disalin ke clipboard",
+      "copyFailed": "Gagal menyalin",
+      "warning": "Setelah otorisasi, pemohon dapat mengekspor album dengan tanda tangan mereka. Apakah Anda mempercayai pemohon?",
+      "approve": "Otorisasi dan ekspor",
+      "cancel": "Batal",
+      "back": "Kembali",
+      "next": "Berikutnya",
+      "done": "Selesai",
+      "exportSuccess": "File otorisasi berhasil diekspor",
+      "exportSuccessHint": "Kirim file (.ktauth) kepada pemohon",
+      "exportFailed": "Gagal mengekspor file otorisasi"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Sidik jari",
+      "fingerprintTitle": "Sidik jari kualifikasi",
+      "fingerprintCopied": "Sidik jari kualifikasi disalin ke clipboard"
+    },
+    "form": {
+      "createTitle": "Buat tanda tangan",
+      "editTitle": "Edit tanda tangan",
+      "editWarning": "Setelah diedit, album dengan tanda tangan ini perlu diekspor ulang untuk memperbarui tanda tangan.",
+      "name": "Nama tanda tangan",
+      "nameHint": "1-50 karakter",
+      "nameRequired": "Masukkan nama tanda tangan",
+      "nameTooLong": "Nama tidak boleh melebihi 50 karakter",
+      "intro": "Presentasi diri",
+      "introHint": "Maks. 500 karakter (opsional)",
+      "introTooLong": "Presentasi tidak boleh melebihi 500 karakter",
+      "cardImage": "Gambar kartu nama",
+      "cardImageFileName": "Kartu nama tanda tangan",
+      "selectImage": "Pilih gambar",
+      "imageHint": "Mendukung PNG, JPEG, WebP, GIF dan format gambar lainnya",
+      "clickToPreview": "Klik untuk pratinjau",
+      "cancel": "Batal",
+      "create": "Buat",
+      "update": "Perbarui",
+      "close": "Tutup"
+    },
+    "delete": {
+      "confirmTitle": "Konfirmasi hapus",
+      "confirm": "Hapus tanda tangan ini"
+    },
+    "export": {
+      "comingSoon": "Fitur ekspor segera hadir",
+      "confirmTitle": "Konfirmasi ekspor tanda tangan",
+      "confirmMessage": "⚠️ Peringatan keamanan",
+      "confirmWarning": "Simpan file tanda tangan dengan aman dan jangan dibagikan!",
+      "confirmDetail": "Siapapun yang memiliki file dapat mengimpornya dan menggunakan tanda tangan Anda. Simpan di tempat yang aman.",
+      "confirmRisks": "Risiko:",
+      "riskItem1": "• Jangan bagikan file tanda tangan kepada orang lain",
+      "riskItem2": "• Jangan unggah file ke jaringan publik",
+      "riskItem3": "• Buat cadangan untuk mencegah kehilangan",
+      "confirmButton": "Saya mengerti risikonya, lanjutkan ekspor",
+      "cancelButton": "Batal"
+    },
+    "import": {
+      "title": "Impor tanda tangan",
+      "selectFile": "Pilih file .ktsign",
+      "fileHint": "Pilih file tanda tangan KeyTone (.ktsign)",
+      "import": "Impor",
+      "conflictTitle": "Tanda tangan sudah ada",
+      "conflictMessage": "Tanda tangan \"{name}\" sudah ada. Timpa?"
+    },
+    "select": {
+      "title": "Pilih tanda tangan",
+      "description": "Pilih tanda tangan untuk mengidentifikasi penulis album",
+      "emptyState": "Tidak ada tanda tangan tersedia",
+      "createSignature": "Pergi ke buat tanda tangan",
+      "noIntro": "Tidak ada deskripsi",
+      "noSignature": "Tanpa tanda tangan",
+      "confirm": "Konfirmasi"
+    },
+    "notify": {
+      "createSuccess": "Tanda tangan berhasil dibuat",
+      "createFailed": "Gagal membuat tanda tangan",
+      "updateSuccess": "Tanda tangan berhasil diperbarui",
+      "updateFailed": "Gagal memperbarui tanda tangan",
+      "deleteSuccess": "Tanda tangan berhasil dihapus",
+      "deleteFailed": "Gagal menghapus tanda tangan",
+      "exportSuccess": "Tanda tangan berhasil diekspor",
+      "exportFailed": "Gagal mengekspor tanda tangan",
+      "importSuccess": "Tanda tangan berhasil diimpor",
+      "importFailed": "Gagal mengimpor tanda tangan",
+      "loadFailed": "Gagal memuat tanda tangan",
+      "imageReadFailed": "Gagal membaca gambar",
+      "invalidFileFormat": "Format file tidak valid",
+      "unexpectedError": "Terjadi kesalahan yang tidak terduga",
+      "noChanges": "Tidak ada perubahan terdeteksi"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Penulis asli",
+      "directExportAuthor": "Penulis ekspor langsung",
+      "sameAuthor": "Penulis asli / Ekspor langsung",
+      "viewDetails": "Klik untuk melihat detail"
     }
   }
 }

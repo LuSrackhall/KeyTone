@@ -6,13 +6,13 @@
       "index": "Paramètres",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Page d'album",
+        "keytoneAlbumPageCaption": "Personnaliser les paramètres de la page d'albums sonores",
+        "scrollBehavior": "Défilement de la forme d'onde",
+        "scrollBehaviorCaption": "Contrôle comment la forme d'onde suit la tête de lecture pendant la lecture",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Poussée intelligente des bords",
+          "paged-jump": "Saut de page"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone est publié sous licence {license}",
     "privacyPolicy": "Politique de confidentialité",
     "userAgreement": "Conditions d'utilisation",
+    "routing": {
+      "splitLabel": "Séparation clavier/souris",
+      "keyboardLabel": "Album lecture clavier",
+      "mouseLabel": "Album lecture souris"
+    },
     "emptyState": {
       "noAlbum": "Aucun album sonore",
       "goToAlbumPage": "Aller à la page d'albums",
@@ -65,6 +70,10 @@
       "saveAsNew": "Enregistrer comme nouvel album",
       "cancel": "Annuler l'importation",
       "confirm": "Confirmer"
+    },
+    "editorNotice": {
+      "message": "Cette page est dédiée à la création et l'édition d'albums. Pour ne pas perturber l'utilisation normale, elle est temporairement en mode 'écoute d'édition'. Veuillez créer un nouvel album ou sélectionner un album à modifier.",
+      "dismiss": "Ne plus afficher"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "Temps de début (ms)",
       "endTime": "Temps de fin (ms)",
       "volume": "Volume sonore",
+      "volumeDb": "Volume sonore (dB)",
+      "volumeOutOfRange": "Hors plage d'affichage (±18 dB)",
       "error": {
         "negativeTime": "Le temps ne peut pas être négatif"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "Vous pouvez découper et définir plusieurs sons indépendants à partir du même fichier source",
         "soundName": "Nom du son",
         "soundDuration": "Temps de début et de fin du son, en millisecondes. Comme il sera utilisé pour les touches, la durée ne devrait pas être trop longue.",
-        "volume": "0 est le volume original, supérieur à 0 augmente le volume, inférieur à 0 diminue le volume. La progression habituelle est de 0.1",
-        "volume_1": "Vous pouvez également saisir manuellement des valeurs plus précises, comme 0.0001. Prévisualisez après chaque ajustement pour éviter un volume trop faible ou trop élevé.",
-        "previewSound": "Les sons de touche sont généralement courts, donc les prévisualisations consécutives se joueront simultanément sans barre de progression ni bouton d'arrêt (redémarrez l'application si nécessaire pour arrêter). Suivez donc les principes de définition des sons."
+        "volume": "Le volume est affiché en dB. 0 dB = volume original ; au-dessus de 0 augmente, en-dessous de 0 diminue.",
+        "volume_1": "Les valeurs dépassant ±18 dB sont valides mais la forme d'onde ne s'affichera qu'à la limite. Prévisualisez après chaque modification.",
+        "previewSound": "Les sons de touche sont généralement courts, donc les prévisualisations consécutives se jouent simultanément sans barre de progression ni bouton d'arrêt (redémarrez l'app si nécessaire). Respectez les principes de définition des sons."
+      },
+      "waveformTrimmer": {
+        "play": "Lecture",
+        "pause": "Pause",
+        "stop": "Arrêt",
+        "zoom": "Zoom",
+        "playScopeAll": "Lire tout",
+        "playScopeSelection": "Lire la sélection",
+        "noSource": "Veuillez sélectionner un fichier audio source pour afficher la forme d'onde.",
+        "loading": "Chargement de la forme d'onde...",
+        "unavailableFallback": "Forme d'onde indisponible. Mode manuel activé.",
+        "current": "Actuel : ",
+        "total": "Total : ",
+        "selection": "Sélection : ",
+        "hint": "(Cliquer/glisser la tête de lecture ; Ctrl+molette pour zoomer ; glisser droit pour sélection rapide ; glisser la ligne centrale pour le volume (0=centre))",
+        "hintMac": "(Cliquer/glisser la tête de lecture ; ⌃Control/⌘Command+molette ou pincement trackpad pour zoomer ; glisser droit pour sélection rapide ; glisser la ligne centrale pour le volume (0=centre))",
+        "volumeOutOfRange": "Hors plage d'affichage (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "Curseur de débogage du volume",
         "caption": "Lorsqu'activé, affiche un curseur de débogage du volume supplémentaire sous la barre de progression du volume de la page principale"
+      },
+      "pressReleaseControl": {
+        "index": "Volume appui/relâchement séparé",
+        "caption": "Active des paramètres de volume indépendants pour l'appui/relâchement (inclut clavier et souris ; sans mode séparation sur la page principale)"
+      },
+      "pressReleasePanel": {
+        "title": "Paramètres volume appui/relâchement",
+        "caption": "Configurer dans l'ordre : Global → Clavier → Souris"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Volume global appui/relâchement",
+        "caption": "Actif en mode unifié et séparé, superposé selon l'état de l'événement"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Global appui",
+          "reduceScope": "Réduction volume global appui",
+          "debugSlider": "Curseur volume global appui"
+        },
+        "up": {
+          "shortLabel": "Global relâchement",
+          "reduceScope": "Réduction volume global relâchement",
+          "debugSlider": "Curseur volume global relâchement"
+        }
+      },
+      "routingSplit": {
+        "index": "Séparation clavier/souris",
+        "caption": "Permet de configurer des albums et volumes distincts pour le clavier et la souris"
+      },
+      "splitVolumePanel": {
+        "title": "Volume mode séparé",
+        "caption": "Actif uniquement si le mode séparé est activé sur la page principale (superposé avec le volume global)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Volume clavier",
+          "caption": "Actif uniquement en mode séparé, superposé avec le volume global",
+          "shortLabel": "Clavier",
+          "reduceScope": "Réduction volume clavier",
+          "debugSlider": "Curseur volume clavier"
+        },
+        "mouse": {
+          "title": "Volume souris",
+          "caption": "Actif uniquement en mode séparé, superposé avec le volume global",
+          "shortLabel": "Souris",
+          "reduceScope": "Réduction volume souris",
+          "debugSlider": "Curseur volume souris"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Volume clavier appui/relâchement",
+          "down": {
+            "shortLabel": "Clavier appui",
+            "reduceScope": "Réduction volume clavier appui",
+            "debugSlider": "Curseur volume clavier appui"
+          },
+          "up": {
+            "shortLabel": "Clavier relâchement",
+            "reduceScope": "Réduction volume clavier relâchement",
+            "debugSlider": "Curseur volume clavier relâchement"
+          }
+        },
+        "mouse": {
+          "title": "Volume souris appui/relâchement",
+          "down": {
+            "shortLabel": "Souris appui",
+            "reduceScope": "Réduction volume souris appui",
+            "debugSlider": "Curseur volume souris appui"
+          },
+          "up": {
+            "shortLabel": "Souris relâchement",
+            "reduceScope": "Réduction volume souris relâchement",
+            "debugSlider": "Curseur volume souris relâchement"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Retour clavier pour souris",
+        "caption": "En mode séparé, utilise l'album clavier si aucun album souris. Désactivé par défaut : séparation totale"
+      },
+      "randomVolumeControl": {
+        "index": "Volume aléatoire (global)",
+        "caption": "Applique une atténuation aléatoire à chaque lecture (sans amplification)",
+        "maxReduceRatio": "Atténuation max aléatoire (global)",
+        "maxReduceRatioRule": "La valeur doit être supérieure ou égale à 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Volume aléatoire (appui/relâchement séparé)",
+        "caption": "Permet de configurer une atténuation aléatoire pour chaque scénario appui/relâchement et clavier/souris"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Volume aléatoire appui/relâchement",
+        "caption": "Configurer dans l'ordre : Global → Clavier → Souris ; chaque élément s'applique uniquement si activé"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Global appui aléatoire",
+          "maxReduceRatio": "Atténuation max aléatoire (global appui)"
+        },
+        "up": {
+          "shortLabel": "Global relâchement aléatoire",
+          "maxReduceRatio": "Atténuation max aléatoire (global relâchement)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Clavier appui aléatoire",
+            "maxReduceRatio": "Atténuation max aléatoire (clavier appui)"
+          },
+          "up": {
+            "shortLabel": "Clavier relâchement aléatoire",
+            "maxReduceRatio": "Atténuation max aléatoire (clavier relâchement)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Souris appui aléatoire",
+            "maxReduceRatio": "Atténuation max aléatoire (souris appui)"
+          },
+          "up": {
+            "shortLabel": "Souris relâchement aléatoire",
+            "maxReduceRatio": "Atténuation max aléatoire (souris relâchement)"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "Quitter",
       "mute": "Muet",
       "unmute": "Activer le son"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "Annuler",
+      "continue": "Continuer",
+      "back": "Retour"
+    },
+    "confirmSignature": {
+      "title": "Signature requise ?",
+      "description": "Cet album n'a pas encore de signature. Souhaitez-vous en ajouter une lors de l'exportation ?",
+      "needSignature": "Ajouter une signature",
+      "noSignature": "Sans signature"
+    },
+    "authRequire": {
+      "title": "Autorisation pour les œuvres dérivées ?",
+      "description": "Voulez-vous que les autres obtiennent votre autorisation avant de créer des œuvres dérivées ?",
+      "recommend": "Recommandé : Sans autorisation (meilleure diffusion)",
+      "yes": "Autorisation requise",
+      "no": "Sans autorisation"
+    },
+    "authImpact": {
+      "title": "Impact de l'activation de l'autorisation",
+      "message": "Avec l'autorisation activée, les autres ne peuvent pas exporter sans permission, mais l'utilisation locale et les modifications personnelles restent libres. Les infos d'auteur sont toujours incluses même sans autorisation. Continuer ?",
+      "confirm": "Compris, continuer"
+    },
+    "contact": {
+      "title": "Coordonnées pour les autorisations",
+      "description": "Veuillez saisir une adresse e-mail valide et éventuellement d'autres moyens de contact.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "Saisir l'adresse e-mail",
+      "emailRequired": "Veuillez saisir une adresse e-mail valide",
+      "emailInvalid": "Le format de l'e-mail semble incorrect",
+      "additionalLabel": "Autres coordonnées (optionnel)",
+      "additionalPlaceholder": "Réseaux sociaux, site web, etc.",
+      "hint": "Ces coordonnées seront enregistrées avec la signature"
+    },
+    "optionalContact": {
+      "title": "Laisser des coordonnées (optionnel)",
+      "description": "Vous pouvez laisser vos coordonnées pour être contacté. Cette étape est optionnelle.",
+      "hint": "Les coordonnées seront enregistrées avec la signature",
+      "skip": "Ignorer",
+      "continue": "Enregistrer et continuer"
+    },
+    "policyDialog": {
+      "title": "Politique de signature",
+      "noSignatureTitle": "Définir la politique de signature",
+      "description": "Confirmez comment gérer la signature et les exigences d'autorisation pour cet album",
+      "requireSignature": "Signature requise",
+      "noSignature": "Sans signature",
+      "requireSignatureHint": "Ajouter une signature pour identifier l'auteur (choix possible uniquement au premier export)",
+      "noSignatureHint": "Exporter sans signature (choix possible au premier export ; modifications ultérieures nécessiteront une signature)",
+      "authRequired": "Les œuvres dérivées nécessitent l'autorisation de l'auteur signataire",
+      "authRequiredHint": "Une fois activé, les autres doivent obtenir une autorisation avant de réexporter. Ce choix est irréversible.",
+      "tipsTitle": "Conseils",
+      "tips": "• Les albums sans signature peuvent en recevoir une au premier export\n• Une fois signés, toutes les modifications nécessiteront une signature\n• Avec autorisation, les autres ne peuvent pas exporter sans permission",
+      "cancel": "Annuler",
+      "continue": "Continuer"
+    },
+    "test": {
+      "title": "🧪 Environnement de test du flux d'export",
+      "description": "Configurez des scénarios de test pour vérifier l'interface et la logique du flux d'exportation.",
+      "albumState": "Configuration de l'état de l'album",
+      "hasSignature": "L'album actuel a une signature",
+      "hasSignatureHint": "Indique que cet album a des traces de signature. Sinon le dialogue de confirmation de signature s'affichera.",
+      "requireAuth": "L'auteur original exige une autorisation pour les œuvres dérivées",
+      "requireAuthHint": "Valide uniquement si l'album a une signature. Affiche le dialogue de contrôle d'autorisation.",
+      "currentState": "État de configuration actuel",
+      "flowExplain": "📋 Explication du flux et dialogues",
+      "openDialog": "Ouvrir les paramètres de test",
+      "apply": "Appliquer la configuration",
+      "close": "Fermer"
+    },
+    "authGateDialog": {
+      "title": "Autorisation requise",
+      "description": "Vous devez obtenir l'autorisation de l'auteur avant d'exporter cet album",
+      "authorContact": "Contact de l'auteur",
+      "email": "E-mail",
+      "additionalContact": "Contact alternatif",
+      "noContact": "Aucune coordonnée fournie",
+      "contactHint": "Contactez l'auteur via les moyens suivants",
+      "copy": "Copier",
+      "importAuthFile": "Importer le fichier d'autorisation",
+      "importHint": "Veuillez importer le fichier d'autorisation de l'auteur pour continuer",
+      "selectFile": "Sélectionner le fichier d'autorisation",
+      "fileSelected": "Sélectionné",
+      "importButton": "Importer",
+      "help": "Comment obtenir l'autorisation ?",
+      "continue": "Continuer",
+      "cancel": "Annuler",
+      "importSuccess": "Autorisation réussie",
+      "importSuccessMessage": "Fichier d'autorisation importé avec succès. Vous pouvez maintenant exporter avec cette signature.",
+      "importFailed": "Vérification du fichier d'autorisation échouée. Veuillez vérifier le fichier."
+    },
+    "pickerDialog": {
+      "title": "Choisir une signature",
+      "description": "Veuillez sélectionner la signature pour cet export",
+      "search": "Rechercher des signatures...",
+      "noResults": "Aucune signature correspondante",
+      "emptyState": "Aucune signature",
+      "createSignature": "Créer une signature",
+      "importAuth": "Importer l'autorisation",
+      "authRequest": "Demander l'autorisation",
+      "createHint": "Cliquer pour créer une nouvelle signature",
+      "selectHint": "Cliquer pour sélectionner une signature",
+      "noImage": "Aucune image",
+      "noIntro": "Aucune description",
+      "originalAuthor": "Auteur original",
+      "contributor": "Contributeur",
+      "unauthorized": "Non autorisé",
+      "confirm": "Confirmer",
+      "cancel": "Annuler"
+    },
+    "authRequestDialog": {
+      "title": "Demande d'autorisation",
+      "step1Title": "Choisir une signature",
+      "step1Description": "Choisir une signature non autorisée pour demander l'autorisation d'export",
+      "step2Title": "Exporter la demande",
+      "step2Description": "Consulter les coordonnées de l'auteur original et exporter le fichier de demande",
+      "step3Title": "Terminé",
+      "selectedSignature": "Signature sélectionnée",
+      "qualificationFingerprint": "Empreinte de qualification",
+      "copySuccess": "{label} copié dans le presse-papiers",
+      "copyFailed": "Copie échouée",
+      "authorContact": "Contact de l'auteur original",
+      "email": "E-mail",
+      "additionalContact": "Contact alternatif",
+      "noContact": "Aucune coordonnée fournie",
+      "copy": "Copier",
+      "instructions": "Instructions",
+      "instructionTip": "Il est recommandé de contacter d'abord l'auteur original pour confirmer son intention.",
+      "instruction1": "Cliquer 'Exporter la demande' pour télécharger le fichier (.ktauthreq)",
+      "instruction2": "Envoyer le fichier à l'auteur original via les coordonnées ci-dessus",
+      "instruction3": "Après réception du fichier d'autorisation (.ktauth), l'importer dans le flux d'export",
+      "noSignatures": "Aucune signature disponible. Veuillez d'abord créer une signature.",
+      "noUnauthorizedSignatures": "Toutes les signatures sont autorisées. Utilisez une signature existante ou créez-en une nouvelle.",
+      "createSignature": "Créer une signature",
+      "noIntro": "Aucune description",
+      "next": "Suivant",
+      "back": "Retour",
+      "exportRequest": "Exporter la demande",
+      "cancel": "Annuler",
+      "done": "Terminé",
+      "exportSuccess": "Fichier de demande exporté",
+      "exportSuccessHint": "Envoyez le fichier à l'auteur original et attendez le fichier d'autorisation",
+      "exportFailed": "Export de la demande échoué",
+      "missingParams": "Paramètres requis manquants"
+    },
+    "signatureInfoDialog": {
+      "title": "Informations de signature de l'album",
+      "noSignature": "Cet album ne contient encore aucune signature",
+      "noSignatureHint": "Ajoutez une signature lors de l'export pour identifier l'auteur",
+      "originalAuthor": "Auteur original",
+      "requireAuth": "Autorisation requise pour l'export",
+      "noAuthRequired": "Sans autorisation",
+      "noName": "(Sans nom)",
+      "noIntro": "(Sans description)",
+      "qualificationFingerprint": "Empreinte de qualification",
+      "contactSection": "Coordonnées",
+      "email": "E-mail",
+      "noEmail": "(Non défini)",
+      "additionalContact": "Contact supplémentaire",
+      "authStatus": "Statut d'autorisation",
+      "requireAuthorization": "Autorisation requise",
+      "noAuthorization": "Sans autorisation",
+      "authorizedCount": "{count} signature(s) autorisée(s)",
+      "authUUID": "UUID d'autorisation",
+      "noAuthUUID": "(Non défini)",
+      "latestExporterFingerprint": "Empreinte du dernier exporteur",
+      "noLatestExporter": "(Non défini)",
+      "authorizedList": "Signatures autorisées",
+      "directExportAuthor": "Auteur d'export direct",
+      "latestExporter": "Dernier exporteur",
+      "contributorAuthors": "Auteurs contributeurs",
+      "signatureStats": "Statistiques de signature",
+      "totalSignatures": "{count} signature(s) au total",
+      "originalAuthorCount": "1 auteur original",
+      "contributorCount": "{count} contributeur(s)",
+      "close": "Fermer",
+      "retry": "Réessayer",
+      "copySuccess": "{label} copié dans le presse-papiers",
+      "copyFailed": "Copie échouée"
+    },
+    "signatureUpdateConfirm": {
+      "title": "Confirmer la mise à jour de la signature",
+      "message": "La signature sélectionnée diffère de celle existante dans l'album. Mettre à jour les détails (description, image) ?",
+      "update": "Mettre à jour",
+      "noUpdate": "Ne pas mettre à jour"
+    },
+    "notify": {
+      "contactCopied": "Coordonnées copiées",
+      "authFileImported": "Fichier d'autorisation importé"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "Gestion des signatures",
+      "create": "Créer une signature",
+      "import": "Importer une signature",
+      "authGrant": "Traiter une autorisation",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "export": "Exporter",
+      "loadError": "Chargement des signatures échoué",
+      "retry": "Réessayer",
+      "emptyState": "Aucune signature",
+      "createFirst": "Créer la première signature",
+      "noImage": "Aucune image de carte de visite",
+      "noImageHint": "Cette signature n'a pas de carte de visite",
+      "noImagePreviewTip": "Cette signature n'a pas de carte de visite"
+    },
+    "authGrant": {
+      "title": "Traiter une autorisation",
+      "step1Description": "Importer le fichier de demande d'autorisation (.ktauthreq)",
+      "step2Description": "Examiner la demande et décider",
+      "selectFile": "Sélectionner le fichier de demande",
+      "fileImported": "Fichier importé avec succès",
+      "importButton": "Importer",
+      "parseError": "Impossible d'analyser le fichier de demande",
+      "noPermission": "Aucune permission pour traiter cette demande. Vérifiez que votre liste de signatures contient la signature correspondante.",
+      "albumId": "ID de l'album (hash)",
+      "requester": "Demandeur",
+      "requesterFingerprint": "Empreinte du demandeur",
+      "yourSignature": "Votre signature",
+      "noMatchingSignature": "Aucune signature correspondante trouvée",
+      "selectSignature": "Sélectionner la signature pour l'autorisation",
+      "qualificationFingerprint": "Empreinte de qualification",
+      "copySuccess": "{label} copié dans le presse-papiers",
+      "copyFailed": "Copie échouée",
+      "warning": "Après autorisation, le demandeur peut exporter l'album avec sa signature. Faites confiance au demandeur ?",
+      "approve": "Autoriser et exporter",
+      "cancel": "Annuler",
+      "back": "Retour",
+      "next": "Suivant",
+      "done": "Terminé",
+      "exportSuccess": "Fichier d'autorisation exporté avec succès",
+      "exportSuccessHint": "Veuillez envoyer le fichier (.ktauth) au demandeur",
+      "exportFailed": "Export du fichier d'autorisation échoué"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Empreinte",
+      "fingerprintTitle": "Empreinte de qualification",
+      "fingerprintCopied": "Empreinte de qualification copiée dans le presse-papiers"
+    },
+    "form": {
+      "createTitle": "Créer une signature",
+      "editTitle": "Modifier la signature",
+      "editWarning": "Après modification, les albums portant cette signature devront être réexportés pour mettre à jour la signature.",
+      "name": "Nom de la signature",
+      "nameHint": "1-50 caractères",
+      "nameRequired": "Veuillez saisir un nom de signature",
+      "nameTooLong": "Le nom ne peut dépasser 50 caractères",
+      "intro": "Description personnelle",
+      "introHint": "500 caractères max (optionnel)",
+      "introTooLong": "La description ne peut dépasser 500 caractères",
+      "cardImage": "Image de carte de visite",
+      "cardImageFileName": "Carte de signature",
+      "selectImage": "Sélectionner une image",
+      "imageHint": "Formats PNG, JPEG, WebP, GIF pris en charge",
+      "clickToPreview": "Cliquer pour prévisualiser",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "update": "Mettre à jour",
+      "close": "Fermer"
+    },
+    "delete": {
+      "confirmTitle": "Confirmer la suppression",
+      "confirm": "Supprimer cette signature"
+    },
+    "export": {
+      "comingSoon": "Fonction d'export bientôt disponible",
+      "confirmTitle": "Confirmer l'export de la signature",
+      "confirmMessage": "⚠️ Avertissement de sécurité",
+      "confirmWarning": "Conservez le fichier de signature en sécurité et ne le partagez pas !",
+      "confirmDetail": "Toute personne possédant le fichier peut l'importer et utiliser votre signature. Conservez-le en lieu sûr.",
+      "confirmRisks": "Risques :",
+      "riskItem1": "• Ne pas partager le fichier de signature",
+      "riskItem2": "• Ne pas télécharger sur un réseau public",
+      "riskItem3": "• Sauvegarder le fichier pour éviter toute perte",
+      "confirmButton": "Risques compris, continuer l'export",
+      "cancelButton": "Annuler"
+    },
+    "import": {
+      "title": "Importer une signature",
+      "selectFile": "Sélectionner un fichier .ktsign",
+      "fileHint": "Veuillez sélectionner un fichier de signature KeyTone (.ktsign)",
+      "import": "Importer",
+      "conflictTitle": "La signature existe déjà",
+      "conflictMessage": "La signature « {name} » existe déjà. Écraser ?"
+    },
+    "select": {
+      "title": "Sélectionner une signature",
+      "description": "Choisissez une signature pour identifier l'auteur de l'album",
+      "emptyState": "Aucune signature disponible",
+      "createSignature": "Aller créer une signature",
+      "noIntro": "Aucune description",
+      "noSignature": "Sans signature",
+      "confirm": "Confirmer"
+    },
+    "notify": {
+      "createSuccess": "Signature créée avec succès",
+      "createFailed": "Création de signature échouée",
+      "updateSuccess": "Signature mise à jour avec succès",
+      "updateFailed": "Mise à jour de signature échouée",
+      "deleteSuccess": "Signature supprimée avec succès",
+      "deleteFailed": "Suppression de signature échouée",
+      "exportSuccess": "Signature exportée avec succès",
+      "exportFailed": "Export de signature échoué",
+      "importSuccess": "Signature importée avec succès",
+      "importFailed": "Import de signature échoué",
+      "loadFailed": "Chargement des signatures échoué",
+      "imageReadFailed": "Lecture de l'image échouée",
+      "invalidFileFormat": "Format de fichier invalide",
+      "unexpectedError": "Une erreur inattendue s'est produite",
+      "noChanges": "Aucune modification détectée"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Auteur original",
+      "directExportAuthor": "Auteur d'export direct",
+      "sameAuthor": "Auteur original / Export direct",
+      "viewDetails": "Cliquer pour voir les détails"
     }
   }
 }

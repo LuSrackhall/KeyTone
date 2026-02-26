@@ -6,13 +6,13 @@
       "index": "設定",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "鍵音專輯頁相關",
+        "keytoneAlbumPageCaption": "對鍵音專輯頁中相關功能進行自定義設定",
+        "scrollBehavior": "波形捲動行為",
+        "scrollBehaviorCaption": "控制播放過程中波形跟隨播放頭的方式",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "智能邊緣推擠",
+          "paged-jump": "分頁式跳轉"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone 根據 {license} 許可證發布",
     "privacyPolicy": "隱私政策",
     "userAgreement": "使用者協議",
+    "routing": {
+      "splitLabel": "鍵盤/滑鼠分離",
+      "keyboardLabel": "鍵盤播放專輯",
+      "mouseLabel": "滑鼠播放專輯"
+    },
     "emptyState": {
       "noAlbum": "暫無鍵音專輯",
       "goToAlbumPage": "前往鍵音專輯頁面",
@@ -65,6 +70,10 @@
       "saveAsNew": "儲存為新專輯",
       "cancel": "取消匯入",
       "confirm": "確認"
+    },
+    "editorNotice": {
+      "message": "鍵音專輯頁面用於創作與編輯。為避免影響主頁日常使用，已暫切換至「編輯試聽模式」。請建立新專輯，或選擇要編輯的專輯。",
+      "dismiss": "不再提示"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "開始時間(毫秒)",
       "endTime": "結束時間(毫秒)",
       "volume": "聲音音量",
+      "volumeDb": "聲音音量（dB）",
+      "volumeOutOfRange": "超出可視範圍（±18 dB）",
       "error": {
         "negativeTime": "時間不能為負數"
       },
@@ -181,10 +192,27 @@
         "noImpactOnSource": "通過此步驟製作的聲音不會影響聲音源檔案",
         "multipleSoundsFromSameSource": "使用者可針對同一聲音源檔案裁剪定義出多個獨立的聲音",
         "soundName": "聲音的名稱",
-        "soundDuration": "聲音的開始時間和結束時間,以毫秒為單位.由於是按鍵使用,所以時間不宜過長.",
-        "volume": "0為原始音量,大於0為提升音量,小於0為降低音量.常用步進為0.1",
-        "volume_1": "當然您也可以手動輸入以做更細膩的調整, 如0.0001等.請在每次音量調整後重新預覽以查看效果, 防止音量過小或過大.",
-        "previewSound": "按鍵用的聲音通常很短, 因此連續預覽的聲音會並發播放, 且不提供進度條和停止按鈕(必要時候可通過重啟本應用來停止).因此請遵循聲音定義的原則."
+        "soundDuration": "聲音的開始時間和結束時間，以毫秒為單位。由於是按鍵使用，時間不宜過長。",
+        "volume": "音量以 dB 顯示，0 dB 為原始音量，大於 0 為提升，小於 0 為降低。",
+        "volume_1": "可輸入超過 ±18 dB 的値，設定仍會生效，但波形僅顯示到邊界；請每次調整後預覽以確認效果。",
+        "previewSound": "按鍵用的聲音通常很短，因此連續預覽的聲音會並發播放，且不提供進度条和停止按鈕（必要時可重啟應用來停止）。請遵循聲音定義的原則。"
+      },
+      "waveformTrimmer": {
+        "play": "播放",
+        "pause": "暫停",
+        "stop": "停止",
+        "zoom": "縮放",
+        "playScopeAll": "播放全部",
+        "playScopeSelection": "播放選區",
+        "noSource": "請選擇音訊源檔案以顯示波形。",
+        "loading": "正在載入波形...",
+        "unavailableFallback": "波形不可用，已降級為手動裁剪。",
+        "current": "目前：",
+        "total": "總長：",
+        "selection": "選區：",
+        "hint": "（支援黟按/拖動播放頭；Ctrl+滚輪可縮放；右鍵拖曳可快速選區；拖動中線可調音量（0在中位））",
+        "hintMac": "（支援黟按/拖動播放頭；⌃Control/⌘Command+滚輪或觸控板捽合可縮放；右鍵拖曳可快速選區；拖動中線可調音量（0在中位））",
+        "volumeOutOfRange": "已超出可視範圍（±18 dB）"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "音量調試滑塊",
         "caption": "開啟後, 會在主頁的音量進度條下方, 額外顯示音量調試滑塊"
+      },
+      "pressReleaseControl": {
+        "index": "按下/抬起音量單獨控制",
+        "caption": "開啟後展示並啟用按下/抬起獨立音量設定（包含對鍵盤及滑鼠的按下/抬起音量的單獨設定，無需在主頁開啟分離模式即可生效）"
+      },
+      "pressReleasePanel": {
+        "title": "按下/抬起獨立音量設定",
+        "caption": "展開後按 全域 → 鍵盤 → 滑鼠 順序設定按下/抬起音量"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "全域按下/抬起音量",
+        "caption": "統一模式與分離模式均生效，按觸發狀態疊加"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "全域按下",
+          "reduceScope": "全域按下音量降幅",
+          "debugSlider": "全域按下音量調試滑塊"
+        },
+        "up": {
+          "shortLabel": "全域抬起",
+          "reduceScope": "全域抬起音量降幅",
+          "debugSlider": "全域抬起音量調試滑塊"
+        }
+      },
+      "routingSplit": {
+        "index": "鍵盤/滑鼠分離",
+        "caption": "開啟後可分別為鍵盤與滑鼠設定播放專輯與獨立音量"
+      },
+      "splitVolumePanel": {
+        "title": "分離模式音量設定",
+        "caption": "僅在主頁面開啟分離時生效（與全域音量疊加）"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "鍵盤音量",
+          "caption": "僅在分離模式下生效，疊加在全域音量之上",
+          "shortLabel": "鍵盤",
+          "reduceScope": "鍵盤音量降幅",
+          "debugSlider": "鍵盤音量調試滑塊"
+        },
+        "mouse": {
+          "title": "滑鼠音量",
+          "caption": "僅在分離模式下生效，疊加在全域音量之上",
+          "shortLabel": "滑鼠",
+          "reduceScope": "滑鼠音量降幅",
+          "debugSlider": "滑鼠音量調試滑塊"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "鍵盤按下/抬起音量",
+          "down": {
+            "shortLabel": "鍵盤按下",
+            "reduceScope": "鍵盤按下音量降幅",
+            "debugSlider": "鍵盤按下音量調試滑塊"
+          },
+          "up": {
+            "shortLabel": "鍵盤抬起",
+            "reduceScope": "鍵盤抬起音量降幅",
+            "debugSlider": "鍵盤抬起音量調試滑塊"
+          }
+        },
+        "mouse": {
+          "title": "滑鼠按下/抬起音量",
+          "down": {
+            "shortLabel": "滑鼠按下",
+            "reduceScope": "滑鼠按下音量降幅",
+            "debugSlider": "滑鼠按下音量調試滑塊"
+          },
+          "up": {
+            "shortLabel": "滑鼠抬起",
+            "reduceScope": "滑鼠抬起音量降幅",
+            "debugSlider": "滑鼠抬起音量調試滑塊"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "滑鼠回退到鍵盤",
+        "caption": "分離模式下，若滑鼠專輯缺失則使用鍵盤專輯。預設關閉：徹底分離"
+      },
+      "randomVolumeControl": {
+        "index": "隨機音量（全域）",
+        "caption": "開啟後每次播放會在當前實際音量基礎上隨機衰減（不會放大）",
+        "maxReduceRatio": "隨機降幅上限（全域）",
+        "maxReduceRatioRule": "輸入值需大於等於0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "隨機音量（按下/抬起單獨控制）",
+        "caption": "開啟後可對按下/抬起及鍵盤/滑鼠場景單獨設定隨機降幅（若開啟全域隨機音量，生效過程將與全域隨機音量疊加）"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "按下/抬起隨機音量設定",
+        "caption": "展開後按 全域 → 鍵盤 → 滑鼠 順序設定；每項開啟後才會生效"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "全域按下隨機",
+          "maxReduceRatio": "隨機降幅上限（全域按下）"
+        },
+        "up": {
+          "shortLabel": "全域抬起隨機",
+          "maxReduceRatio": "隨機降幅上限（全域抬起）"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "鍵盤按下隨機",
+            "maxReduceRatio": "隨機降幅上限（鍵盤按下）"
+          },
+          "up": {
+            "shortLabel": "鍵盤抬起隨機",
+            "maxReduceRatio": "隨機降幅上限（鍵盤抬起）"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "滑鼠按下隨機",
+            "maxReduceRatio": "隨機降幅上限（滑鼠按下）"
+          },
+          "up": {
+            "shortLabel": "滑鼠抬起隨機",
+            "maxReduceRatio": "隨機降幅上限（滑鼠抬起）"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "退出",
       "mute": "靜音",
       "unmute": "取消靜音"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "取消",
+      "continue": "繼續",
+      "back": "返回"
+    },
+    "confirmSignature": {
+      "title": "是否需要簽名",
+      "description": "當前專輯尚未留下任何簽名痕跡，請選擇此次匯出是否需要新增簽名。",
+      "needSignature": "需要簽名",
+      "noSignature": "無需簽名"
+    },
+    "authRequire": {
+      "title": "二次創作是否需要授權",
+      "description": "是否要求他人在進行二次創作時，必須先獲得作者授權？",
+      "recommend": "推薦：無需授權（更利於傳播）",
+      "yes": "需要授權",
+      "no": "無需授權"
+    },
+    "authImpact": {
+      "title": "啟用授權的影響",
+      "message": "啟用「二次創作需授權」後，他人未經授權無法匯出此專輯，但本地使用或個人修改不受限制。即使不啟用，匯出檔案仍會保留原作者資訊。是否繼續？",
+      "confirm": "我已知曉並繼續"
+    },
+    "contact": {
+      "title": "填寫授權聯絡方式",
+      "description": "請先填寫一個有效電子郵件，可選地補充其他聯絡方式（社群媒體、官網等）。",
+      "emailLabel": "電子郵件",
+      "emailPlaceholder": "請輸入電子郵件地址",
+      "emailRequired": "請填寫有效的電子郵件地址",
+      "emailInvalid": "電子郵件格式看起來不正確",
+      "additionalLabel": "其他聯絡方式（選填）",
+      "additionalPlaceholder": "可補充社群媒體、官網等資訊",
+      "hint": "這些聯絡方式將隨簽名一同儲存，供申請授權者查閱"
+    },
+    "optionalContact": {
+      "title": "留下聯絡方式（可選）",
+      "description": "您可以選擇留下聯絡方式，便於他人與您取得聯繫。此步驟為可選，可直接略過。",
+      "hint": "聯絡方式將隨簽名一同儲存，供他人查閱",
+      "skip": "略過",
+      "continue": "儲存並繼續"
+    },
+    "policyDialog": {
+      "title": "簽名策略與要求",
+      "noSignatureTitle": "設定簽名策略",
+      "description": "請確認如何處理此專輯的簽名及授權要求",
+      "requireSignature": "需要簽名",
+      "noSignature": "無需簽名",
+      "requireSignatureHint": "為專輯新增簽名以標識創作者身份（僅首次匯出可選）",
+      "noSignatureHint": "此專輯匯出時不新增簽名（僅首次匯出可選，後續修改需留下簽名痕跡）",
+      "authRequired": "二次創作必須透過當前簽名作者授權",
+      "authRequiredHint": "啟用此項後，他人在重新匯出此專輯前需要獲得授權。本次選擇不可更改。",
+      "tipsTitle": "提示",
+      "tips": "• 無簽名痕跡的專輯首次匯出可選擇是否需要簽名\n• 一旦新增簽名，所有後續修改都需留下簽名痕跡\n• 啟用授權後，其他人無法在獲得授權前匯出此專輯",
+      "cancel": "取消",
+      "continue": "繼續"
+    },
+    "test": {
+      "title": "🧪 匯出流程測試環境",
+      "description": "設定測試場景以驗證匯出流程的 UI 與互動邏輯。選擇不同的專輯狀態組合，觀察流程中顯示的對話框順序與內容。",
+      "albumState": "專輯狀態設定",
+      "hasSignature": "當前專輯已有簽名",
+      "hasSignatureHint": "勾選表示此專輯之前已有過簽名痕跡。否則將顯示確認簽名對話框。",
+      "requireAuth": "原作者要求二次創作需授權",
+      "requireAuthHint": "僅在已有簽名時有效。勾選表示原作者選擇了二次創作需要授權，將顯示授權門控對話框。",
+      "currentState": "當前設定狀態",
+      "flowExplain": "📋 流程說明與對應對話框",
+      "openDialog": "開啟測試環境設定",
+      "apply": "套用設定",
+      "close": "關閉"
+    },
+    "authGateDialog": {
+      "title": "需要授權",
+      "description": "匯出此專輯前需要獲得作者授權",
+      "authorContact": "作者聯絡方式",
+      "email": "電子郵件",
+      "additionalContact": "備用聯絡方式",
+      "noContact": "未提供聯絡方式",
+      "contactHint": "請透過以下方式聯絡作者以獲取授權",
+      "copy": "複製",
+      "importAuthFile": "匯入授權檔案",
+      "importHint": "請匯入作者提供的授權檔案後再繼續",
+      "selectFile": "選擇授權檔案",
+      "fileSelected": "已選擇",
+      "importButton": "匯入",
+      "help": "如何獲取授權？",
+      "continue": "繼續",
+      "cancel": "取消",
+      "importSuccess": "授權成功",
+      "importSuccessMessage": "授權檔案已成功匯入，您現在可以使用該簽名匯出此專輯。",
+      "importFailed": "授權檔案驗證失敗，請確保檔案正確"
+    },
+    "pickerDialog": {
+      "title": "選擇簽名",
+      "description": "請選擇此次匯出使用的簽名",
+      "search": "搜尋簽名...",
+      "noResults": "未找到匹配的簽名",
+      "emptyState": "暫無簽名",
+      "createSignature": "建立簽名",
+      "importAuth": "匯入授權",
+      "authRequest": "申請授權",
+      "createHint": "點擊建立新簽名",
+      "selectHint": "點擊選擇簽名",
+      "noImage": "暫無圖片",
+      "noIntro": "暫無介紹",
+      "originalAuthor": "原始作者",
+      "contributor": "貢獻作者",
+      "unauthorized": "未授權",
+      "confirm": "確認",
+      "cancel": "取消"
+    },
+    "authRequestDialog": {
+      "title": "授權申請",
+      "step1Title": "選擇簽名",
+      "step1Description": "選擇一個未授權的簽名，為其申請此專輯的匯出授權",
+      "step2Title": "匯出申請",
+      "step2Description": "查看原始作者聯絡方式並匯出授權申請檔案",
+      "step3Title": "完成",
+      "selectedSignature": "已選簽名",
+      "qualificationFingerprint": "資格碼指紋",
+      "copySuccess": "{label}已複製到剪貼簿",
+      "copyFailed": "複製失敗",
+      "authorContact": "原始作者聯絡方式",
+      "email": "電子郵件",
+      "additionalContact": "備用聯絡方式",
+      "noContact": "未提供聯絡方式",
+      "copy": "複製",
+      "instructions": "操作說明",
+      "instructionTip": "建議先與原始作者取得聯繫並確認授權意向，以避免申請後無回應的情況。",
+      "instruction1": "點擊「匯出申請」按鈕下載授權申請檔案（.ktauthreq）",
+      "instruction2": "透過上方聯絡方式將申請檔案傳送給原始作者",
+      "instruction3": "收到原始作者回傳的授權檔案（.ktauth）後，在匯出流程中匯入即可",
+      "noSignatures": "暫無可用簽名，請先建立簽名",
+      "noUnauthorizedSignatures": "所有簽名均已授權，您可以使用現有簽名或建立新簽名後重新申請授權",
+      "createSignature": "建立簽名",
+      "noIntro": "暫無介紹",
+      "next": "下一步",
+      "back": "上一步",
+      "exportRequest": "匯出申請",
+      "cancel": "取消",
+      "done": "完成",
+      "exportSuccess": "授權申請檔案已匯出",
+      "exportSuccessHint": "請將檔案傳送給原始作者，等待其回傳授權檔案",
+      "exportFailed": "匯出授權申請檔案失敗",
+      "missingParams": "缺少必要參數"
+    },
+    "signatureInfoDialog": {
+      "title": "專輯簽名資訊",
+      "noSignature": "此專輯尚未包含任何簽名",
+      "noSignatureHint": "匯出專輯時可選擇新增簽名，用於標識創作者身份",
+      "originalAuthor": "原始作者",
+      "requireAuth": "需授權匯出",
+      "noAuthRequired": "無需授權",
+      "noName": "（未命名）",
+      "noIntro": "（無介紹）",
+      "qualificationFingerprint": "資格碼指紋",
+      "contactSection": "聯絡方式",
+      "email": "電子郵件",
+      "noEmail": "（未設定）",
+      "additionalContact": "其他聯絡方式",
+      "authStatus": "授權狀態",
+      "requireAuthorization": "需要授權",
+      "noAuthorization": "無需授權",
+      "authorizedCount": "已授權 {count} 個簽名",
+      "authUUID": "授權識別UUID",
+      "noAuthUUID": "（未設定）",
+      "latestExporterFingerprint": "最近匯出者資格碼指紋",
+      "noLatestExporter": "（未設定）",
+      "authorizedList": "已授權簽名列表",
+      "directExportAuthor": "直接匯出作者",
+      "latestExporter": "最近匯出者",
+      "contributorAuthors": "歷史貢獻作者",
+      "signatureStats": "簽名統計",
+      "totalSignatures": "共 {count} 個簽名",
+      "originalAuthorCount": "1 原始作者",
+      "contributorCount": "{count} 貢獻者",
+      "close": "關閉",
+      "retry": "重試",
+      "copySuccess": "{label}已複製到剪貼簿",
+      "copyFailed": "複製失敗"
+    },
+    "signatureUpdateConfirm": {
+      "title": "更新簽名確認",
+      "message": "所選簽名與專輯中已存在的該簽名內容有變更。是否確認更新該簽名的資訊（介紹、圖片）？",
+      "update": "更新",
+      "noUpdate": "不更新"
+    },
+    "notify": {
+      "contactCopied": "聯絡方式已複製",
+      "authFileImported": "授權檔案已匯入"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "簽名管理",
+      "create": "建立簽名",
+      "import": "匯入簽名",
+      "authGrant": "授權受理",
+      "edit": "編輯",
+      "delete": "刪除",
+      "export": "匯出",
+      "loadError": "載入簽名失敗",
+      "retry": "重試",
+      "emptyState": "暫無簽名",
+      "createFirst": "建立第一個簽名",
+      "noImage": "暫無名片圖片",
+      "noImageHint": "此簽名未提供名片",
+      "noImagePreviewTip": "此簽名未提供名片"
+    },
+    "authGrant": {
+      "title": "授權受理",
+      "step1Description": "匯入他人的授權申請檔案（.ktauthreq）",
+      "step2Description": "審核申請並決定是否授權",
+      "selectFile": "選擇授權申請檔案",
+      "fileImported": "檔案匯入成功",
+      "importButton": "匯入",
+      "parseError": "解析授權申請檔案失敗",
+      "noPermission": "您沒有權限受理此申請。請確保您的簽名列表中存在對應的簽名。",
+      "albumId": "專輯識別（雜湊值）",
+      "requester": "申請方",
+      "requesterFingerprint": "申請方資格碼指紋",
+      "yourSignature": "您的簽名",
+      "noMatchingSignature": "未在您的簽名列表中找到匹配的簽名",
+      "selectSignature": "選擇用於授權的簽名",
+      "qualificationFingerprint": "資格碼指紋",
+      "copySuccess": "{label}已複製到剪貼簿",
+      "copyFailed": "複製失敗",
+      "warning": "授權後，申請方將可以使用其自己的簽名匯出該專輯。請確保您信任申請方。",
+      "approve": "同意並匯出",
+      "cancel": "取消",
+      "back": "上一步",
+      "next": "下一步",
+      "done": "完成",
+      "exportSuccess": "授權檔案匯出成功",
+      "exportSuccessHint": "請將授權檔案（.ktauth）傳送給申請方",
+      "exportFailed": "匯出授權檔案失敗"
+    },
+    "contextMenu": {
+      "viewFingerprint": "指紋",
+      "fingerprintTitle": "資格碼指紋",
+      "fingerprintCopied": "資格碼指紋已複製到剪貼簿"
+    },
+    "form": {
+      "createTitle": "建立簽名",
+      "editTitle": "編輯簽名",
+      "editWarning": "編輯簽名後，如需為已簽該簽名的專輯中的簽名執行更新，則需對相關專輯重新進行簽名匯出操作。",
+      "name": "簽名名稱",
+      "nameHint": "1-50 個字元",
+      "nameRequired": "請輸入簽名名稱",
+      "nameTooLong": "簽名名稱不能超過 50 個字元",
+      "intro": "個人介紹",
+      "introHint": "最多 500 個字元（選填）",
+      "introTooLong": "個人介紹不能超過 500 個字元",
+      "cardImage": "名片圖片",
+      "cardImageFileName": "簽名卡片",
+      "selectImage": "選擇圖片",
+      "imageHint": "支援 PNG、JPEG、WebP、GIF 等圖片格式",
+      "clickToPreview": "點擊預覽",
+      "cancel": "取消",
+      "create": "建立",
+      "update": "更新",
+      "close": "關閉"
+    },
+    "delete": {
+      "confirmTitle": "確認刪除",
+      "confirm": "刪除此簽名"
+    },
+    "export": {
+      "comingSoon": "匯出功能即將推出",
+      "confirmTitle": "確認匯出簽名",
+      "confirmMessage": "⚠️ 安全警告",
+      "confirmWarning": "請妥善保管您的簽名檔案，不要將其傳送給他人！",
+      "confirmDetail": "只要持有簽名檔案，任何人都可以匯入並使用您的簽名進行簽名操作。請確保將簽名檔案儲存在安全的位置。",
+      "confirmRisks": "風險提示：",
+      "riskItem1": "• 不要與他人分享簽名檔案",
+      "riskItem2": "• 不要將簽名檔案上傳到公開網路",
+      "riskItem3": "• 妥善備份簽名檔案以防遺失",
+      "confirmButton": "我已了解風險，繼續匯出",
+      "cancelButton": "取消"
+    },
+    "import": {
+      "title": "匯入簽名",
+      "selectFile": "選擇 .ktsign 檔案",
+      "fileHint": "請選擇 KeyTone 簽名檔案（.ktsign）",
+      "import": "匯入",
+      "conflictTitle": "簽名已存在",
+      "conflictMessage": "簽名 \"{name}\" 已存在，是否覆蓋？"
+    },
+    "select": {
+      "title": "選擇簽名",
+      "description": "為專輯選擇一個簽名，用於標識創作者身份",
+      "emptyState": "暫無簽名",
+      "createSignature": "前往建立簽名",
+      "noIntro": "暫無介紹",
+      "noSignature": "不新增簽名",
+      "confirm": "確認"
+    },
+    "notify": {
+      "createSuccess": "簽名建立成功",
+      "createFailed": "簽名建立失敗",
+      "updateSuccess": "簽名更新成功",
+      "updateFailed": "簽名更新失敗",
+      "deleteSuccess": "簽名刪除成功",
+      "deleteFailed": "簽名刪除失敗",
+      "exportSuccess": "簽名匯出成功",
+      "exportFailed": "簽名匯出失敗",
+      "importSuccess": "簽名匯入成功",
+      "importFailed": "簽名匯入失敗",
+      "loadFailed": "簽名載入失敗",
+      "imageReadFailed": "圖片讀取失敗",
+      "invalidFileFormat": "無效的檔案格式",
+      "unexpectedError": "發生未知錯誤",
+      "noChanges": "未偵測到任何變更"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "原始作者",
+      "directExportAuthor": "直接匯出作者",
+      "sameAuthor": "原始作者 / 直接匯出作者",
+      "viewDetails": "點擊查看詳細資訊"
     }
   }
 }

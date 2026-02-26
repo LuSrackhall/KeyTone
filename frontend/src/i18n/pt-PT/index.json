@@ -6,13 +6,13 @@
       "index": "Configurações",
       "caption": "",
       "category": {
-        "keytoneAlbumPage": "KeyTone Album Page",
-        "keytoneAlbumPageCaption": "Customize settings for the KeyTone Album page",
-        "scrollBehavior": "Waveform Scrolling",
-        "scrollBehaviorCaption": "Controls how the waveform follows the playhead during playback",
+        "keytoneAlbumPage": "Página de álbum",
+        "keytoneAlbumPageCaption": "Personalizar as definições da página de álbum de sons",
+        "scrollBehavior": "Deslocamento da forma de onda",
+        "scrollBehaviorCaption": "Controla como a forma de onda segue o cabeçote de reprodução",
         "scrollOptions": {
-          "edge-push": "Smart Edge Push",
-          "paged-jump": "Paged Jump"
+          "edge-push": "Impulso inteligente de margem",
+          "paged-jump": "Salto de página"
         }
       }
     },
@@ -28,6 +28,11 @@
     "licenseText": "KeyTone é disponibilizado sob a licença {license}",
     "privacyPolicy": "Política de Privacidade",
     "userAgreement": "Acordo de Utilizador",
+    "routing": {
+      "splitLabel": "Separação teclado/rato",
+      "keyboardLabel": "Álbum reprodução teclado",
+      "mouseLabel": "Álbum reprodução rato"
+    },
     "emptyState": {
       "noAlbum": "Sem álbuns de sons de teclas",
       "goToAlbumPage": "Ir para a página de álbuns",
@@ -65,6 +70,10 @@
       "saveAsNew": "Guardar como novo álbum",
       "cancel": "Cancelar importação",
       "confirm": "Confirmar"
+    },
+    "editorNotice": {
+      "message": "Esta página destina-se à criação e edição de álbuns. Para não perturbar a utilização normal, foi alternado para o modo 'escuta de edição'. Crie um novo álbum ou selecione um para editar.",
+      "dismiss": "Não mostrar novamente"
     }
   },
   "KeyToneAlbum": {
@@ -170,6 +179,8 @@
       "startTime": "Tempo inicial (milissegundos)",
       "endTime": "Tempo final (milissegundos)",
       "volume": "Volume do som",
+      "volumeDb": "Volume do som (dB)",
+      "volumeOutOfRange": "Fora do intervalo de visualização (±18 dB)",
       "error": {
         "negativeTime": "O tempo não pode ser negativo"
       },
@@ -182,9 +193,26 @@
         "multipleSoundsFromSameSource": "Pode recortar e definir múltiplos sons independentes a partir do mesmo ficheiro áudio original",
         "soundName": "Nome do som",
         "soundDuration": "Tempo inicial e final do som em milissegundos. Como será utilizado para teclas, o tempo não deve ser muito longo.",
-        "volume": "0 para volume original, maior que 0 para aumentar, menor que 0 para diminuir. O incremento comum é 0,1",
-        "volume_1": "Também pode inserir manualmente para ajustes mais precisos, como 0,0001. Por favor, pré-visualize após cada ajuste de volume para verificar o efeito, evitando volume muito alto ou muito baixo.",
-        "previewSound": "Os sons para teclas geralmente são curtos, portanto, as pré-visualizações contínuas serão reproduzidas simultaneamente, sem barra de progresso ou botão de parar (se necessário, reinicie a aplicação para parar). Siga os princípios de definição de som."
+        "volume": "O volume é apresentado em dB. 0 dB = volume original; acima de 0 aumenta, abaixo de 0 reduz.",
+        "volume_1": "Valores além de ±18 dB são válidos, mas a forma de onda é apenas visualizada até ao limite. Pré-visualize após cada alteração.",
+        "previewSound": "Os sons de tecla são curtos, por isso pré-visualizações consecutivas são reproduzidas simultaneamente sem barra de progresso ou botão de parar (reinicie a aplicação se necessário). Siga os princípios de definição de som."
+      },
+      "waveformTrimmer": {
+        "play": "Reproduzir",
+        "pause": "Pausar",
+        "stop": "Parar",
+        "zoom": "Zoom",
+        "playScopeAll": "Reproduzir tudo",
+        "playScopeSelection": "Reproduzir seleção",
+        "noSource": "Selecione um ficheiro de áudio para visualizar a forma de onda.",
+        "loading": "A carregar forma de onda...",
+        "unavailableFallback": "Forma de onda indisponível. Modo de corte manual ativado.",
+        "current": "Atual: ",
+        "total": "Total: ",
+        "selection": "Seleção: ",
+        "hint": "(Clique/arraste o cabeçote; Ctrl+roda para zoom; arrasto direito para seleção rápida; arraste a linha central para volume (0=centro))",
+        "hintMac": "(Clique/arraste o cabeçote; ⌃Control/⌘Command+roda ou gesto de pinça no trackpad para zoom; arrasto direito para seleção rápida; arraste a linha central para volume (0=centro))",
+        "volumeOutOfRange": "Fora do intervalo de visualização (±18 dB)"
       }
     },
     "craftKeySounds": {
@@ -323,6 +351,132 @@
       "音量调试滑块": {
         "index": "Controlo deslizante de depuração de volume",
         "caption": "Quando ativado, exibe um controlo deslizante adicional de depuração de volume sob a barra de progresso de volume na página principal"
+      },
+      "pressReleaseControl": {
+        "index": "Volume premir/soltar separado",
+        "caption": "Ativa definições de volume independentes para premir/soltar (incluindo teclado e rato)"
+      },
+      "pressReleasePanel": {
+        "title": "Config. volume premir/soltar",
+        "caption": "Configurar por ordem: Global → Teclado → Rato"
+      },
+      "pressReleaseGlobalPanel": {
+        "title": "Volume global premir/soltar",
+        "caption": "Ativo em modo unificado e separado, sobreposto conforme o estado do evento"
+      },
+      "pressReleaseGlobal": {
+        "down": {
+          "shortLabel": "Global premir",
+          "reduceScope": "Redução volume global premir",
+          "debugSlider": "Controlo volume global premir"
+        },
+        "up": {
+          "shortLabel": "Global soltar",
+          "reduceScope": "Redução volume global soltar",
+          "debugSlider": "Controlo volume global soltar"
+        }
+      },
+      "routingSplit": {
+        "index": "Separação teclado/rato",
+        "caption": "Permite configurar álbuns e volumes separados para teclado e rato"
+      },
+      "splitVolumePanel": {
+        "title": "Volume modo separado",
+        "caption": "Ativo apenas se a separação estiver ativada na página principal (sobrepõe o volume global)"
+      },
+      "splitVolume": {
+        "keyboard": {
+          "title": "Volume teclado",
+          "caption": "Apenas no modo separado; sobrepõe o volume global",
+          "shortLabel": "Teclado",
+          "reduceScope": "Redução volume teclado",
+          "debugSlider": "Controlo volume teclado"
+        },
+        "mouse": {
+          "title": "Volume rato",
+          "caption": "Apenas no modo separado; sobrepõe o volume global",
+          "shortLabel": "Rato",
+          "reduceScope": "Redução volume rato",
+          "debugSlider": "Controlo volume rato"
+        }
+      },
+      "pressReleaseSplit": {
+        "keyboard": {
+          "title": "Volume teclado premir/soltar",
+          "down": {
+            "shortLabel": "Teclado premir",
+            "reduceScope": "Redução volume teclado premir",
+            "debugSlider": "Controlo volume teclado premir"
+          },
+          "up": {
+            "shortLabel": "Teclado soltar",
+            "reduceScope": "Redução volume teclado soltar",
+            "debugSlider": "Controlo volume teclado soltar"
+          }
+        },
+        "mouse": {
+          "title": "Volume rato premir/soltar",
+          "down": {
+            "shortLabel": "Rato premir",
+            "reduceScope": "Redução volume rato premir",
+            "debugSlider": "Controlo volume rato premir"
+          },
+          "up": {
+            "shortLabel": "Rato soltar",
+            "reduceScope": "Redução volume rato soltar",
+            "debugSlider": "Controlo volume rato soltar"
+          }
+        }
+      },
+      "mouseFallback": {
+        "index": "Fallback rato para teclado",
+        "caption": "No modo separado, utiliza álbum de teclado se não há álbum de rato. Desativado por padrão: separação total"
+      },
+      "randomVolumeControl": {
+        "index": "Volume aleatório (global)",
+        "caption": "Aplica atenuação aleatória em cada reprodução (sem amplificação)",
+        "maxReduceRatio": "Redução máx. aleatória (global)",
+        "maxReduceRatioRule": "O valor deve ser >= 0"
+      },
+      "pressReleaseRandomControl": {
+        "index": "Volume aleatório (premir/soltar separado)",
+        "caption": "Permite configurar atenuação aleatória individual para cada cenário"
+      },
+      "pressReleaseRandomPanel": {
+        "title": "Volume aleatório premir/soltar",
+        "caption": "Configurar por ordem: Global → Teclado → Rato; cada elemento aplica apenas se ativado"
+      },
+      "pressReleaseRandomGlobal": {
+        "down": {
+          "shortLabel": "Global premir aleatório",
+          "maxReduceRatio": "Redução máx. (global premir)"
+        },
+        "up": {
+          "shortLabel": "Global soltar aleatório",
+          "maxReduceRatio": "Redução máx. (global soltar)"
+        }
+      },
+      "pressReleaseRandomSplit": {
+        "keyboard": {
+          "down": {
+            "shortLabel": "Teclado premir aleatório",
+            "maxReduceRatio": "Redução máx. (teclado premir)"
+          },
+          "up": {
+            "shortLabel": "Teclado soltar aleatório",
+            "maxReduceRatio": "Redução máx. (teclado soltar)"
+          }
+        },
+        "mouse": {
+          "down": {
+            "shortLabel": "Rato premir aleatório",
+            "maxReduceRatio": "Redução máx. (rato premir)"
+          },
+          "up": {
+            "shortLabel": "Rato soltar aleatório",
+            "maxReduceRatio": "Redução máx. (rato soltar)"
+          }
+        }
       }
     }
   },
@@ -344,6 +498,329 @@
       "quit": "Sair",
       "mute": "Silenciar",
       "unmute": "Ativar som"
+    }
+  },
+  "exportFlow": {
+    "common": {
+      "cancel": "Cancelar",
+      "continue": "Continuar",
+      "back": "Voltar"
+    },
+    "confirmSignature": {
+      "title": "Assinatura necessária?",
+      "description": "Este álbum ainda não tem assinatura. Adicionar uma nesta exportação?",
+      "needSignature": "Adicionar assinatura",
+      "noSignature": "Sem assinatura"
+    },
+    "authRequire": {
+      "title": "Autorização para obras derivadas?",
+      "description": "Deseja que outros obtenham a sua autorização antes de criar obras derivadas?",
+      "recommend": "Recomendado: Sem autorização (melhor divulgação)",
+      "yes": "Autorização necessária",
+      "no": "Sem autorização"
+    },
+    "authImpact": {
+      "title": "Impacto da autorização",
+      "message": "Com autorização ativa, outros não podem exportar sem permissão, mas o uso local é livre. As informações do autor são sempre incluídas. Continuar?",
+      "confirm": "Compreendido, continuar"
+    },
+    "contact": {
+      "title": "Dados de contacto para autorizações",
+      "description": "Introduza um e-mail válido e opcionalmente outros contactos.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "Introduzir e-mail",
+      "emailRequired": "Por favor, introduza um e-mail válido",
+      "emailInvalid": "Formato de e-mail parece inválido",
+      "additionalLabel": "Outros contactos (opcional)",
+      "additionalPlaceholder": "Redes sociais, sítio web, etc.",
+      "hint": "Os dados de contacto serão guardados com a assinatura"
+    },
+    "optionalContact": {
+      "title": "Deixar contactos (opcional)",
+      "description": "Pode deixar os seus contactos. Este passo é opcional.",
+      "hint": "Os dados de contacto serão guardados com a assinatura",
+      "skip": "Saltar",
+      "continue": "Guardar e continuar"
+    },
+    "policyDialog": {
+      "title": "Política de assinatura",
+      "noSignatureTitle": "Definir política de assinatura",
+      "description": "Confirme as definições de assinatura e autorização para este álbum",
+      "requireSignature": "Assinatura necessária",
+      "noSignature": "Sem assinatura",
+      "requireSignatureHint": "Adicionar assinatura para identificar o autor (apenas possível na primeira exportação)",
+      "noSignatureHint": "Exportar sem assinatura (apenas na primeira exportação; alterações futuras precisarão de assinatura)",
+      "authRequired": "Obras derivadas requerem autorização do autor signatário",
+      "authRequiredHint": "Uma vez ativo, outros devem obter autorização antes de reexportar. Irrevogável.",
+      "tipsTitle": "Sugestões",
+      "tips": "• Álbuns sem assinatura podem receber uma na primeira exportação\n• Uma vez assinados, todas as alterações precisarão de assinatura\n• Com autorização, outros não podem exportar sem permissão",
+      "cancel": "Cancelar",
+      "continue": "Continuar"
+    },
+    "test": {
+      "title": "🧪 Ambiente de teste do fluxo de exportação",
+      "description": "Configure cenários de teste para verificar a interface e a lógica do fluxo de exportação.",
+      "albumState": "Configuração do estado do álbum",
+      "hasSignature": "O álbum atual tem assinatura",
+      "hasSignatureHint": "Indica que este álbum tem assinatura. Caso contrário, o diálogo de confirmação aparecerá.",
+      "requireAuth": "O autor original requer autorização para obras derivadas",
+      "requireAuthHint": "Válido apenas se o álbum tem assinatura. Exibe o diálogo de controlo de autorização.",
+      "currentState": "Estado atual da configuração",
+      "flowExplain": "📋 Explicação do fluxo e diálogos",
+      "openDialog": "Abrir definições de teste",
+      "apply": "Aplicar configuração",
+      "close": "Fechar"
+    },
+    "authGateDialog": {
+      "title": "Autorização necessária",
+      "description": "Necessita da autorização do autor para exportar este álbum",
+      "authorContact": "Contacto do autor",
+      "email": "E-mail",
+      "additionalContact": "Contacto alternativo",
+      "noContact": "Nenhum dado de contacto fornecido",
+      "contactHint": "Contacte o autor pelos seguintes meios",
+      "copy": "Copiar",
+      "importAuthFile": "Importar ficheiro de autorização",
+      "importHint": "Importe o ficheiro de autorização do autor para continuar",
+      "selectFile": "Selecionar ficheiro de autorização",
+      "fileSelected": "Selecionado",
+      "importButton": "Importar",
+      "help": "Como obter autorização?",
+      "continue": "Continuar",
+      "cancel": "Cancelar",
+      "importSuccess": "Autorização bem-sucedida",
+      "importSuccessMessage": "Ficheiro de autorização importado. Agora pode exportar com esta assinatura.",
+      "importFailed": "Verificação do ficheiro de autorização falhou. Verifique o ficheiro."
+    },
+    "pickerDialog": {
+      "title": "Escolher assinatura",
+      "description": "Selecione a assinatura para esta exportação",
+      "search": "Pesquisar assinaturas...",
+      "noResults": "Nenhuma assinatura encontrada",
+      "emptyState": "Sem assinaturas",
+      "createSignature": "Criar assinatura",
+      "importAuth": "Importar autorização",
+      "authRequest": "Solicitar autorização",
+      "createHint": "Criar nova assinatura",
+      "selectHint": "Selecionar assinatura",
+      "noImage": "Sem imagem",
+      "noIntro": "Sem descrição",
+      "originalAuthor": "Autor original",
+      "contributor": "Colaborador",
+      "unauthorized": "Não autorizado",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    },
+    "authRequestDialog": {
+      "title": "Solicitação de autorização",
+      "step1Title": "Escolher assinatura",
+      "step1Description": "Escolher assinatura não autorizada para solicitar autorização",
+      "step2Title": "Exportar solicitação",
+      "step2Description": "Visualizar contactos do autor original e exportar ficheiro de solicitação",
+      "step3Title": "Concluído",
+      "selectedSignature": "Assinatura selecionada",
+      "qualificationFingerprint": "Impressão digital de qualificação",
+      "copySuccess": "{label} copiado para a área de transferência",
+      "copyFailed": "Falha ao copiar",
+      "authorContact": "Contacto do autor original",
+      "email": "E-mail",
+      "additionalContact": "Contacto alternativo",
+      "noContact": "Sem dados de contacto",
+      "copy": "Copiar",
+      "instructions": "Instruções",
+      "instructionTip": "Recomenda-se contactar primeiro o autor original para confirmar a intenção.",
+      "instruction1": "Clique 'Exportar solicitação' para transferir o ficheiro (.ktauthreq)",
+      "instruction2": "Envie o ficheiro ao autor original pelos contactos acima",
+      "instruction3": "Após receber o ficheiro de autorização (.ktauth), importe-o no fluxo de exportação",
+      "noSignatures": "Sem assinaturas disponíveis. Crie uma assinatura primeiro.",
+      "noUnauthorizedSignatures": "Todas as assinaturas estão autorizadas. Use uma existente ou crie uma nova.",
+      "createSignature": "Criar assinatura",
+      "noIntro": "Sem descrição",
+      "next": "Seguinte",
+      "back": "Voltar",
+      "exportRequest": "Exportar solicitação",
+      "cancel": "Cancelar",
+      "done": "Concluído",
+      "exportSuccess": "Ficheiro de solicitação exportado",
+      "exportSuccessHint": "Envie o ficheiro ao autor original e aguarde o ficheiro de autorização",
+      "exportFailed": "Falha ao exportar solicitação",
+      "missingParams": "Parâmetros necessários em falta"
+    },
+    "signatureInfoDialog": {
+      "title": "Informações de assinatura do álbum",
+      "noSignature": "Este álbum ainda não tem assinatura",
+      "noSignatureHint": "Adicione uma assinatura ao exportar para identificar o autor",
+      "originalAuthor": "Autor original",
+      "requireAuth": "Autorização necessária para exportar",
+      "noAuthRequired": "Sem autorização",
+      "noName": "(Sem nome)",
+      "noIntro": "(Sem descrição)",
+      "qualificationFingerprint": "Impressão digital de qualificação",
+      "contactSection": "Contactos",
+      "email": "E-mail",
+      "noEmail": "(Não definido)",
+      "additionalContact": "Contacto adicional",
+      "authStatus": "Estado de autorização",
+      "requireAuthorization": "Autorização necessária",
+      "noAuthorization": "Sem autorização",
+      "authorizedCount": "{count} assinatura(s) autorizada(s)",
+      "authUUID": "UUID de autorização",
+      "noAuthUUID": "(Não definido)",
+      "latestExporterFingerprint": "Impressão digital do último exportador",
+      "noLatestExporter": "(Não definido)",
+      "authorizedList": "Assinaturas autorizadas",
+      "directExportAuthor": "Autor de exportação direta",
+      "latestExporter": "Último exportador",
+      "contributorAuthors": "Autores colaboradores",
+      "signatureStats": "Estatísticas de assinatura",
+      "totalSignatures": "{count} assinatura(s) no total",
+      "originalAuthorCount": "1 autor original",
+      "contributorCount": "{count} colaborador(es)",
+      "close": "Fechar",
+      "retry": "Tentar novamente",
+      "copySuccess": "{label} copiado para a área de transferência",
+      "copyFailed": "Falha ao copiar"
+    },
+    "signatureUpdateConfirm": {
+      "title": "Confirmar atualização de assinatura",
+      "message": "A assinatura selecionada difere da do álbum. Atualizar os detalhes (descrição, imagem)?",
+      "update": "Atualizar",
+      "noUpdate": "Não atualizar"
+    },
+    "notify": {
+      "contactCopied": "Contacto copiado",
+      "authFileImported": "Ficheiro de autorização importado"
+    }
+  },
+  "signature": {
+    "page": {
+      "title": "Gestão de assinaturas",
+      "create": "Criar assinatura",
+      "import": "Importar assinatura",
+      "authGrant": "Processar autorização",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "export": "Exportar",
+      "loadError": "Falha ao carregar assinaturas",
+      "retry": "Tentar novamente",
+      "emptyState": "Sem assinaturas",
+      "createFirst": "Criar a primeira assinatura",
+      "noImage": "Sem imagem de cartão de visita",
+      "noImageHint": "Esta assinatura não tem imagem de cartão de visita",
+      "noImagePreviewTip": "Esta assinatura não tem imagem de cartão de visita"
+    },
+    "authGrant": {
+      "title": "Processar autorização",
+      "step1Description": "Importar ficheiro de solicitação de autorização (.ktauthreq)",
+      "step2Description": "Examinar a solicitação e decidir",
+      "selectFile": "Selecionar ficheiro de solicitação",
+      "fileImported": "Ficheiro importado com sucesso",
+      "importButton": "Importar",
+      "parseError": "Não foi possível analisar o ficheiro de solicitação",
+      "noPermission": "Sem permissão para processar esta solicitação. Verifique se tem a assinatura correspondente.",
+      "albumId": "ID do álbum (hash)",
+      "requester": "Solicitante",
+      "requesterFingerprint": "Impressão digital do solicitante",
+      "yourSignature": "A sua assinatura",
+      "noMatchingSignature": "Nenhuma assinatura correspondente encontrada",
+      "selectSignature": "Selecionar assinatura para autorização",
+      "qualificationFingerprint": "Impressão digital de qualificação",
+      "copySuccess": "{label} copiado para a área de transferência",
+      "copyFailed": "Falha ao copiar",
+      "warning": "Após autorização, o solicitante pode exportar o álbum com a sua assinatura. Confia no solicitante?",
+      "approve": "Autorizar e exportar",
+      "cancel": "Cancelar",
+      "back": "Voltar",
+      "next": "Seguinte",
+      "done": "Concluído",
+      "exportSuccess": "Ficheiro de autorização exportado com sucesso",
+      "exportSuccessHint": "Envie o ficheiro (.ktauth) ao solicitante",
+      "exportFailed": "Falha ao exportar ficheiro de autorização"
+    },
+    "contextMenu": {
+      "viewFingerprint": "Impressão digital",
+      "fingerprintTitle": "Impressão digital de qualificação",
+      "fingerprintCopied": "Impressão digital copiada para a área de transferência"
+    },
+    "form": {
+      "createTitle": "Criar assinatura",
+      "editTitle": "Editar assinatura",
+      "editWarning": "Após editar, os álbuns com esta assinatura precisarão ser reexportados para atualizá-la.",
+      "name": "Nome da assinatura",
+      "nameHint": "1-50 caracteres",
+      "nameRequired": "Por favor, introduza um nome de assinatura",
+      "nameTooLong": "O nome não pode exceder 50 caracteres",
+      "intro": "Apresentação pessoal",
+      "introHint": "Máx. 500 caracteres (opcional)",
+      "introTooLong": "A apresentação não pode exceder 500 caracteres",
+      "cardImage": "Imagem de cartão de visita",
+      "cardImageFileName": "Cartão de assinatura",
+      "selectImage": "Selecionar imagem",
+      "imageHint": "Suporta PNG, JPEG, WebP, GIF e outros formatos de imagem",
+      "clickToPreview": "Clique para pré-visualizar",
+      "cancel": "Cancelar",
+      "create": "Criar",
+      "update": "Atualizar",
+      "close": "Fechar"
+    },
+    "delete": {
+      "confirmTitle": "Confirmar eliminação",
+      "confirm": "Eliminar esta assinatura"
+    },
+    "export": {
+      "comingSoon": "Função de exportação em breve",
+      "confirmTitle": "Confirmar exportação de assinatura",
+      "confirmMessage": "⚠️ Aviso de segurança",
+      "confirmWarning": "Guarde o ficheiro de assinatura em segurança e não o partilhe!",
+      "confirmDetail": "Qualquer pessoa com o ficheiro pode importá-lo e utilizar a sua assinatura. Guarde-o num local seguro.",
+      "confirmRisks": "Riscos:",
+      "riskItem1": "• Não partilhe o ficheiro de assinatura",
+      "riskItem2": "• Não faça upload em redes públicas",
+      "riskItem3": "• Faça uma cópia de segurança para evitar perdas",
+      "confirmButton": "Compreendo os riscos, continuar exportação",
+      "cancelButton": "Cancelar"
+    },
+    "import": {
+      "title": "Importar assinatura",
+      "selectFile": "Selecionar ficheiro .ktsign",
+      "fileHint": "Selecione um ficheiro de assinatura KeyTone (.ktsign)",
+      "import": "Importar",
+      "conflictTitle": "A assinatura já existe",
+      "conflictMessage": "A assinatura \"{name}\" já existe. Substituir?"
+    },
+    "select": {
+      "title": "Selecionar assinatura",
+      "description": "Escolha uma assinatura para identificar o autor do álbum",
+      "emptyState": "Sem assinaturas disponíveis",
+      "createSignature": "Ir criar assinatura",
+      "noIntro": "Sem descrição",
+      "noSignature": "Sem assinatura",
+      "confirm": "Confirmar"
+    },
+    "notify": {
+      "createSuccess": "Assinatura criada com sucesso",
+      "createFailed": "Falha ao criar assinatura",
+      "updateSuccess": "Assinatura atualizada com sucesso",
+      "updateFailed": "Falha ao atualizar assinatura",
+      "deleteSuccess": "Assinatura eliminada com sucesso",
+      "deleteFailed": "Falha ao eliminar assinatura",
+      "exportSuccess": "Assinatura exportada com sucesso",
+      "exportFailed": "Falha ao exportar assinatura",
+      "importSuccess": "Assinatura importada com sucesso",
+      "importFailed": "Falha ao importar assinatura",
+      "loadFailed": "Falha ao carregar assinaturas",
+      "imageReadFailed": "Falha ao ler imagem",
+      "invalidFileFormat": "Formato de ficheiro inválido",
+      "unexpectedError": "Ocorreu um erro inesperado",
+      "noChanges": "Nenhuma alteração detetada"
+    }
+  },
+  "albumSelector": {
+    "signatureHoverCard": {
+      "originalAuthor": "Autor original",
+      "directExportAuthor": "Autor de exportação direta",
+      "sameAuthor": "Autor original / Exportação direta",
+      "viewDetails": "Clique para ver detalhes"
     }
   }
 }

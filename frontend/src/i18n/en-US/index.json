@@ -202,14 +202,11 @@
         "pause": "Pause",
         "stop": "Stop",
         "zoom": "Zoom",
-
         "playScopeAll": "Play All",
         "playScopeSelection": "Play Selection",
-
         "noSource": "Select an audio source file to show the waveform.",
         "loading": "Loading waveform...",
         "unavailableFallback": "Waveform is unavailable. Falling back to manual trimming.",
-
         "current": "Current: ",
         "total": "Total: ",
         "selection": "Selection: ",
@@ -583,11 +580,9 @@
       "noContact": "No contact info provided",
       "contactHint": "Contact the author through the following to get authorization",
       "copy": "Copy",
-      "copySuccess": "Copied to clipboard",
       "importAuthFile": "Import Authorization File",
       "importHint": "Please import the authorization file from the author to continue",
       "selectFile": "Select Authorization File",
-      "noFileSelected": "No file selected",
       "fileSelected": "Selected",
       "importButton": "Import",
       "help": "How to get authorization?",
