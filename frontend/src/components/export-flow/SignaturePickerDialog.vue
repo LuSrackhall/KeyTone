@@ -12,53 +12,78 @@
         </q-card-section>
 
         <!-- Search Bar -->
-        <q-card-section class="q-pa-sm">
+        <q-card-section class="q-pt-sm q-px-sm q-pb-xs">
           <!-- Description -->
-          <div class="text-caption q-mb-sm">
+          <div class="text-caption q-mb-xs" style="line-height: 1.2;">
             {{ t('exportFlow.pickerDialog.description') }}
           </div>
 
           <!-- Search Input -->
-          <div class="q-mb-sm">
+          <div class="q-mb-none">
             <q-input
               v-model="searchQuery"
               filled
               dense
+              hide-bottom-space
               :placeholder="t('exportFlow.pickerDialog.search')"
-              icon="search"
               clearable
               size="sm"
-            />
-            <div class="q-mt-xs flex items-center" :class="requireAuthorization ? 'justify-between' : 'justify-end'">
-              <!-- 授权申请按钮：仅在需要授权的再次导出时显示（左侧）-->
+            >
+              <template v-slot:prepend>
+                <q-icon name="search" size="sm" />
+              </template>
+              <template v-slot:append>
+                <!-- 创建签名按钮移至搜索框内 -->
+                <q-btn
+                  round
+                  dense
+                  flat
+                  color="primary"
+                  icon="add"
+                  @click="onCreateNew"
+                >
+                  <q-tooltip class="bg-primary text-white" :delay="200" :offset="[0, 5]">
+                    {{ t('exportFlow.pickerDialog.createSignature') }}
+                  </q-tooltip>
+                </q-btn>
+              </template>
+            </q-input>
+
+            <div v-if="requireAuthorization" class="q-mt-xs row no-wrap q-gutter-x-xs justify-between w-full">
+              <!-- 授权申请按钮（保持原位，缩放动画适配，no-wrap）-->
               <q-btn
-                v-if="requireAuthorization"
                 size="xs"
                 flat
+                no-wrap
                 color="deep-purple"
-                icon="mail_outline"
-                :label="t('exportFlow.pickerDialog.authRequest')"
+                class="flex-1 w-1/2 overflow-hidden transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                 @click="onAuthRequest"
-              />
-              <!-- 导入授权按钮：仅在需要授权的再次导出时显示（中间）-->
+              >
+                <q-icon name="mail_outline" size="14px" class="q-mr-xs shrink-0" />
+                <div class="truncate min-w-0" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                  {{ t('exportFlow.pickerDialog.authRequest') }}
+                </div>
+                <q-tooltip class="bg-deep-purple text-white" :delay="300" :offset="[0, 5]">
+                  {{ t('exportFlow.pickerDialog.authRequest') }}
+                </q-tooltip>
+              </q-btn>
+              <!-- 导入授权按钮（保持原位，缩放动画适配，no-wrap）-->
               <q-btn
-                v-if="requireAuthorization"
                 size="xs"
                 flat
+                no-wrap
                 color="secondary"
-                icon="key"
-                :label="t('exportFlow.pickerDialog.importAuth')"
+                class="flex-1 w-1/2 overflow-hidden transition-transform duration-300 hover:scale-[1.02] active:scale-95"
                 @click="onImportAuth"
-              />
-              <!-- 创建签名按钮（右侧）-->
-              <q-btn
-                size="xs"
-                flat
-                color="primary"
-                icon="add"
-                :label="t('exportFlow.pickerDialog.createSignature')"
-                @click="onCreateNew"
-              />
+              >
+                <q-icon name="key" size="14px" class="q-mr-xs shrink-0" />
+                <div class="truncate min-w-0" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                  {{ t('exportFlow.pickerDialog.importAuth') }}
+                </div>
+                <q-tooltip class="bg-secondary text-white" :delay="300" :offset="[0, 5]">
+                  {{ t('exportFlow.pickerDialog.importAuth') }}
+                </q-tooltip>
+              </q-btn>
             </div>
           </div>
         </q-card-section>

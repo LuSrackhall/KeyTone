@@ -61,7 +61,10 @@
       "refreshFailed": "Refresh failed, try manually",
       "importOverwriteSuccess": "Overwrite success",
       "importSaveAsNewSuccess": "Saved as new",
-      "fileDescription": "KeyTone Album File"
+      "fileDescription": "KeyTone Album File",
+      "noAlbumSelected": "Please select an album first",
+      "encryptFailed": "Failed to encrypt album config",
+      "applySignatureFailed": "Failed to apply signature config"
     },
     "importDialog": {
       "title": "Import Album",
@@ -102,7 +105,6 @@
       "audioFile": "Audio source file",
       "sound": "Pre-defined sound clips",
       "keySound": "Key sounds",
-
       "audioFile_0": "SoundFile",
       "sound_0": "SoundClip",
       "keySound_0": "KeySound"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Cancel",
       "continue": "Continue",
-      "back": "Back"
+      "back": "Back",
+      "confirm": "Confirm"
     },
     "confirmSignature": {
       "title": "Require a signature?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Contact info copied",
       "authFileImported": "Auth file imported"
+    },
+    "reexportWarning": {
+      "title": "Re-export Confirmation",
+      "description": "The original author of this album has required that re-exports must include a signature. Please confirm and select the signature to use, or cancel."
+    },
+    "selectionDialog": {
+      "title": "Select Signature",
+      "loading": "Loading available signatures...",
+      "emptyTitle": "No Available Signatures",
+      "emptyDesc": "Please create a signature before exporting",
+      "filterAuthorized": "Authorized only",
+      "filterInAlbum": "In album only",
+      "noIntro": "No description",
+      "badgeOriginalAuthor": "Original Author",
+      "badgeInAlbum": "In Album",
+      "badgeNeedAuth": "Needs Auth",
+      "badgeAuthorized": "Authorized",
+      "qualificationCodePrefix": "Qual. Code",
+      "unauthorizedBannerText": "Some signatures require authorization from the original author before they can be used. Please contact the original author for the authorization file.",
+      "unauthorizedOverlayText": "Requires Author Authorization",
+      "confirm": "Confirm Selection",
+      "loadFailed": "Failed to load signature list",
+      "unauthorizedWarning": "This signature requires authorization from the original author",
+      "unauthorizedCaption": "Please contact the original author for the authorization file",
+      "pleaseSelect": "Please select a signature first"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Failed to read image",
       "invalidFileFormat": "Invalid file format",
       "unexpectedError": "An unexpected error occurred",
-      "noChanges": "No changes detected"
+      "noChanges": "No changes detected",
+      "sortUpdated": "Sort order updated",
+      "sortUpdateFailed": "Failed to update sort order, please retry"
     }
   },
   "albumSelector": {

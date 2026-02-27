@@ -61,7 +61,10 @@
       "refreshFailed": "Aktualisierung fehlgeschlagen, manuell versuchen",
       "importOverwriteSuccess": "Überschreiben erfolgreich",
       "importSaveAsNewSuccess": "Als neu gespeichert",
-      "fileDescription": "KeyTone Album-Datei"
+      "fileDescription": "KeyTone Album-Datei",
+      "noAlbumSelected": "Bitte zuerst ein Album auswählen",
+      "encryptFailed": "Albumkonfiguration konnte nicht verschlüsselt werden",
+      "applySignatureFailed": "Signaturkonfiguration konnte nicht angewendet werden"
     },
     "importDialog": {
       "title": "Album importieren",
@@ -102,7 +105,6 @@
       "audioFile": "Audio-Quelldatei",
       "sound": "Vordefinierte Soundclips",
       "keySound": "Tastensounds",
-
       "audioFile_0": "Audiodatei",
       "sound_0": "Soundclip",
       "keySound_0": "Tastensound"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Abbrechen",
       "continue": "Weiter",
-      "back": "Zurück"
+      "back": "Zurück",
+      "confirm": "Bestätigen"
     },
     "confirmSignature": {
       "title": "Signatur erforderlich?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Kontakt kopiert",
       "authFileImported": "Genehmigungsdatei importiert"
+    },
+    "reexportWarning": {
+      "title": "Erneuten Export bestätigen",
+      "description": "Der Originalautor dieses Albums hat festgelegt, dass ein erneuter Export eine Signatur erfordert. Bitte bestätigen und wählen Sie die Signatur aus oder brechen Sie ab."
+    },
+    "selectionDialog": {
+      "title": "Signatur auswählen",
+      "loading": "Verfügbare Signaturen werden geladen...",
+      "emptyTitle": "Keine verfügbaren Signaturen",
+      "emptyDesc": "Erstellen Sie zuerst eine Signatur bevor Sie exportieren",
+      "filterAuthorized": "Nur autorisierte",
+      "filterInAlbum": "Nur im Album",
+      "noIntro": "Keine Beschreibung",
+      "badgeOriginalAuthor": "Originalautor",
+      "badgeInAlbum": "Im Album",
+      "badgeNeedAuth": "Autorisierung erforderlich",
+      "badgeAuthorized": "Autorisiert",
+      "qualificationCodePrefix": "Qual.-Code",
+      "unauthorizedBannerText": "Einige Signaturen benötigen eine Autorisierung des Originalautors. Bitte kontaktieren Sie den Originalautor für die Autorisierungsdatei.",
+      "unauthorizedOverlayText": "Autorisierung des Autors erforderlich",
+      "confirm": "Auswahl bestätigen",
+      "loadFailed": "Signaturliste konnte nicht geladen werden",
+      "unauthorizedWarning": "Diese Signatur benötigt eine Autorisierung des Originalautors",
+      "unauthorizedCaption": "Bitte kontaktieren Sie den Originalautor für die Autorisierungsdatei",
+      "pleaseSelect": "Bitte zuerst eine Signatur auswählen"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Bild lesen fehlgeschlagen",
       "invalidFileFormat": "Ungültiges Dateiformat",
       "unexpectedError": "Unerwarteter Fehler aufgetreten",
-      "noChanges": "Keine Änderungen erkannt"
+      "noChanges": "Keine Änderungen erkannt",
+      "sortUpdated": "Reihenfolge aktualisiert",
+      "sortUpdateFailed": "Reihenfolge konnte nicht aktualisiert werden. Bitte erneut versuchen"
     }
   },
   "albumSelector": {

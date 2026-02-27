@@ -61,7 +61,10 @@
       "refreshFailed": "アルバムは上書きされましたが、更新に失敗しました。手動で更新してください",
       "importOverwriteSuccess": "アルバムが正常に上書きインポートされました",
       "importSaveAsNewSuccess": "アルバムが新しいアルバムとして保存されました",
-      "fileDescription": "KeyTone アルバムファイル"
+      "fileDescription": "KeyTone アルバムファイル",
+      "noAlbumSelected": "まずアルバムを選択してください",
+      "encryptFailed": "アルバム設定の暗号化に失敗しました",
+      "applySignatureFailed": "署名設定の適用に失敗しました"
     },
     "importDialog": {
       "title": "アルバムのインポート",
@@ -102,7 +105,6 @@
       "audioFile": "オーディオソースファイル",
       "sound": "定義済みサウンド",
       "keySound": "究極のキーサウンド",
-
       "audioFile_0": "オーディオファイル",
       "sound_0": "サウンド",
       "keySound_0": "究極のキーサウンド"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "キャンセル",
       "continue": "続ける",
-      "back": "戻る"
+      "back": "戻る",
+      "confirm": "確認"
     },
     "confirmSignature": {
       "title": "署名が必要ですか",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "連絡先をコピーしました",
       "authFileImported": "承認ファイルをインポートしました"
+    },
+    "reexportWarning": {
+      "title": "再エクスポートの確認",
+      "description": "このアルバムの原作者は、再エクスポートには署名が必要と指定しています。確認後、使用する署名を選択するかキャンセルしてください。"
+    },
+    "selectionDialog": {
+      "title": "署名を選択",
+      "loading": "使用可能な署名を読み込み中...",
+      "emptyTitle": "使用可能な署名がありません",
+      "emptyDesc": "先に署名を作成してからアルバムをエクスポートしてください",
+      "filterAuthorized": "認証済みのみ表示",
+      "filterInAlbum": "アルバム内のみ表示",
+      "noIntro": "説明なし",
+      "badgeOriginalAuthor": "オリジナル作者",
+      "badgeInAlbum": "アルバムに追加済み",
+      "badgeNeedAuth": "認証が必要",
+      "badgeAuthorized": "認証済み",
+      "qualificationCodePrefix": "資格コード",
+      "unauthorizedBannerText": "一部の署名は使用前に原作者の認証が必要です。授権ファイルについては原作者にお問い合わせください。",
+      "unauthorizedOverlayText": "原作者の承認が必要",
+      "confirm": "選択を確認",
+      "loadFailed": "署名リストの読み込みに失敗しました",
+      "unauthorizedWarning": "この署名は使用前に原作者の承認が必要です",
+      "unauthorizedCaption": "授権ファイルについては原作者にお問い合わせください",
+      "pleaseSelect": "先に署名を選択してください"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "画像の読み込みに失敗しました",
       "invalidFileFormat": "無効なファイル形式です",
       "unexpectedError": "予期しないエラーが発生しました",
-      "noChanges": "変更が検出されませんでした"
+      "noChanges": "変更が検出されませんでした",
+      "sortUpdated": "並び順が更新されました",
+      "sortUpdateFailed": "並び順の更新に失敗しました。再試行してください"
     }
   },
   "albumSelector": {

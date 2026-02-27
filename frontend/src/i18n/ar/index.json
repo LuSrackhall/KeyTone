@@ -61,7 +61,10 @@
       "refreshFailed": "تمت الكتابة فوق الألبوم، لكن فشل التحديث، يرجى التحديث يدويًا",
       "importOverwriteSuccess": "تم استيراد الألبوم والكتابة فوق القديم بنجاح",
       "importSaveAsNewSuccess": "تم حفظ الألبوم كألبوم جديد",
-      "fileDescription": "ملف ألبوم KeyTone"
+      "fileDescription": "ملف ألبوم KeyTone",
+      "noAlbumSelected": "يرجى تحديد ألبوم أولاً",
+      "encryptFailed": "فشل تشفير إعدادات الألبوم",
+      "applySignatureFailed": "فشل تطبيق إعدادات التوقيع"
     },
     "importDialog": {
       "title": "استيراد ألبوم",
@@ -102,7 +105,6 @@
       "audioFile": "ملفات الصوت المصدرية",
       "sound": "مقاطع الصوت المحددة مسبقًا",
       "keySound": "نغمات المفاتيح المميزة",
-
       "audioFile_0": "ملف صوتي",
       "sound_0": "مقطع صوتي",
       "keySound_0": "نغمة مفتاح مميزة"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "إلغاء",
       "continue": "متابعة",
-      "back": "رجوع"
+      "back": "رجوع",
+      "confirm": "تأكيد"
     },
     "confirmSignature": {
       "title": "هل تحتاج إلى توقيع؟",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "تم نسخ معلومات الاتصال",
       "authFileImported": "تم استيراد ملف التفويض"
+    },
+    "reexportWarning": {
+      "title": "تأكيد إعادة التصدير",
+      "description": "حدد المؤلف الأصلي لهذا الألبوم أن إعادة التصدير يجب أن تتضمن توقيعًا. يرجى التأكيد واختيار التوقيع المراد استخدامه أو الإلغاء."
+    },
+    "selectionDialog": {
+      "title": "اختر توقيعًا",
+      "loading": "جارٍ تحميل التوقيعات المتاحة...",
+      "emptyTitle": "لا توجد توقيعات متاحة",
+      "emptyDesc": "يرجى إنشاء توقيع قبل التصدير",
+      "filterAuthorized": "المعتمدة فقط",
+      "filterInAlbum": "في الألبوم فقط",
+      "noIntro": "لا يوجد وصف",
+      "badgeOriginalAuthor": "المؤلف الأصلي",
+      "badgeInAlbum": "في الألبوم",
+      "badgeNeedAuth": "يتطلب تفويضًا",
+      "badgeAuthorized": "معتمد",
+      "qualificationCodePrefix": "الرمز",
+      "unauthorizedBannerText": "تتطلب بعض التوقيعات تفويضًا من المؤلف الأصلي. يرجى التواصل مع المؤلف للحصول على ملف التفويض.",
+      "unauthorizedOverlayText": "يتطلب تفويض المؤلف",
+      "confirm": "تأكيد الاختيار",
+      "loadFailed": "فشل تحميل قائمة التوقيعات",
+      "unauthorizedWarning": "يتطلب هذا التوقيع تفويضًا من المؤلف الأصلي",
+      "unauthorizedCaption": "يرجى التواصل مع المؤلف الأصلي للحصول على ملف التفويض",
+      "pleaseSelect": "يرجى تحديد توقيع أولاً"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "فشل قراءة الصورة",
       "invalidFileFormat": "تنسيق الملف غير صالح",
       "unexpectedError": "حدث خطأ غير متوقع",
-      "noChanges": "لم يُكتشف أي تغيير"
+      "noChanges": "لم يُكتشف أي تغيير",
+      "sortUpdated": "تم تحديث ترتيب الفرز",
+      "sortUpdateFailed": "فشل تحديث ترتيب الفرز، يرجى المحاولة مرة أخرى"
     }
   },
   "albumSelector": {

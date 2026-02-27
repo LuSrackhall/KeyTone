@@ -61,7 +61,10 @@
       "refreshFailed": "Albüm üzerine yazıldı, ancak yenileme başarısız oldu, lütfen manuel olarak yenileyin",
       "importOverwriteSuccess": "Albüm başarıyla üzerine yazıldı",
       "importSaveAsNewSuccess": "Albüm yeni albüm olarak kaydedildi",
-      "fileDescription": "KeyTone Albüm Dosyası"
+      "fileDescription": "KeyTone Albüm Dosyası",
+      "noAlbumSelected": "Lütfen önce bir albüm seçin",
+      "encryptFailed": "Albüm yapılandırması şifrelenemedi",
+      "applySignatureFailed": "İmza yapılandırması uygulanamadı"
     },
     "importDialog": {
       "title": "Albüm İçe Aktar",
@@ -102,7 +105,6 @@
       "audioFile": "Ses Kaynak Dosyası",
       "sound": "Önceden Tanımlanmış Ses",
       "keySound": "Premium Tuş Sesi",
-
       "audioFile_0": "Ses Dosyası",
       "sound_0": "Ses Parçası",
       "keySound_0": "Premium Tuş Sesi"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "İptal",
       "continue": "Devam",
-      "back": "Geri"
+      "back": "Geri",
+      "confirm": "Onayla"
     },
     "confirmSignature": {
       "title": "İmza gerekli mi?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "İletişim kopyalandı",
       "authFileImported": "Yetki dosyası içe aktarıldı"
+    },
+    "reexportWarning": {
+      "title": "Yeniden Dışa Aktarma Onayı",
+      "description": "Bu albümün orijinal yazarı, yeniden dışa aktarmalar için imza gerektiğini belirtti. Lütfen onaylayın ve imzayı seçin veya iptal edin."
+    },
+    "selectionDialog": {
+      "title": "İmza seç",
+      "loading": "Mevcut imzalar yükleniyor...",
+      "emptyTitle": "Mevcut imza yok",
+      "emptyDesc": "Dışa aktarmadan önce bir imza oluşturun",
+      "filterAuthorized": "Yalnızca yetkililer",
+      "filterInAlbum": "Yalnızca albümde",
+      "noIntro": "Açıklama yok",
+      "badgeOriginalAuthor": "Orijinal yazar",
+      "badgeInAlbum": "Albümde",
+      "badgeNeedAuth": "Yetki gerekli",
+      "badgeAuthorized": "Yetkili",
+      "qualificationCodePrefix": "Kod",
+      "unauthorizedBannerText": "Bazı imzalar orijinal yazarın yetkisi gerektirir. Yetki dosyası için orijinal yazarla iletişime geçin.",
+      "unauthorizedOverlayText": "Yazar yetkisi gerekli",
+      "confirm": "Seçimi onayla",
+      "loadFailed": "İmza listesi yüklenemedi",
+      "unauthorizedWarning": "Bu imza orijinal yazarın yetkisini gerektiriyor",
+      "unauthorizedCaption": "Yetki dosyası için orijinal yazarla iletişime geçin",
+      "pleaseSelect": "Lütfen önce bir imza seçin"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Görsel okunamadı",
       "invalidFileFormat": "Geçersiz dosya formatı",
       "unexpectedError": "Beklenmeyen bir hata oluştu",
-      "noChanges": "Değişiklik algılanmadı"
+      "noChanges": "Değişiklik algılanmadı",
+      "sortUpdated": "Sıralama güncellendi",
+      "sortUpdateFailed": "Sıralama güncellenemedi, lütfen tekrar deneyin"
     }
   },
   "albumSelector": {

@@ -3,7 +3,7 @@
     <q-card class="export-policy-dialog" style="width: 90%; max-width: 340px">
       <!-- Header -->
       <q-card-section class="bg-primary bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
-        <div class="text-subtitle1">{{ $t('exportFlow.policyDialog.title') }}</div>
+        <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ $t('exportFlow.policyDialog.title') }}</div>
       </q-card-section>
 
       <!-- Content -->
@@ -105,6 +105,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useSettingStore } from 'src/stores/setting-store';
 
 interface PolicyDialogProps {
   visible: boolean;
@@ -140,6 +141,13 @@ const props = withDefaults(defineProps<PolicyDialogProps>(), {
 
 const emit = defineEmits<PolicyDialogEmits>();
 const { t } = useI18n();
+const setting_store = useSettingStore();
+
+const i18n_dialogTitleSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-subtitle1'
+    : 'text-[0.95rem] leading-tight';
+});
 
 const isVisible = ref(false);
 const formData = ref<FormData>({

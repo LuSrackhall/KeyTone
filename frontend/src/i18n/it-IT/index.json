@@ -61,7 +61,10 @@
       "refreshFailed": "Album sovrascritto, ma aggiornamento fallito. Aggiorna manualmente",
       "importOverwriteSuccess": "Album sovrascritto con successo",
       "importSaveAsNewSuccess": "Album salvato come nuovo album",
-      "fileDescription": "File album KeyTone"
+      "fileDescription": "File album KeyTone",
+      "noAlbumSelected": "Seleziona prima un album",
+      "encryptFailed": "Impossibile cifrare la configurazione dell'album",
+      "applySignatureFailed": "Impossibile applicare la configurazione della firma"
     },
     "importDialog": {
       "title": "Importa album",
@@ -102,7 +105,6 @@
       "audioFile": "File audio sorgente",
       "sound": "Frammenti audio predefiniti",
       "keySound": "Suoni tasti ottimizzati",
-
       "audioFile_0": "File audio",
       "sound_0": "Frammenti audio",
       "keySound_0": "Suoni tasti ottimizzati"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Annulla",
       "continue": "Continua",
-      "back": "Indietro"
+      "back": "Indietro",
+      "confirm": "Conferma"
     },
     "confirmSignature": {
       "title": "Firma richiesta?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Contatto copiato",
       "authFileImported": "File di autorizzazione importato"
+    },
+    "reexportWarning": {
+      "title": "Conferma ri-esportazione",
+      "description": "L'autore originale di questo album ha specificato che la ri-esportazione richiede una firma. Conferma e seleziona la firma da utilizzare, oppure annulla."
+    },
+    "selectionDialog": {
+      "title": "Seleziona firma",
+      "loading": "Caricamento firme disponibili...",
+      "emptyTitle": "Nessuna firma disponibile",
+      "emptyDesc": "Crea prima una firma prima di esportare",
+      "filterAuthorized": "Solo autorizzate",
+      "filterInAlbum": "Solo nell'album",
+      "noIntro": "Nessuna descrizione",
+      "badgeOriginalAuthor": "Autore originale",
+      "badgeInAlbum": "Nell'album",
+      "badgeNeedAuth": "Autorizzazione richiesta",
+      "badgeAuthorized": "Autorizzata",
+      "qualificationCodePrefix": "Codice",
+      "unauthorizedBannerText": "Alcune firme richiedono l'autorizzazione dall'autore originale. Contatta l'autore originale per il file di autorizzazione.",
+      "unauthorizedOverlayText": "Autorizzazione dell'autore richiesta",
+      "confirm": "Conferma selezione",
+      "loadFailed": "Caricamento elenco firme fallito",
+      "unauthorizedWarning": "Questa firma richiede l'autorizzazione dall'autore originale",
+      "unauthorizedCaption": "Contatta l'autore originale per il file di autorizzazione",
+      "pleaseSelect": "Seleziona prima una firma"
     }
   },
   "signature": {
@@ -786,7 +814,7 @@
       "fileHint": "Seleziona un file firma KeyTone (.ktsign)",
       "import": "Importa",
       "conflictTitle": "La firma esiste già",
-      "conflictMessage": "La firma \u00AB{name}\u00BB esiste già. Sovrascrivere?"
+      "conflictMessage": "La firma «{name}» esiste già. Sovrascrivere?"
     },
     "select": {
       "title": "Seleziona firma",
@@ -812,7 +840,9 @@
       "imageReadFailed": "Lettura immagine fallita",
       "invalidFileFormat": "Formato file non valido",
       "unexpectedError": "Si è verificato un errore imprevisto",
-      "noChanges": "Nessuna modifica rilevata"
+      "noChanges": "Nessuna modifica rilevata",
+      "sortUpdated": "Ordine di ordinamento aggiornato",
+      "sortUpdateFailed": "Aggiornamento dell'ordine di ordinamento fallito, riprova"
     }
   },
   "albumSelector": {

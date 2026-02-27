@@ -2,27 +2,27 @@
   <q-dialog v-model="dialogVisible" persistent>
     <q-card style="min-width: 700px; max-width: 900px">
       <q-card-section class="row items-center q-pb-none sticky top-0 z-10 bg-white/30 backdrop-blur-sm">
-        <div class="text-h6">选择签名</div>
+        <div class="text-h6">{{ t('exportFlow.selectionDialog.title') }}</div>
         <q-space />
         <q-btn icon="close" flat round dense @click="cancel" />
       </q-card-section>
 
       <q-card-section v-if="loading" class="flex flex-center" style="min-height: 300px">
         <q-spinner color="primary" size="3em" />
-        <div class="text-body2 text-grey-7 q-mt-md">正在加载可用签名...</div>
+        <div class="text-body2 text-grey-7 q-mt-md">{{ t('exportFlow.selectionDialog.loading') }}</div>
       </q-card-section>
 
       <q-card-section v-else-if="signatures.length === 0" class="text-center q-pa-lg">
         <q-icon name="inbox" size="64px" color="grey-5" />
-        <div class="text-h6 text-grey-7 q-mt-md">暂无可用签名</div>
-        <div class="text-body2 text-grey-6 q-mt-sm">请先创建签名后再导出专辑</div>
+        <div class="text-h6 text-grey-7 q-mt-md">{{ t('exportFlow.selectionDialog.emptyTitle') }}</div>
+        <div class="text-body2 text-grey-6 q-mt-sm">{{ t('exportFlow.selectionDialog.emptyDesc') }}</div>
       </q-card-section>
 
       <q-card-section v-else class="q-pt-none">
         <!-- 筛选选项 -->
         <div class="row q-mb-md q-gutter-sm">
-          <q-toggle v-model="showOnlyAuthorized" label="仅显示已授权" color="primary" />
-          <q-toggle v-model="showOnlyInAlbum" label="仅显示已在专辑中" color="blue" />
+          <q-toggle v-model="showOnlyAuthorized" :label="t('exportFlow.selectionDialog.filterAuthorized')" color="primary" />
+          <q-toggle v-model="showOnlyInAlbum" :label="t('exportFlow.selectionDialog.filterInAlbum')" color="blue" />
         </div>
 
         <q-separator class="q-mb-md" />
@@ -49,35 +49,35 @@
                 </div>
 
                 <div class="text-body2 text-grey-7 q-mb-md">
-                  {{ sig.intro || '暂无介绍' }}
+                  {{ sig.intro || t('exportFlow.selectionDialog.noIntro') }}
                 </div>
 
                 <!-- 徽章区域 -->
                 <div class="badges-container">
                   <q-badge v-if="sig.isOriginalAuthor" color="amber-7" class="q-mr-xs">
                     <q-icon name="star" size="14px" class="q-mr-xs" />
-                    原始作者
+                    {{ t('exportFlow.selectionDialog.badgeOriginalAuthor') }}
                   </q-badge>
 
                   <q-badge v-if="sig.isInAlbum" color="blue-7" class="q-mr-xs">
                     <q-icon name="check_circle" size="14px" class="q-mr-xs" />
-                    已在专辑中
+                    {{ t('exportFlow.selectionDialog.badgeInAlbum') }}
                   </q-badge>
 
-                  <q-badge v-if="!sig.isAuthorized" color="negative" class="q-mr-xs" :title="'需要原始作者授权'">
+                  <q-badge v-if="!sig.isAuthorized" color="negative" class="q-mr-xs" :title="t('exportFlow.selectionDialog.unauthorizedOverlayText')">
                     <q-icon name="lock" size="14px" class="q-mr-xs" />
-                    需要授权
+                    {{ t('exportFlow.selectionDialog.badgeNeedAuth') }}
                   </q-badge>
 
                   <q-badge v-else-if="sig.isAuthorized && !sig.isOriginalAuthor" color="positive">
                     <q-icon name="check" size="14px" class="q-mr-xs" />
-                    已授权
+                    {{ t('exportFlow.selectionDialog.badgeAuthorized') }}
                   </q-badge>
                 </div>
 
                 <!-- 资格码（小字显示） -->
                 <div class="text-caption text-grey-5 q-mt-sm" style="word-break: break-all">
-                  资格码: {{ sig.qualificationCode.substring(0, 16) }}...
+                  {{ t('exportFlow.selectionDialog.qualificationCodePrefix') }}: {{ sig.qualificationCode.substring(0, 16) }}...
                 </div>
               </q-card-section>
 
@@ -93,7 +93,7 @@
             <!-- 未授权遮罩 -->
             <div v-if="!sig.isAuthorized" class="unauthorized-overlay">
               <q-icon name="lock" size="48px" color="white" />
-              <div class="text-white text-body2 q-mt-sm">需要原始作者授权</div>
+              <div class="text-white text-body2 q-mt-sm">{{ t('exportFlow.selectionDialog.unauthorizedOverlayText') }}</div>
             </div>
           </q-card>
         </div>
@@ -107,13 +107,13 @@
           <template v-slot:avatar>
             <q-icon name="info" color="orange" />
           </template>
-          部分签名需要原始作者授权后才能使用。请联系原始作者获取授权文件。
+          {{ t('exportFlow.selectionDialog.unauthorizedBannerText') }}
         </q-banner>
       </q-card-section>
 
       <q-card-actions align="right" :class="['sticky bottom-0 z-10 bg-white/30 backdrop-blur-sm']">
-        <q-btn flat label="取消" color="grey-7" @click="cancel" />
-        <q-btn unelevated label="确认选择" color="primary" :disable="!selectedSignature" @click="confirm" />
+        <q-btn flat :label="t('exportFlow.common.cancel')" color="grey-7" @click="cancel" />
+        <q-btn unelevated :label="t('exportFlow.selectionDialog.confirm')" color="primary" :disable="!selectedSignature" @click="confirm" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -121,6 +121,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { GetAvailableSignatures } from 'src/boot/query/keytonePkg-query';
 import type { AvailableSignature } from 'src/types/export-flow';
 import { Notify } from 'quasar';
@@ -134,6 +135,8 @@ const emit = defineEmits<{
   (e: 'confirm', signatureId: string): void;
   (e: 'cancel'): void;
 }>();
+
+const { t } = useI18n();
 
 const dialogVisible = ref(false);
 const loading = ref(false);
@@ -181,7 +184,7 @@ async function open() {
     console.error('获取可用签名失败:', err);
     Notify.create({
       type: 'negative',
-      message: '加载签名列表失败: ' + (err.message || '未知错误'),
+      message: t('exportFlow.selectionDialog.loadFailed') + (err.message ? ': ' + err.message : ''),
     });
     dialogVisible.value = false;
   } finally {
@@ -196,8 +199,8 @@ function selectSignature(sig: AvailableSignature) {
   if (!sig.isAuthorized) {
     Notify.create({
       type: 'warning',
-      message: '此签名需要原始作者授权后才能使用',
-      caption: '请联系原始作者获取授权文件',
+      message: t('exportFlow.selectionDialog.unauthorizedWarning'),
+      caption: t('exportFlow.selectionDialog.unauthorizedCaption'),
     });
     return;
   }
@@ -212,7 +215,7 @@ function confirm() {
   if (!selectedSignature.value) {
     Notify.create({
       type: 'warning',
-      message: '请先选择一个签名',
+      message: t('exportFlow.selectionDialog.pleaseSelect'),
     });
     return;
   }

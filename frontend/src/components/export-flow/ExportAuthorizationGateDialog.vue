@@ -3,7 +3,7 @@
     <q-card class="auth-gate-dialog" style="width: 90%; max-width: 360px">
       <!-- Header (sticky glass) -->
       <q-card-section class="bg-warning bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
-        <div class="text-subtitle1">{{ t('exportFlow.authGateDialog.title') }}</div>
+        <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ t('exportFlow.authGateDialog.title') }}</div>
       </q-card-section>
 
       <!-- Content -->
@@ -141,6 +141,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import { useSettingStore } from 'src/stores/setting-store';
 import { verifyAndImportAuthGrant, addToAuthorizedList } from 'boot/query/signature-query';
 
 interface AuthGateDialogProps {
@@ -171,6 +172,13 @@ const props = withDefaults(defineProps<AuthGateDialogProps>(), {
 const emit = defineEmits<AuthGateDialogEmits>();
 const { t } = useI18n();
 const $q = useQuasar();
+const setting_store = useSettingStore();
+
+const i18n_dialogTitleSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-subtitle1'
+    : 'text-[0.95rem] leading-tight';
+});
 
 const isVisible = ref(false);
 const authFile = ref<File | null>(null);

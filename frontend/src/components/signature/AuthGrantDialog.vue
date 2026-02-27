@@ -3,7 +3,7 @@
     <q-card class="auth-grant-dialog" style="width: 90%; max-width: 400px">
       <!-- Header -->
       <q-card-section class="bg-teal bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
-        <div class="text-subtitle1">{{ t('signature.authGrant.title') }}</div>
+        <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ t('signature.authGrant.title') }}</div>
       </q-card-section>
 
       <!-- Content -->
@@ -287,6 +287,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import { useSettingStore } from 'src/stores/setting-store';
 import type { Signature } from 'src/types/signature';
 import {
   parseAuthRequest,
@@ -321,6 +322,13 @@ const emit = defineEmits<AuthGrantDialogEmits>();
 
 const { t } = useI18n();
 const $q = useQuasar();
+const setting_store = useSettingStore();
+
+const i18n_dialogTitleSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-subtitle1'
+    : 'text-[0.95rem] leading-tight';
+});
 
 // Refs
 const hiddenFileInput = ref<HTMLInputElement | null>(null);

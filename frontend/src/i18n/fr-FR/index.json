@@ -61,7 +61,10 @@
       "refreshFailed": "Album remplacé, mais l'actualisation a échoué. Veuillez actualiser manuellement",
       "importOverwriteSuccess": "Album remplacé avec succès",
       "importSaveAsNewSuccess": "Album enregistré comme nouvel album",
-      "fileDescription": "Fichier d'album KeyTone"
+      "fileDescription": "Fichier d'album KeyTone",
+      "noAlbumSelected": "Veuillez d'abord sélectionner un album",
+      "encryptFailed": "Échec du chiffrement de la configuration de l'album",
+      "applySignatureFailed": "Échec de l'application de la configuration de signature"
     },
     "importDialog": {
       "title": "Importer un album",
@@ -102,7 +105,6 @@
       "audioFile": "Fichier audio source",
       "sound": "Segments sonores prédéfinis",
       "keySound": "Sons de touche premium",
-
       "audioFile_0": "Fichier audio",
       "sound_0": "Segment sonore",
       "keySound_0": "Son de touche premium"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Annuler",
       "continue": "Continuer",
-      "back": "Retour"
+      "back": "Retour",
+      "confirm": "Confirmer"
     },
     "confirmSignature": {
       "title": "Signature requise ?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Coordonnées copiées",
       "authFileImported": "Fichier d'autorisation importé"
+    },
+    "reexportWarning": {
+      "title": "Confirmation de ré-exportation",
+      "description": "L'auteur original de cet album a spécifié que la ré-exportation nécessite une signature. Confirmez et sélectionnez la signature à utiliser, ou annulez."
+    },
+    "selectionDialog": {
+      "title": "Sélectionner une signature",
+      "loading": "Chargement des signatures disponibles...",
+      "emptyTitle": "Aucune signature disponible",
+      "emptyDesc": "Créez d'abord une signature avant d'exporter",
+      "filterAuthorized": "Autorisées uniquement",
+      "filterInAlbum": "Dans l'album uniquement",
+      "noIntro": "Aucune description",
+      "badgeOriginalAuthor": "Auteur original",
+      "badgeInAlbum": "Dans l'album",
+      "badgeNeedAuth": "Autorisation requise",
+      "badgeAuthorized": "Autorisée",
+      "qualificationCodePrefix": "Code",
+      "unauthorizedBannerText": "Certaines signatures nécessitent l'autorisation de l'auteur original. Contactez l'auteur original pour le fichier d'autorisation.",
+      "unauthorizedOverlayText": "Autorisation de l'auteur requise",
+      "confirm": "Confirmer la sélection",
+      "loadFailed": "Échec du chargement de la liste des signatures",
+      "unauthorizedWarning": "Cette signature nécessite l'autorisation de l'auteur original",
+      "unauthorizedCaption": "Contactez l'auteur original pour le fichier d'autorisation",
+      "pleaseSelect": "Veuillez d'abord sélectionner une signature"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Lecture de l'image échouée",
       "invalidFileFormat": "Format de fichier invalide",
       "unexpectedError": "Une erreur inattendue s'est produite",
-      "noChanges": "Aucune modification détectée"
+      "noChanges": "Aucune modification détectée",
+      "sortUpdated": "Ordre de tri mis à jour",
+      "sortUpdateFailed": "Échec de la mise à jour de l'ordre de tri, veuillez réessayer"
     }
   },
   "albumSelector": {

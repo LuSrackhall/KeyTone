@@ -61,7 +61,10 @@
       "refreshFailed": "專輯已覆蓋，但重新整理失敗，請手動重新整理",
       "importOverwriteSuccess": "專輯覆蓋匯入成功",
       "importSaveAsNewSuccess": "專輯已儲存為新專輯",
-      "fileDescription": "KeyTone 專輯檔案"
+      "fileDescription": "KeyTone 專輯檔案",
+      "noAlbumSelected": "請先選擇一個專輯",
+      "encryptFailed": "加密專輯設定失敗",
+      "applySignatureFailed": "提交簽名設定失敗"
     },
     "importDialog": {
       "title": "匯入專輯",
@@ -102,7 +105,6 @@
       "audioFile": "音訊源檔案",
       "sound": "預定義聲音片段",
       "keySound": "至臻鍵音",
-
       "audioFile_0": "音訊檔案",
       "sound_0": "聲音片段",
       "keySound_0": "至臻鍵音"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "取消",
       "continue": "繼續",
-      "back": "返回"
+      "back": "返回",
+      "confirm": "確認"
     },
     "confirmSignature": {
       "title": "是否需要簽名",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "聯絡方式已複製",
       "authFileImported": "授權檔案已匯入"
+    },
+    "reexportWarning": {
+      "title": "再次匯出確認",
+      "description": "該鍵音專輯原始作者明確了該鍵音包的二次匯出必須實施簽名，請確認後選擇要使用的簽名或取消。"
+    },
+    "selectionDialog": {
+      "title": "選擇簽名",
+      "loading": "正在載入可用簽名...",
+      "emptyTitle": "暫無可用簽名",
+      "emptyDesc": "請先建立簽名後再匯出專輯",
+      "filterAuthorized": "僅顯示已授權",
+      "filterInAlbum": "僅顯示已在專輯中",
+      "noIntro": "暫無介紹",
+      "badgeOriginalAuthor": "原始作者",
+      "badgeInAlbum": "已在專輯中",
+      "badgeNeedAuth": "需要授權",
+      "badgeAuthorized": "已授權",
+      "qualificationCodePrefix": "資格碼",
+      "unauthorizedBannerText": "部分簽名需要原始作者授權後才能使用。請聯絡原始作者獲取授權文件。",
+      "unauthorizedOverlayText": "需要原始作者授權",
+      "confirm": "確認選擇",
+      "loadFailed": "載入簽名列表失敗",
+      "unauthorizedWarning": "此簽名需要原始作者授權後才能使用",
+      "unauthorizedCaption": "請聯絡原始作者獲取授權文件",
+      "pleaseSelect": "請先選擇一個簽名"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "圖片讀取失敗",
       "invalidFileFormat": "無效的檔案格式",
       "unexpectedError": "發生未知錯誤",
-      "noChanges": "未偵測到任何變更"
+      "noChanges": "未偵測到任何變更",
+      "sortUpdated": "排序已更新",
+      "sortUpdateFailed": "排序更新失敗，請重試"
     }
   },
   "albumSelector": {

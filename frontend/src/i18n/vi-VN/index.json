@@ -61,7 +61,10 @@
       "refreshFailed": "Album đã được ghi đè, nhưng làm mới thất bại, vui lòng làm mới thủ công",
       "importOverwriteSuccess": "Ghi đè album thành công",
       "importSaveAsNewSuccess": "Album đã được lưu dưới dạng album mới",
-      "fileDescription": "File album KeyTone"
+      "fileDescription": "File album KeyTone",
+      "noAlbumSelected": "Vui lòng chọn album trước",
+      "encryptFailed": "Mã hóa cấu hình album thất bại",
+      "applySignatureFailed": "Áp dụng cấu hình chữ ký thất bại"
     },
     "importDialog": {
       "title": "Nhập album",
@@ -102,7 +105,6 @@
       "audioFile": "File âm thanh nguồn",
       "sound": "Đoạn âm thanh định sẵn",
       "keySound": "Âm thanh phím tối ưu",
-
       "audioFile_0": "File âm thanh",
       "sound_0": "Đoạn âm thanh",
       "keySound_0": "Âm thanh phím tối ưu"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Hủy",
       "continue": "Tiếp tục",
-      "back": "Quay lại"
+      "back": "Quay lại",
+      "confirm": "Xác nhận"
     },
     "confirmSignature": {
       "title": "Cần chữ ký?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Liên lạc đã sao chép",
       "authFileImported": "File ủy quyền đã nhập"
+    },
+    "reexportWarning": {
+      "title": "Xác nhận xuất lại",
+      "description": "Tác giả gốc của album này yêu cầu việc xuất lại phải có chữ ký. Vui lòng xác nhận và chọn chữ ký hoặc hủy bỏ."
+    },
+    "selectionDialog": {
+      "title": "Chọn chữ ký",
+      "loading": "Đang tải chữ ký có sẵn...",
+      "emptyTitle": "Không có chữ ký nào",
+      "emptyDesc": "Hãy tạo chữ ký trước khi xuất album",
+      "filterAuthorized": "Chỉ đã được ủy quyền",
+      "filterInAlbum": "Chỉ trong album",
+      "noIntro": "Không có mô tả",
+      "badgeOriginalAuthor": "Tác giả gốc",
+      "badgeInAlbum": "Đã có trong album",
+      "badgeNeedAuth": "Cần ủy quyền",
+      "badgeAuthorized": "Đã ủy quyền",
+      "qualificationCodePrefix": "Mã",
+      "unauthorizedBannerText": "Một số chữ ký cần được tác giả gốc ủy quyền. Vui lòng liên hệ tác giả để lấy tệp ủy quyền.",
+      "unauthorizedOverlayText": "Cần ủy quyền từ tác giả",
+      "confirm": "Xác nhận lựa chọn",
+      "loadFailed": "Không tải được danh sách chữ ký",
+      "unauthorizedWarning": "Chữ ký này cần được tác giả gốc ủy quyền",
+      "unauthorizedCaption": "Liên hệ tác giả gốc để lấy tệp ủy quyền",
+      "pleaseSelect": "Vui lòng chọn chữ ký trước"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Đọc ảnh thất bại",
       "invalidFileFormat": "Định dạng file không hợp lệ",
       "unexpectedError": "Xảy ra lỗi không mong muốn",
-      "noChanges": "Không phát hiện thay đổi"
+      "noChanges": "Không phát hiện thay đổi",
+      "sortUpdated": "Đã cập nhật thứ tự sắp xếp",
+      "sortUpdateFailed": "Cập nhật thứ tự sắp xếp thất bại, vui lòng thử lại"
     }
   },
   "albumSelector": {

@@ -718,7 +718,7 @@ const openSignatureDialog = (albumPath: string) => {
   if (!albumPath) {
     q.notify({
       type: 'warning',
-      message: '请先选择一个专辑',
+      message: t('keyToneAlbumPage.notify.noAlbumSelected'),
       position: 'top',
     });
     return;
@@ -744,7 +744,7 @@ const openSignatureDialogFromList = async (albumPath: string) => {
   if (!albumPath) {
     q.notify({
       type: 'warning',
-      message: '请先选择一个专辑',
+      message: t('keyToneAlbumPage.notify.noAlbumSelected'),
       position: 'top',
     });
     return;
@@ -906,7 +906,7 @@ const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSig
     console.error('加密专辑配置失败:', encryptError);
     q.notify({
       type: 'negative',
-      message: '加密专辑配置失败: ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
+      message: t('keyToneAlbumPage.notify.encryptFailed') + ': ' + (encryptError instanceof Error ? encryptError.message : String(encryptError)),
     });
     return false;
   }
@@ -928,7 +928,7 @@ const ensureSignatureConfigApplied = async (albumPath: string, result: ExportSig
     console.error('提交签名配置失败:', applyError);
     q.notify({
       type: 'negative',
-      message: '提交签名配置失败: ' + (applyError instanceof Error ? applyError.message : String(applyError)),
+      message: t('keyToneAlbumPage.notify.applySignatureFailed') + ': ' + (applyError instanceof Error ? applyError.message : String(applyError)),
     });
     return false;
   }
@@ -1005,7 +1005,7 @@ const exportAlbum = async () => {
   if (!albumPath) {
     q.notify({
       type: 'warning',
-      message: '请先选择一个专辑',
+      message: t('keyToneAlbumPage.notify.noAlbumSelected'),
     });
     return;
   }

@@ -61,7 +61,10 @@
       "refreshFailed": "Album telah ditimpa, tetapi gagal diperbarui, silakan perbarui secara manual",
       "importOverwriteSuccess": "Album berhasil ditimpa",
       "importSaveAsNewSuccess": "Album telah disimpan sebagai album baru",
-      "fileDescription": "File Album KeyTone"
+      "fileDescription": "File Album KeyTone",
+      "noAlbumSelected": "Silakan pilih album terlebih dahulu",
+      "encryptFailed": "Gagal mengenkripsi konfigurasi album",
+      "applySignatureFailed": "Gagal menerapkan konfigurasi tanda tangan"
     },
     "importDialog": {
       "title": "Impor Album",
@@ -102,7 +105,6 @@
       "audioFile": "File Audio Sumber",
       "sound": "Potongan Suara",
       "keySound": "KeyTone Premium",
-
       "audioFile_0": "File Audio",
       "sound_0": "Potongan Suara",
       "keySound_0": "KeyTone Premium"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Batal",
       "continue": "Lanjutkan",
-      "back": "Kembali"
+      "back": "Kembali",
+      "confirm": "Konfirmasi"
     },
     "confirmSignature": {
       "title": "Perlu tanda tangan?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Kontak disalin",
       "authFileImported": "File otorisasi diimpor"
+    },
+    "reexportWarning": {
+      "title": "Konfirmasi Ekspor Ulang",
+      "description": "Penulis asli album ini menetapkan bahwa ekspor ulang harus menyertakan tanda tangan. Konfirmasi dan pilih tanda tangan yang akan digunakan, atau batalkan."
+    },
+    "selectionDialog": {
+      "title": "Pilih tanda tangan",
+      "loading": "Memuat tanda tangan yang tersedia...",
+      "emptyTitle": "Tidak ada tanda tangan tersedia",
+      "emptyDesc": "Buat tanda tangan sebelum mengekspor",
+      "filterAuthorized": "Hanya yang diotorisasi",
+      "filterInAlbum": "Hanya yang ada di album",
+      "noIntro": "Tidak ada deskripsi",
+      "badgeOriginalAuthor": "Penulis asli",
+      "badgeInAlbum": "Di album",
+      "badgeNeedAuth": "Perlu otorisasi",
+      "badgeAuthorized": "Diotorisasi",
+      "qualificationCodePrefix": "Kode",
+      "unauthorizedBannerText": "Beberapa tanda tangan memerlukan otorisasi dari penulis asli. Hubungi penulis asli untuk file otorisasi.",
+      "unauthorizedOverlayText": "Memerlukan otorisasi penulis",
+      "confirm": "Konfirmasi pilihan",
+      "loadFailed": "Gagal memuat daftar tanda tangan",
+      "unauthorizedWarning": "Tanda tangan ini memerlukan otorisasi dari penulis asli",
+      "unauthorizedCaption": "Hubungi penulis asli untuk file otorisasi",
+      "pleaseSelect": "Silakan pilih tanda tangan terlebih dahulu"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Gagal membaca gambar",
       "invalidFileFormat": "Format file tidak valid",
       "unexpectedError": "Terjadi kesalahan yang tidak terduga",
-      "noChanges": "Tidak ada perubahan terdeteksi"
+      "noChanges": "Tidak ada perubahan terdeteksi",
+      "sortUpdated": "Urutan diperbarui",
+      "sortUpdateFailed": "Gagal memperbarui urutan, silakan coba lagi"
     }
   },
   "albumSelector": {

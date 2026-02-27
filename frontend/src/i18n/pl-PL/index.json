@@ -61,7 +61,10 @@
       "refreshFailed": "Album został nadpisany, ale odświeżenie nie powiodło się. Odśwież ręcznie",
       "importOverwriteSuccess": "Album został pomyślnie nadpisany",
       "importSaveAsNewSuccess": "Album został zapisany jako nowy",
-      "fileDescription": "Plik albumu KeyTone"
+      "fileDescription": "Plik albumu KeyTone",
+      "noAlbumSelected": "Najpierw wybierz album",
+      "encryptFailed": "Nie udało się zaszyfrować konfiguracji albumu",
+      "applySignatureFailed": "Nie udało się zastosować konfiguracji podpisu"
     },
     "importDialog": {
       "title": "Importuj album",
@@ -102,7 +105,6 @@
       "audioFile": "Plik źródłowy",
       "sound": "Predefiniowane dźwięki",
       "keySound": "Dźwięk klawisza",
-
       "audioFile_0": "Plik audio",
       "sound_0": "Dźwięk",
       "keySound_0": "Dźwięk klawisza"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Anuluj",
       "continue": "Kontynuuj",
-      "back": "Wstecz"
+      "back": "Wstecz",
+      "confirm": "Potwierdź"
     },
     "confirmSignature": {
       "title": "Wymagany podpis?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Kontakt skopiowany",
       "authFileImported": "Plik autoryzacji zaimportowany"
+    },
+    "reexportWarning": {
+      "title": "Potwierdzenie ponownego eksportu",
+      "description": "Oryginalny autor tego albumu określił, że ponowny eksport wymaga podpisu. Potwierdź i wybierz podpis lub anuluj."
+    },
+    "selectionDialog": {
+      "title": "Wybierz podpis",
+      "loading": "Ładowanie dostępnych podpisów...",
+      "emptyTitle": "Brak dostępnych podpisów",
+      "emptyDesc": "Najpierw utwórz podpis przed eksportem",
+      "filterAuthorized": "Tylko autoryzowane",
+      "filterInAlbum": "Tylko w albumie",
+      "noIntro": "Brak opisu",
+      "badgeOriginalAuthor": "Oryginalny autor",
+      "badgeInAlbum": "W albumie",
+      "badgeNeedAuth": "Wymaga autoryzacji",
+      "badgeAuthorized": "Autoryzowany",
+      "qualificationCodePrefix": "Kod",
+      "unauthorizedBannerText": "Niektóre podpisy wymagają autoryzacji od oryginalnego autora. Skontaktuj się z autorem po plik autoryzacji.",
+      "unauthorizedOverlayText": "Wymagana autoryzacja autora",
+      "confirm": "Potwierdź wybór",
+      "loadFailed": "Nie udało się załadować listy podpisów",
+      "unauthorizedWarning": "Ten podpis wymaga autoryzacji od oryginalnego autora",
+      "unauthorizedCaption": "Skontaktuj się z autorem po plik autoryzacji",
+      "pleaseSelect": "Najpierw wybierz podpis"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Odczyt obrazu nie powiódł się",
       "invalidFileFormat": "Nieprawidłowy format pliku",
       "unexpectedError": "Wystąpił nieoczekiwany błąd",
-      "noChanges": "Nie wykryto żadnych zmian"
+      "noChanges": "Nie wykryto żadnych zmian",
+      "sortUpdated": "Kolejność zaktualizowana",
+      "sortUpdateFailed": "Nie udało się zaktualizować kolejności. Spróbuj ponownie"
     }
   },
   "albumSelector": {

@@ -61,7 +61,10 @@
       "refreshFailed": "El álbum se ha sobrescrito, pero falló la actualización. Por favor, actualiza manualmente",
       "importOverwriteSuccess": "Álbum sobrescrito con éxito",
       "importSaveAsNewSuccess": "Álbum guardado como nuevo",
-      "fileDescription": "Archivo de álbum KeyTone"
+      "fileDescription": "Archivo de álbum KeyTone",
+      "noAlbumSelected": "Primero seleccione un álbum",
+      "encryptFailed": "Error al cifrar la configuración del álbum",
+      "applySignatureFailed": "Error al aplicar la configuración de firma"
     },
     "importDialog": {
       "title": "Importar álbum",
@@ -102,7 +105,6 @@
       "audioFile": "Archivo de audio fuente",
       "sound": "Fragmentos de sonido predefinidos",
       "keySound": "Sonido de tecla",
-
       "audioFile_0": "Archivo de audio",
       "sound_0": "Fragmento de sonido",
       "keySound_0": "Sonido de tecla"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "Cancelar",
       "continue": "Continuar",
-      "back": "Volver"
+      "back": "Volver",
+      "confirm": "Confirmar"
     },
     "confirmSignature": {
       "title": "¿Se requiere firma?",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "Contacto copiado",
       "authFileImported": "Archivo de autorización importado"
+    },
+    "reexportWarning": {
+      "title": "Confirmación de re-exportación",
+      "description": "El autor original de este álbum ha especificado que la re-exportación requiere una firma. Confirme y seleccione la firma a utilizar, o cancele."
+    },
+    "selectionDialog": {
+      "title": "Seleccionar firma",
+      "loading": "Cargando firmas disponibles...",
+      "emptyTitle": "No hay firmas disponibles",
+      "emptyDesc": "Primero crea una firma antes de exportar",
+      "filterAuthorized": "Solo autorizadas",
+      "filterInAlbum": "Solo en el álbum",
+      "noIntro": "Sin descripción",
+      "badgeOriginalAuthor": "Autor original",
+      "badgeInAlbum": "En el álbum",
+      "badgeNeedAuth": "Requiere autorización",
+      "badgeAuthorized": "Autorizada",
+      "qualificationCodePrefix": "Código",
+      "unauthorizedBannerText": "Algunas firmas requieren autorización del autor original. Contáctelo para obtener el archivo de autorización.",
+      "unauthorizedOverlayText": "Se requiere autorización del autor",
+      "confirm": "Confirmar selección",
+      "loadFailed": "Error al cargar la lista de firmas",
+      "unauthorizedWarning": "Esta firma requiere autorización del autor original",
+      "unauthorizedCaption": "Consulte al autor original para obtener el archivo de autorización",
+      "pleaseSelect": "Primero seleccione una firma"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "Error al leer imagen",
       "invalidFileFormat": "Formato de archivo inválido",
       "unexpectedError": "Se produjo un error inesperado",
-      "noChanges": "No se detectaron cambios"
+      "noChanges": "No se detectaron cambios",
+      "sortUpdated": "Orden de clasificación actualizado",
+      "sortUpdateFailed": "Error al actualizar el orden, por favor inténtelo de nuevo"
     }
   },
   "albumSelector": {

@@ -2,7 +2,7 @@
   <q-dialog v-model="isVisible" persistent>
     <q-card style="width: 90%; max-width: 340px">
       <q-card-section class="bg-primary bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
-        <div class="text-subtitle1">{{ $t('exportFlow.authRequire.title') }}</div>
+        <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ $t('exportFlow.authRequire.title') }}</div>
       </q-card-section>
 
       <q-card-section class="q-pa-md q-pt-md">
@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useSettingStore } from 'src/stores/setting-store';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{
@@ -32,6 +33,14 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const setting_store = useSettingStore();
+
+const i18n_dialogTitleSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-subtitle1'
+    : 'text-[0.95rem] leading-tight';
+});
+
 const dialogVisible = computed({
   get: () => props.visible,
   set: (v) => {

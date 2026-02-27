@@ -3,7 +3,7 @@
     <q-card class="auth-request-dialog" style="width: 90%; max-width: 400px">
       <!-- Header -->
       <q-card-section class="bg-deep-purple bg-opacity-90 text-white q-pa-sm sticky top-0 z-10 backdrop-blur-sm">
-        <div class="text-subtitle1">{{ t('exportFlow.authRequestDialog.title') }}</div>
+        <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ t('exportFlow.authRequestDialog.title') }}</div>
       </q-card-section>
 
       <!-- Content -->
@@ -17,7 +17,7 @@
                 <q-icon v-if="currentStep > 1" name="check" size="14px" />
                 <span v-else>1</span>
               </div>
-              <div class="step-label">{{ t('exportFlow.authRequestDialog.step1Title') }}</div>
+              <div class="step-label transition-all duration-300" :class="i18n_stepLabelSize">{{ t('exportFlow.authRequestDialog.step1Title') }}</div>
             </div>
             <div class="step-connector" :class="{ active: currentStep > 1 }"></div>
             <!-- Step 2 -->
@@ -26,7 +26,7 @@
                 <q-icon v-if="currentStep > 2" name="check" size="14px" />
                 <span v-else>2</span>
               </div>
-              <div class="step-label">{{ t('exportFlow.authRequestDialog.step2Title') }}</div>
+              <div class="step-label transition-all duration-300" :class="i18n_stepLabelSize">{{ t('exportFlow.authRequestDialog.step2Title') }}</div>
             </div>
             <div class="step-connector" :class="{ active: currentStep > 2 }"></div>
             <!-- Step 3 -->
@@ -35,7 +35,7 @@
                 <q-icon v-if="currentStep >= 3" name="check" size="14px" />
                 <span v-else>3</span>
               </div>
-              <div class="step-label">{{ t('exportFlow.authRequestDialog.step3Title') }}</div>
+              <div class="step-label transition-all duration-300" :class="i18n_stepLabelSize">{{ t('exportFlow.authRequestDialog.step3Title') }}</div>
             </div>
           </div>
         </div>
@@ -345,6 +345,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import { useSettingStore } from 'src/stores/setting-store';
 import { generateAuthRequest } from 'boot/query/signature-query';
 
 interface SignatureItem {
@@ -385,6 +386,19 @@ const emit = defineEmits<AuthRequestDialogEmits>();
 
 const { t } = useI18n();
 const $q = useQuasar();
+const setting_store = useSettingStore();
+
+const i18n_stepLabelSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-[0.7rem]'
+    : 'text-[0.55rem]';
+});
+
+const i18n_dialogTitleSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-subtitle1'
+    : 'text-[0.95rem] leading-tight';
+});
 
 // UI State
 const isVisible = ref(false);
@@ -612,10 +626,8 @@ function onDone() {
 
     .step-label {
       margin-top: 6px;
-      font-size: 0.7rem;
       color: #9e9e9e;
       text-align: center;
-      transition: color 0.3s ease;
       white-space: nowrap;
     }
 

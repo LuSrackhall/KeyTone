@@ -61,7 +61,10 @@
       "refreshFailed": "앨범이 덮어쓰기되었지만 새로고침에 실패했습니다. 수동으로 새로고침하세요",
       "importOverwriteSuccess": "앨범 덮어쓰기 가져오기 성공",
       "importSaveAsNewSuccess": "앨범이 새 앨범으로 저장되었습니다",
-      "fileDescription": "KeyTone 앨범 파일"
+      "fileDescription": "KeyTone 앨범 파일",
+      "noAlbumSelected": "먼저 앨범을 선택하세요",
+      "encryptFailed": "앨범 설정 암호화 실패",
+      "applySignatureFailed": "서명 설정 적용 실패"
     },
     "importDialog": {
       "title": "앨범 가져오기",
@@ -102,7 +105,6 @@
       "audioFile": "오디오 소스 파일",
       "sound": "사전 정의된 사운드 클립",
       "keySound": "키톤 사운드",
-
       "audioFile_0": "오디오 파일",
       "sound_0": "사운드 클립",
       "keySound_0": "키톤 사운드"
@@ -504,7 +506,8 @@
     "common": {
       "cancel": "취소",
       "continue": "계속",
-      "back": "뒤로"
+      "back": "뒤로",
+      "confirm": "확인"
     },
     "confirmSignature": {
       "title": "서명이 필요합니까",
@@ -690,6 +693,31 @@
     "notify": {
       "contactCopied": "연락처 복사됨",
       "authFileImported": "승인 파일 가져오기 완료"
+    },
+    "reexportWarning": {
+      "title": "재내보내기 확인",
+      "description": "이 앨범의 원작자는 재내보내기에 서명이 필요하다고 지정했습니다. 확인 후 사용할 서명을 선택하거나 취소하세요."
+    },
+    "selectionDialog": {
+      "title": "서명 선택",
+      "loading": "사용 가능한 서명 불러오는 중...",
+      "emptyTitle": "사용 가능한 서명 없음",
+      "emptyDesc": "먼저 서명을 만든 후 앨범을 내보내세요",
+      "filterAuthorized": "승인된 것만 표시",
+      "filterInAlbum": "앨범에 있는 것만 표시",
+      "noIntro": "설명 없음",
+      "badgeOriginalAuthor": "원작자",
+      "badgeInAlbum": "앨범에 있음",
+      "badgeNeedAuth": "인증 필요",
+      "badgeAuthorized": "승인됨",
+      "qualificationCodePrefix": "자격 코드",
+      "unauthorizedBannerText": "일부 서명은 원작자의 승인이 필요합니다. 승인 파일은 원작자에게 문의하세요.",
+      "unauthorizedOverlayText": "원작자 승인 필요",
+      "confirm": "선택 확인",
+      "loadFailed": "서명 목록 불러오기 실패",
+      "unauthorizedWarning": "이 서명은 원작자의 승인이 필요합니다",
+      "unauthorizedCaption": "승인 파일은 원작자에게 문의하세요",
+      "pleaseSelect": "먼저 서명을 선택하세요"
     }
   },
   "signature": {
@@ -812,7 +840,9 @@
       "imageReadFailed": "이미지 읽기 실패",
       "invalidFileFormat": "잘못된 파일 형식",
       "unexpectedError": "예상치 못한 오류가 발생했습니다",
-      "noChanges": "변경 사항이 없습니다"
+      "noChanges": "변경 사항이 없습니다",
+      "sortUpdated": "정렬이 업데이트되었습니다",
+      "sortUpdateFailed": "정렬 업데이트 실패, 다시 시도해주세요"
     }
   },
   "albumSelector": {

@@ -25,7 +25,7 @@
     <!-- 页面顶部标题栏 -->
     <div class="q-pa-md">
       <div class="flex justify-between items-center">
-        <h1 class="text-h5 q-my-none">{{ $t('signature.page.title') }}</h1>
+        <h1 :class="[i18n_titleFontSize, 'q-my-none transition-all duration-300']">{{ $t('signature.page.title') }}</h1>
         <div class="q-gutter-md">
           <q-btn
             flat
@@ -130,15 +130,22 @@
                 <!-- 无图片占位符 -->
                 <div
                   v-else
-                  class="flex items-center justify-center w-full h-full"
+                  class="w-full h-full relative"
                   :title="$t('signature.page.noImageHint')"
                   style="cursor: default"
                 >
                   <div
-                    class="text-caption text-grey-6 text-center"
-                    style="font-size: 0.65rem; line-height: 1.3; padding: 4px"
+                    class="absolute inset-0 custom-thin-scrollbar"
+                    style="overflow-y: auto; overflow-x: hidden; padding: 2px;"
                   >
-                    {{ $t('signature.page.noImageHint') }}
+                    <div style="min-height: 100%; display: flex; align-items: center; justify-content: center; width: 100%;">
+                      <div
+                        class="text-caption text-grey-6 text-center"
+                        style="font-size: 0.65rem; line-height: 1.2; word-break: break-all; width: 100%;"
+                      >
+                        {{ $t('signature.page.noImageHint') }}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -426,6 +433,7 @@ import AuthGrantDialog from 'src/components/signature/AuthGrantDialog.vue';
 import ContextMenu from 'src/components/ContextMenu.vue';
 import ContextMenuItem from 'src/components/ContextMenuItem.vue';
 import { useSignatureStore } from 'src/stores/signature-store';
+import { useSettingStore } from 'src/stores/setting-store';
 import {
   getSignaturesList,
   decryptSignatureData,
@@ -468,6 +476,13 @@ interface FileSystemWritableFileStream extends WritableStream {
 const q = useQuasar();
 const { t: $t } = useI18n();
 const signatureStore = useSignatureStore();
+const setting_store = useSettingStore();
+
+const i18n_titleFontSize = computed(() => {
+  return ['zh-CN', 'zh-TW', 'ja', 'ko-KR'].includes(setting_store.languageDefault)
+    ? 'text-h5'
+    : 'text-[1.1rem] leading-tight';
+});
 
 // 系统类型判断
 const isMacOS = ref(getMacOSStatus());
@@ -1629,7 +1644,7 @@ async function updateSignatureSort() {
     if (!success) {
       q.notify({
         type: 'negative',
-        message: '排序更新失败，请重试',
+        message: $t('signature.notify.sortUpdateFailed'),
         position: 'top',
       });
       // 还原到原始顺序
@@ -1637,7 +1652,7 @@ async function updateSignatureSort() {
     } else {
       q.notify({
         type: 'positive',
-        message: '排序已更新',
+        message: $t('signature.notify.sortUpdated'),
         position: 'top',
         timeout: 300,
       });
@@ -1646,7 +1661,7 @@ async function updateSignatureSort() {
     console.error('Failed to update signature sort:', error);
     q.notify({
       type: 'negative',
-      message: '排序更新失败',
+      message: $t('signature.notify.sortUpdateFailed'),
       position: 'top',
     });
     // 还原到原始顺序
@@ -1673,6 +1688,23 @@ function handleImagePreview(filename: string) {
 </script>
 
 <style lang="scss" scoped>
+.custom-thin-scrollbar {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 2px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4);
+    border-radius: 9999px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(96, 165, 250, 1);
+  }
+}
+
 .ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
