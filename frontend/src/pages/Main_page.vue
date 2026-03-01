@@ -919,7 +919,7 @@ function getMacOSStatus() {
   content: '';
   position: absolute;
   top: 7px; /* 从9px上移2px：使 4px 块以边框中线 (9px) 为中心 */
-  height: 4px; /* 聚焦态下 Quasar border 变为 2px，需要留 1px 上下余量 */
+  height: 5px; /* 聚焦态下 Quasar border 变为 2px，需要留 1px 上下余量 */
   left: -2px; /* 左右微微延展以形成两侧遮挡 */
   right: -2px;
   /* 稍微提高不透明度，确保聚焦后 primary 色边框也被遮盖 */
