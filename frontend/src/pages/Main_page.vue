@@ -24,7 +24,10 @@
    因此, 我们这里主动设置 style="min-height: 0px"
   -->
 
-  <q-page style="min-height: 0px" :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]']">
+  <q-page
+    style="min-height: 0px"
+    :class="[isMacOS ? 'w-[389.5px] h-[458.5px]' : 'w-[379px] h-[458.5px]', isRussian ? 'locale-ru' : '']"
+  >
     <div
       :class="[
         '',
@@ -89,7 +92,7 @@
           </div>
 
           <q-select
-            :class="['w-[216px]', 'select-component-label-show']"
+            :class="['w-[216px]', 'select-component-label-show', { 'long-label-shrink': $t('mainHome.selectedKeySoundAlbum').length > 12 }]"
             v-model="setting_store.playbackRouting.unifiedAlbumPath"
             :options="main_store.keyTonePkgOptions"
             :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
@@ -136,7 +139,7 @@
               <q-icon
                 name="cancel"
                 @click.stop.prevent="setting_store.playbackRouting.unifiedAlbumPath = ''"
-                class="cursor-pointer text-lg"
+                class="cursor-pointer text-lg translate-y-[5px]"
               />
             </template>
 
@@ -185,7 +188,7 @@
             </div>
 
             <q-select
-              :class="['w-[216px]', 'select-component-label-show']"
+              :class="['w-[216px]', 'select-component-label-show', { 'long-label-shrink': $t('mainHome.routing.keyboardLabel').length > 12 }]"
               v-model="setting_store.playbackRouting.keyboardAlbumPath"
               :options="main_store.keyTonePkgOptions"
               :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
@@ -231,7 +234,7 @@
                 <q-icon
                   name="cancel"
                   @click.stop.prevent="setting_store.playbackRouting.keyboardAlbumPath = ''"
-                  class="cursor-pointer text-lg"
+                  class="cursor-pointer text-lg translate-y-[5px]"
                 />
               </template>
             </q-select>
@@ -259,7 +262,7 @@
             </div>
 
             <q-select
-              :class="['w-[216px]', 'select-component-label-show']"
+              :class="['w-[216px]', 'select-component-label-show', { 'long-label-shrink': $t('mainHome.routing.mouseLabel').length > 12 }]"
               v-model="setting_store.playbackRouting.mouseAlbumPath"
               :options="main_store.keyTonePkgOptions"
               :option-label="(item: any) => main_store.keyTonePkgOptionsName.get(item)"
@@ -305,7 +308,7 @@
                 <q-icon
                   name="cancel"
                   @click.stop.prevent="setting_store.playbackRouting.mouseAlbumPath = ''"
-                  class="cursor-pointer text-lg"
+                  class="cursor-pointer text-lg translate-y-[5px]"
                 />
               </template>
             </q-select>
@@ -478,7 +481,8 @@ import SignatureAuthorsDialog from 'src/components/export-flow/SignatureAuthorsD
 
 const q = useQuasar();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const isRussian = computed(() => String(locale.value).startsWith('ru'));
 const $t = t;
 const setting_store = useSettingStore();
 const main_store = useMainStore();
@@ -821,6 +825,18 @@ function getMacOSStatus() {
   }
 }
 
+/* 聚焦时保持与非聚焦一致，避免签名标签视觉变透明 */
+:deep(.selector-with-legend-container .q-field--focused .q-field__control) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 修复聚焦时右侧异常白块，保持 append 区透明 */
+:deep(.select-component-label-show .q-field__append) {
+  background: transparent !important;
+}
+
 // 实际上, 在此处通过global来更改的.q-field__native, 已经覆盖了:deep(.q-field__native)的样式, 因此上方(包括其它文件中的):deep(.q-field__native)的样式可以删除(如果与这里相同的话)。
 // * global(或者说不带scoped的style)的影响范围是全局的, 包括其它vue文件中的内容也将会受此影响。
 //   > 不过这种影响是有前提的, 机这个带有global的组件必须至少加载过一次。 比如a.vue和b.vue为main.vue下的同级别组件, a中拥有global样式, b中没有。
@@ -841,6 +857,11 @@ function getMacOSStatus() {
 
   // 添加细微滚动条
   @apply h-5.8 [&::-webkit-scrollbar]:h-0.4 [&::-webkit-scrollbar-track]:bg-blueGray-400/50  [&::-webkit-scrollbar-thumb]:bg-blueGray-500/40[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-400;
+}
+
+:deep(.select-component-label-show.q-field--focused .q-field__native) {
+  // 聚焦时避免滚动容器触发布局伪影（右侧白块）
+  @apply max-w-full overflow-hidden whitespace-nowrap;
 }
 
 :global(.q-item__section) {
@@ -887,17 +908,73 @@ function getMacOSStatus() {
   top: -9px;
   /* 水平定位：靠右，留出一些边距 */
   right: 12px;
-  z-index: 10;
-  /* 背景色：用于遮挡边框线，创造"打断"效果 */
-  /* 使用与选择器控件背景一致的半透明色，避免出现明显黑色矩形 */
-  background: rgba(255, 255, 255, 0.05);
-  /* 与选择器一致的毛玻璃感，提升融合度 */
+  z-index: 30;
+  /* 左右添加一点 padding，确保内部元素不贴边 */
+  padding: 0 4px;
+}
+
+/* 使用伪元素只在边框垂直正中间生成有限高度的毛玻璃，避免上下扩展遮挡悬浮标题 */
+/* 高度设为 4px（以边框中线为中心上下各 2px），确保聚焦时 Quasar 将边框加粗到 2px 后仍能完整遮盖 */
+.signature-legend-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 7px; /* 从9px上移2px：使 4px 块以边框中线 (9px) 为中心 */
+  height: 4px; /* 聚焦态下 Quasar border 变为 2px，需要留 1px 上下余量 */
+  left: -2px; /* 左右微微延展以形成两侧遮挡 */
+  right: -2px;
+  /* 稍微提高不透明度，确保聚焦后 primary 色边框也被遮盖 */
+  background: rgba(255, 255, 255, 0.18);
+  /* 毛玻璃效果，使遮挡区与页面背景融合 */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  /* 左右添加一点 padding，确保边框被完全遮挡 */
-  padding: 0 6px;
   /* 轻微圆角，避免背景块显得生硬 */
   border-radius: 999px;
+  z-index: -1;
+}
+
+/* 针对分流模式下，未选择（不浮动）时超长文本进行缩放防溢出 */
+.long-label-shrink:not(.q-field--float) :deep(.q-field__label) {
+  transform-origin: left center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  width: max-content;
+  display: flex;
+  align-items: center; /* 换行时整体保持垂直居中 */
+  /* 使用 CSS 动画缩小，保证不干扰 Quasar 自身的 floating transform transition */
+  animation: shrinkLabelScale 0.4s ease-out forwards;
+}
+
+/* 仅对俄语(i18n locale 开头为 ru) 应用较小的行高 */
+.locale-ru {
+  .long-label-shrink:not(.q-field--float) :deep(.q-field__label){
+    line-height: 0.8;
+  }
+}
+
+// .long-label-shrink.q-field--float :deep(.q-field__label) {
+//   white-space: nowrap;
+//   overflow-wrap: normal;
+//   word-break: normal;
+//   line-height: 1;
+//   display: block;
+//   max-width: 100%;
+// }
+
+@keyframes shrinkLabelScale {
+  0% {
+    transform: translateY(0) scale(1);
+    max-width: 100%;
+  }
+  100% {
+    transform: translateY(0) scale(0.86); /* 调整缩小比例：减少过度缩小，改为 0.82 */
+    max-width: 125%; /* 修正缩放后的可用宽度，匹配新的缩放比例 */
+  }
+}
+
+/* 适配 RTL 语言的缩放基点 */
+[dir="rtl"] .long-label-shrink:not(.q-field--float) :deep(.q-field__label) {
+  transform-origin: right center;
 }
 </style>
 
