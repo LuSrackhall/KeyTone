@@ -5,7 +5,7 @@
         <div :class="['transition-all duration-300', i18n_dialogTitleSize]">{{ $t('exportFlow.contact.title') }}</div>
       </q-card-section>
 
-      <q-card-section class="q-pa-md">
+      <q-card-section class="q-pa-md export-auth-contact__content">
         <div class="text-caption q-mb-xs">{{ $t('exportFlow.contact.description') }}</div>
         <q-input
           v-model="emailLocal"
@@ -106,3 +106,12 @@ function onSubmit() {
   emit('submit', { email, additional: additional || undefined });
 }
 </script>
+
+<style scoped>
+.export-auth-contact__content :deep(.q-field__native) {
+  height: auto !important;
+}
+.export-auth-contact__content :deep(.q-field__messages) {
+  white-space: nowrap;
+}
+</style>

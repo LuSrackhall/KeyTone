@@ -7,7 +7,7 @@
       </q-card-section>
 
       <!-- Content -->
-      <q-card-section class="q-pa-md">
+      <q-card-section class="q-pa-md optional-contact-dialog__content">
         <div class="text-caption text-grey-7 q-mb-md">
           {{ t('exportFlow.optionalContact.description') }}
         </div>
@@ -176,3 +176,12 @@ const onSubmit = () => {
   isVisible.value = false;
 };
 </script>
+
+<style scoped>
+.optional-contact-dialog__content :deep(.q-field__native) {
+  height: auto !important;
+}
+.optional-contact-dialog__content :deep(.q-field__messages) {
+  white-space: nowrap;
+}
+</style>
