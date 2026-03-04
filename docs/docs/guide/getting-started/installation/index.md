@@ -35,7 +35,8 @@ You can obtain KeyTone through the following methods:
 
 ## System Requirements
 
-* Windows 10 or later. macOS 11 or later.
+* **Windows** 10 or later.
+* **macOS** 11 or later.
 * Audio output device.
 
 ## Encountering Issues

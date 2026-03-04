@@ -34,3 +34,20 @@ KeyTone offers multiple binding methods to meet the needs of different users and
 ## Conclusion
 
 Through **Key Sound Linkage (Step 4)**, all your preparation work will be transformed into actual auditory feedback at this moment. Whether it’s simple and unified, extremely personalized, or a clever combination of both, KeyTone strives to provide you with the best configuration experience, making your keys "sound" alive from now on!
+
+## **Mouse Click Sound Support** <Badge type="tip" text="New Feature" />
+
+In addition to keyboard keys, KeyTone now supports binding sound effects to **mouse button events**:
+
+Mouse button items follow exactly the same binding mechanism as keyboard keys. You can assign any audio source file, custom sound definition, or premium key sound to them, using the same priority override logic as keyboard keys.
+
+## **Keyboard / Mouse Album Separation Mode** <Badge type="tip" text="New Feature" />
+
+By default, a single selected album is used for both **keyboard and mouse** events (Unified Mode). KeyTone also provides a **Separation Mode**, allowing you to select different albums for keyboard and mouse independently.
+
+- Separation Mode can be toggled directly from the main page.
+- In Separation Mode, two independent album selectors appear on the main page: one for keyboard and one for mouse.
+- Each selector independently controls playback, volume, and mute status. In other words, under Separation Mode, keyboard and mouse each have their **own independent volume controls**, which stack with the global volume slider.
+- **Fallback Behavior**: If no mouse album is selected, the built-in test sound is used by default. You can enable the “Mouse Fallback to Keyboard Album” option in Settings—when enabled, if the mouse album is missing in Separation Mode, it will fall back to the keyboard album instead of the built-in test sound.
+
+This mode is ideal for users who want to configure **keyboard sound albums** and **mouse click albums** separately. It allows flexible mixing and matching of different keyboard and mouse album configurations to achieve a more personalized experience.

@@ -14,6 +14,36 @@ The core purpose of this step is to take the audio source files uploaded in **Lo
 
 Through **Define and Trim Sounds (Step 2)**, you can transform lengthy recordings or complex audio tracks into a series of concise, precise, and readily usable sound units, laying a solid foundation for subsequent creations.
 
+## **Waveform-Based Visual Trimming** <Badge type="tip" text="Enhanced Feature" />
+
+In addition to manually entering start/end timestamps, KeyTone now includes a built-in **waveform visualization component** in the Create/Edit Sound dialog, making the trimming process more intuitive and precise.
+
+### Waveform & Selection
+
+- The waveform of the selected audio source file is rendered directly inside the dialog.  
+  Use the mouse wheel to zoom (with `Ctrl`) and scroll horizontally (with `Shift`) to navigate longer audio files.
+- Right-click and drag on the waveform to create a **selection range** and visually define the trimming boundaries.  
+  The selection remains **bi-directionally synchronized** with the numeric start/end time input fields.
+
+### Frontend Preview Playback Bar
+
+* A built-in **frontend preview playback bar** is placed above the waveform (fully running on the frontend layer, without relying on the SDK preview), supporting:
+  * Play / Pause with a draggable playhead.
+  * **Full playback** (entire source file) or **Selection playback** (only the defined trimmed range).
+* When the dialog is closed, any ongoing preview playback will automatically stop, preventing audio from continuing after the window is dismissed.
+
+### Volume Indicator Bar (dB)
+
+* A **horizontal volume indicator bar** is integrated within the waveform. Drag it up or down to adjust the initial volume of the trimmed segment in real time:
+  * Visible range: **±18 dB**, with scale markings at 18 / 12 / 6 / 0 / −6 / −12 / −18 displayed on the left.
+  * The current dB value is shown on the right side of the waveform.
+  * At 0 dB, the indicator rests on the waveform’s center baseline.
+* This design allows you to fine-tune volume while previewing, eliminating the need for repetitive manual numeric input.
+
+::: tip
+The original numeric trimming workflow remains fully intact. The waveform component is an **enhancement**, not a replacement—you can freely choose whichever method best fits your preference.
+:::
+
 ## **Next Steps**
 
 <!-- **What Are the Uses of Defined Sounds?** -->

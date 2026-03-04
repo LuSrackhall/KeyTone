@@ -13,6 +13,12 @@ Creating a complete key sound album typically involves the following four core s
 
 To prevent the insertion of malicious programs during key sound album sharing, KeyTone has developed and adopted the `.ktalbum` file format. This format includes encryption and verification mechanisms to ensure, to a certain extent, the integrity and security of key sound albums.
 
+Building on this foundation, KeyTone introduces a comprehensive **album signing and authorization system**:
+
+* **Author Signatures**: Album creators can generate one or more signatures to sign their albums. A valid signature verifies the album’s origin and confirms that it has not been tampered with after signing. It also helps protect the creator’s copyright to a certain extent.
+* **Configuration Encryption**: The album configuration data inside `.ktalbum` files is encrypted to prevent unauthorized viewing or modification.
+* **Import Verification**: Whether an album is signed or not does not affect the import process. However, for signed albums, KeyTone clearly displays the signing status, the signer’s identity, and whether the signature is valid after import or when applied—helping users make more informed trust decisions.
+
 In the following documentation, we will provide detailed explanations of the operations and concepts for each step. The documentation will often use the format **(Step n)** to assist in explaining the relationships between steps, helping you better understand and use the system.
 
 ## **Community and Simple Examples**

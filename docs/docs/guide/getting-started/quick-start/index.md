@@ -15,10 +15,17 @@ This guide will help you quickly master KeyTone's basic operations and core feat
 * Use the main interface's volume slider for real-time adjustments. The mute button (left of the slider) toggles global silence (synchronized with tray menu options).
 * You can further adjust the slider's maximum attenuation range of the main page slider in the settings page for finer volume control and lower volume levels.
 * The settings page also provides an additional volume control slider, allowing the volume to exceed 100% (use cautiously to prevent audio clipping).
+* A **random volume variation** option is available in the settings. When enabled, each keystroke plays with a subtle, randomized volume fluctuation for a more natural feel.
 
-### Other Settings
+### Keyboard & Mouse Sound Separation
 
-* Set the software language.
+* By default, a single album handles both keyboard and mouse sounds (**Unified Mode**).
+* Switch to **Separation Mode** in Settings to independently select a keyboard album and a mouse album — ideal for users who want to mix different sound styles.
+* In separation mode, independent volume sliders for keyboard and mouse are available.
+
+### Language & Other Settings
+
+* Set the software language — 16 languages are available, including Arabic with full RTL layout support.
 * Configure whether to hide the window on startup.
 * Enable or disable auto-start on boot (subject to the operating system’s auto-start settings and restrictions).
 
