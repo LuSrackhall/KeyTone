@@ -1,3 +1,78 @@
+#  (2026-03-04)
+
+
+### Bug Fixes
+
+* 继续修复上边线对标签的影响，确保即时在点击时, 也能保持视觉效果一致 ([2e55cb9](https://github.com/LuSrackhall/KeyTone/commit/2e55cb93a4a7e78b1f194ae3f56dd78821b9ddce))
+* 解决 q-select 在引入搜索功能后, 滚动条显示异常的问题 ([b3bde51](https://github.com/LuSrackhall/KeyTone/commit/b3bde51480730eeff7af2ddead3fa901138134be))
+* 修复编辑已有高级键音时, 切换播放模式不生效的问题。本次修复通过兼容字符串和对象两种结构，确保保存时配置能够正确写回。 ([56a1462](https://github.com/LuSrackhall/KeyTone/commit/56a1462f3b90c6f3553495fe09985cd706b1162d)), closes [#123](https://github.com/LuSrackhall/KeyTone/issues/123)
+* 修复并优化主页吗选择器的样式, 尤其是i18n支持这一块，调整组件样式以适应长标签，并且特别修复聚焦时的签名名称视觉问题, 避免聚焦时上边线影响签名标签 ([105d6f4](https://github.com/LuSrackhall/KeyTone/commit/105d6f48ea7ab055329b0d80ea9ce0811d67ac8b))
+* 修复波形可视化组件展示短时长音频时在低缩放下波形宽度不足导致的留白问题，此问题会导致右键选区的不准确, 调整 fillParent 为 true即可解决。 ([4522921](https://github.com/LuSrackhall/KeyTone/commit/452292139abf4226cb100859eab85c6a80e3cf49))
+* 修复当删除后重导入同一 音频源文件 (及相同`sha256`) 时，历史缺失引用可能重新命中新的别名槽位，形成“无用户操作的自动复联”的不符合直觉的bug。 ([e04965a](https://github.com/LuSrackhall/KeyTone/commit/e04965a4a31c80e502fcd95cab83e0f528486e11)), closes [#131](https://github.com/LuSrackhall/KeyTone/issues/131)
+* 修复导出授权联系人和可选联系人对话框的邮箱输入框内容上移的ui问题 ([6181893](https://github.com/LuSrackhall/KeyTone/commit/6181893f9e90c32b65e78ae5d3eb6d72dd7da16d))
+* 修复键音专辑界面 专辑选择器中“查看详细信息”功能 点击后不触发对话框的bug，使用 pointerdown.capture 触发并阻止事件冒泡，确保对话框正常打开 ([d045b2c](https://github.com/LuSrackhall/KeyTone/commit/d045b2c248f17f96b64e042b3c51bea49c024342))
+* 修复选区在大幅度缩放时无法稳定附着在波形上的uibug。原因是 WaveSurfer v7 中 getWrapper() 返回 shadow DOM 内部 .wrapper 的宽度设置问题，避免 regions 插件计算错误。 ([d6e73a0](https://github.com/LuSrackhall/KeyTone/commit/d6e73a0937c583259387dce6c47f7e388a5bc439))
+* 修复载人音频源文件对话框中, 音频源文件选择器样式异常的bug，是的其高度恢复动态变化。 并且, 再次基础上增加对话框级别的滚动区域和底部毛玻璃粘滞区域及按钮按钮，以改善用户体验。 ([3922b20](https://github.com/LuSrackhall/KeyTone/commit/3922b206b0caeca4abd4b61f7f84e23034df35a5))
+* 修复主页面音量不为0%情况下静音模式无法持久化的问题 ([a312864](https://github.com/LuSrackhall/KeyTone/commit/a3128647d6a908c7e2dcd3ca7889595025fd7c25))
+* 修复专辑选择器右上角的签名展示效果，调整背景色和圆角，提升视觉融合度, 避免长方形黑框的样式bug。 ([a46319a](https://github.com/LuSrackhall/KeyTone/commit/a46319a3cdeec8f74b4a35c688f7fe0adaa656e7))
+* 优化上下文菜单位置更新逻辑，动态测量菜单宽高以适应内容, 以修复刚刚因添加新的菜单项而造成的接近底部时菜单溢出界面的bug。 ([4eb7547](https://github.com/LuSrackhall/KeyTone/commit/4eb7547eea000761045d3c41d87f259cddd60329))
+* 专辑签名信息对话框展开图片动画修复; 签名管理页面指纹查看功能简化 ([42be6cc](https://github.com/LuSrackhall/KeyTone/commit/42be6ccdd8bc341ec4b92eaaa8f05511bce923a7))
+* **App.vue:** 优化sse数据处理的防抖逻辑，明确其作用仅保证最终一致性 ([6f3747c](https://github.com/LuSrackhall/KeyTone/commit/6f3747cdb1108f44e3c1d8cca304dd443f802fdf))
+* **electron-main:** 更新sdk-debug路径配置以指向正确的Config和AudioPackage目录, 避免调试时的意外错误。 ([6444aca](https://github.com/LuSrackhall/KeyTone/commit/6444acae7caf317e54779012eaa82fc3b1e76655))
+* **fix dropdown list sorting:** Implement natural alphanumeric sorting. ([ab25a2b](https://github.com/LuSrackhall/KeyTone/commit/ab25a2bd955b996d4aa03a5714327292de125043)), closes [#104](https://github.com/LuSrackhall/KeyTone/issues/104) [#105](https://github.com/LuSrackhall/KeyTone/issues/105)
+* **openspec:** 全面移除openspec使用期间生成的所有不可控代码, 如数据结构定义和数据流处理等核心逻辑, 仅保留ui实现与基础交互逻辑。当然, openspec及所生成的文档我不打算删除。 ([a2195df](https://github.com/LuSrackhall/KeyTone/commit/a2195df7cdaeb7fabe450fcc2ade2b8d628cb5d7))
+* **openspec:** 实施修复并进一步迭代了上一次提交的更新规格。目前列表项的整体ui样式及业务逻辑, 基本符合我的初步需求。 ([38501ed](https://github.com/LuSrackhall/KeyTone/commit/38501ed78ec7382f72d20f445a98330230dd104a))
+* **openspec:** 修复实施变更迭代, 以增强签名管理对话框的ui使用体验 ([cb8c017](https://github.com/LuSrackhall/KeyTone/commit/cb8c0174c6cc8495bbd2de7df78ba83ddb9ba141))
+* **release-build:** 修复生产环境下签名管理页面无法使用的bug。 原因是 MacOS 系统类型判断逻辑未使用之前自定义的方式获取。 ([74bdc3a](https://github.com/LuSrackhall/KeyTone/commit/74bdc3a6bdf7eef8067d7c08b8fe9ad2c173da9c))
+* **sdk:** 1. 添加线程安全的键音包删除函数, 从而修复频繁创建/删除键音包过程中容易造成sdk崩溃的重大bug; 2. 进一步完善临界区的加锁范围, 避免其它意外的死锁与panic可能。 ([c769fe7](https://github.com/LuSrackhall/KeyTone/commit/c769fe7f125740345440e4e8a50c153b74724a9e))
+* **signature-macos:** 为名称输入框添加样式调整, 不知为何, 输入框的输入样式偏上只出现在了mac端 ([14afb7e](https://github.com/LuSrackhall/KeyTone/commit/14afb7e71193e0efb48df660c546efc03c208b7b))
+* **signature:** 调整导入对话框的宽度，优化体验 ([1c9fd60](https://github.com/LuSrackhall/KeyTone/commit/1c9fd601e916684a508cd12b540e58ebb68f494a))
+* **signature:** 更新签名中名片图片的命名方式, 由sha-1改为uuid的sha-1, 目的是防止多个签名用相同名片图片时图片只存一份不方便修改 ([60565a3](https://github.com/LuSrackhall/KeyTone/commit/60565a3a8e7ffbeefe25bf5d1374874f80a0c095))
+* **signature:** 更新无名片图片提示信息，调整签名数据结构以支持名片字段空值 ([bb64801](https://github.com/LuSrackhall/KeyTone/commit/bb648018eb75dfaa8c17acae07945a1fa0b03912))
+* **signature:** 进一步修复优化签名管理列表与页面的右边距; 隐藏页面底部的滚动条 ([40fa07b](https://github.com/LuSrackhall/KeyTone/commit/40fa07bd30e74ed4f1a63a2617cb2c120a62a870))
+* **signature:** 通过使用增量更新代替简陋的全量更新, 彻底修复了签名列表在新增/删除/手动排序后的闪烁问题。 ([68308cb](https://github.com/LuSrackhall/KeyTone/commit/68308cb6fc713891c5c7e231c7115d178f65d878))
+* **signature:** 修复导出功能立即显示通知的bug, 使用 File System Access API 来改进导出签名功能, 使得选择路径并保存后才显示成功通知; 补全导入签名时冲突覆盖取消对话框的i18n ([9cad13e](https://github.com/LuSrackhall/KeyTone/commit/9cad13e1b9c1a4c9c9fc2a576bbbec92a6955b32))
+* **signature:** 修复签名管理页面列表项中个人介绍文本溢出时不展示滚动条的问题 ([fdb7e5b](https://github.com/LuSrackhall/KeyTone/commit/fdb7e5b5c10713c1b25a41a79e683d4c80865688))
+* **signature:** 修复现有增量更新不支持排序的问题, 这会引发sse回调过程最终一致性无法覆盖排序相关逻辑的bug——虽然发生机率几乎为0。 ([7f15993](https://github.com/LuSrackhall/KeyTone/commit/7f15993c95ae1ed3e36614c16e3893477eba7e8f))
+* **signature:** 因无法修复q-menu菜单造成的列表闪烁bug, 因此添加自定义上下文菜单组件解决此问题，并通过自定义菜单组件进一步提升用户交互体验 ([cab7618](https://github.com/LuSrackhall/KeyTone/commit/cab76185f479d19d109acbe21e95ff3b0471de15))
+* **signature:** 优化删除和表单提交后的列表刷新逻辑 , 避免在排序及更新期间执行增量更新, 是增删改的整体流程体验更加丝滑 ([67d3e49](https://github.com/LuSrackhall/KeyTone/commit/67d3e49edc75efe863fdc74498b6594232609b03))
+* **signature:** 优化拖动排序逻辑，避免不必要的排序更新 ([2794eb7](https://github.com/LuSrackhall/KeyTone/commit/2794eb77e9e95ddc43fdfabaff1d549eb5a70b48))
+* **signature:** 优化拖动排序逻辑，实时反馈插入位置，避免误判拖拽位置, 提升用户体验 ([b38c09d](https://github.com/LuSrackhall/KeyTone/commit/b38c09d95ed858e5a0584e2474538722f9a2e8df))
+* **signature:** 优化拖动排序体验，增加拖动元素的高 z-index，确保视觉效果更流畅 ([3986552](https://github.com/LuSrackhall/KeyTone/commit/3986552d9ece0af747eec289b6784da0755de6cf))
+* **signature:** 增加拖动排序时的透明度效果，提升用户体验 ([deae8ca](https://github.com/LuSrackhall/KeyTone/commit/deae8ca8b84676e2015461db9d952b5207e37f97))
+* **viper:** 移除没必要的log打印, 避免影响性能。 ([4f11595](https://github.com/LuSrackhall/KeyTone/commit/4f115955afa0e5e1976caf24c342cec5ffe0a101))
+
+
+### Features
+
+* **氛围:** 进一步实现并完善专辑导出流程的签名对话框的ui及交互逻辑。 ([07248b3](https://github.com/LuSrackhall/KeyTone/commit/07248b3f60d585e69ebea8743e0002112975dc73))
+* 添加键盘/鼠标播放路由功能, 使得用户可以使用A专辑的键盘和B专辑的鼠标配置 ([5f28258](https://github.com/LuSrackhall/KeyTone/commit/5f2825828792d40fa6dba7e24c2b5dbeb53abf1d)), closes [#122](https://github.com/LuSrackhall/KeyTone/issues/122)
+* 添加授权请求和请求受理以及授权导入等一系列签名核心功能 ([3005c0f](https://github.com/LuSrackhall/KeyTone/commit/3005c0fca4a287be66482d6fb136e7dd8c652582))
+* 添加鼠标/键盘分离模式下, 鼠标回退到键盘专辑的功能，支持分离模式下鼠标专辑缺失时回退使用键盘专辑, 默认不回退彻底分离, 可在 设置界面-主页面相关模块中 开启 ([f03f2ab](https://github.com/LuSrackhall/KeyTone/commit/f03f2ab5551995893df402528170da149ffafbe7)), closes [#122](https://github.com/LuSrackhall/KeyTone/issues/122)
+* 添加无需授权场景的可选联系方式填写的对话框 ([727452a](https://github.com/LuSrackhall/KeyTone/commit/727452addb2145241c60206ca5ef3cd4d2cc0a44))
+* 为键音专辑选择器添加搜索功能 ([7d1d644](https://github.com/LuSrackhall/KeyTone/commit/7d1d6440b5005c129bb4cfc76fc081f6f7c2258b))
+* 新增分离模式下键盘/鼠标独立音量设置 ([c8879e3](https://github.com/LuSrackhall/KeyTone/commit/c8879e357a891ec100510f8dd7e27b4b86e53b9e)), closes [#126](https://github.com/LuSrackhall/KeyTone/issues/126)
+* 新增设置页面上主页面相关随机音量功能及按下/抬起随机音量单独控制 ([c6eb25b](https://github.com/LuSrackhall/KeyTone/commit/c6eb25badd344b60f2b091d21fbd5242c788dd45)), closes [#99](https://github.com/LuSrackhall/KeyTone/issues/99)
+* 在主页专辑选择器中展示签名作者信息 ([970632e](https://github.com/LuSrackhall/KeyTone/commit/970632e0bb55e8bf963a34b8442cb8f5410e3b30))
+* 在专辑选择器中添加与主界面一致的签名徽章和悬停卡片展示，优化用户体验 ([c307c4a](https://github.com/LuSrackhall/KeyTone/commit/c307c4ae844817eaab5c9eb61117ca87a154dc8d))
+* 增加按下/抬起音量单独控制功能 ([bbb5647](https://github.com/LuSrackhall/KeyTone/commit/bbb56474c8d4e4200c1e407b8ab73382dfa291b6)), closes [#98](https://github.com/LuSrackhall/KeyTone/issues/98)
+* **openspec:** 按照初始规范和部分变更, 做签名管理相关功能初始的0-1阶段的提交。 ([dd2afab](https://github.com/LuSrackhall/KeyTone/commit/dd2afab885845b25a6c525e67d323489940c1ba4))
+* **signature:** 签名管理列表的名称和介绍, 溢出文本将允许滚动显示 ([27301be](https://github.com/LuSrackhall/KeyTone/commit/27301beb36a37f35737c9eb8db0f405d11ab7534))
+* **signature:** 实现签名拖动排序功能，支持前端更新排序并持久化到后端 ([fcba9d1](https://github.com/LuSrackhall/KeyTone/commit/fcba9d18c3e73726c5bfc7791533247a6d74b6b7))
+* **signature:** 添加导出签名确认对话框，增强安全提示和用户交互体验 ([8e126dc](https://github.com/LuSrackhall/KeyTone/commit/8e126dc969feee8470c36061d1ba9dced95a5d38))
+* **signature:** 添加孤立签名名片图片清理功能，定期删除不在配置中的图片文件 ([baf1934](https://github.com/LuSrackhall/KeyTone/commit/baf193453035fc4909b24106fd306c3763356a46))
+* **signature:** 添加签名列表的过渡动画效果，提升用户体验 ([2de9c3b](https://github.com/LuSrackhall/KeyTone/commit/2de9c3b8a7f1fa7ff926c61c9c645b69dac545cf))
+* **signature:** 重新实现并完善签名创建功能。 ([77c8db8](https://github.com/LuSrackhall/KeyTone/commit/77c8db836ad5cdc344bf904f7f73e94730cf81ef))
+* **signature:** 重新实现签名编辑功能，支持对介绍和名片图片的更新编辑。 ([9535840](https://github.com/LuSrackhall/KeyTone/commit/953584023c56d42db4f6bbbf9f8d3db3992399c3))
+* **signature:** 重新实现签名导出和导入功能，支持冲突处理与覆盖选项 ([0e5c462](https://github.com/LuSrackhall/KeyTone/commit/0e5c462732a1aa95c0b9621ed485bd3f1a99014a))
+* **signature:** 重新实现签名删除功能;同时, 修复了签名管理列表项的右键导出菜单的位置bug。 ([5e2019a](https://github.com/LuSrackhall/KeyTone/commit/5e2019ad13e3b7c783f25455c11ff7388a635ce0))
+* **signature:** 重新完善签名管理的列表预览功能，包括获取签名列表、解密签名数据和获取签名图片, 以渲染签名列表并支持名片图片预览 ([9319930](https://github.com/LuSrackhall/KeyTone/commit/93199300bdceb84d041c85afb236c304433b45a7))
+
+
+### Reverts
+
+* Revert "chore(fix): 提升签名名片图片清理安全性，避免因密钥不兼容导致误删" ([adf9e57](https://github.com/LuSrackhall/KeyTone/commit/adf9e573890598cbae51ab25f51bc2272633da8f))
+* Revert "chore: 完成上次提交中所修改内容的open-spec提案的归档。" ([9546c2c](https://github.com/LuSrackhall/KeyTone/commit/9546c2cab79a648bd21ba823ffa295f746b2ddd5))
 #  (2025-07-31)
 
 
