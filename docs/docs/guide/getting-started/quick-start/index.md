@@ -15,7 +15,8 @@ This guide will help you quickly master KeyTone's basic operations and core feat
 * Use the main interface's volume slider for real-time adjustments. The mute button (left of the slider) toggles global silence (synchronized with tray menu options).
 * You can further adjust the slider's maximum attenuation range of the main page slider in the settings page for finer volume control and lower volume levels.
 * The settings page also provides an additional volume control slider, allowing the volume to exceed 100% (use cautiously to prevent audio clipping).
-* A **random volume variation** option is available in the settings. When enabled, each keystroke plays with a subtle, randomized volume fluctuation for a more natural feel.
+* For even finer control, enable **Press/Release Independent Volume Control** in **Settings → Main Page Related**. This unlocks separate dB volume adjustments for key-press (down) and key-release (up) events, each supporting its own attenuation range and debug slider. Volume stacking order: *global → keyboard/mouse split volume → press/release layer → random layer*.
+* A **random volume variation** option is available in the settings. When enabled, each keystroke plays with a subtle, randomized volume fluctuation for a more natural feel. An additional **press/release random volume** option allows enabling random variation independently for press and release events.
 
 ### Keyboard & Mouse Sound Separation
 
