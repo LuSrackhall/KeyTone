@@ -21,8 +21,8 @@ This guide will help you quickly master KeyTone's basic operations and core feat
 ### Keyboard & Mouse Sound Separation
 
 * By default, a single album handles both keyboard and mouse sounds (**Unified Mode**).
-* Switch to **Separation Mode** in Settings to independently select a keyboard album and a mouse album — ideal for users who want to mix different sound styles.
-* In separation mode, independent volume sliders for keyboard and mouse are available.
+* Toggle to **Split Mode** on the main page to select different albums for your keyboard and mouse independently—perfect for users who want to mix and match sound styles.
+* In Split Mode, the keyboard and mouse each have their own volume sliders (the global slider on the main page still affects both; please go to the Settings page to adjust independent volume levels).
 
 ### Language & Other Settings
 
