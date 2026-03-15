@@ -206,6 +206,93 @@ type Cut struct {
 	Volume  float64
 }
 
+// errEmptyAudioCut 表示“这次裁剪在逻辑上不应该播放任何声音”。
+// 这不是异常故障, 而是一个明确的业务分支:
+// 1. 用户把结束时间拖到了开始时间之前/相同位置;
+// 2. 裁剪区间完全落在音频总长度之外;
+// 3. 音频长度本身异常, 无法得到任何可播放样本。
+//
+// 之所以单独定义这个错误, 是为了在调用方区分:
+// - 真正需要记录日志的故障(如 Seek 失败、解码器异常);
+// - 合法但不应发声的“空片段”情况。
+var errEmptyAudioCut = errors.New("audio cut does not contain playable samples")
+
+// preparePlaybackSource 将“裁剪描述 Cut”转换成一个真正可播放的 Streamer。
+//
+// 这是这次修复的核心: 旧实现是先 Resample, 再在播放期间轮询 Position(),
+// 一旦发现到达结束点就直接 Close 原始流。这个做法的问题在于:
+// 1. Resampler 为了插值会预读未来的一段原始样本;
+// 2. 因此“原始流当前位置”并不等于“已经真正播出的声音位置”;
+// 3. 尤其在很短的裁剪片段中, 预读进来的区间外样本会被插值带入输出;
+// 4. 最终表现就是: 明明选中的片段没有声音, 实际却还能听到片段外的声音。
+//
+// 新方案改成两步:
+// 1. 先在原始采样率的 StreamSeekCloser 上 Seek 到 startSample;
+// 2. 再用 beep.Take 严格限制最多只能读取 end-start 个样本;
+//
+// 这样重采样器拿到的输入源本身就是一个“已经裁好长度”的只读片段,
+// 它即便预读, 也只能在这个受限区间内预读, 不可能再越界读到片段外的声音。
+//
+// 返回值:
+// - beep.Streamer: 供后续重采样与播放使用的源流;
+// - float64: 初始音量偏移, 直接继承自 cut.Volume;
+// - error: 区分空片段(errEmptyAudioCut)与真正故障。
+func preparePlaybackSource(audioStreamer beep.StreamSeekCloser, sampleRate beep.SampleRate, cut *Cut) (beep.Streamer, float64, error) {
+	initVolume := 0.0
+	// 没有 cut 代表“播放整段音频”, 这时直接把原始流返回即可。
+	if cut == nil {
+		return audioStreamer, initVolume, nil
+	}
+
+	// 结束时间小于等于开始时间时, 语义上就是空区间, 必须明确无声返回。
+	if cut.EndMS <= cut.StartMS {
+		return nil, 0, errEmptyAudioCut
+	}
+
+	// 配置中的裁剪时间单位是毫秒, 这里统一转换为解码后“原始采样率”下的样本索引。
+	// 注意必须使用原始采样率, 不能使用全局播放采样率, 否则时间轴会错位。
+	startSample := sampleRate.N(time.Millisecond * time.Duration(cut.StartMS))
+	endSample := sampleRate.N(time.Millisecond * time.Duration(cut.EndMS))
+	totalSamples := audioStreamer.Len()
+
+	// 没有任何可用样本时, 直接视为空片段。
+	if totalSamples <= 0 {
+		return nil, 0, errEmptyAudioCut
+	}
+	// 负值裁剪时间统一钳制到 0, 防止配置异常导致 Seek 到负位置。
+	if startSample < 0 {
+		startSample = 0
+	}
+	if endSample < 0 {
+		endSample = 0
+	}
+	// 如果起点已经在文件末尾或更后面, 就没有任何可播放内容。
+	if startSample >= totalSamples {
+		return nil, 0, errEmptyAudioCut
+	}
+	// 结束位置允许越界, 但要钳制到文件真实长度, 等价于“播放到文件结尾”。
+	if endSample > totalSamples {
+		endSample = totalSamples
+	}
+	// 钳制后若仍然没有有效区间, 说明最终结果仍是空片段。
+	if endSample <= startSample {
+		return nil, 0, errEmptyAudioCut
+	}
+
+	// Seek 是必须检查错误的。
+	// 旧逻辑忽略了 Seek 返回值, 一旦解码器拒绝 Seek 或位置异常, 播放可能回退到文件开头,
+	// 这正是“选中的是静音段, 却听到别处声音”的另一个来源。
+	if err := audioStreamer.Seek(startSample); err != nil {
+		return nil, 0, fmt.Errorf("seek start sample %d failed: %w", startSample, err)
+	}
+
+	initVolume = cut.Volume
+	// Take 会把源流严格截断为指定样本数。
+	// 后续即便交给 Resample, Resample 也只能在这个已裁好的窗口中读取数据,
+	// 不会再接触到区间外的原始样本。
+	return beep.Take(endSample-startSample, audioStreamer), initVolume, nil
+}
+
 // 键音播放器
 //
 // Parameters:
@@ -255,28 +342,23 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, keySta
 	audioStreamer = JoinManage(audioStreamer)
 	defer audioStreamer.Close()
 
-	fmt.Println("format.SampleRate", format.SampleRate)
-	fmt.Println("formatGlobalSampleRate", formatGlobalSampleRate)
-
-	// 将文件的采样率, 设置成与播放器一致
-	reStreamer := beep.Resample(4, format.SampleRate, formatGlobalSampleRate, audioStreamer)
-
-	// 处理cut参数
-	endSample := -1 // 为保证cut=nil时, 也能正常保留原始工作。(当从配置文件获取的信息达不到构造cut时, cut将不会被构造。cut释放为nil的逻辑不应该在播放器端处理<如start和end都等于0时, cut就应该为nil, 即全量PlayKeySound播放>。)
-	initVolume := 0.0
-	// 如果cut=nil则全量播放
-	if cut != nil {
-		startSample := 0
-		startSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.StartMS))
-		audioStreamer.Seek(startSample)
-		// 若有不合理错误, 则直接退出, 不播放任何声音。
-		// * 如果开始时间等于结束时间, 说明用户不想播放任何声音, 为避免内存浪费, 我们在此处也直接做退出处理。
-		if cut.EndMS <= cut.StartMS {
+	// 先把“文件 + cut 配置”整理成一个真正可播放的源流。
+	// 这里的关键原则是: 先裁剪, 再重采样。
+	// 如果顺序反过来, 重采样器内部的预读行为就可能把裁剪区间外的内容提前读进来。
+	playbackSource, initVolume, err := preparePlaybackSource(audioStreamer, format.SampleRate, cut)
+	if err != nil {
+		// 空片段不记错误日志, 直接静默返回, 这是符合用户配置语义的结果。
+		if errors.Is(err, errEmptyAudioCut) {
 			return
 		}
-		endSample = format.SampleRate.N(time.Millisecond * time.Duration(cut.EndMS))
-		initVolume = cut.Volume
+		// 只有真正的异常才记录日志, 便于后续排查具体音频文件或解码器问题。
+		logger.Error("message", fmt.Sprintf("error: failed to prepare playback source: %v", err))
+		return
 	}
+
+	// 将文件的采样率, 设置成与播放器一致。
+	// 裁剪必须先作用在原始采样率的流上, 再交给重采样器, 否则重采样器的预读会把裁剪区间外的数据带入播放。
+	reStreamer := beep.Resample(4, format.SampleRate, formatGlobalSampleRate, playbackSource)
 
 	// 处理音量
 	volume := &effects.Volume{
@@ -309,43 +391,27 @@ func PlayKeySound(audioFilePath *AudioFilePath, cut *Cut, keycode string, keySta
 	// ctrl := &beep.Ctrl{Streamer: volume, Paused: false}
 
 	// 播放音乐
-	done := make(chan struct{})
-	defer close(done)
+	// 这里使用一个带 1 个缓冲的 done 通道等待播放完成:
+	// 1. speaker.Play 是异步的, 不会阻塞当前 goroutine;
+	// 2. beep.Callback 会在整段流真正播放结束后触发;
+	// 3. 带缓冲是为了防止极端调度下, 回调先于接收方执行时发生阻塞;
+	// 4. select + default 则保证回调至多投递一次完成信号。
+	//
+	// 旧实现之所以复杂, 是因为它依赖“播放途中主动关流”来截断, 所以必须轮询、抢时机、担心回调卡死。
+	// 现在裁剪已经由 Take 在数据源层面完成, 这里就只需要等待自然播放结束即可。
+	done := make(chan struct{}, 1)
 	// speaker.Play(beep.Seq(ctrl, beep.Callback(func() {
 	speaker.Play(beep.Seq(volume, beep.Callback(func() {
-		done <- struct{}{}
+		select {
+		case done <- struct{}{}:
+		default:
+		}
 	})))
 
-	// // FIXME: 暂时先如此处理, 后续再进一步处理
-	// go (func() {
-	// 	time.Sleep(500 * time.Millisecond)
-	// 	ctrl.Paused = true
-	// 	done <- true
-	// })()
-
-	// 等待播放完成
-	re := true
-	for re {
-		select {
-		case <-done:
-			re = false
-		case <-time.After(10 * time.Millisecond):
-			pos := audioStreamer.Position()
-			if pos >= endSample && endSample != -1 {
-				// speaker.Lock()
-				// ctrl.Paused = true // 目前只能用此一种方式, 在指定时间中止正在播放的音频 (由于暂停后, 会永远的滞留在播放器中等待恢复, 无法进入结束状态而被正确回收, 因此我们暂时采用静音的方式解决问题)
-				// volume.Silent = true // 静音的方式解决问题, 虽然可以保证最终的内存正常释放, 但如果音频文件过大, 仍是会在一定时间内造成不必要的短暂内存泄漏问题。
-				// volume.Silent = true // 仍保留这个的原因是: 为了防止末尾仍有声音, 或者说保证声音的纯净。
-				// audioStreamer.Seek(audioStreamer.Len()) // 直接将其播放进度设置到末尾, 以使其直接播放完毕而自动调用内存回收。(从而避免音频文件过大时, 在一定时间内造成的短暂不必要的内存占用过大问题。)
-				audioStreamer.Close()
-				// speaker.Unlock()
-				<-done // 为了防止beep.Callback回调卡死而造成的内存泄漏, 这里必须如此处理(就算提前结束, 也要正确的等待Callback回调)
-				re = false
-			}
-		}
-	}
-	// fmt.Println("播放用时", time.Since(starTime))
-	fmt.Println("结束------结束------结束")
+	// 阻塞到当前片段自然播放完毕。
+	// 这样可以保证函数返回时, 该次播放对应的生命周期已完整结束,
+	// 避免调用方误以为播放已经完成而继续触发清理或下一步依赖逻辑。
+	<-done
 }
 
 func decodeAudioFile(file fs.File, ext string) (beep.StreamSeekCloser, beep.Format, error) {
@@ -1223,14 +1289,14 @@ func keySoundParsePlayWith(get ConfigGetter, key_sound_UUID string, keyState str
 					}, nil, keycode, keyState)
 					return
 				}
-						if vMap["type"] == "sounds" {
-							sound_UUID := vMap["value"].(string)
-							soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode, keyState)
+				if vMap["type"] == "sounds" {
+					sound_UUID := vMap["value"].(string)
+					soundParsePlayWith(get, sound_UUID, audioPkgUUID, keycode, keyState)
 					return
 				}
-						if vMap["type"] == "key_sounds" {
-							key_sound_UUID := vMap["value"].(string)
-							keySoundParsePlayWith(get, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
+				if vMap["type"] == "key_sounds" {
+					key_sound_UUID := vMap["value"].(string)
+					keySoundParsePlayWith(get, key_sound_UUID, keyState, audioPkgUUID, isGlobal, keycode, count)
 					return
 				}
 			}
