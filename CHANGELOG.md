@@ -1,3 +1,9 @@
+#  (2026-05-07)
+
+
+### Bug Fixes
+
+* 通过优化设置详情页的尺寸约束与双击导航逻辑, 修复了因双击具体设置组造成的界面显示异常的bug ([638d883](https://github.com/LuSrackhall/KeyTone/commit/638d8839bd8ceec7c070cc6d99966f296c83df61)), closes [#139](https://github.com/LuSrackhall/KeyTone/issues/139)
 #  (2026-03-15)
 
 

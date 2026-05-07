@@ -81,6 +81,7 @@ function sidebarChangelog() {
       text: "Changelog",
       items: [
         // { text: "v0.2.0", link: "/v0.2.0" }, // 最新的changelog, 往上写就好了
+        { text: "v1.0.2", link: "/v1.0.2" },
         { text: "v1.0.1", link: "/v1.0.1" },
         { text: "v1.0.0", link: "/v1.0.0" },
         { text: "v0.6.0", link: "/v0.6.0" },
