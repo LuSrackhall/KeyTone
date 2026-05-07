@@ -64,6 +64,10 @@ const routes: RouteRecordRaw[] = [
         path: '/setting-volumeAmplify',
         component: () => import('pages/SettingPageChildren/VolumeAmplify_setting.vue'),
       },
+      {
+        path: '/setting-keytoneAlbumPage',
+        component: () => import('pages/SettingPageChildren/KeytoneAlbumPage_setting.vue'),
+      },
     ],
   },
   {

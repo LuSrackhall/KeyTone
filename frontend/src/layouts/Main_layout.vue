@@ -167,8 +167,27 @@
       </div>
     </q-drawer>
 
+    <!--
+      ═══════════════════════════════════════════════════════════════
+      设置详情页（/setting-*）需要固定窗口尺寸约束
+      ═══════════════════════════════════════════════════════════════
+      当路由为 /setting-xxx（如 /setting-language）时，子页面组件不含
+      尺寸约束，直接渲染会导致内容溢出、透明区域或滚动条异常。
+
+      这里的方案是：在 Main_layout 层识别设置详情页路由，主动给
+      <router-view /> 包裹与 Setting_page.vue 一致的固定尺寸
+      （q-page + q-scroll-area + 固定宽高），确保视觉统一。
+      普通页面（/、/keytone_album 等）不受影响。
+    -->
     <q-page-container>
-      <router-view />
+      <template v-if="isSettingDetailPage">
+        <q-page style="min-height: 0px" :class="settingDetailPageClasses">
+          <q-scroll-area :class="settingDetailPageClasses">
+            <router-view />
+          </q-scroll-area>
+        </q-page>
+      </template>
+      <router-view v-else />
     </q-page-container>
   </q-layout>
 </template>
@@ -274,6 +293,26 @@ function getMacOSStatus() {
   }
   return false;
 }
+
+/**
+ * 判断当前路由是否为设置详情页（/setting-xxx 系列）。
+ * 注意：/setting 本身是主设置页（有独立的 Expansion Items），
+ * 其 Setting_page.vue 自身已有尺寸约束，不应被再次包裹。
+ */
+const isSettingDetailPage = computed(() => {
+  const path = router.currentRoute.value.fullPath;
+  return path !== '/setting' && path.startsWith('/setting');
+});
+
+/**
+ * 与 Setting_page.vue 保持一致的固定尺寸类名。
+ * macOS 版窗口裁剪区域不同，需要微调宽度。
+ */
+const settingDetailPageClasses = computed(() => {
+  return isMacOS.value
+    ? 'w-[389.5px] h-[458.5px]'
+    : 'w-[379px] h-[458.5px]';
+});
 </script>
 
 <style lang="scss" scoped>
